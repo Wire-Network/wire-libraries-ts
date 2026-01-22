@@ -1,4 +1,4 @@
-import { isDefined, isPromise } from "../guards"
+import { isDefined, isPromise } from "../guards/index.js"
 
 export enum DeferredStatus {
   PENDING = "PENDING",

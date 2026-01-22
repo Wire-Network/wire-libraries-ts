@@ -1,0 +1,20 @@
+{
+  "extends": "../../etc/tsconfig/tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "rootDir": "./src",
+    "outDir": "./lib"
+  },
+  "references": [
+    {
+      "path": "../../packages/shared/tsconfig.json"
+    },
+    {
+      "path": "../../packages/shared-web/tsconfig.json"
+    },
+  ],
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "lib" ]
+}

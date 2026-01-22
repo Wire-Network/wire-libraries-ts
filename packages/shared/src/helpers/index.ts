@@ -1,1 +1,1 @@
-export * from "./Deferred"
+export * from "./Deferred.js"

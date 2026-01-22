@@ -1,10 +1,10 @@
-import { assert, getValue, isDefined, isFunction, isNumber } from "../guards"
+import { assert, getValue, isString, isDefined, isFunction, isNumber } from "../guards/index.js"
 import { Option } from "prelude-ts"
 import { pick } from "lodash"
 import { LevelKind, LevelThresholds } from "./Level.js"
-import type { LoggingManager } from "./LoggingManager"
-import type { LogRecord } from "./LogRecord"
-import { isLogLevelKind, isString } from "./util.js"
+import type { LoggingManager } from "./LoggingManager.js"
+import type { LogRecord } from "./LogRecord.js"
+import { isLogLevelKind } from "./util.js"
 
 export interface LoggerOptions {
   categoryInterpolator: CategoryInterpolator
@@ -53,7 +53,7 @@ export function toLogRecord(
     None: () => ({})
   })
 
-  const record = isString(levelOrRecord)
+  const recordBase = isString(levelOrRecord)
     ? ({
         ...pick(logger, ["category"]),
         timestamp: Date.now(),
@@ -63,8 +63,9 @@ export function toLogRecord(
       } as LogRecord)
     : levelOrRecord
   return {
-    ...record,
-    ...errRecord
+    ...recordBase,
+    ...errRecord,
+    timestamp: isNumber(recordBase.timestamp) && recordBase.timestamp > 0 ? recordBase.timestamp : Date.now(),
   }
 }
 

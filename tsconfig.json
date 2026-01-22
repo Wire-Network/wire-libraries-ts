@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "./etc/tsconfig/tsconfig.base.json",
   "files": [],
   "exclude": [
     "**/node_modules/**",
@@ -19,6 +19,9 @@
     },
     {
       "path": "./packages/shared-node/tsconfig.json"
-    }
+    },
+    {
+      "path": "./examples/web-logging-example/tsconfig.json"
+    },
   ]
 }

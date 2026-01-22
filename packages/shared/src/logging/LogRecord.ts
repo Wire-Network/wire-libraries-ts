@@ -8,7 +8,7 @@ export interface LogRecord<Data = any> {
   message: string
   args?: any[]
   data?: Data
-  tag: string
+  tags?: string[]
   url?: string
   env?: string
   event?: string

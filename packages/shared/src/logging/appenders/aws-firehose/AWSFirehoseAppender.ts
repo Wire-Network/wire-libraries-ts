@@ -26,7 +26,7 @@ export class AWSFirehoseAppender<Record extends LogRecord = LogRecord>
   private flushDeferred: Deferred<void>
   private flushIntervalMs = 1000;
 
-  constructor(public readonly credentialManager: AWSFirehoseCredentialManager) {
+  constructor(public readonly credentialManager: AWSFirehoseCredentialManager = new AWSFirehoseCredentialManager()) {
     credentialManager.on("received", () => {
       log.info("Credentials received, initializing firehose client")
       if (!this.pendingRecords.length || !!this.flushDeferred) {
@@ -50,6 +50,8 @@ export class AWSFirehoseAppender<Record extends LogRecord = LogRecord>
 
     this.pendingRecords.push({
       ...record,
+      app: "web",
+      timestamp: Date.now(),
       env: typeof process === "undefined" ? "WEB" : process.env.WIRE_ENV ?? "SHARED",
       url: typeof window === "undefined" ? "local://node" : window.location.href,
     })
@@ -119,8 +121,14 @@ export class AWSFirehoseAppender<Record extends LogRecord = LogRecord>
         const
           chunkSize = Math.min(this.pendingRecords.length, 10),
           records = this.pendingRecords.splice(0, chunkSize),
-          batch: PutRecordBatchInput["Records"] = records.map(record => ({
-            Data: Uint8Array.from(JSON.stringify(record))
+          recordJsons = records.map(record => JSON.stringify(record))
+
+        // log.info("Record JSONs", recordJsons)
+
+        const
+          textEncoder = new TextEncoder(),
+          batch: PutRecordBatchInput["Records"] = recordJsons.map(jsonStr => ({
+            Data: textEncoder.encode(jsonStr)
           }))
 
         log.info(`Pushing ${records.length} records to firehose`)

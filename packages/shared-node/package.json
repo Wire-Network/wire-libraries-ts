@@ -2,6 +2,9 @@
   "name": "@wireio/shared-node",
   "version": "1.0.0",
   "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
   "type": "module",
   "types": "lib/index.d.ts",
   "module": "lib/index.js",

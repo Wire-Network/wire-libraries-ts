@@ -1,9 +1,9 @@
 import { FirehoseClient, PutRecordBatchCommand } from "@aws-sdk/client-firehose"
-import { Deferred } from "../../../helpers"
-import { getInternalLogger } from "../../InternalLogger"
+import { Deferred } from "../../../helpers/index.js"
+import { getInternalLogger } from "../../InternalLogger.js"
 import EventEmitter3 from "eventemitter3"
 
-const API_BASE = "https://dxwtjurpvh.execute-api.us-east-1.amazonaws.com"
+const API_BASE = "https://log-ingest.shared.wire-dev.com"
 const CRED_BUFFER_PADDING_MS = 3 * 60 * 1000 // 3 minutes
 
 const log = getInternalLogger(import.meta.filename)
@@ -60,10 +60,6 @@ export class AWSFirehoseCredentialManager extends EventEmitter3<AWSFirehoseCrede
   }
 
   private async load(): Promise<AWSCredentials> {
-    let creds = this.getCredentials()
-    if (creds) {
-      return creds
-    }
     if (this.loadDeferred && !this.loadDeferred.isRejected())
       return this.loadDeferred.promise
 

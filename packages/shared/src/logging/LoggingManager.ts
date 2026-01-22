@@ -1,13 +1,13 @@
 import { isNumber, isObject, isString } from "../guards/index.js"
 import { Option } from "prelude-ts"
 import { flatten, isEmpty, min, negate } from "lodash"
-import type { Appender } from "./Appender"
+import type { Appender } from "./Appender.js"
 import { ConsoleAppender } from "./appenders/ConsoleAppender.js"
 import { Level, LevelKind, LevelThresholds } from "./Level.js"
 import { Logger, LoggerOptions } from "./Logger.js"
-import type { LogRecord } from "./LogRecord"
+import type { LogRecord } from "./LogRecord.js"
 import { LogContext, LogContextContainer } from "./context/index.js"
-import { flow, get, nth } from "lodash/fp"
+import { flow, get, nth } from "lodash/fp.js"
 
 export type CategoryMatch = RegExp | string
 
