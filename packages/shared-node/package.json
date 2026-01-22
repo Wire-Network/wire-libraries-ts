@@ -1,10 +1,10 @@
 {
   "name": "@wireio/shared-node",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "publishConfig": {
     "access": "restricted"
-  },  
+  },
   "files": [
     "lib",
     "README.md"
