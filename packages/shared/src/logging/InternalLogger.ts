@@ -25,4 +25,6 @@ export function setInternalLoggerThresholdLevel(level: LevelKind): void {
   getInternalLogger().setOverrideLevel(level)
 }
 
-;(window as any).setInternalLoggerThresholdLevel = setInternalLoggerThresholdLevel
+if (typeof window !== "undefined"){
+  ;(window as any).setInternalLoggerThresholdLevel = setInternalLoggerThresholdLevel
+}

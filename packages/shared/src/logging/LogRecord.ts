@@ -1,4 +1,5 @@
-import type { LevelKind } from "./Level"
+import type { LevelKind } from "./Level.js"
+
 
 export interface LogMetadata<Data extends {} = any> {
   url?: string
@@ -18,3 +19,4 @@ export interface LogRecord<Data extends {} = any> extends LogMetadata<Data> {
   errorMessage?: string
   errorStack?: string
 }
+

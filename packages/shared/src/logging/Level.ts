@@ -6,7 +6,7 @@ export enum Level {
   info = "info",
   warn = "warn",
   error = "error",
-  fatal = "fatal"
+  fatal = "fatal", 
 }
 
 export type LevelName = `${Level}`

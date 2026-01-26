@@ -1,9 +1,9 @@
 const path = require("path");
 const webpack = require("webpack");
 
-const FIREHOSE_CREDS_URL = process.env.FIREHOSE_CREDS_URL;
-if (!FIREHOSE_CREDS_URL || !FIREHOSE_CREDS_URL.trim().length) {
-  console.error("Error: FIREHOSE_CREDS_URL environment variable is required");
+const WIRE_PUSH_URL = process.env.WIRE_PUSH_URL;
+if (!WIRE_PUSH_URL || !WIRE_PUSH_URL.trim().length) {
+  console.error("Error: WIRE_PUSH_URL environment variable is required");
   process.exit(1);
 }
 
@@ -34,7 +34,7 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      FIREHOSE_CREDS_URL: JSON.stringify(FIREHOSE_CREDS_URL)
+      WIRE_PUSH_URL: JSON.stringify(WIRE_PUSH_URL)
     })
   ]
 };

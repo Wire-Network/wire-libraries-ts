@@ -1,14 +1,15 @@
-import { AWSFirehoseAppender, getLoggingManager, Level } from "@wireio/shared"
+import { AWSFirehoseAppender, getLoggingManager, Level, PushLogRecordsAppender } from "@wireio/shared"
 
 declare global {
-  const FIREHOSE_CREDS_URL: string
+  const WIRE_PUSH_URL: string
 }
 
 const logManager = getLoggingManager()
-logManager.addAppenders(new AWSFirehoseAppender(FIREHOSE_CREDS_URL))
+//logManager.addAppenders(new AWSFirehoseAppender(WIRE_PUSH_URL))
+logManager.addAppenders(new PushLogRecordsAppender(WIRE_PUSH_URL))
 logManager.globalMetadata = {
   env: "local",
-  app: "web-logging-example",
+  app: "web-hub-webapp",
   data: {
     globalMetaValue: "web-logging-example"
   }
