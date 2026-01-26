@@ -3,14 +3,17 @@ import EventEmitter3 from "eventemitter3"
 import { Deferred } from "../../../helpers/index.js"
 import { LogRecord } from "../../LogRecord.js"
 import { Appender } from "../../Appender.js"
+import { getInternalLogger } from "../../InternalLogger.js"
 
 // Constants for tuning (adjustable in development)
-const COOKIE_EXPIRATION_MS = 30 * 60 * 1000 // 30 minutes
+const COOKIE_EXPIRATION_MS = 5 * 60 * 1000 // 30 minutes
 const COOKIE_REFRESH_BUFFER_MS = 2 * 60 * 1000 // Refresh 2 minutes before expiration
-const FLUSH_QUEUE_DEPTH = 100
-const FLUSH_INTERVAL_MS = 10 * 1000 // 10 seconds
+const FLUSH_QUEUE_DEPTH = 1000
+const FLUSH_INTERVAL_MS = 5 * 1000 // 10 seconds
 const LOG_QUEUE_MAX_RECORDS = 10000
 const COOKIE_NAME = "wire_logs_id"
+
+const log = getInternalLogger()
 
 interface PushLogRecordsCredentialManagerEventMap {
   received: () => void
@@ -44,18 +47,7 @@ export class PushLogRecordsCredentialManager extends EventEmitter3<PushLogRecord
       return false
     }
 
-    return this.hasCookie()
-  }
-
-  /**
-   * Check if the cookie exists in the browser
-   */
-  private hasCookie(): boolean {
-    if (typeof document === "undefined") {
-      return false
-    }
-
-    return document.cookie.split(";").some((item) => item.trim().startsWith(`${COOKIE_NAME}=`))
+    return true
   }
 
   /**
@@ -134,7 +126,7 @@ export class PushLogRecordsCredentialManager extends EventEmitter3<PushLogRecord
 
       return true
     } catch (err) {
-      console.debug("Failed to fetch push log credentials", err)
+      log.warn("Failed to fetch push log credentials", err)
       deferred.reject(err)
       this.credentialDeferred = null
       return false
@@ -154,7 +146,7 @@ export class PushLogRecordsCredentialManager extends EventEmitter3<PushLogRecord
       this.credentialDeferred = null
       this.fetchCredentials().catch(() => {
         // Log but don't throw - will retry on next request
-        console.debug("Scheduled credential refresh failed")
+        log.debug("Scheduled credential refresh failed")
       })
     }, refreshIn)
   }
@@ -266,7 +258,7 @@ export class PushLogRecordsAppender<Record extends LogRecord = LogRecord> implem
     // Ensure we have valid credentials
     const hasCredentials = await this.credentialManager.ensureCredentials()
     if (!hasCredentials) {
-      console.debug("Failed to push log records", "No valid credentials available")
+      log.debug("Failed to push log records", "No valid credentials available")
       return
     }
 
@@ -275,15 +267,16 @@ export class PushLogRecordsAppender<Record extends LogRecord = LogRecord> implem
     try {
       // Take all pending records for this flush
       const records = this.pendingRecords.splice(0, this.pendingRecords.length)
+      const payload = { records: records.map(record => JSON.stringify(record)) }
 
       const response = await fetch(this.endpointUrl, {
         method: "PUT",
         mode: "cors",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify(records),
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
@@ -294,7 +287,7 @@ export class PushLogRecordsAppender<Record extends LogRecord = LogRecord> implem
 
       deferred.resolve()
     } catch (err) {
-      console.debug("Failed to push log records", err)
+      log.debug("Failed to push log records", err)
       deferred.reject(err)
     } finally {
       this.flushDeferred = null

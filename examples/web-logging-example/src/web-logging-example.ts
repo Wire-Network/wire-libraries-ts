@@ -8,8 +8,8 @@ const logManager = getLoggingManager()
 //logManager.addAppenders(new AWSFirehoseAppender(WIRE_PUSH_URL))
 logManager.addAppenders(new PushLogRecordsAppender(WIRE_PUSH_URL))
 logManager.globalMetadata = {
-  env: "local",
-  app: "web-hub-webapp",
+  env: "dev",
+  app: "wire-hub-webapp",
   data: {
     globalMetaValue: "web-logging-example"
   }
