@@ -1,5 +1,5 @@
 {
-  "name": "@wireio/shared-project",
+  "name": "@wireio/wire-libraries-project",
   "private": true,
   "scripts": {
     "build": "tsc -b tsconfig.json",

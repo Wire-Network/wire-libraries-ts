@@ -1,7 +1,7 @@
 # Push Log Records Appender
 
 This is a logging appender (src @packages/shared/src/logging/appenders/push/PushLogRecordsAppender.ts), which is a client to the
-`PushLogRecordsLambda` (located at `../wire-cloud-infra/lib/lambda/log-ingest/src/PushLogRecordsLambda.ts` from the root of `wire-shared-ts` repo) you have created previously.
+`PushLogRecordsLambda` (located at `../wire-cloud-infra/lib/lambda/log-ingest/src/PushLogRecordsLambda.ts` from the root of `wire-libraries-ts` repo) you have created previously.
 
 Use the AWS firehose appender as a template @../aws-firehose/AWSFirehoseAppender.ts
 

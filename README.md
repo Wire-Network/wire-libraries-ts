@@ -1,4 +1,4 @@
-# Wire Shared TypeScript
+# Wire Libraries TypeScript
 
 A monorepo containing shared TypeScript libraries for Wire applications, providing cross-platform utilities for logging, type guards, async helpers, and blockchain SDK primitives.
 
@@ -41,7 +41,7 @@ pnpm test
 ## Project Structure
 
 ```
-wire-shared-ts/
+wire-libraries-ts/
 ├── packages/
 │   ├── shared/           # Core shared utilities
 │   ├── shared-web/       # Web-specific utilities
