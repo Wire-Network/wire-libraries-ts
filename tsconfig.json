@@ -19,6 +19,9 @@
     },
     {
       "path": "./packages/shared-node/tsconfig.json"
+    },    
+    {
+      "path": "./packages/sdk-core/tsconfig.json"
     },
     {
       "path": "./examples/web-logging-example/tsconfig.json"
