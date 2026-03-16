@@ -232,7 +232,18 @@ function decodeKey(value: string) {
         break
     }
 
-    const data = Base58.decodeRipemd160Check(parts[2], size, type)
+    let data: Bytes
+    try {
+      data = Base58.decodeRipemd160Check(parts[2], size, type)
+    } catch (e) {
+      try {
+        let hex = parts[2]
+        if (hex.startsWith("0x")) hex = hex.slice(2)
+        data = new Bytes(hexToArray(hex))
+      } catch (e2) {
+        throw e
+      }
+    }
     return { type, data }
   } else {
     // WIF format

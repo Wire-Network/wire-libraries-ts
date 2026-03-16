@@ -139,7 +139,9 @@ export class PublicKey implements ABISerializableObject {
       )
     }
 
-    // return `PUB_${this.type}_${Base58.encodeRipemd160Check(this.data, this.type)}`;
+    if (this.type === KeyType.K1 || this.type === KeyType.R1) {
+      return `PUB_${this.type}_${Base58.encodeRipemd160Check(this.data, this.type)}`
+    }
     return `PUB_${this.type}_${arrayToHex(this.data.array)}`
   }
 

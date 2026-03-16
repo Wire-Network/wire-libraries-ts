@@ -24,6 +24,12 @@
       "path": "./packages/sdk-core/tsconfig.json"
     },
     {
+      "path": "./packages/wallet-ext-sdk/tsconfig.json"
+    },
+    {
+      "path": "./packages/wallet-browser-ext/tsconfig.json"
+    },
+    {
       "path": "./examples/web-logging-example/tsconfig.json"
     },
   ]

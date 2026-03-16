@@ -3,7 +3,7 @@ import { ripemd160, sha256, sha512 } from "hash.js"
 import { ABIDecoder } from "../serializer/Decoder"
 import { ABIEncoder } from "../serializer/Encoder"
 import { ABISerializableObject } from "../serializer/Serializable"
-import { arrayEquals, arrayToHex, isInstanceOf } from "../Utils"
+import { arrayEquals, arrayToHex, hexToArray, isInstanceOf } from "../Utils"
 
 import { Bytes, BytesType } from "./Bytes"
 
@@ -12,7 +12,11 @@ type ChecksumType = Checksum | BytesType
 class Checksum implements ABISerializableObject {
   static abiName = "__checksum"
   static byteSize: number
-
+  
+  static isChecksumType(value: any): value is Checksum {
+    return value?.array && (Array.isArray(value.array) || typeof value.array === "object")
+  }
+  
   static from<T extends typeof Checksum>(
     this: T,
     value: ChecksumType
@@ -23,13 +27,20 @@ class Checksum implements ABISerializableObject {
       return value
     }
 
-    if (isInstanceOf(value, Checksum)) {
+    if (isInstanceOf(value, Checksum) || Checksum.isChecksumType(value)) {
       return new this(value.array)
     }
 
     return new this(Bytes.from(value).array)
   }
-
+  static fromHexString(value: string) {
+    if (value.length !== this.byteSize * 2) {
+      throw new Error(
+        `Invalid checksum hex string, expected ${this.byteSize * 2} characters got ${value.length}`
+      )
+    }
+    return new this(hexToArray(value))
+  }
   static fromABI<T extends typeof Checksum>(
     this: T,
     decoder: ABIDecoder

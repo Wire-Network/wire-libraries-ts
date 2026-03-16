@@ -1,0 +1,12 @@
+{
+  "extends": "../../etc/tsconfig/tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib",
+    "types": ["chrome"]
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../sdk-core/tsconfig.json" }
+  ]
+}

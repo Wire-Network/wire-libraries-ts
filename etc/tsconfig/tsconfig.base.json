@@ -57,6 +57,12 @@
       "@wireio/sdk-core/*": [
         "./packages/sdk-core/src/*"
       ],
+      "@wireio/wallet-ext-sdk": [
+        "./packages/wallet-ext-sdk/src"
+      ],
+      "@wireio/wallet-ext-sdk/*": [
+        "./packages/wallet-ext-sdk/src/*"
+      ],
     }
   },
   "include": [

@@ -1,0 +1,21 @@
+{
+  "name": "@wireio/wallet-ext-sdk",
+  "description": "Client SDK for the Wire Wallet browser extension",
+  "version": "0.1.0",
+  "private": false,
+  "publishConfig": { "access": "public" },
+  "files": ["lib"],
+  "type": "module",
+  "types": "lib/index.d.ts",
+  "module": "lib/index.js",
+  "license": "FSL-1.1-Apache-2.0",
+  "scripts": {
+    "build": "tsc -b tsconfig.json",
+    "build:dev": "tsc -b tsconfig.json -w",
+    "test": "jest"
+  },
+  "dependencies": {
+    "tslib": "^2.8.1",
+    "@wireio/sdk-core": "workspace:*"
+  }
+}
