@@ -2,7 +2,10 @@ import { WireWalletClient, WalletNotFoundError } from "@wireio/wallet-ext-sdk"
 
 const mockProvider = {
   isWireWallet: true as const,
-  request: jest.fn(),
+  version: "1.0.0",
+  isUnlocked: jest.fn(),
+  getAccounts: jest.fn(),
+  signTransaction: jest.fn(),
   on: jest.fn(),
   removeListener: jest.fn(),
 }
@@ -12,7 +15,9 @@ describe("WireWalletClient", () => {
 
   beforeEach(() => {
     client = new WireWalletClient()
-    mockProvider.request.mockReset()
+    mockProvider.isUnlocked.mockReset()
+    mockProvider.getAccounts.mockReset()
+    mockProvider.signTransaction.mockReset()
     mockProvider.on.mockReset()
     mockProvider.removeListener.mockReset()
     delete window.__WIRE_WALLET__
@@ -38,21 +43,9 @@ describe("WireWalletClient", () => {
       await expect(client.getAccounts()).rejects.toThrow(WalletNotFoundError)
     })
 
-    test("getActiveAccount() throws WalletNotFoundError", async () => {
-      await expect(client.getActiveAccount()).rejects.toThrow(WalletNotFoundError)
-    })
-
-    test("getPublicKeys() throws WalletNotFoundError", async () => {
-      await expect(client.getPublicKeys()).rejects.toThrow(WalletNotFoundError)
-    })
-
-    test("getEndpoints() throws WalletNotFoundError", async () => {
-      await expect(client.getEndpoints()).rejects.toThrow(WalletNotFoundError)
-    })
-
     test("signTransaction() throws WalletNotFoundError", async () => {
       await expect(
-        client.signTransaction({ serializedTransaction: "abcd" })
+        client.signTransaction({ digest: "abcd", accountId: "test" })
       ).rejects.toThrow(WalletNotFoundError)
     })
 
@@ -70,67 +63,35 @@ describe("WireWalletClient", () => {
   })
 
   describe("getAccounts()", () => {
-    test("calls provider.request with correct method", async () => {
+    test("calls provider.getAccounts", async () => {
       window.__WIRE_WALLET__ = mockProvider
-      mockProvider.request.mockResolvedValue([])
-      await client.getAccounts()
-      expect(mockProvider.request).toHaveBeenCalledWith({ method: "wire_getAccounts" })
-    })
-  })
-
-  describe("getActiveAccount()", () => {
-    test("calls provider.request with correct method", async () => {
-      window.__WIRE_WALLET__ = mockProvider
-      mockProvider.request.mockResolvedValue(null)
-      await client.getActiveAccount()
-      expect(mockProvider.request).toHaveBeenCalledWith({ method: "wire_getActiveAccount" })
-    })
-  })
-
-  describe("getPublicKeys()", () => {
-    test("calls provider.request with correct method", async () => {
-      window.__WIRE_WALLET__ = mockProvider
-      mockProvider.request.mockResolvedValue([])
-      await client.getPublicKeys()
-      expect(mockProvider.request).toHaveBeenCalledWith({ method: "wire_getPublicKeys" })
-    })
-  })
-
-  describe("getEndpoints()", () => {
-    test("calls provider.request with correct method", async () => {
-      window.__WIRE_WALLET__ = mockProvider
-      mockProvider.request.mockResolvedValue([])
-      await client.getEndpoints()
-      expect(mockProvider.request).toHaveBeenCalledWith({ method: "wire_getEndpoints" })
+      mockProvider.getAccounts.mockResolvedValue([])
+      const result = await client.getAccounts()
+      expect(mockProvider.getAccounts).toHaveBeenCalled()
+      expect(result).toEqual([])
     })
   })
 
   describe("signTransaction()", () => {
-    test("calls provider.request with correct method and params", async () => {
+    test("calls provider.signTransaction with digest and accountId", async () => {
       window.__WIRE_WALLET__ = mockProvider
       const request = {
-        serializedTransaction: "deadbeef",
-        chainId: "chain-123",
-        requiredKeys: ["PUB_K1_abc"],
+        digest: "deadbeef",
+        accountId: "account-123",
       }
-      mockProvider.request.mockResolvedValue({
-        signatures: ["SIG_K1_xyz"],
-        serializedTransaction: "deadbeef",
-      })
-      await client.signTransaction(request)
-      expect(mockProvider.request).toHaveBeenCalledWith({
-        method: "wire_signTransaction",
-        params: [request],
-      })
+      mockProvider.signTransaction.mockResolvedValue("SIG_K1_xyz")
+      const result = await client.signTransaction(request)
+      expect(mockProvider.signTransaction).toHaveBeenCalledWith("deadbeef", "account-123")
+      expect(result).toEqual({ signatures: ["SIG_K1_xyz"] })
     })
   })
 
   describe("isUnlocked()", () => {
-    test("calls provider.request with correct method", async () => {
+    test("calls provider.isUnlocked", async () => {
       window.__WIRE_WALLET__ = mockProvider
-      mockProvider.request.mockResolvedValue(true)
+      mockProvider.isUnlocked.mockResolvedValue(true)
       const result = await client.isUnlocked()
-      expect(mockProvider.request).toHaveBeenCalledWith({ method: "wire_isUnlocked" })
+      expect(mockProvider.isUnlocked).toHaveBeenCalled()
       expect(result).toBe(true)
     })
   })

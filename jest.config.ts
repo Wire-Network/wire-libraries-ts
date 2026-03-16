@@ -6,7 +6,9 @@ const config: Config = {
     "packages/shared-node",
     "packages/shared-web",
     "packages/sdk-core",
-  ],
+    "packages/wallet-browser-ext",
+    "packages/wallet-ext-sdk"
+  ]
 }
 
 export default config
