@@ -1,6 +1,6 @@
 {
   "name": "@wireio/shared-web",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "private": true,
   "publishConfig": {
     "access": "restricted"
