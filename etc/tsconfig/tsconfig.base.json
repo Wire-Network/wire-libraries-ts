@@ -16,7 +16,6 @@
     "moduleResolution": "bundler",
     "composite": true,
     "incremental": true,
-    "skipDefaultLibCheck": true,
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": false,
@@ -27,10 +26,12 @@
     "experimentalDecorators": true,
     "esModuleInterop": true,
     "isolatedModules": true,
-    "inlineSourceMap": false,
-    "inlineSources": false,
-    "sourceMap": true,
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "sourceMap": false,
     "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "preserveWatchOutput": true,
     "target": "ES2022",
     "paths": {
       "@wireio/shared": [

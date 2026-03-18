@@ -334,7 +334,6 @@ export class Permission extends Struct {
     threshold: number
     keys: { key: string; weight: number }[]
     accounts: any[]
-    waits: any[]
   }
 }
 
