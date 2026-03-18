@@ -1,7 +1,7 @@
 {
   "name": "@wireio/sdk-core",
   "description": "Library for working with Wire powered blockchains.",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "private": false,
   "publishConfig": {
     "access": "public"
