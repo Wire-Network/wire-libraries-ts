@@ -20,7 +20,7 @@
   "devDependencies": {
     "@types/lodash": "4.17.23",
     "@types/node": "^22.15.3",
-    "typescript": "5.9.2"
+    "typescript": "6.0.2"
   },
   "dependencies": {
     "@wireio/shared": "workspace:*"

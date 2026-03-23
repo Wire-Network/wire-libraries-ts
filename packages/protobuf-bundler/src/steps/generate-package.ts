@@ -6,8 +6,8 @@ import { renderTemplate } from "../util/templates.js"
 import { deepMerge } from "../util/merge.js"
 import type { Target } from "./run-protoc.js"
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = Path.dirname(__filename)
+// const __filename = fileURLToPath(import.meta.url)
+// const __dirname = Path.dirname(__filename)
 
 /**
  * Read the bundler's own package.json to extract dependency versions.

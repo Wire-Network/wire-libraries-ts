@@ -3,9 +3,9 @@
   "version": "1.0.5",
   "description": "protoc plugin generating Rust encode/decode modules from protobuf3 definitions for Solana programs",
   "private": false,
-  "type": "module",
+  "type": "commonjs",
   "types": "lib/index.d.ts",
-  "module": "dist/bundle/protoc-gen-solana.mjs",
+  "main": "dist/bundle/protoc-gen-solana.cjs",
   "bin": {
     "protoc-gen-solana": "dist/bin/protoc-gen-solana"
   },
@@ -17,9 +17,10 @@
     "build": "pnpm run compile && pnpm run bundle",
     "build:dev": "concurrently npm:compile:dev npm:bundle:dev",
     "dev": "pnpm run build:dev",    
-    "dist": "pnpm build && pkg -c package.json --output dist/bin/protoc-gen-solana -d --options experimental-require-module dist/bundle/protoc-gen-solana.mjs",
+    "dist": "pnpm build && pkg -c package.json --output dist/bin/protoc-gen-solana -d dist/bundle/protoc-gen-solana.cjs",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "generate:test": "npm run dist && mkdir -p ./dist/tests/generated && npx protoc --plugin=protoc-gen-solana=$PWD/dist/bin/protoc-gen-solana --solana_out=./dist/tests/generated tests/protos/*.proto",
+    "postinstall": "pnpm run dist",
     "clean": "rm -rf lib dist",
     "test": "jest"
   },

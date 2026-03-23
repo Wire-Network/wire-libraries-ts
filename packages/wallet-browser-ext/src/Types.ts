@@ -1,7 +1,5 @@
 export { KeyType } from "@wireio/sdk-core"
 
-import "./ModuleResTypeDeclarations"
-
 export enum ChainKind {
   WIRE = "WIRE",
   ETHEREUM = "ETHEREUM",

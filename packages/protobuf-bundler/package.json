@@ -3,9 +3,9 @@
   "version": "1.0.7",
   "description": "CLI that fetches .proto files from GitHub, runs protoc with Wire plugins, and generates publishable packages",
   "private": false,
-  "type": "module",
+  "type": "commonjs",
   "types": "lib/index.d.ts",
-  "module": "dist/bundle/wire-protobuf-bundler.mjs",
+  "main": "dist/bundle/wire-protobuf-bundler.cjs",
   "bin": {
     "wire-protobuf-bundler": "dist/bin/wire-protobuf-bundler"
   },
@@ -15,8 +15,9 @@
     "bundle": "node esbuild.config.js",
     "bundle:dev": "node esbuild.config.js -w",
     "dev": "concurrently npm:build:dev npm:bundle:dev",
-    "dist": "pnpm build && pnpm bundle && pkg -c package.json --output dist/bin/wire-protobuf-bundler --options experimental-require-module dist/bundle/wire-protobuf-bundler.mjs",
+    "dist": "pnpm build && pnpm bundle && pkg -c package.json --output dist/bin/wire-protobuf-bundler dist/bundle/wire-protobuf-bundler.cjs",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "postinstall": "pnpm run dist",
     "clean": "rm -rf lib dist",
     "test": "jest"
   },

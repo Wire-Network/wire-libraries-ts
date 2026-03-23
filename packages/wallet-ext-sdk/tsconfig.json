@@ -2,7 +2,9 @@
   "extends": "../../etc/tsconfig/tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "lib"
+    "outDir": "lib",
+    "moduleResolution": "bundler",
+    "module": "ESNext"
   },
   "include": ["src"]
 }

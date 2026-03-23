@@ -10,6 +10,7 @@ const config: Config = {
       "ts-jest",
       {
         tsconfig: "<rootDir>/../../etc/tsconfig/tsconfig.base.jest.json",
+        
       },
     ],
   },

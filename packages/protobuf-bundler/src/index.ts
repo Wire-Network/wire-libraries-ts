@@ -1,10 +1,10 @@
-import yargs from "yargs"
+import Yargs from "yargs"
 import { hideBin } from "yargs/helpers"
 import { log, setLogLevel } from "./util/logger.js"
 import { bundleCommand } from "./commands/bundle.js"
 
 async function main(): Promise<void> {
-  const argv = await yargs(hideBin(process.argv))
+  const argv = await Yargs(hideBin(process.argv))
     .scriptName("protobuf-bundler")
     .usage(
       "$0 --repo <repo> --target <target> --output <dir> --package-name <name>"

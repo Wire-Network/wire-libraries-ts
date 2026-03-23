@@ -6,9 +6,11 @@ import { log } from "../util/logger.js"
 import { renderTemplate } from "../util/templates.js"
 import { resolvePluginBin, findProtoRoot } from "./run-protoc.js"
 import { removeSymLinkDirectory } from "../util/filesystem-helper.js"
+import { tmpdir } from "node:os"
+import Assert from "node:assert"
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = Path.dirname(__filename)
+// const __filename = fileURLToPath(import.meta.url)
+// const __dirname = Path.dirname(__filename)
 
 export interface GenerateTypescriptOptions {
   protoFiles: string[]
@@ -99,9 +101,24 @@ export async function generateTypescript(
 
   log.info("Running protoc for TypeScript: npx protoc %s", args.join(" "))
 
+  // @protobuf-ts/plugin@2.11.1 uses deprecated ts.create* factory APIs that
+  // were removed in TypeScript 5.x. Inject a compatibility shim via
+  // NODE_OPTIONS so it is loaded before the plugin imports typescript.
+  // const shimBasePath = "lib/TypescriptFactoryShim.js",
+  //   shimPath = Path.resolve(__dirname, "../..", shimBasePath),
+  //   shimContent = Fs.readFileSync(shimPath, "utf-8"),
+  //   shimTmpDir = Path.join(tmpdir(),"wire-proto-"),
+  //   shimTmpFile = Path.join(shimTmpDir, "ts-factory-shim.js")
+  // Fs.mkdtempSync(shimTmpDir)
+  // Assert.ok(Fs.lstatSync(shimTmpDir).isDirectory())
+  //
+  const existingNodeOpts = process.env.NODE_OPTIONS || ""
+  // const nodeOptions = `--require ${shimPath} ${existingNodeOpts}`.trim()
+
   try {
     execFileSync("npx", ["protoc", ...args], {
-      stdio: ["pipe", "pipe", "inherit"]
+      stdio: ["pipe", "pipe", "inherit"],
+      // env: { ...process.env, NODE_OPTIONS: nodeOptions }
     })
   } catch (err: any) {
     throw new Error(

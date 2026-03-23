@@ -3,8 +3,8 @@ import Path from "node:path"
 import { fileURLToPath } from "node:url"
 import Handlebars from "handlebars"
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = Path.dirname(__filename)
+// const __filename = fileURLToPath(import.meta.url)
+// const __dirname = Path.dirname(__filename)
 
 function resolveTemplatesDir(): string {
   const candidates = [

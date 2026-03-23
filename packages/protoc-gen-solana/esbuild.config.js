@@ -1,5 +1,5 @@
-import esbuild from 'esbuild'
-import { chmodSync } from 'fs'
+const esbuild = require('esbuild')
+const { chmodSync } = require('fs')
 
 const shouldWatch = process.argv.includes('--watch') || process.argv.includes('-w') ||
   process.env.WATCH === "1"
@@ -19,28 +19,33 @@ const chmodPlugin = {
   }
 }
 
-const ctx = await esbuild.context({
-  entryPoints: ["src/index.ts"],
-  bundle: true,
-  platform: "node",
-  target: "node24",
-  format: "esm",
-  outfile: "dist/bundle/protoc-gen-solana.mjs",
-  sourcemap: true,
-  minify: false,
-  banner: {
-    js: [
-      "#!/usr/bin/env node",
-    ].join("\n")
-  },
-  external: [],
-  logLevel: "info",
-  plugins: [chmodPlugin]
-})
+async function main() {
+  const ctx = await esbuild.context({
+    entryPoints: ["src/index.ts"],
+    bundle: true,
+    platform: "node",
+    target: "node24",
+    format: "cjs",
+    outfile: "dist/bundle/protoc-gen-solana.cjs",
+    sourcemap: true,
+    minify: false,
+    banner: {
+      js: "#!/usr/bin/env node\nvar import_meta_url = require('url').pathToFileURL(__filename).href;"
+    },
+    define: {
+      "import.meta.url": "import_meta_url",
+    },
+    external: [],
+    logLevel: "info",
+    plugins: [chmodPlugin]
+  })
 
-if (shouldWatch) {
-  await ctx.watch()
-} else {
-  await ctx.rebuild()
-  await ctx.dispose()
+  if (shouldWatch) {
+    await ctx.watch()
+  } else {
+    await ctx.rebuild()
+    await ctx.dispose()
+  }
 }
+
+main()

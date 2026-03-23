@@ -1,3 +1,4 @@
+import "./TypescriptFactoryShim.js"
 import { log } from "./util/logger.js"
 import { runPlugin } from "./plugin.js"
 

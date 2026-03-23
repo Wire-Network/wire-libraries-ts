@@ -3,7 +3,11 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "lib",
-    "types": ["chrome"]
+    
+    "types": [
+      "chrome",
+//      "./src/ModuleResTypeDeclarations.d.ts"
+    ]
   },
   "include": ["src"],
   "references": [

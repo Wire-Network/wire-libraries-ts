@@ -3,6 +3,17 @@ import Path from "node:path"
 import { log } from "./logger.js"
 import Assert from "node:assert"
 
+export function resolveCandidatePath(
+  dirname: string,
+  ...candidates: string[]
+): string {
+  const candidatePaths = candidates.map(c => Path.join(dirname, c))
+  const c = candidatePaths.find(p => Fs.existsSync(p))
+  if (!c) {
+    throw new Error(`No candidate found: ${candidatePaths.join(", ")}`)
+  }
+  return c
+}
 
 /**
  * Checks whether a file or directory exists at the given path.
@@ -29,11 +40,9 @@ export async function exists(path: string): Promise<boolean> {
  * @returns `true` if the path no longer exists after the operation, `false` otherwise.
  */
 export async function removeSymLinkDirectory(path: string): Promise<boolean> {
-  if (!await exists(path))
-    return true
+  if (!(await exists(path))) return true
 
   try {
-
     const stats = await Fs.promises.lstat(path)
     Assert.ok(stats, "Failed to get stats for path")
 
@@ -53,5 +62,5 @@ export async function removeSymLinkDirectory(path: string): Promise<boolean> {
     log.warn(`Failed to clean up node_modules at: ${path}`, err)
   }
 
-  return !await exists(path)
+  return !(await exists(path))
 }
