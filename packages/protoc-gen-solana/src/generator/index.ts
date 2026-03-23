@@ -1,0 +1,5 @@
+export { generateRsFile } from "./message.js"
+export { generateRuntime } from "./runtime.js"
+export type { MessageDescriptor } from "./message.js"
+export type { FieldInfo } from "./field.js"
+export { PROTO_TYPE_MAP, WireType, resolveRustType, fieldTag } from "./type-map.js"

@@ -1,5 +1,6 @@
 export { KeyType } from "@wireio/sdk-core"
-import { Checksum256 } from "@wireio/sdk-core"
+
+import "./ModuleResTypeDeclarations"
 
 export enum ChainKind {
   WIRE = "WIRE",

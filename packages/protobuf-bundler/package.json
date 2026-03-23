@@ -1,0 +1,58 @@
+{
+  "name": "@wireio/wire-protobuf-bundler",
+  "version": "1.0.7",
+  "description": "CLI that fetches .proto files from GitHub, runs protoc with Wire plugins, and generates publishable packages",
+  "private": false,
+  "type": "module",
+  "types": "lib/index.d.ts",
+  "module": "dist/bundle/wire-protobuf-bundler.mjs",
+  "bin": {
+    "wire-protobuf-bundler": "dist/bin/wire-protobuf-bundler"
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.json",
+    "build:dev": "tsc -b tsconfig.json -w",
+    "bundle": "node esbuild.config.js",
+    "bundle:dev": "node esbuild.config.js -w",
+    "dev": "concurrently npm:build:dev npm:bundle:dev",
+    "dist": "pnpm build && pnpm bundle && pkg -c package.json --output dist/bin/wire-protobuf-bundler --options experimental-require-module dist/bundle/wire-protobuf-bundler.mjs",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "clean": "rm -rf lib dist",
+    "test": "jest"
+  },
+  "pkg": {
+    "assets": [
+      "templates/**/*",
+      "package.json"
+    ]
+  },
+  "files": [
+    "lib",
+    "dist/bin",
+    "dist/bundle",
+    "templates",
+    "README.md"
+  ],
+  "dependencies": {
+    "@protobuf-ts/plugin": "^2.11.1",
+    "@protobuf-ts/runtime": "^2.11.1",
+    "@wireio/protoc-gen-solana": "workspace:*",
+    "@wireio/protoc-gen-solidity": "workspace:*",
+    "@yao-pkg/pkg": "^6.14.1",
+    "degit": "^2.8.4",
+    "handlebars": "^4.7.8",
+    "protoc": "^34.0.0",
+    "tracer": "^1.3.0",
+    "typescript": "^6.0.2",
+    "yargs": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "@types/yargs": "^17.0.35",
+    "esbuild": "^0.27.3",
+    "prettier": "^3.8.1"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "{{packageName}}",
+  "version": "{{version}}",
+  "description": "Auto-generated protobuf types for Solidity",
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "contracts",
+    "**/*.ts",
+    "**/*.js",
+    "**/*.d.ts",
+    "**/*.d.ts.map",
+    "*.js",
+    "README.md"
+  ],
+  "dependencies": {
+    "@protobuf-ts/runtime": "{{protobufTsRuntimeVersion}}"
+  }{{#if additionalFields}},
+{{#each additionalFields}}
+  "{{@key}}": {{{json this}}}{{#unless @last}},{{/unless}}
+{{/each}}
+{{/if}}
+}

@@ -1,0 +1,24 @@
+[package]
+name = "{{packageName}}"
+version = "{{version}}"
+edition = "2021"
+description = "Auto-generated protobuf types for {{packageName}}"
+{{#if license}}
+license = "{{license}}"
+{{/if}}
+{{#if repository}}
+repository = "{{repository}}"
+{{/if}}
+{{#if authors}}
+authors = [{{#each authors}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}]
+{{/if}}
+
+[features]
+default = []
+borsh = ["dep:borsh"]
+
+[dependencies]
+borsh = { version = "1", optional = true }
+{{#each dependencies}}
+{{@key}} = "{{this}}"
+{{/each}}
