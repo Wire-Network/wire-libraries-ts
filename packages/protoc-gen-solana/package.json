@@ -1,6 +1,6 @@
 {
   "name": "@wireio/protoc-gen-solana",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "protoc plugin generating Rust encode/decode modules from protobuf3 definitions for Solana programs",
   "private": false,
   "type": "commonjs",
@@ -16,7 +16,7 @@
     "bundle:dev": "node esbuild.config.js -w",
     "build": "pnpm run compile && pnpm run bundle",
     "build:dev": "concurrently npm:compile:dev npm:bundle:dev",
-    "dev": "pnpm run build:dev",    
+    "dev": "pnpm run build:dev",
     "dist": "pnpm build && pkg -c package.json --output dist/bin/protoc-gen-solana -d dist/bundle/protoc-gen-solana.cjs",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "generate:test": "npm run dist && mkdir -p ./dist/tests/generated && npx protoc --plugin=protoc-gen-solana=$PWD/dist/bin/protoc-gen-solana --solana_out=./dist/tests/generated tests/protos/*.proto",

@@ -1,7 +1,7 @@
 {
   "name": "@wireio/web-logging-example",
   "private": true,
-  "version": "1.0.15",
+  "version": "1.0.16",
   "scripts": {
     "build": "webpack",
     "build:dev": "webpack serve --mode development --port 9090 --host 0.0.0.0"
