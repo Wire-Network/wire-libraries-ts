@@ -1,4 +1,6 @@
-# protoc-gen-solana
+# @wireio/protoc-gen-solana
+
+[![npm](https://img.shields.io/npm/v/@wireio/protoc-gen-solana)](https://www.npmjs.com/package/@wireio/protoc-gen-solana)
 
 A `protoc` plugin that generates Rust protobuf encode/decode modules from proto3 definitions, optimized for Solana programs.
 
@@ -9,18 +11,20 @@ Given a `.proto` file, the plugin outputs:
 
 Generated code targets minimal allocations and efficient compute, suitable for Solana's on-chain constraints.
 
+> Part of the [`wire-libraries-ts`](../../README.md) monorepo.
+
 ## Install
 
 ```bash
 npm install @wireio/protoc-gen-solana
 ```
 
-Requires Node >= 24 on your PATH.
+Requires Node >= 24.
 
 ## Usage
 
 ```bash
-[npx] protoc \
+npx protoc \
   --plugin=protoc-gen-solana=./node_modules/.bin/protoc-gen-solana \
   --solana_out=./generated \
   path/to/your.proto
@@ -31,11 +35,11 @@ Requires Node >= 24 on your PATH.
 Pass parameters via `--solana_opt`:
 
 ```bash
-[npx] protoc --solana_opt=log_level=debug ...
+npx protoc --solana_opt=log_level=debug ...
 ```
 
-| Parameter   | Values                                          | Default |
-|-------------|-------------------------------------------------|---------|
+| Parameter   | Values                                           | Default |
+|-------------|--------------------------------------------------|---------|
 | `log_level` | `log`, `trace`, `debug`, `info`, `warn`, `error` | `info`  |
 
 ## Example
@@ -78,19 +82,23 @@ impl SolanaAccount {
 }
 ```
 
-## Supported Proto3 Features
+## Type Mapping
 
-| Feature | Rust Representation |
-|---|---|
-| Scalar types (int32, uint64, bool, string, bytes, float, double, etc.) | Native Rust types (`i32`, `u64`, `bool`, `String`, `Vec<u8>`, `f32`, `f64`) |
-| Nested messages | Struct with `encode()`/`decode()` |
-| Repeated fields | `Vec<T>` |
-| Map fields | Parallel `Vec<K>` + `Vec<V>` (keys and values) |
-| Enums | `i32` |
-| sint32 / sint64 | ZigZag-encoded `i32` / `i64` |
-| fixed32 / fixed64 / sfixed32 / sfixed64 | Fixed-width encoding |
-| Unknown fields | Silently skipped during decode |
-| Borsh serialization | Opt-in via `feature = "borsh"` on the generated crate |
+| Proto | Rust | Wire Type |
+|-------|------|-----------|
+| `int32` / `int64` | `i32` / `i64` | Varint |
+| `uint32` / `uint64` | `u32` / `u64` | Varint |
+| `sint32` / `sint64` | `i32` / `i64` | Varint (ZigZag) |
+| `bool` | `bool` | Varint |
+| `string` | `String` | Length-delimited |
+| `bytes` | `Vec<u8>` | Length-delimited |
+| `float` / `double` | `f32` / `f64` | Fixed |
+| `fixed32` / `fixed64` | `u32` / `u64` | Fixed |
+| `sfixed32` / `sfixed64` | `i32` / `i64` | Fixed |
+| `enum` | `i32` | Varint |
+| `message` | struct | Length-delimited |
+| `repeated T` | `Vec<T>` | Sequential tags |
+| `map<K,V>` | `Vec<K>` + `Vec<V>` | Length-delimited |
 
 ### Map Field Convention
 
@@ -113,7 +121,7 @@ For a proto file `path/to/service.proto` with `package example.nested`:
 
 ```
 <output_dir>/
-  protobuf_runtime.rs          # Always emitted — shared wire format primitives
+  protobuf_runtime.rs        # Always emitted — shared wire format primitives
   example/nested/service.rs  # Per-proto generated structs
 ```
 
@@ -123,21 +131,24 @@ The generated code imports the runtime via `use crate::protobuf_runtime::*;`, so
 
 ```bash
 pnpm install
-pnpm dev        # Watch mode (TypeScript compile + esbuild bundle)
-pnpm dist       # Full production build (compile + bundle + pkg binary)
-pnpm format     # Format source with prettier
+pnpm build        # Compile TypeScript + esbuild bundle
+pnpm dev          # Watch mode (compile + bundle)
+pnpm dist         # Full production build (compile + bundle + pkg binary)
+pnpm test         # Run unit tests
+pnpm format       # Format source with prettier
+pnpm clean        # Remove build artifacts
 ```
 
-### Testing
+### Integration Testing
 
 ```bash
 pnpm generate:test
 ```
 
-This builds the plugin binary and runs `protoc` against the proto files in `tests/protos/`, writing generated Rust output to `dist/tests/generated/`.
+Builds the plugin binary and runs `protoc` against the proto files in `tests/protos/`, writing generated Rust output to `dist/tests/generated/`.
 
 The Rust runtime (`rs/protobuf_runtime.rs`) contains `#[cfg(test)]` unit tests covering all wire format primitives.
 
 ## License
 
-See [LICENSE](LICENSE) for details.
+MIT
