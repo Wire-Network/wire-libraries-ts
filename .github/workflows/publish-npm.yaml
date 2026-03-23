@@ -27,6 +27,7 @@ jobs:
     env:
       # npm/pnpm will read this for auth when publishing
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      PKG_CACHE_PATH: /home/runner/.pkg-cache
 
     steps:
       - name: Checkout
@@ -46,7 +47,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Pre-fetch pkg base binary
-        run: npx pkg-fetch node24 linux x64
+        run: mkdir -p ${PKG_CACHE_PATH} && npx @yao-pkg/pkg-fetch node24 linux x64
 
       - name: Install deps
         run: pnpm install
