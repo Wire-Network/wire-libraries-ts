@@ -45,6 +45,9 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
+      - name: Pre-fetch pkg base binary
+        run: npx pkg-fetch node24 linux x64
+
       - name: Install deps
         run: pnpm install
 
