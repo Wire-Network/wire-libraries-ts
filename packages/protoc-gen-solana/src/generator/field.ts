@@ -1,4 +1,4 @@
-import { toSnakeCase } from "../util/names.js"
+import { toSnakeCase, toRustFieldName } from "../util/names.js"
 import {
   PROTO_TYPE_MAP,
   WireType,
@@ -34,7 +34,7 @@ export function isMessage(field: FieldInfo): boolean {
  * Generate the Rust struct member declaration for a field.
  */
 export function genStructMember(field: FieldInfo): string {
-  const rustName = toSnakeCase(field.name)
+  const rustName = toRustFieldName(field.name)
   let rustType = resolveRustType(field.type, field.typeName)
 
   if (field.mapEntry) {
@@ -62,7 +62,7 @@ export function genStructMember(field: FieldInfo): string {
  * Returns Rust statements that append encoded bytes to a `Vec<u8> buf`.
  */
 export function genFieldEncode(field: FieldInfo): string {
-  const rustName = toSnakeCase(field.name)
+  const rustName = toRustFieldName(field.name)
   const typeInfo = PROTO_TYPE_MAP[field.type]
 
   if (!typeInfo) {
@@ -96,7 +96,7 @@ export function genFieldEncode(field: FieldInfo): string {
  * Returns a `TAG => { ... }` arm.
  */
 export function genFieldDecode(field: FieldInfo): string {
-  const rustName = toSnakeCase(field.name)
+  const rustName = toRustFieldName(field.name)
   const typeInfo = PROTO_TYPE_MAP[field.type]
 
   if (!typeInfo) {
@@ -206,7 +206,7 @@ function genRepeatedEncode(
 }
 
 function genMapEncode(field: FieldInfo, tagHex: string): string {
-  const rustName = toSnakeCase(field.name)
+  const rustName = toRustFieldName(field.name)
   const me = field.mapEntry!
   const keyInfo = PROTO_TYPE_MAP[me.keyType]
   const valInfo = PROTO_TYPE_MAP[me.valueType]

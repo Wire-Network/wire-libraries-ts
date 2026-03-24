@@ -144,7 +144,7 @@ function processRequest(stdin: Buffer): PluginResult {
     }
 
     const rsFileName = protoFileToRsFile(fileName, protoFile.package ?? "")
-    const rsContent = generateRsFile(messages, fileName)
+    const rsContent = generateRsFile(messages, fileName, protoFile.package ?? "")
 
     files.push({ name: rsFileName, content: rsContent })
     log.info("Generated %s (%d messages)", rsFileName, messages.length)

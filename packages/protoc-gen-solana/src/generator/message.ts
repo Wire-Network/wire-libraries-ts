@@ -25,13 +25,106 @@ export interface MessageDescriptor {
 }
 
 /**
+ * Collect all cross-file message type references from a set of messages.
+ * Returns the set of fully-qualified type names that are NOT defined in
+ * the current file's message list.
+ */
+function collectExternalTypes(
+  messages: MessageDescriptor[],
+  currentProtoPackage: string
+): Set<string> {
+  const localNames = new Set(messages.map(m => m.fullName))
+  // Also include nested (map entry) names
+  for (const m of messages) {
+    for (const nm of m.nestedMessages) {
+      localNames.add(nm.fullName)
+    }
+  }
+
+  const external = new Set<string>()
+  for (const msg of messages) {
+    for (const field of msg.fields) {
+      if (field.type === 11 && field.typeName) {
+        const fqn = field.typeName.startsWith(".")
+          ? field.typeName
+          : `.${field.typeName}`
+        if (!localNames.has(fqn)) {
+          external.add(fqn)
+        }
+      }
+    }
+  }
+  return external
+}
+
+/**
+ * Convert a fully-qualified proto type name to a Rust `use` path.
+ * e.g. ".sysio.opp.types.ChainAddress" → "crate::sysio::opp::types::types::ChainAddress"
+ *
+ * The module path maps proto package segments to directory/file structure.
+ * The last segment before the type name is repeated as the filename module.
+ */
+function fqnToRustUsePath(fqn: string): string {
+  // Strip leading dot
+  const parts = fqn.replace(/^\./, "").split(".")
+  if (parts.length < 2) return ""
+  // Last part is the type name, everything before is package path
+  const typeName = parts[parts.length - 1]
+  const packageParts = parts.slice(0, -1)
+  // The module file name matches the last package segment (e.g. "types" → types.rs)
+  const modulePath = packageParts.join("::")
+  return `crate::${modulePath}::${packageParts[packageParts.length - 1]}::${typeName}`
+}
+
+/**
+ * Generate `use` import lines for external types referenced by messages.
+ */
+function genExternalImports(
+  messages: MessageDescriptor[],
+  currentProtoPackage: string
+): string[] {
+  const external = collectExternalTypes(messages, currentProtoPackage)
+  if (external.size === 0) return []
+
+  // Build the current file's module path so we can exclude self-imports
+  const currentModulePath = currentProtoPackage
+    ? `crate::${currentProtoPackage.split(".").join("::")}::${currentProtoPackage.split(".").pop()}`
+    : ""
+
+  // Group by module path for wildcard imports
+  const modules = new Map<string, Set<string>>()
+  for (const fqn of external) {
+    const parts = fqn.replace(/^\./, "").split(".")
+    if (parts.length < 2) continue
+    const typeName = parts[parts.length - 1]
+    const packageParts = parts.slice(0, -1)
+    const modulePath = `crate::${packageParts.join("::")}::${packageParts[packageParts.length - 1]}`
+
+    // Skip self-imports
+    if (modulePath === currentModulePath) continue
+
+    if (!modules.has(modulePath)) {
+      modules.set(modulePath, new Set())
+    }
+    modules.get(modulePath)!.add(typeName)
+  }
+
+  const lines: string[] = []
+  for (const [mod, _types] of modules) {
+    lines.push(`use ${mod}::*;`)
+  }
+  return lines
+}
+
+/**
  * Generate a complete .rs file containing struct definitions and
  * encode/decode impl blocks for all non-map-entry messages
  * in a given proto file.
  */
 export function generateRsFile(
   messages: MessageDescriptor[],
-  protoFileName: string
+  protoFileName: string,
+  protoPackage?: string
 ): string {
   const lines: string[] = []
 
@@ -41,6 +134,13 @@ export function generateRsFile(
   lines.push(`#![allow(unused_imports, non_camel_case_types, dead_code)]`)
   lines.push(``)
   lines.push(`use crate::protobuf_runtime::*;`)
+
+  // Add cross-module imports for types from other proto files
+  const externalImports = genExternalImports(messages, protoPackage || "")
+  for (const imp of externalImports) {
+    lines.push(imp)
+  }
+
   lines.push(``)
 
   // Generate structs with encode/decode impls

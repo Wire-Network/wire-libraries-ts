@@ -18,6 +18,42 @@ export function toSnakeCase(name: string): string {
 }
 
 /**
+ * Rust reserved words (keywords + weak keywords) that cannot be used as
+ * identifiers. Appending a trailing underscore is safe because protobuf
+ * encodes by field number, not name.
+ */
+const RUST_RESERVED_WORDS: ReadonlySet<string> = new Set([
+  // Strict keywords
+  "as", "async", "await", "break", "const", "continue", "crate",
+  "dyn", "else", "enum", "extern", "false", "fn", "for", "if",
+  "impl", "in", "let", "loop", "match", "mod", "move", "mut",
+  "pub", "ref", "return", "self", "Self", "static", "struct",
+  "super", "trait", "true", "type", "unsafe", "use", "where", "while",
+  // Reserved for future use
+  "abstract", "become", "box", "do", "final", "macro", "override",
+  "priv", "try", "typeof", "unsized", "virtual", "yield",
+])
+
+/**
+ * Sanitize a Rust identifier by appending a trailing underscore if it
+ * collides with a reserved word. Safe because protobuf encodes by field
+ * number, not name.
+ * e.g. "type" → "type_", "match" → "match_"
+ */
+export function sanitizeRustFieldName(name: string): string {
+  return RUST_RESERVED_WORDS.has(name) ? `${name}_` : name
+}
+
+/**
+ * Convert a proto field name to a Rust-safe struct member name.
+ * Applies camelCase → snake_case conversion then reserved word sanitization.
+ * e.g. "user_name" → "user_name", "type" → "type_", "myAddress" → "my_address"
+ */
+export function toRustFieldName(protoFieldName: string): string {
+  return sanitizeRustFieldName(toSnakeCase(protoFieldName))
+}
+
+/**
  * Generate output .rs filename for a given .proto file, optionally rooted
  * under a directory derived from the proto package name.
  * e.g. "my_service.proto" with package "example.nested"

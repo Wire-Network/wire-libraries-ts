@@ -104,7 +104,7 @@ async function generateSolanaPackage(
   writeModFiles(srcDir, moduleTree)
 
   // Build lib.rs content
-  const topModules = Object.keys(moduleTree).sort()
+  const topModules = Object.keys(moduleTree).filter(k => k !== "_files").sort()
   const reexports = collectLeafModulePaths(moduleTree, [])
   context.modules = topModules
   context.reexports = reexports
