@@ -1,6 +1,6 @@
 {
   "name": "@wireio/wire-protobuf-bundler",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "CLI that fetches .proto files from GitHub, runs protoc with Wire plugins, and generates publishable packages",
   "private": false,
   "type": "commonjs",
