@@ -1,16 +1,9 @@
 import { execFileSync } from "node:child_process"
 import Fs from "node:fs"
 import Path from "node:path"
-import { fileURLToPath } from "node:url"
 import { log } from "../util/logger.js"
 import { renderTemplate } from "../util/templates.js"
 import { resolvePluginBin, findProtoRoot } from "./run-protoc.js"
-import { removeSymLinkDirectory } from "../util/filesystem-helper.js"
-import { tmpdir } from "node:os"
-import Assert from "node:assert"
-
-// const __filename = fileURLToPath(import.meta.url)
-// const __dirname = Path.dirname(__filename)
 
 export interface GenerateTypescriptOptions {
   protoFiles: string[]
@@ -41,29 +34,6 @@ function walkDir(dir: string): string[] {
   return results
 }
 
-/**
- * Find the nearest node_modules directory containing @protobuf-ts/runtime.
- * Searches upward from startDir.
- */
-function findNodeModules(startDir: string): string {
-  let dir = startDir
-  while (true) {
-    const candidate = Path.join(dir, "node_modules")
-    if (
-      Fs.existsSync(candidate) &&
-      Fs.existsSync(Path.join(candidate, "@protobuf-ts", "runtime"))
-    ) {
-      return candidate
-    }
-    const parent = Path.dirname(dir)
-    if (parent === dir) break
-    dir = parent
-  }
-  throw new Error(
-    "Could not find node_modules containing @protobuf-ts/runtime. " +
-    "Ensure @protobuf-ts/runtime is installed."
-  )
-}
 
 /**
  * Generate TypeScript types from proto files alongside the Solidity output.
@@ -80,8 +50,6 @@ export async function generateTypescript(
   const { protoFiles, protoDir, tmpDir, outputDir } = opts
 
   // ── Step 1: Run protoc with protoc-gen-ts ──────────────────────────────
-  const outputNodeModules = Path.join(outputDir, "node_modules")
-  
   const tsOutputDir = Path.join(tmpDir, "ts")
   const tsGenDir = Path.join(tsOutputDir, "generated")
   Fs.mkdirSync(tsGenDir, { recursive: true })
@@ -101,24 +69,9 @@ export async function generateTypescript(
 
   log.info("Running protoc for TypeScript: npx protoc %s", args.join(" "))
 
-  // @protobuf-ts/plugin@2.11.1 uses deprecated ts.create* factory APIs that
-  // were removed in TypeScript 5.x. Inject a compatibility shim via
-  // NODE_OPTIONS so it is loaded before the plugin imports typescript.
-  // const shimBasePath = "lib/TypescriptFactoryShim.js",
-  //   shimPath = Path.resolve(__dirname, "../..", shimBasePath),
-  //   shimContent = Fs.readFileSync(shimPath, "utf-8"),
-  //   shimTmpDir = Path.join(tmpdir(),"wire-proto-"),
-  //   shimTmpFile = Path.join(shimTmpDir, "ts-factory-shim.js")
-  // Fs.mkdtempSync(shimTmpDir)
-  // Assert.ok(Fs.lstatSync(shimTmpDir).isDirectory())
-  //
-  const existingNodeOpts = process.env.NODE_OPTIONS || ""
-  // const nodeOptions = `--require ${shimPath} ${existingNodeOpts}`.trim()
-
   try {
     execFileSync("npx", ["protoc", ...args], {
-      stdio: ["pipe", "pipe", "inherit"],
-      // env: { ...process.env, NODE_OPTIONS: nodeOptions }
+      stdio: ["pipe", "pipe", "inherit"]
     })
   } catch (err: any) {
     throw new Error(
@@ -172,73 +125,6 @@ export async function generateTypescript(
 
   const tsconfig = renderTemplate("solidity/tsconfig.json.hbs", {})
   Fs.writeFileSync(Path.join(outputDir, "tsconfig.json"), tsconfig)
-
-  // ── Step 5: Symlink node_modules for @protobuf-ts/runtime resolution ──
-
-  // Search from project root (relative to compiled output location) and cwd
-  const searchDirs = [
-    Path.resolve(__dirname, "../.."),
-    Path.resolve(__dirname, "../../.."),
-    process.cwd()
-  ]
-
-  let bundlerNodeModules: string | undefined
-  for (const dir of searchDirs) {
-    try {
-      bundlerNodeModules = findNodeModules(dir)
-      break
-    } catch {
-      // try next
-    }
-  }
-  if (!bundlerNodeModules) {
-    throw new Error(
-      "Could not find node_modules containing @protobuf-ts/runtime. " +
-      "Ensure @protobuf-ts/runtime is installed."
-    )
-  }
-
-  
-  
-  await removeSymLinkDirectory(outputNodeModules)
-  
-  log.info(
-    "Creating temporary node_modules symlink: %s → %s",
-    outputNodeModules,
-    bundlerNodeModules
-  )
-  // Fs.symlinkSync(bundlerNodeModules, tmpNodeModules, "junction")
-
-  // ── Step 6: Run tsc ────────────────────────────────────────────────────
-
-  try {
-    log.info("Compiling TypeScript in %s", outputDir)
-    execFileSync(
-      "npx",
-      ["tsc", "-p", Path.join(outputDir, "tsconfig.json")],
-      {
-        stdio: ["pipe", "pipe", "inherit"],
-        cwd: outputDir
-      }
-    )
-  } finally {
-    // Always clean up the symlink
-    try {
-      Fs.rmSync(outputNodeModules, { recursive: true, force: true })
-      log.debug("Removed temporary node_modules symlink")
-    } catch {
-      log.warn("Failed to remove temporary node_modules symlink at %s", outputNodeModules)
-    }
-  }
-
-  // ── Step 7: Rename index.js → index.mjs ────────────────────────────────
-
-  // const indexJs = Path.join(outputDir, "index.js")
-  // const indexMjs = Path.join(outputDir, "index.mjs")
-  // if (Fs.existsSync(indexJs)) {
-  //   Fs.renameSync(indexJs, indexMjs)
-  //   log.debug("Renamed index.js → index.mjs")
-  // }
 
   log.info("TypeScript generation complete: %d module(s)", tsModules.length)
 }

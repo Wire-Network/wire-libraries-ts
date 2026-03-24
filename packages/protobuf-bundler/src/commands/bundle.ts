@@ -1,3 +1,4 @@
+import { execFileSync, execSync } from "node:child_process"
 import Fs from "node:fs"
 import Path from "node:path"
 import Os from "node:os"
@@ -14,6 +15,7 @@ export interface BundleArgs {
   packageName: string
   packageVersion: string
   packageData: Record<string, any>
+  publish: boolean
 }
 
 export async function bundleCommand(args: BundleArgs): Promise<void> {
@@ -40,13 +42,19 @@ export async function bundleCommand(args: BundleArgs): Promise<void> {
     })
 
     // Step 3: Generate the publishable package
-    Fs.mkdirSync(outputDir, { recursive: true })
-
+    // For solidity, build in a staging dir so we can npm i + tsc before
+    // copying to the final output location.
     const genDir = Path.join(tmpDir, "generated")
+    const isSolidity = args.target === "solidity"
+    const stagingDir = isSolidity
+      ? Path.join(tmpDir, "staging")
+      : outputDir
+
+    Fs.mkdirSync(stagingDir, { recursive: true })
 
     await generatePackage({
       target: args.target,
-      outputDir,
+      outputDir: stagingDir,
       packageName: args.packageName,
       packageVersion: args.packageVersion,
       packageData: args.packageData,
@@ -55,18 +63,8 @@ export async function bundleCommand(args: BundleArgs): Promise<void> {
       repo: args.repo
     })
 
-    // Step 4 (solidity only): Generate TypeScript types alongside contracts
-    if (args.target === "solidity") {
-      await generateTypescript({
-        protoFiles,
-        protoDir,
-        tmpDir,
-        outputDir
-      })
-    }
-
-    // Copy proto sources to output for reference
-    const protoOutDir = Path.join(outputDir, "proto")
+    // Copy proto sources
+    const protoOutDir = Path.join(stagingDir, "proto")
     Fs.mkdirSync(protoOutDir, { recursive: true })
     for (const pf of protoFiles) {
       const relative = Path.relative(protoDir, pf)
@@ -75,13 +73,92 @@ export async function bundleCommand(args: BundleArgs): Promise<void> {
       Fs.copyFileSync(pf, dest)
     }
 
+    if (isSolidity) {
+      // Step 4a: Generate TypeScript types into the staging dir
+      await generateTypescript({
+        protoFiles,
+        protoDir,
+        tmpDir,
+        outputDir: stagingDir
+      })
+
+      // Step 4b: Install dependencies in staging so tsc can resolve them
+      log.info("Installing dependencies in staging dir…")
+      execSync("npm i", {
+        cwd: stagingDir,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "inherit"]
+      })
+
+      // Step 4c: Compile TypeScript (protobuf-ts clients require TS 3)
+      log.info("Compiling TypeScript in %s", stagingDir)
+      execFileSync(
+        "npx",
+        ["-y", "-p", "typescript@3", "tsc", "-p", Path.join(stagingDir, "tsconfig.json")],
+        {
+          stdio: ["pipe", "pipe", "inherit"],
+          cwd: stagingDir
+        }
+      )
+
+      // Step 4d: Copy everything except node_modules to output
+      Fs.mkdirSync(outputDir, { recursive: true })
+      copyDirExcluding(stagingDir, outputDir, new Set(["node_modules"]))
+
+      // Step 4e: Install production dependencies in the output dir
+      log.info("Installing dependencies in output dir…")
+      execSync("npm i", {
+        cwd: outputDir,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "inherit"]
+      })
+    }
+
     log.info("Bundle complete → %s", outputDir)
+
+    // Step 5 (optional): Publish the generated package
+    if (args.publish) {
+      log.info("Publishing package from %s…", outputDir)
+      try {
+        const result = execSync("npm publish --access public", {
+          cwd: outputDir,
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "pipe"]
+        })
+        log.info("Published successfully: %s", result.trim())
+      } catch (err: any) {
+        const stderr: string = err.stderr?.toString() ?? ""
+        throw new Error(`npm publish failed: ${stderr || err.message}`)
+      }
+    }
   } finally {
     try {
       Fs.rmSync(tmpDir, { recursive: true, force: true })
       log.debug("Cleaned up temp dir: %s", tmpDir)
     } catch (err: any) {
       log.warn("Failed to clean temp dir %s: %s", tmpDir, err.message)
+    }
+  }
+}
+
+/**
+ * Recursively copy a directory tree, skipping entries whose names
+ * appear in the `exclude` set.
+ */
+function copyDirExcluding(
+  src: string,
+  dest: string,
+  exclude: Set<string>
+): void {
+  Fs.mkdirSync(dest, { recursive: true })
+  for (const entry of Fs.readdirSync(src, { withFileTypes: true })) {
+    if (exclude.has(entry.name)) continue
+    const srcPath = Path.join(src, entry.name)
+    const destPath = Path.join(dest, entry.name)
+    if (entry.isDirectory()) {
+      copyDirExcluding(srcPath, destPath, exclude)
+    } else {
+      Fs.copyFileSync(srcPath, destPath)
     }
   }
 }
