@@ -5,6 +5,7 @@ import { getCurve } from "./crypto/Curves"
 import { KeyType } from "./chain/KeyType"
 import { Name, NameType } from "./chain/Name"
 import { TimePoint } from "./chain/Time"
+import { BLOCK_TIMESTAMP_EPOCH_MS, BLOCK_TIMESTAMP_INTERVAL_MS } from "./chain/constants"
 import { ethers } from "ethers"
 import { Serializer } from "./serializer/index"
 
@@ -316,7 +317,7 @@ export const ensure0x = (hex: string): string => {
  */
 export const dateToBlockTimestamp = (date: TimePoint): number => {
   return Math.round(
-    (checkDateParse(date.toString() + "Z") - 1735689600000) / 500
+    (checkDateParse(date.toString() + "Z") - BLOCK_TIMESTAMP_EPOCH_MS) / BLOCK_TIMESTAMP_INTERVAL_MS
   )
 }
 

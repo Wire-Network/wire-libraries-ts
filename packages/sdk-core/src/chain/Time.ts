@@ -4,6 +4,7 @@ import { ABISerializableObject } from "../serializer/Serializable"
 import { isInstanceOf } from "../Utils"
 
 import { AnyInt, Int64, Int64Type, UInt32, UInt32Type, UInt64 } from "./Integer"
+import { BLOCK_TIMESTAMP_EPOCH_MS, BLOCK_TIMESTAMP_INTERVAL_MS } from "./constants"
 
 export type TimePointType = TimePoint | TimePointSec | string | Date | AnyInt
 
@@ -163,7 +164,7 @@ export class BlockTimestamp extends TimePointBase {
   static abiName = "block_timestamp_type"
 
   static fromMilliseconds(ms: number) {
-    return new this(UInt32.from(Math.round((ms - 1735689600000) / 500)))
+    return new this(UInt32.from(Math.round((ms - BLOCK_TIMESTAMP_EPOCH_MS) / BLOCK_TIMESTAMP_INTERVAL_MS)))
   }
 
   static fromInteger(value: UInt32Type) {
@@ -185,6 +186,6 @@ export class BlockTimestamp extends TimePointBase {
   }
 
   toMilliseconds() {
-    return Number(this.value.cast(UInt64).multiplying(500).adding(1735689600000))
+    return Number(this.value.cast(UInt64).multiplying(BLOCK_TIMESTAMP_INTERVAL_MS).adding(BLOCK_TIMESTAMP_EPOCH_MS))
   }
 }
