@@ -316,7 +316,7 @@ export const ensure0x = (hex: string): string => {
  */
 export const dateToBlockTimestamp = (date: TimePoint): number => {
   return Math.round(
-    (checkDateParse(date.toString() + "Z") - 946684800000) / 500
+    (checkDateParse(date.toString() + "Z") - 1735689600000) / 500
   )
 }
 
