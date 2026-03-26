@@ -11,12 +11,25 @@
     "README.md"
   ],
   "type": "module",
-  "types": "lib/index.d.ts",
-  "module": "lib/index.js",
+  "types": "lib/esm/index.d.ts",
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.js",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.js",
+      "types": "./lib/esm/index.d.ts"
+    },
+    "./*": {
+      "import": "./lib/esm/*.js",
+      "require": "./lib/cjs/*.js",
+      "types": "./lib/esm/*.d.ts"
+    }
+  },
   "access": "public",
   "license": "FSL-1.1-Apache-2.0",
   "scripts": {
-    "build": "tsc -b tsconfig.json",
+    "build": "tsc -b tsconfig.json && node ../../scripts/fix-hybrid-output.mjs .",
     "build:dev": "tsc -b tsconfig.json -w",
     "test": "jest"
   },

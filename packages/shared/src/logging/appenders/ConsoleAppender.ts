@@ -1,6 +1,6 @@
 import type { LogRecord } from "../LogRecord"
 import type { Appender } from "../Appender"
-import { Option } from "prelude-ts"
+import { Option } from "@3fv/prelude-ts"
 import type { LevelKind } from "../Level"
 import type { Formatter } from "../Formatter"
 
@@ -66,9 +66,9 @@ export const kDefaultConsoleAppenderConfig: ConsoleAppenderConfig = {
  * Console appender, the simple default appender used
  * everywhere OOB
  */
-export class ConsoleAppender<Record extends LogRecord>
-  implements Appender<Record>
-{
+export class ConsoleAppender<
+  Record extends LogRecord
+> implements Appender<Record> {
   readonly config: ConsoleAppenderConfig
 
   /**
@@ -79,7 +79,7 @@ export class ConsoleAppender<Record extends LogRecord>
   append(record: Record): void {
     const { level, message, data, args, category, timestamp } = record
     const { formatter = consoleFormatter } = this.config
-    Option.ofNullable(formatter(record)).map((result) => {
+    Option.ofNullable(formatter(record)).map(result => {
       const args = Array.isArray(result) ? result : [result]
       this.write(level, ...args)
     })
@@ -87,14 +87,14 @@ export class ConsoleAppender<Record extends LogRecord>
 
   /**
    * Write args to console
-   * 
-   * @param level 
-   * @param args 
+   *
+   * @param level
+   * @param args
    */
   protected write(level: LevelKind, ...args: any[]) {
     Option.ofNullable(console[level])
-        .orCall(() => Option.ofNullable(console.log))
-        .map((fn: Function) => fn.apply(console, args))
+      .orCall(() => Option.ofNullable(console.log))
+      .map((fn: Function) => fn.apply(console, args))
   }
 
   /**

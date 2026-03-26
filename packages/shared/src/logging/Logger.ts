@@ -1,5 +1,12 @@
-import { assert, getValue, isString, isDefined, isFunction, isNumber } from "../guards/index.js"
-import { Option } from "prelude-ts"
+import {
+  assert,
+  getValue,
+  isString,
+  isDefined,
+  isFunction,
+  isNumber
+} from "../guards/index.js"
+import { Option } from "@3fv/prelude-ts"
 import { cloneDeep, isObject, pick } from "lodash"
 import { LevelKind, LevelThresholds } from "./Level.js"
 import type { LoggingManager } from "./LoggingManager.js"
@@ -22,13 +29,13 @@ export const filenameCategoryInterpolator: CategoryInterpolator = (
 ) => {
   const allParts = filename.replaceAll("\\", "/").split("/")
   const rootIndex = Math.max(
-    ...["src", "lib"].map((name) => allParts.indexOf(name))
+    ...["src", "lib"].map(name => allParts.indexOf(name))
   )
   const parts =
     rootIndex === -1 ? [allParts.pop()] : allParts.slice(rootIndex + 1)
   const category = Option.of(parts.join(":"))
-    .flatMap((cat) =>
-      Option.of(cat.lastIndexOf(".")).map((index) =>
+    .flatMap(cat =>
+      Option.of(cat.lastIndexOf(".")).map(index =>
         index === -1 ? cat : cat.slice(0, index)
       )
     )
@@ -61,9 +68,11 @@ export function toLogRecord(
     }
 
   const errRecord = Option.ofNullable(
-    args.find((arg) => (isString(arg?.message) && !!arg.stack) || arg instanceof Error)
+    args.find(
+      arg => (isString(arg?.message) && !!arg.stack) || arg instanceof Error
+    )
   ).match({
-    Some: (err) => ({
+    Some: err => ({
       errorMessage: getValue(() => err.message),
       errorStack: getValue(() => err.stack)
     }),
@@ -72,20 +81,22 @@ export function toLogRecord(
 
   const recordBase = isString(levelOrRecord)
     ? ({
-      ...pick(logger, ["category"]),
-      timestamp: Date.now(),
-      message: args[0],
-      level: levelOrRecord,
-      args: args.slice(1)
-    } as LogRecord)
+        ...pick(logger, ["category"]),
+        timestamp: Date.now(),
+        message: args[0],
+        level: levelOrRecord,
+        args: args.slice(1)
+      } as LogRecord)
     : levelOrRecord
 
   const record = {
-
     ...recordBase,
     ...errRecord,
     ...metadata,
-    timestamp: isNumber(recordBase.timestamp) && recordBase.timestamp > 0 ? recordBase.timestamp : Date.now(),
+    timestamp:
+      isNumber(recordBase.timestamp) && recordBase.timestamp > 0
+        ? recordBase.timestamp
+        : Date.now()
   }
 
   if (metadata.data) {
@@ -115,7 +126,7 @@ export class Logger {
 
   get overrideThreshold() {
     return Option.ofNullable(this.overrideLevel)
-      .map((level) => LevelThresholds[level])
+      .map(level => LevelThresholds[level])
       .getOrNull()
   }
 
@@ -143,11 +154,18 @@ export class Logger {
    */
   log(record: LogRecord): void
   log(level: LevelKind, message: string, ...args: any[]): void
-  log(level: LevelKind, metadata: LogMetadata, message: string, ...args: any[]): void
+  log(
+    level: LevelKind,
+    metadata: LogMetadata,
+    message: string,
+    ...args: any[]
+  ): void
   log(levelOrRecord: LevelKind | LogRecord, ...args: any[]) {
     const record = toLogRecord(this, levelOrRecord, args)
     if (this.options.overrideAppenders.length) {
-      this.options.overrideAppenders.forEach((appender) => appender.append(record))
+      this.options.overrideAppenders.forEach(appender =>
+        appender.append(record)
+      )
     } else {
       this.manager.fire(record)
     }
@@ -161,7 +179,9 @@ export class Logger {
    * @returns {(message: string, ...args: any[]) => void}
    * @private
    */
-  private createLevelLogger(level: LevelKind): (message: string, ...args: any[]) => void {
+  private createLevelLogger(
+    level: LevelKind
+  ): (message: string, ...args: any[]) => void {
     const isEnabled = this.createLevelEnabled(level)
     return (message: string, ...args: any[]) => {
       if (isEnabled()) {
@@ -181,11 +201,12 @@ export class Logger {
     return () => {
       const { rootThreshold } = this.manager
 
-      const globalOverrideThreshold = this.manager.determineThresholdOverride(this.category)
-      const categoryThresholds = isNumber(this.overrideThreshold) ? [this.overrideThreshold] : [
-        globalOverrideThreshold,
-        rootThreshold
-      ].filter(isNumber)
+      const globalOverrideThreshold = this.manager.determineThresholdOverride(
+        this.category
+      )
+      const categoryThresholds = isNumber(this.overrideThreshold)
+        ? [this.overrideThreshold]
+        : [globalOverrideThreshold, rootThreshold].filter(isNumber)
 
       const categoryThreshold = Math.min(...categoryThresholds)
 
@@ -218,7 +239,11 @@ export class Logger {
     this.error(message, ...args)
   }
 
-  assertFatal(test: boolean | (() => boolean), message: string, exitCode: number = 1) {
+  assertFatal(
+    test: boolean | (() => boolean),
+    message: string,
+    exitCode: number = 1
+  ) {
     const isTruthy = isFunction(test) ? test() : test
     if (isTruthy) {
       return
@@ -228,7 +253,9 @@ export class Logger {
     if (typeof process !== "undefined") {
       process.exit(exitCode)
     } else {
-      console.error("FATAL ASSERTION: `process` is not defined, probably in a web browser")
+      console.error(
+        "FATAL ASSERTION: `process` is not defined, probably in a web browser"
+      )
     }
   }
 
@@ -236,7 +263,7 @@ export class Logger {
     readonly manager: LoggingManager,
     readonly category: string,
     readonly options: LoggerOptions
-  ) { }
+  ) {}
 
   static hydrateOptions(options: Partial<LoggerOptions> = {}): LoggerOptions {
     return {

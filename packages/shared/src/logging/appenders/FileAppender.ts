@@ -3,7 +3,7 @@ import * as Path from "path"
 import * as Fs from "fs"
 import type { LogRecord } from "../LogRecord"
 import type { Appender } from "../Appender"
-import { Option, Future } from "prelude-ts"
+import { Option, Future } from "@3fv/prelude-ts"
 import { Buffer } from "buffer"
 import Debug from "debug"
 import Bluebird from "bluebird"
@@ -48,9 +48,9 @@ export type FileAppenderOptions<Record extends LogRecord = any> = Partial<
   FileAppenderConfig<Record>
 >
 
-export class FileAppender<Record extends LogRecord>
-  implements Appender<Record>
-{
+export class FileAppender<
+  Record extends LogRecord
+> implements Appender<Record> {
   readonly config: FileAppenderConfig<Record>
 
   private readonly state: {
@@ -176,9 +176,9 @@ export class FileAppender<Record extends LogRecord>
    * @returns {Promise<void>}
    */
   close() {
-    return this.flush().onComplete(() =>
-      Option.of(this.state.file).map(Fs.closeSync)
-    ).toPromise()
+    return this.flush()
+      .onComplete(() => Option.of(this.state.file).map(Fs.closeSync))
+      .toPromise()
   }
 
   get queue() {
@@ -212,7 +212,7 @@ export class FileAppender<Record extends LogRecord>
         while (this.queue.length) {
           const buf: Buffer = this.queue.shift()
 
-          await Bluebird.fromCallback((cb) =>
+          await Bluebird.fromCallback(cb =>
             Fs.appendFile(file, buf, "utf-8", cb)
           )
 

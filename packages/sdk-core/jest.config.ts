@@ -1,7 +1,7 @@
 import type { Config } from "jest"
 
 const config: Config = {
-  displayName: "sdk-core",
+  displayName: "@wireio/sdk-core",
   testEnvironment: "node",
   roots: ["<rootDir>/tests"],
   testMatch: ["**/*.test.ts"],

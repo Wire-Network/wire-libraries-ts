@@ -1,5 +1,5 @@
 import { isNumber, isObject, isString } from "../guards/index.js"
-import { Option } from "prelude-ts"
+import { Option } from "@3fv/prelude-ts"
 import { flatten, isEmpty, min, negate } from "lodash"
 import type { Appender } from "./Appender.js"
 import { ConsoleAppender } from "./appenders/ConsoleAppender.js"
@@ -28,12 +28,12 @@ function parseThresholdOverridePatterns(
   value: string,
   level: LevelKind = "debug"
 ): ThresholdOverride[] {
-  return value
-    .split(",")
-    .map((s) => [new RegExp(s), level] as ThresholdOverride)
+  return value.split(",").map(s => [new RegExp(s), level] as ThresholdOverride)
 }
 
-export const kEnvThresholdOverrides = Option.ofNullable(typeof process !== "undefined" && process.env.DEBUG_PATTERNS)
+export const kEnvThresholdOverrides = Option.ofNullable(
+  typeof process !== "undefined" && process.env.DEBUG_PATTERNS
+)
   .filter(negate(isEmpty))
   .map(parseThresholdOverridePatterns)
   .getOrElse([])
@@ -78,29 +78,29 @@ export class LoggingManager<Record extends LogRecord = any> {
    */
   get appenders(): Array<Appender<Record>> {
     return Option.ofNullable(this.state.appenders)
-      .filter((appenders) => appenders.length > 0)
+      .filter(appenders => appenders.length > 0)
       .getOrCall(() => {
         this.state.appenders.push(new ConsoleAppender())
         return this.state.appenders
       })
   }
-  
+
   /**
    * Global threshold overrides
    */
   get thresholdOverrides() {
     return this.state.thresholdOverrides
   }
-  
+
   /**
    * Update the overrides
    *
    * @param newOverrides
    */
-  set thresholdOverrides(newOverrides:ThresholdOverride[]) {
+  set thresholdOverrides(newOverrides: ThresholdOverride[]) {
     this.state.thresholdOverrides = newOverrides
   }
-  
+
   /**
    * Set global appenders
    *
@@ -115,18 +115,20 @@ export class LoggingManager<Record extends LogRecord = any> {
 
     return this
   }
-  
+
   /**
    * Add one or more appenders to existing appender set
    *
    * @param {Appender<Record> | Appender<Record>[]} newAppenders
    * @returns {this<Record>}
    */
-  addAppenders(...newAppenders: Array<Appender<Record> | Appender<Record>[]>): this {
+  addAppenders(
+    ...newAppenders: Array<Appender<Record> | Appender<Record>[]>
+  ): this {
     this.state.appenders.push(...flatten(newAppenders))
     return this
   }
-  
+
   /**
    * Clear threshold overrides
    *
@@ -167,15 +169,16 @@ export class LoggingManager<Record extends LogRecord = any> {
    */
   determineThresholdOverride(category: string): number {
     const contexts = this.getApplicableCurrentContexts(category),
-      
-    // FIND CONFIGURED OVERRIDE LEVEL
+      // FIND CONFIGURED OVERRIDE LEVEL
       overrideThreshold = Option.ofNullable(
         this.thresholdOverrides.find(([match]) =>
-          isString(match) ? match === category : (match as RegExp).test(category)
+          isString(match)
+            ? match === category
+            : (match as RegExp).test(category)
         )
       )
         .map(nth(1))
-        .map((level) => LevelThresholds[level as Level])
+        .map(level => LevelThresholds[level as Level])
         .getOrNull(),
       // FIND `LogContext` OVERRIDE LEVEL
       contextThresholds = contexts
@@ -191,7 +194,7 @@ export class LoggingManager<Record extends LogRecord = any> {
 
     return override as number
   }
-  
+
   /**
    * Set the root logging level
    *
@@ -202,7 +205,7 @@ export class LoggingManager<Record extends LogRecord = any> {
     this.state.rootLevel = newLevel
     return this
   }
-  
+
   /**
    * Fire a log event, eventually
    * invert this by making `Logger` an
@@ -218,9 +221,9 @@ export class LoggingManager<Record extends LogRecord = any> {
       contextAppenders = contexts.flatMap(get("appenders")),
       appenders = [...this.appenders, ...contextAppenders]
 
-    appenders.forEach((appender) => appender.append(record as Record))
+    appenders.forEach(appender => appender.append(record as Record))
   }
-  
+
   /**
    * Get a logger from cache, if the category
    * does not have an existing logger, then create one.
@@ -237,7 +240,7 @@ export class LoggingManager<Record extends LogRecord = any> {
     const category = Logger.interoplateCategory(categoryOrFilename, options)
 
     return Option.ofNullable(category)
-      .map((category) => this.loggers.get(category))
+      .map(category => this.loggers.get(category))
       .getOrCall(() => {
         const logger = new Logger(this, category, options)
         this.loggers.set(category, logger)
@@ -273,7 +276,7 @@ export class LoggingManager<Record extends LogRecord = any> {
   private constructor() {
     this.configure({})
   }
-  
+
   /**
    * Singleton instance
    *
@@ -281,7 +284,7 @@ export class LoggingManager<Record extends LogRecord = any> {
    * @private
    */
   private static manager: LoggingManager
-  
+
   /**
    * Get logging manager and optionally provided
    * configuration options
@@ -308,9 +311,15 @@ export function getLoggingManager(): LoggingManager {
   return LoggingManager.get()
 }
 
-if (Option.try_(() => process.env.NODE_ENV === "development").getOrElse(false)) {
-  [typeof window !== "undefined" && window, typeof global !== "undefined" && global].filter(isObject)
-    .map(target => Object.assign(target, {
-      loggingManager: getLoggingManager()
-    }))
+if (Option.try(() => process.env.NODE_ENV === "development").getOrElse(false)) {
+  ;[
+    typeof window !== "undefined" && window,
+    typeof global !== "undefined" && global
+  ]
+    .filter(isObject)
+    .map(target =>
+      Object.assign(target, {
+        loggingManager: getLoggingManager()
+      })
+    )
 }

@@ -10,7 +10,7 @@ overrides:
   bluebird: 3.7.2
   debug: 4.3.4
   lodash: 4.17.21
-  prelude-ts: 1.0.6
+  '@3fv/prelude-ts': ^0.8.37
   prettier: 3.8.1
   tracer: 1.3.0
   webpack: 5.104.1
@@ -36,6 +36,12 @@ importers:
       '@types/node':
         specifier: 25.5.0
         version: 25.5.0
+      '@wireio/shared':
+        specifier: workspace:*
+        version: link:packages/shared
+      concurrently:
+        specifier: ^9.2.1
+        version: 9.2.1
       jest:
         specifier: ^30.3.0
         version: 30.3.0(@types/node@25.5.0)(ts-node@10.9.2(@types/node@25.5.0)(typescript@6.0.2))
@@ -233,6 +239,9 @@ importers:
 
   packages/shared:
     dependencies:
+      '@3fv/prelude-ts':
+        specifier: ^0.8.37
+        version: 0.8.37
       '@aws-sdk/client-firehose':
         specifier: 3.972.0
         version: 3.972.0
@@ -251,9 +260,6 @@ importers:
       lodash:
         specifier: 4.17.21
         version: 4.17.21
-      prelude-ts:
-        specifier: 1.0.6
-        version: 1.0.6
       tracer:
         specifier: 1.3.0
         version: 1.3.0
@@ -368,6 +374,12 @@ importers:
         version: 2.8.1
 
 packages:
+
+  '@3fv/guard@1.4.39':
+    resolution: {integrity: sha512-yWMyr9EWjnSbfyaafZfByjIu+Lbh9OBviSeTIv1tWN9F0qFtCw1nP9pZNQfpdgWcaDuR9gXbZjUnkt6wb5+YVA==}
+
+  '@3fv/prelude-ts@0.8.37':
+    resolution: {integrity: sha512-BmHtMi1eAdQ3w//P4wGFRSFqtxgNyWRmV8HPtWzFf9fXS7L+EuUK7iI7AEIS8+/fGjfkLxDPrg6K09PA/wYv9Q==}
 
   '@asamuzakjp/css-color@3.2.0':
     resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
@@ -2253,6 +2265,11 @@ packages:
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
+  concurrently@9.2.1:
+    resolution: {integrity: sha512-fsfrO0MxV64Znoy8/l1vVIjjHa29SZyyqPgQBwhiDcaW8wJc2W3XWVOGx4M3oJBnv/zdUZIIp1gDeS98GzP8Ng==}
+    engines: {node: '>=18'}
+    hasBin: true
+
   connect-history-api-fallback@2.0.0:
     resolution: {integrity: sha512-U73+6lQFmfiNPrYbXqr6kZ1i1wiRqXnp2nhMsINseWXO8lDau0LGEffJ8kQi4EjLZympVgRdvqjAgiZ1tgzDDA==}
     engines: {node: '>=0.8'}
@@ -3581,9 +3598,6 @@ packages:
     deprecated: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
     hasBin: true
 
-  prelude-ts@1.0.6:
-    resolution: {integrity: sha512-AESHLCJ7psPqtj69LEJlZ2ENTnYeI2IJyxpWz459Ag556O/4u41JLOK11ZHTsMeUrRJQ+xWA6ulw/hGycXgEkA==}
-
   prettier@3.8.1:
     resolution: {integrity: sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg==}
     engines: {node: '>=14'}
@@ -3765,6 +3779,9 @@ packages:
 
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
+
+  rxjs@7.8.2:
+    resolution: {integrity: sha512-dhKf903U/PQZY6boNNtAGdWbG85WAbjT/1xYoZIC7FAY0yWapOBQVsVrDl58W86//e1VpMNBtRV4MaXfdMySFA==}
 
   safe-buffer@5.1.2:
     resolution: {integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==}
@@ -4109,6 +4126,10 @@ packages:
     engines: {node: '>=10.0'}
     peerDependencies:
       tslib: '2'
+
+  tree-kill@1.2.2:
+    resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
+    hasBin: true
 
   ts-jest@29.4.6:
     resolution: {integrity: sha512-fSpWtOO/1AjSNQguk43hb/JCo16oJDnMJf3CdEGNkqsEX3t0KX96xvyX1D7PfLCpVoKu4MfVrqUkFyblYoY4lA==}
@@ -4478,6 +4499,16 @@ packages:
     engines: {node: '>=10'}
 
 snapshots:
+
+  '@3fv/guard@1.4.39':
+    dependencies:
+      lodash: 4.17.21
+
+  '@3fv/prelude-ts@0.8.37':
+    dependencies:
+      '@3fv/guard': 1.4.39
+      hamt_plus: 1.0.2
+      list: 2.0.19
 
   '@asamuzakjp/css-color@3.2.0':
     dependencies:
@@ -7097,6 +7128,15 @@ snapshots:
 
   concat-map@0.0.1: {}
 
+  concurrently@9.2.1:
+    dependencies:
+      chalk: 4.1.2
+      rxjs: 7.8.2
+      shell-quote: 1.8.3
+      supports-color: 8.1.1
+      tree-kill: 1.2.2
+      yargs: 17.7.2
+
   connect-history-api-fallback@2.0.0: {}
 
   content-disposition@0.5.4:
@@ -8621,11 +8661,6 @@ snapshots:
       tar-fs: 2.1.4
       tunnel-agent: 0.6.0
 
-  prelude-ts@1.0.6:
-    dependencies:
-      hamt_plus: 1.0.2
-      list: 2.0.19
-
   prettier@3.8.1: {}
 
   pretty-error@4.0.0:
@@ -8801,6 +8836,10 @@ snapshots:
   run-parallel@1.2.0:
     dependencies:
       queue-microtask: 1.2.3
+
+  rxjs@7.8.2:
+    dependencies:
+      tslib: 2.8.1
 
   safe-buffer@5.1.2: {}
 
@@ -9202,6 +9241,8 @@ snapshots:
   tree-dump@1.1.0(tslib@2.8.1):
     dependencies:
       tslib: 2.8.1
+
+  tree-kill@1.2.2: {}
 
   ts-jest@29.4.6(@babel/core@7.29.0)(@jest/transform@30.3.0)(@jest/types@30.3.0)(babel-jest@30.3.0(@babel/core@7.29.0))(jest-util@30.3.0)(jest@30.3.0(@types/node@25.5.0)(ts-node@10.9.2(@types/node@25.5.0)(typescript@6.0.2)))(typescript@6.0.2):
     dependencies:

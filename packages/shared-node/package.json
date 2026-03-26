@@ -1,20 +1,34 @@
 {
   "name": "@wireio/shared-node",
   "version": "1.0.18",
-  "private": true,
+  "private": false,
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "files": [
     "lib",
     "README.md"
   ],
   "type": "module",
-  "types": "lib/index.d.ts",
-  "module": "lib/index.js",
+  "types": "lib/esm/index.d.ts",
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.js",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.js",
+      "types": "./lib/esm/index.d.ts"
+    },
+    "./*": {
+      "import": "./lib/esm/*.js",
+      "require": "./lib/cjs/*.js",
+      "types": "./lib/esm/*.d.ts"
+    }
+  },
   "scripts": {
     "build": "tsc -b tsconfig.json",
     "build:dev": "tsc -b tsconfig.json -w",
+    "fix:hybrid:package": "node ../../scripts/fix-hybrid-output.mjs .",
     "test": "jest"
   },
   "devDependencies": {
