@@ -1,62 +1,118 @@
-# context-mode — MANDATORY routing rules
+# CLAUDE.md
 
-You have context-mode MCP tools available. These rules are NOT optional — they protect your context window from flooding. A single unrouted command can dump 56 KB into context and waste the entire session.
+## Build & Development
 
-## BLOCKED commands — do NOT attempt these
+```bash
+pnpm install                # Install all deps (requires pnpm 10.32.1, Node >=22)
+pnpm build                  # Build all packages via tsc -b (composite project references)
+pnpm build:dev              # Watch mode (incremental)
+pnpm test                   # Build + jest (all packages)
+pnpm format                 # Prettier on **/*.{ts,tsx,md}
+```
 
-### curl / wget — BLOCKED
-Any Bash command containing `curl` or `wget` is intercepted and replaced with an error message. Do NOT retry.
-Instead use:
-- `ctx_fetch_and_index(url, source)` to fetch and index web pages
-- `ctx_execute(language: "javascript", code: "const r = await fetch(...)")` to run HTTP calls in sandbox
+Per-package commands (run from package directory):
+```bash
+pnpm build                  # Package-level build
+pnpm test                   # Package-level tests (where available)
+pnpm bundle                 # esbuild bundle (CLI packages only)
+pnpm dist                   # Full dist: compile + bundle + pkg binary (CLI packages only)
+pnpm dev                    # Watch mode (CLI packages only)
+```
 
-### Inline HTTP — BLOCKED
-Any Bash command containing `fetch('http`, `requests.get(`, `requests.post(`, `http.get(`, or `http.request(` is intercepted and replaced with an error message. Do NOT retry with Bash.
-Instead use:
-- `ctx_execute(language, code)` to run HTTP calls in sandbox — only stdout enters context
+## Monorepo Structure
 
-### WebFetch — BLOCKED
-WebFetch calls are denied entirely. The URL is extracted and you are told to use `ctx_fetch_and_index` instead.
-Instead use:
-- `ctx_fetch_and_index(url, source)` then `ctx_search(queries)` to query the indexed content
+pnpm workspaces with TypeScript composite project references. No Lerna/Nx.
 
-## REDIRECTED tools — use sandbox equivalents
+### Packages
 
-### Bash (>20 lines output)
-Bash is ONLY for: `git`, `mkdir`, `rm`, `mv`, `cd`, `ls`, `npm install`, `pip install`, and other short-output commands.
-For everything else, use:
-- `ctx_batch_execute(commands, queries)` — run multiple commands + search in ONE call
-- `ctx_execute(language: "shell", code: "...")` — run in sandbox, only stdout enters context
+| Package | Scope | Published | Output |
+|---------|-------|-----------|--------|
+| `@wireio/shared` | Core utilities (logging, guards, helpers) | Yes | Hybrid ESM+CJS |
+| `@wireio/shared-web` | Web-specific utilities | No | ESM |
+| `@wireio/shared-node` | Node.js utilities | Yes | Hybrid ESM+CJS |
+| `@wireio/sdk-core` | Wire blockchain SDK types/primitives | Yes | Hybrid ESM+CJS |
+| `@wireio/wallet-ext-sdk` | Wallet extension client SDK | Yes | ESM |
+| `@wireio/wallet-browser-ext` | Chrome extension developer wallet | No | Webpack bundle |
+| `@wireio/protoc-gen-solana` | protoc plugin: proto3 → Rust/Solana | Yes | CJS + pkg binary |
+| `@wireio/protoc-gen-solidity` | protoc plugin: proto3 → Solidity | Yes | CJS + pkg binary |
+| `@wireio/wire-protobuf-bundler` | CLI: fetch protos → generate packages | Yes | CJS + pkg binary |
 
-### Read (for analysis)
-If you are reading a file to **Edit** it → Read is correct (Edit needs content in context).
-If you are reading to **analyze, explore, or summarize** → use `ctx_execute_file(path, language, code)` instead. Only your printed summary enters context. The raw file content stays in the sandbox.
+### Dependency Graph
 
-### Grep (large results)
-Grep results can flood context. Use `ctx_execute(language: "shell", code: "grep ...")` to run searches in sandbox. Only your printed summary enters context.
+```
+shared ──→ shared-web
+       ──→ shared-node
 
-## Tool selection hierarchy
+sdk-core ──→ wallet-ext-sdk ──→ wallet-browser-ext
+```
 
-1. **GATHER**: `ctx_batch_execute(commands, queries)` — Primary tool. Runs all commands, auto-indexes output, returns search results. ONE call replaces 30+ individual calls.
-2. **FOLLOW-UP**: `ctx_search(queries: ["q1", "q2", ...])` — Query indexed content. Pass ALL questions as array in ONE call.
-3. **PROCESSING**: `ctx_execute(language, code)` | `ctx_execute_file(path, language, code)` — Sandbox execution. Only stdout enters context.
-4. **WEB**: `ctx_fetch_and_index(url, source)` then `ctx_search(queries)` — Fetch, chunk, index, query. Raw HTML never enters context.
-5. **INDEX**: `ctx_index(content, source)` — Store content in FTS5 knowledge base for later search.
+Protoc plugins and bundler are standalone (no internal deps).
 
-## Subagent routing
+## TypeScript Configuration
 
-When spawning subagents (Agent/Task tool), the routing block is automatically injected into their prompt. Bash-type subagents are upgraded to general-purpose so they have access to MCP tools. You do NOT need to manually instruct subagents about context-mode.
+Base configs live in `etc/tsconfig/`:
 
-## Output constraints
+| Config | Purpose |
+|--------|---------|
+| `tsconfig.base.json` | ESM packages (ES2022, ESNext modules, bundler resolution) |
+| `tsconfig.base.cjs.json` | CJS packages (nodenext module resolution) |
+| `tsconfig.base.esm.json` | Pure ESM (ESNext target + modules) |
+| `tsconfig.base.jest.json` | Jest transform (CJS compat for ts-jest) |
+| `tsconfig.jest.cjs.json` | CJS Jest transform variant |
 
-- Keep responses under 500 words.
-- Write artifacts (code, configs, PRDs) to FILES — never return them as inline text. Return only: file path + 1-line description.
-- When indexing content, use descriptive source labels so others can `ctx_search(source: "label")` later.
+Root `tsconfig.json` has project references to all packages. Build order is resolved by `tsc -b`.
 
-## ctx commands
+**Note:** strict mode is OFF (`strict: false`, `noImplicitAny: false`). Path aliases for all `@wireio/*` packages are defined in the base config.
 
-| Command | Action |
-|---------|--------|
-| `ctx stats` | Call the `ctx_stats` MCP tool and display the full output verbatim |
-| `ctx doctor` | Call the `ctx_doctor` MCP tool, run the returned shell command, display as checklist |
-| `ctx upgrade` | Call the `ctx_upgrade` MCP tool, run the returned shell command, display as checklist |
+## Hybrid ESM/CJS Build Pattern
+
+Packages that publish both ESM and CJS (`shared`, `sdk-core`, `shared-node`) use:
+
+1. Two tsconfig files: one for `lib/esm/`, one for `lib/cjs/`
+2. Post-build: `scripts/fix-hybrid-output.mjs` patches relative imports with `.js` extensions and creates `lib/cjs/package.json` with `{"type":"commonjs"}`
+3. Package.json `exports` map: `"import"` → `lib/esm/`, `"require"` → `lib/cjs/`
+
+## CLI Plugin Build Pipeline (protoc-gen-*, protobuf-bundler)
+
+1. `tsc` → `lib/` (compile)
+2. `esbuild` → `dist/bundle/*.cjs` with shebang + chmod (bundle)
+3. `@yao-pkg/pkg` → standalone binary at `dist/bin/` with embedded assets (dist)
+
+Assets (Rust runtime, Solidity templates, Handlebars templates) are embedded via `pkg.assets` in package.json.
+
+## Testing
+
+- Framework: Jest 30 with ts-jest
+- Root `jest.config.ts` lists all package projects
+- Tests live in `<package>/tests/` (not alongside source)
+- Test environments: `node` for most packages, `jsdom` for web/extension packages
+- Module name mapping strips `.js` extensions: `(^.{1,2}/.*)\\.js$` → `$1`
+- protoc plugins have no TS unit tests — tested via `pnpm generate:test` which runs protoc end-to-end
+
+## Code Style
+
+Enforced by Prettier (`.prettierrc.js`):
+- No semicolons
+- Double quotes
+- No trailing commas
+- 2-space indent, no tabs
+- Arrow parens: avoid when possible
+- No ESLint configured
+
+## CI/CD
+
+GitHub Actions (`.github/workflows/publish-npm.yaml`):
+- Triggers on push to `master` (skips if `[skip release]` in commit message)
+- Bumps all packages patch version (`pnpm -r exec -- pnpm version patch`)
+- Auto-commits `chore(release): bump patch [skip release]`
+- Publishes all non-private packages to npm (`pnpm -r publish --access public`)
+
+## Gotchas
+
+- `pnpm test` runs `npm run build` first (not `pnpm build`), then jest — the build must succeed before tests run
+- protoc-gen packages have `postinstall` scripts that trigger `pnpm dist` — this can be slow on first install
+- The `fix-hybrid-output.mjs` script must run after every build of hybrid packages or ESM imports will break in Node
+- `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
+- Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch
+- Node >=22 required (package.json says >=22, README says >=24 — actual CI uses v24)
+- The `web-logging-example` requires `WIRE_PUSH_URL` env var injected at webpack build time
