@@ -1,1 +1,1 @@
-export * from './SystemContractTypes';
+export * as SystemContracts from "./SystemContractTypes"

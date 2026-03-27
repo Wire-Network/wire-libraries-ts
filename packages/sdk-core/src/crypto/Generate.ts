@@ -1,6 +1,6 @@
 // src/crypto/generate.ts
 
-import { KeyType } from "../chain/KeyType"
+import { KeyType } from "../chain"
 import { getCurve } from "./Curves"
 import nacl from "tweetnacl"
 

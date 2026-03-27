@@ -29,6 +29,10 @@ export class Bytes implements ABISerializableObject {
    * @note Make sure to take a [[copy]] before mutating the bytes as the underlying source is not copied here.
    */
   static from(value: AnyBytes, encoding?: BytesEncoding): Bytes {
+    if (value instanceof Uint8Array) {
+      return new this(value)
+    }
+
     if (isInstanceOf(value, this)) {
       return value
     }

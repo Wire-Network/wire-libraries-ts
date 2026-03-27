@@ -1,3 +1,6 @@
+// system contract types
+export * from "./types"
+
 // chain types
 export * from "./chain"
 
@@ -27,3 +30,11 @@ export * as Crypto from "./crypto"
 
 export * from "./signing/IndexSigning"
 export * from "./AbiCache"
+
+// hash
+import { sha256, sha512, sha384 } from "hash.js"
+export const Hash = {
+  sha256,
+  sha512,
+  sha384
+}

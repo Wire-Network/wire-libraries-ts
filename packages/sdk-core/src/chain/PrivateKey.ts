@@ -117,6 +117,18 @@ export class PrivateKey {
     return new PrivateKey(KeyType.from(type), new Bytes(generate(type)))
   }
 
+  /**
+   * Regenerate PrivateKey from seed.
+   *
+   * @param type - Key type.
+   * @param seed - Key data.
+   */
+  static regenerate(type: KeyType, seed: Bytes | ArrayLike<number>) {
+    const data = Bytes.from(seed)
+
+    return new PrivateKey(type, data)
+  }
+
   /** @internal */
   constructor(type: KeyType, data: Bytes) {
     if (
