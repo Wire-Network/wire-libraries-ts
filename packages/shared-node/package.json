@@ -1,6 +1,6 @@
 {
   "name": "@wireio/shared-node",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "private": false,
   "publishConfig": {
     "access": "public"

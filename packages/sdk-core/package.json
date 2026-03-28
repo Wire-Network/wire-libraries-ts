@@ -1,7 +1,7 @@
 {
   "name": "@wireio/sdk-core",
   "description": "Library for working with Wire powered blockchains.",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "private": false,
   "publishConfig": {
     "access": "public"
@@ -39,7 +39,7 @@
     "elliptic": "^6.5.4",
     "ethers": "^5.7.0",
     "hash.js": "^1.0.0",
-    "@noble/curves":"1.9.7",
+    "@noble/curves": "1.9.7",
     "js-big-decimal": "^2.0.7",
     "pako": "^2.1.0",
     "tslib": "^2.1.0",
