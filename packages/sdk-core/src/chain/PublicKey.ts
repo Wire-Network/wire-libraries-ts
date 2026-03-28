@@ -10,6 +10,7 @@ import { arrayToHex, hexToArray, isInstanceOf } from "../Utils"
 
 import { Bytes } from "./Bytes"
 import { KeyType } from "./KeyType"
+import { blsEncode, blsDecode } from "../crypto/BLSSerdes"
 
 export type PublicKeyType =
   | PublicKey
@@ -42,13 +43,22 @@ export class PublicKey implements ABISerializableObject {
     }
 
     if (value.startsWith("PUB_")) {
-      const parts = value.split("_")
+      const firstUnderscore = value.indexOf("_")
+      const secondUnderscore = value.indexOf("_", firstUnderscore + 1)
 
-      if (parts.length !== 3) {
+      if (firstUnderscore === -1 || secondUnderscore === -1) {
         throw new Error("Invalid public key string")
       }
 
-      const type = KeyType.from(parts[1])
+      const typeStr = value.substring(firstUnderscore + 1, secondUnderscore)
+      const payload = value.substring(secondUnderscore + 1)
+      const type = KeyType.from(typeStr)
+
+      if (type === KeyType.BLS) {
+        const data = new Bytes(blsDecode(payload, 96))
+        return new PublicKey(type, data)
+      }
+
       // ECDSA curves use 33-byte compressed pubs; ED25519 uses 32-byte
       const size =
         type === KeyType.K1 || type === KeyType.R1 || type === KeyType.EM
@@ -60,16 +70,15 @@ export class PublicKey implements ABISerializableObject {
       let data: Bytes | Uint8Array
 
       try {
-        data = Base58.decodeRipemd160Check(parts[2], size, type)
+        data = Base58.decodeRipemd160Check(payload, size, type)
       } catch (e) {
         try {
-          data = hexToArray(parts[2])
+          data = hexToArray(payload)
         } catch (e2) {
           console.error("Both base58 and hex failed to parse", e, e2)
           throw e
         }
       }
-      // const data = hexToArray(parts[2]);
       return new PublicKey(type, data)
     } else if (value.length >= 50) {
       // Legacy SYS key
@@ -93,6 +102,10 @@ export class PublicKey implements ABISerializableObject {
       decoder.setPosition(startPos)
       const data = Bytes.from(decoder.readArray(len))
       return new PublicKey(KeyType.WA, data)
+    }
+
+    if (type === KeyType.BLS) {
+      return new PublicKey(type, new Bytes(decoder.readArray(96)))
     }
 
     // ECDSA compressed keys = 33 bytes; ED25519 keys = 32 bytes
@@ -127,6 +140,10 @@ export class PublicKey implements ABISerializableObject {
 
   /** Return key in modern Antelope/SYSIO format (`PUB_<type>_<base58data>`) */
   toString() {
+    if (this.type === KeyType.BLS) {
+      return `PUB_BLS_${blsEncode(this.data.array)}`
+    }
+
     // Ensure the key is compressed
     if (
       (this.type === KeyType.K1 ||

@@ -1,0 +1,22 @@
+{
+  "extends": "../../etc/tsconfig/tsconfig.base.jest.json",
+  "compilerOptions": {
+    "rootDir": "tests",
+    "outDir": "lib/test-cjs",
+    "ignoreDeprecations": "6.0",
+    "composite": true,
+    "incremental": true,
+    "paths": {
+      "@wireio/shared-node": [
+        "./src"
+      ],
+      "@wireio/shared-node/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "references": [
+    { "path": "./tsconfig.cjs.json" },
+  ],
+  "include": ["tests"]
+}

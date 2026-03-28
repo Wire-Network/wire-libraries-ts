@@ -1,3 +1,4 @@
+import "jest"
 import { createHash } from "crypto"
 import { PrivateKey } from "@wireio/sdk-core/chain/PrivateKey"
 import { PublicKey } from "@wireio/sdk-core/chain/PublicKey"

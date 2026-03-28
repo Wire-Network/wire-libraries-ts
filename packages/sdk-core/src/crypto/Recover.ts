@@ -17,6 +17,9 @@ export function recover(
     case KeyType.ED:
       throw new Error("ED25519 does not support public key recovery")
 
+    case KeyType.BLS:
+      throw new Error("BLS does not support public key recovery")
+
     case KeyType.EM: {
       // wire: [vWire(31/32)‖r(32)‖s(32)]
       const vRaw = signature[0] - 4 // 27/28

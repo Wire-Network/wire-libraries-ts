@@ -6,7 +6,7 @@ import { KeyType } from "./chain/KeyType"
 import { Name, NameType } from "./chain/Name"
 import { TimePoint } from "./chain/Time"
 import { ethers } from "ethers"
-import { Serializer } from "./serializer/index"
+import { Serializer } from "./serializer/"
 
 export function arrayEquals(a: ArrayLike<number>, b: ArrayLike<number>) {
   const len = a.length

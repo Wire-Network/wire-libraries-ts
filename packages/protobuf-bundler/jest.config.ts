@@ -9,15 +9,15 @@ const config: Config = {
     "^.+\\.ts$": [
       "ts-jest",
       {
-        tsconfig: "<rootDir>/../../etc/tsconfig/tsconfig.jest.cjs.json",
-      },
-    ],
+        tsconfig: "<rootDir>/../../etc/tsconfig/tsconfig.base.jest.json"
+      }
+    ]
   },
   moduleNameMapper: {
     "^@wireio/wire-protobuf-bundler$": "<rootDir>/src/index",
     "^@wireio/wire-protobuf-bundler/(.*)$": "<rootDir>/src/$1",
-    "^(\\.{1,2}/.*)\\.js$": "$1",
-  },
+    "^(\\.{1,2}/.*)\\.js$": "$1"
+  }
 }
 
 export default config

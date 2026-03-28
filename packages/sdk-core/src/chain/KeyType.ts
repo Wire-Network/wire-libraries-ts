@@ -5,7 +5,8 @@ export enum KeyType {
   WA = "WA", // WebauthN - used for WebAuthn and FIDO2
   // Note: WA is not a curve type but a protocol, it is included for compatibility
   EM = "EM", // Ethereum Message - handles ethereum signed message prefix
-  ED = "ED" // Ed25519 - used for Solana and other ED chains
+  ED = "ED", // Ed25519 - used for Solana and other ED chains
+  BLS = "BLS" // BLS12-381 - used for BLS signatures
 }
 
 export namespace KeyType {
@@ -21,6 +22,8 @@ export namespace KeyType {
         return 3
       case KeyType.ED:
         return 4
+      case KeyType.BLS:
+        return 5
       default:
         throw new Error(`Unknown curve type: ${value}`)
     }
@@ -45,6 +48,8 @@ export namespace KeyType {
         return KeyType.EM
       case 4:
         return KeyType.ED
+      case 5:
+        return KeyType.BLS
       default:
         throw new Error("Unknown curve type")
     }

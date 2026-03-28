@@ -17,7 +17,12 @@ import { Action, AnyAction } from "../chain/Action"
 import { KeyType } from "../chain/KeyType"
 import { NameType } from "../chain/Name"
 import { Signature } from "../chain/Signature"
-import { Transaction, SignedTransaction, PackedTransaction, CompressionType } from "../chain/Transaction"
+import {
+  Transaction,
+  SignedTransaction,
+  PackedTransaction,
+  CompressionType
+} from "../chain/Transaction"
 import { UInt32Type } from "../chain/Integer"
 import { SignerProvider } from "../signing/SignerProvider"
 import * as v1 from "./v1/Types"

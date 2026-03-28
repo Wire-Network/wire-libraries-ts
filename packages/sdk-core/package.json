@@ -10,7 +10,6 @@
     "lib",
     "README.md"
   ],
-  "type": "module",
   "types": "lib/esm/index.d.ts",
   "main": "lib/cjs/index.js",
   "module": "lib/esm/index.js",
@@ -29,9 +28,10 @@
   "access": "public",
   "license": "FSL-1.1-Apache-2.0",
   "scripts": {
-    "build": "tsc -b tsconfig.json && node ../../scripts/fix-hybrid-output.mjs .",
+    "build": "tsc -b tsconfig.json",
     "build:dev": "tsc -b tsconfig.json -w",
-    "test": "jest"
+    "test": "jest",
+    "fix:hybrid:exports": "node ../../scripts/fix-hybrid-output.mjs ."
   },
   "dependencies": {
     "bn.js": "^4.11.9",
@@ -39,6 +39,7 @@
     "elliptic": "^6.5.4",
     "ethers": "^5.7.0",
     "hash.js": "^1.0.0",
+    "@noble/curves":"1.9.7",
     "js-big-decimal": "^2.0.7",
     "pako": "^2.1.0",
     "tslib": "^2.1.0",
@@ -48,6 +49,7 @@
     "@types/bn.js": "^5.1.0",
     "@types/elliptic": "^6.4.18",
     "@types/node": "^22.15.3",
+    "source-map-support": "^0.5.21",
     "typescript": "6.0.2"
   }
 }

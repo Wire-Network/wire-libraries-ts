@@ -4,6 +4,7 @@ import { KeyType } from "../chain/KeyType"
 import { SignatureParts } from "../chain/Signature"
 import nacl from "tweetnacl"
 import { ethers } from "ethers"
+import { blsSign, skFromLE } from "./BLS"
 
 /**
  * Signs a message with a private key using various cryptographic algorithms.
@@ -41,6 +42,12 @@ export function sign(
       const s = ethers.utils.arrayify(sig.s)
       const recid = sig.recoveryParam! + 27
       return { type, r, s, recid }
+    }
+
+    case KeyType.BLS: {
+      const skBE = skFromLE(secret)
+      const sigLE = blsSign(skBE, message)
+      return { type, r: sigLE, s: new Uint8Array(0), recid: 0 }
     }
 
     default: {

@@ -9,15 +9,15 @@ const config: Config = {
     "^.+\\.ts$": [
       "ts-jest",
       {
-        tsconfig: "<rootDir>/../../etc/tsconfig/tsconfig.jest.cjs.json",
-      },
-    ],
+        tsconfig: "<rootDir>/../../etc/tsconfig/tsconfig.base.jest.json"
+      }
+    ]
   },
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
     "^@wireio/protoc-gen-solana$": "<rootDir>/src/index",
-    "^@wireio/protoc-gen-solana/(.*)$": "<rootDir>/src/$1",
-  },
+    "^@wireio/protoc-gen-solana/(.*)$": "<rootDir>/src/$1"
+  }
 }
 
 export default config

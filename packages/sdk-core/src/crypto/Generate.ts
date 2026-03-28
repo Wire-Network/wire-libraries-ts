@@ -1,8 +1,9 @@
 // src/crypto/generate.ts
 
-import { KeyType } from "../chain"
+import { KeyType } from "../chain/KeyType"
 import { getCurve } from "./Curves"
 import nacl from "tweetnacl"
+import { blsGenerate, skToLE } from "./BLS"
 
 /**
  * Generate a new private key for given type.
@@ -22,6 +23,9 @@ export function generate(type: KeyType): Uint8Array {
       } while (!curve.keyFromPrivate(key).validate().result)
       return key
     }
+
+    case KeyType.BLS:
+      return skToLE(blsGenerate())
 
     default: {
       // ECDSA curves (K1, R1)

@@ -58,7 +58,7 @@ Base configs live in `etc/tsconfig/`:
 | `tsconfig.base.cjs.json` | CJS packages (nodenext module resolution) |
 | `tsconfig.base.esm.json` | Pure ESM (ESNext target + modules) |
 | `tsconfig.base.jest.json` | Jest transform (CJS compat for ts-jest) |
-| `tsconfig.jest.cjs.json` | CJS Jest transform variant |
+| `tsconfig.base.jest.json` | CJS Jest transform variant |
 
 Root `tsconfig.json` has project references to all packages. Build order is resolved by `tsc -b`.
 

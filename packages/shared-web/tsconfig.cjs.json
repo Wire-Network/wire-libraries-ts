@@ -1,0 +1,14 @@
+{
+  "extends": "../../etc/tsconfig/tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/cjs",
+    "module": "commonjs",
+    
+    "ignoreDeprecations": "6.0"
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../shared/tsconfig.cjs.json" }
+  ]
+}

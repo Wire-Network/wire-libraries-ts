@@ -1,13 +1,12 @@
 {
   "extends": "../../etc/tsconfig/tsconfig.base.json",
-  "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "lib"
-  },
-  "include": ["src"],
+  "files": [],
   "references": [
     {
-      "path": "../shared/tsconfig.json"
-    }
+      "path": "../shared/tsconfig.json",
+      
+    },
+    { "path": "./tsconfig.esm.json" },
+    { "path": "./tsconfig.cjs.jest.json" }
   ]
 }

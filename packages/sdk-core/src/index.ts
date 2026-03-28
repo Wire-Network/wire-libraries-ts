@@ -2,7 +2,7 @@
 export * from "./types"
 
 // chain types
-export * from "./chain"
+export * from "./chain/index"
 
 // utils
 export * from "./serializer"

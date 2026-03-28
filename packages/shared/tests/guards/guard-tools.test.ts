@@ -15,9 +15,12 @@ describe("getValue", () => {
 
   it("returns default value when function throws", () => {
     expect(
-      getValue(() => {
-        throw new Error()
-      }, "default")
+      getValue(
+        () => {
+          throw new Error()
+        },
+        "default" as any as never
+      )
     ).toBe("default")
   })
 
@@ -31,7 +34,10 @@ describe("getValue", () => {
   })
 
   it("returns promise resolving to default on rejection", async () => {
-    const result = getValue(() => Promise.reject(new Error()), "default")
+    const result = getValue(
+      () => Promise.reject(new Error()),
+      "default" as any as never
+    )
     await expect(result).resolves.toBe("default")
   })
 })
@@ -67,7 +73,7 @@ describe("setGuardErrorHandler", () => {
 
     getValue(() => {
       throw new Error("caught")
-    }, undefined)
+    }, undefined as never)
 
     expect(errors).toHaveLength(1)
     expect(errors[0].message).toBe("caught")
@@ -82,7 +88,7 @@ describe("setGuardErrorHandler", () => {
 
     getValue(() => {
       throw new Error("not caught")
-    }, undefined)
+    }, undefined as never)
 
     expect(errors).toHaveLength(0)
   })

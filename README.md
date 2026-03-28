@@ -70,7 +70,7 @@ The monorepo uses [project references](https://www.typescriptlang.org/docs/handb
 
 - **`tsconfig.base.json`** — ESM packages (DOM + ESNext)
 - **`tsconfig.base.cjs.json`** — CommonJS packages (Node-only)
-- **`tsconfig.base.jest.json`** / **`tsconfig.jest.cjs.json`** — Jest transforms
+- **`tsconfig.base.jest.json`** / **`tsconfig.base.jest.json`** — Jest transforms
 
 ## License
 

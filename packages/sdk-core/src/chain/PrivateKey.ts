@@ -16,7 +16,9 @@ import { Checksum512 } from "./Checksum"
 import { KeyType } from "./KeyType"
 import { PublicKey } from "./PublicKey"
 import { Signature } from "./Signature"
-import * as Crypto from "../crypto/index"
+import { getCurve } from "../crypto/Curves"
+import { blsEncode, blsDecode } from "../crypto/BLSSerdes"
+import { blsKeyGen, blsProofOfPossession, skToLE } from "../crypto/BLS"
 
 export type PrivateKeyType = PrivateKey | string
 
@@ -124,15 +126,33 @@ export class PrivateKey {
    * @param seed - Key data.
    */
   static regenerate(type: KeyType, seed: Bytes | ArrayLike<number>) {
+    if (type === KeyType.BLS) {
+      //const seed = sha256("wire")
+      let seedData: Uint8Array
+      if (seed instanceof Bytes) seedData = seed.array
+      else if (seed instanceof Uint8Array) seedData = seed
+      else seedData = new Uint8Array(seed)
+
+      const skBE = blsKeyGen(seedData)
+      const skLE = skToLE(skBE)
+      return new PrivateKey(KeyType.BLS, new Bytes(skLE), new Bytes(skBE))
+    }
     const data = Bytes.from(seed)
 
     return new PrivateKey(type, data)
   }
 
   /** @internal */
-  constructor(type: KeyType, data: Bytes) {
+  constructor(
+    type: KeyType,
+    data: Bytes,
+    readonly blsDataBE: Bytes | null = null
+  ) {
     if (
-      (type === KeyType.K1 || type === KeyType.R1 || type === KeyType.EM) &&
+      (type === KeyType.K1 ||
+        type === KeyType.R1 ||
+        type === KeyType.EM ||
+        type === KeyType.BLS) &&
       data.length !== 32
     ) {
       throw new Error("Invalid private key length")
@@ -146,6 +166,27 @@ export class PrivateKey {
     this.data = data
   }
 
+  get proofOfPossessionData(): Uint8Array {
+    if (this.type === KeyType.BLS) {
+      return blsProofOfPossession(this.blsDataBE.array)
+    }
+    throw new Error("Proof of possession is only available for BLS keys")
+  }
+
+  get proofOfPossessionString(): string {
+    if (this.type === KeyType.BLS) {
+      return "SIG_BLS_" + blsEncode(this.proofOfPossessionData)
+    }
+    throw new Error("Proof of possession is only available for BLS keys")
+  }
+
+  get proofOfPossessionSignature(): Signature {
+    if (this.type === KeyType.BLS) {
+      return Signature.from(this.proofOfPossessionString)
+    }
+    throw new Error("Proof of possession is only available for BLS keys")
+  }
+
   /**
    * Sign a raw message or its digest.
    * ED25519: signs the raw message.
@@ -154,8 +195,7 @@ export class PrivateKey {
   signMessage(message: BytesType) {
     const raw = Bytes.from(message).array
 
-    if (this.type === KeyType.ED) {
-      // ED25519: raw message
+    if (this.type === KeyType.ED || this.type === KeyType.BLS) {
       return Signature.from(sign(this.data.array, raw, this.type))
     }
 
@@ -201,7 +241,10 @@ export class PrivateKey {
   }
 
   toElliptic(): EC.KeyPair {
-    const ec = Crypto.getCurve(this.type)
+    if (this.type === KeyType.BLS) {
+      throw new Error("BLS keys are not elliptic curve keys")
+    }
+    const ec = getCurve(this.type)
     return ec.keyFromPrivate(this.data.array)
   }
 
@@ -209,6 +252,9 @@ export class PrivateKey {
    * Return the key in Antelope/SYSIO PVT_<type>_<base58check> format.
    */
   toString() {
+    if (this.type === KeyType.BLS) {
+      return `PVT_BLS_${blsEncode(this.data.array)}`
+    }
     return `PVT_${this.type}_${Base58.encodeRipemd160Check(this.data, this.type)}`
   }
 
@@ -234,6 +280,12 @@ function decodeKey(value: string) {
     }
 
     const type = KeyType.from(parts[1])
+
+    if (type === KeyType.BLS) {
+      const data = new Bytes(blsDecode(parts[2], 32))
+      return { type, data }
+    }
+
     let size: number | undefined
 
     switch (type) {

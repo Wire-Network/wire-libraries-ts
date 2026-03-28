@@ -19,6 +19,9 @@ export function sharedSecret(
         "Shared secret (ECDH) not supported for ED25519; convert to X25519 first"
       )
 
+    case KeyType.BLS:
+      throw new Error("BLS does not support shared secret")
+
     default: {
       // ECDSA curves (K1, R1, EM)
       const curve = getCurve(type)

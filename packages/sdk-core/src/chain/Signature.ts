@@ -9,7 +9,10 @@ import { Bytes, BytesType } from "./Bytes"
 import { Checksum256, Checksum256Type } from "./Checksum"
 import { KeyType } from "./KeyType"
 import { PublicKey } from "./PublicKey"
-import * as Crypto from "../crypto/index"
+
+import { blsEncode, blsDecode } from "../crypto/BLSSerdes"
+import { recover } from "../crypto/Recover"
+import { verify } from "../crypto/Verify"
 
 export type SignatureType = Signature | SignatureParts | string
 
@@ -39,6 +42,10 @@ export class Signature implements ABISerializableObject {
         return new Signature(KeyType.ED, new Bytes(data))
       }
 
+      if (value.type === KeyType.BLS) {
+        return new Signature(KeyType.BLS, new Bytes(value.r))
+      }
+
       // everything else stays 65-byte with recid in [0]
       const data = new Uint8Array(1 + 32 + 32)
       let recid = value.recid
@@ -60,20 +67,23 @@ export class Signature implements ABISerializableObject {
       throw new Error("Invalid signature string")
     }
 
-    const parts = value.split("_")
+    const firstUnderscore = value.indexOf("_")
+    const secondUnderscore = value.indexOf("_", firstUnderscore + 1)
 
-    if (parts.length !== 3) {
+    if (firstUnderscore === -1 || secondUnderscore === -1) {
       throw new Error("Invalid signature string")
     }
 
-    const type = KeyType.from(parts[1])
+    const typeStr = value.substring(firstUnderscore + 1, secondUnderscore)
+    const payload = value.substring(secondUnderscore + 1)
+    const type = KeyType.from(typeStr)
 
     let data: Bytes | Uint8Array
 
     if (type === KeyType.EM) {
       // SIG_EM_ hex is in libfc format [r(32)|s(32)|v(1)]
       // Convert to internal wire format [vWire(1)|r(32)|s(32)]
-      const raw = hexToArray(parts[2])
+      const raw = hexToArray(payload)
       if (raw.length !== 65) {
         throw new Error(`EM signature hex must be 65 bytes, got ${raw.length}`)
       }
@@ -85,6 +95,11 @@ export class Signature implements ABISerializableObject {
       return new Signature(type, new Bytes(wire))
     }
 
+    if (type === KeyType.BLS) {
+      const data = new Bytes(blsDecode(payload, 192))
+      return new Signature(type, data)
+    }
+
     try {
       // 65 for ECDSA, 64 for ED
       const length =
@@ -93,10 +108,10 @@ export class Signature implements ABISerializableObject {
           : type === KeyType.ED
             ? 64
             : undefined
-      data = Base58.decodeRipemd160Check(parts[2], length, type)
+      data = Base58.decodeRipemd160Check(payload, length, type)
     } catch (e) {
       try {
-        data = hexToArray(parts[2])
+        data = hexToArray(payload)
       } catch (e2) {
         console.error("Both base58 and hex failed to parse", e, e2)
         throw e
@@ -119,6 +134,10 @@ export class Signature implements ABISerializableObject {
       decoder.setPosition(startPos)
       const data = Bytes.from(decoder.readArray(len))
       return new Signature(KeyType.WA, data)
+    }
+
+    if (type === KeyType.BLS) {
+      return new Signature(type, new Bytes(decoder.readArray(192)))
     }
 
     const length = type === KeyType.ED ? 64 : 65
@@ -213,7 +232,7 @@ export class Signature implements ABISerializableObject {
   /** Recover public key from given message digest. */
   recoverDigest(digest: Checksum256Type): PublicKey {
     digest = Checksum256.from(digest)
-    return Crypto.recover(this.data.array, digest.array, this.type)
+    return recover(this.data.array, digest.array, this.type)
   }
 
   /** Recover public key from given message. */
@@ -224,7 +243,7 @@ export class Signature implements ABISerializableObject {
   /** Verify this signature with given message digest and public key. */
   verifyDigest(digest: Checksum256Type, publicKey: PublicKey): boolean {
     digest = Checksum256.from(digest)
-    return Crypto.verify(
+    return verify(
       this.data.array,
       digest.array,
       publicKey.data.array,
@@ -254,13 +273,8 @@ export class Signature implements ABISerializableObject {
 
     switch (this.type) {
       case KeyType.ED:
-        // ED25519: raw `[r‖s]`
-        return Crypto.verify(
-          this.data.array,
-          rawMsg,
-          publicKey.data.array,
-          this.type
-        )
+      case KeyType.BLS:
+        return verify(this.data.array, rawMsg, publicKey.data.array, this.type)
 
       case KeyType.EM: {
         // 1) unwrap wire [vWire‖r‖s]
@@ -276,7 +290,7 @@ export class Signature implements ABISerializableObject {
         sig[64] = vRaw
 
         // 3) verify with EIP-191 prefix + keccak256
-        return Crypto.verify(sig, rawMsg, publicKey.data.array, KeyType.EM)
+        return verify(sig, rawMsg, publicKey.data.array, KeyType.EM)
       }
 
       default:
@@ -287,6 +301,10 @@ export class Signature implements ABISerializableObject {
 
   /** Base58check encoded string representation of this signature (`SIG_<type>_<data>`). */
   toString(): string {
+    if (this.type === KeyType.BLS) {
+      return `SIG_BLS_${blsEncode(this.data.array)}`
+    }
+
     if (this.type === KeyType.EM) {
       // Internal wire format is [vWire|r|s], but SIG_EM_ hex uses
       // libfc's [r|s|v] format where v = vWire - 4 (Ethereum v: 27/28)
@@ -354,6 +372,12 @@ export class Signature implements ABISerializableObject {
 
   /** @internal */
   toABI(encoder: ABIEncoder): void {
+    if (this.type === KeyType.BLS) {
+      encoder.writeByte(KeyType.indexFor(this.type))
+      encoder.writeArray(this.data.array)
+      return
+    }
+
     encoder.writeByte(KeyType.indexFor(this.type))
     if (this.type === KeyType.EM) {
       // Internal wire format is [vWire|r|s], but libfc's

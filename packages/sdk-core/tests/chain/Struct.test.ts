@@ -1,3 +1,5 @@
+import "source-map-support/register"
+import "jest"
 import { Struct } from "@wireio/sdk-core/chain/Struct"
 import { Name } from "@wireio/sdk-core/chain/Name"
 import { UInt64 } from "@wireio/sdk-core/chain/Integer"

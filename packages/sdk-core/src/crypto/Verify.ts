@@ -2,6 +2,7 @@ import { getCurve } from "./Curves"
 import { KeyType } from "../chain/KeyType"
 import nacl from "tweetnacl"
 import { ethers } from "ethers"
+import { blsVerify } from "./BLS"
 
 /**
  * Verify signature using message and public key.
@@ -24,6 +25,9 @@ export function verify(
       const expected = ethers.utils.computeAddress(pubkey)
       return recovered.toLowerCase() === expected.toLowerCase()
     }
+
+    case KeyType.BLS:
+      return blsVerify(signature, message, pubkey)
 
     default: {
       // ECDSA verification using elliptic
