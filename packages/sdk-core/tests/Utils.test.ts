@@ -4,8 +4,12 @@ import {
   hexToArray,
   concatBytes,
   isInstanceOf,
-  ensure0x
+  ensure0x,
+  dateToBlockTimestamp,
+  checkDateParse
 } from "@wireio/sdk-core/Utils"
+import { TimePoint } from "@wireio/sdk-core/chain/Time"
+import { BLOCK_TIMESTAMP_EPOCH_MS, BLOCK_TIMESTAMP_INTERVAL_MS } from "@wireio/sdk-core/chain/constants"
 
 describe("Utils", () => {
   describe("arrayEquals", () => {
@@ -122,6 +126,41 @@ describe("Utils", () => {
 
     it("handles empty string", () => {
       expect(ensure0x("")).toBe("0x")
+    })
+  })
+
+  describe("dateToBlockTimestamp", () => {
+    it("returns 0 for the epoch date (Jan 1, 2025)", () => {
+      const tp = TimePoint.fromMilliseconds(BLOCK_TIMESTAMP_EPOCH_MS)
+      expect(dateToBlockTimestamp(tp)).toBe(0)
+    })
+
+    it("returns correct slot for epoch + one interval", () => {
+      const tp = TimePoint.fromMilliseconds(BLOCK_TIMESTAMP_EPOCH_MS + BLOCK_TIMESTAMP_INTERVAL_MS)
+      expect(dateToBlockTimestamp(tp)).toBe(1)
+    })
+
+    it("returns correct slot for epoch + 10 seconds", () => {
+      const tp = TimePoint.fromMilliseconds(BLOCK_TIMESTAMP_EPOCH_MS + 10000)
+      expect(dateToBlockTimestamp(tp)).toBe(20) // 10000 / 500 = 20
+    })
+
+    it("matches BlockTimestamp.fromMilliseconds slot value", () => {
+      const ms = BLOCK_TIMESTAMP_EPOCH_MS + 5000
+      const tp = TimePoint.fromMilliseconds(ms)
+      const slot = dateToBlockTimestamp(tp)
+      expect(slot).toBe(Math.round((ms - BLOCK_TIMESTAMP_EPOCH_MS) / BLOCK_TIMESTAMP_INTERVAL_MS))
+    })
+  })
+
+  describe("checkDateParse", () => {
+    it("parses a valid ISO date string", () => {
+      const result = checkDateParse("2025-01-01T00:00:00Z")
+      expect(result).toBe(BLOCK_TIMESTAMP_EPOCH_MS)
+    })
+
+    it("throws on invalid date string", () => {
+      expect(() => checkDateParse("not-a-date")).toThrow("Invalid time format")
     })
   })
 })
