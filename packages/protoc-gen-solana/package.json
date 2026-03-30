@@ -1,6 +1,6 @@
 {
   "name": "@wireio/protoc-gen-solana",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "protoc plugin generating Rust encode/decode modules from protobuf3 definitions for Solana programs",
   "private": false,
   "type": "commonjs",

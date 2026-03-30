@@ -1,7 +1,7 @@
 {
   "name": "@wireio/wallet-ext-sdk",
   "description": "Client SDK for the Wire Wallet browser extension",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "private": false,
   "publishConfig": {
     "access": "public"
