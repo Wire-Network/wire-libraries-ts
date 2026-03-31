@@ -1,8 +1,9 @@
 import { ethers } from "ethers"
 import { KeyType } from "../chain/KeyType"
-import { PrivateKey } from "../chain/PrivateKey"
+import { PrivateKey, PrivateKeyType } from "../chain/PrivateKey"
 import { PublicKey } from "../chain/PublicKey"
 import { getCurve } from "../crypto/Curves"
+import { hexToArray } from "../Utils"
 
 export interface SignerProvider {
   /**
@@ -63,25 +64,29 @@ export const createEdSigner = (
 }
 
 /**
- * Create a classic signer provider using elliptic curves.
- * @param secret The private key as a Uint8Array.
- * @param keyType The type of key (default is K1).
- * @returns A SignerProvider for classic elliptic curve signing.
+ * Create a classic signer provider for K1/R1-style keys.
+ *
+ * This signer expects a precomputed 32-byte digest payload (the same digest
+ * produced by transaction.signingDigest(...).msgBytes for classic keys) and
+ * signs it directly via `signDigest` to avoid double-hashing.
+ *
+ * The returned bytes are in raw `[r||s||v]` format so callers can pass them
+ * into `Signature.fromRaw(...)` without additional conversion.
+ *
+ * @param privateKey Private key in any supported `PrivateKeyType` representation.
+ * @returns A `SignerProvider` for classic elliptic-curve signing.
  */
-export const createClassicSigner = (
-  secret: Uint8Array,
-  keyType = KeyType.K1
-): SignerProvider => {
-  const ecKey = getCurve(keyType).keyFromPrivate(secret)
-  const privKey = PrivateKey.fromElliptic(ecKey, keyType)
+export const createClassicSigner = (privateKey: PrivateKeyType): SignerProvider => {
+  const privKey = PrivateKey.from(privateKey);
 
   return {
     pubKey: privKey.toPublic(),
     async sign(msg) {
-      const sigBytes = privKey.signMessage(msg).data.array
-      return sigBytes
+      const digest = typeof msg === 'string' ? hexToArray(msg) : msg;
+      const signature = privKey.signDigest(digest);
+      return hexToArray(signature.toHex().slice(2));
     }
-  }
+  };
 }
 
 /** @Internal */
