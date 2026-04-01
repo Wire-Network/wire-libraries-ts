@@ -1,6 +1,7 @@
 import { ethers } from "ethers"
+import { Option } from "@3fv/prelude-ts"
 import { KeyType } from "../chain/KeyType"
-import { PrivateKey, PrivateKeyType } from "../chain/PrivateKey"
+import { PrivateKey, type PrivateKeyType } from "../chain/PrivateKey"
 import { PublicKey } from "../chain/PublicKey"
 import { getCurve } from "../crypto/Curves"
 import { hexToArray } from "../Utils"
@@ -18,6 +19,21 @@ export interface SignerProvider {
   sign(msg: string | Uint8Array): Promise<Uint8Array>
 }
 
+const toMessageBytes = (
+  msg: string | Uint8Array,
+  mapStringValue: (value: string) => Uint8Array
+) => {
+  return Option.of(msg)
+    .filter((value): value is string => typeof value === "string")
+    .map(mapStringValue)
+    .orCall(() =>
+      Option.of(msg).filter(
+        (value): value is Uint8Array => value instanceof Uint8Array
+      )
+    )
+    .get()
+}
+
 /**
  * Create an Ethereum signer provider.
  * @param signer The ethers.js JsonRpcSigner instance.
@@ -31,8 +47,7 @@ export const createEmSigner = (
   return {
     pubKey,
     async sign(msg) {
-      const msgBytes =
-        typeof msg === "string" ? ethers.utils.toUtf8Bytes(msg) : msg
+      const msgBytes = toMessageBytes(msg, ethers.utils.toUtf8Bytes)
 
       const sigHex = await signer.signMessage(msgBytes)
       const sigBytes = ethers.utils.arrayify(sigHex)
@@ -54,8 +69,7 @@ export const createEdSigner = (
   return {
     pubKey,
     async sign(msg) {
-      const msgBytes =
-        typeof msg === "string" ? new TextEncoder().encode(msg) : msg
+      const msgBytes = toMessageBytes(msg, value => new TextEncoder().encode(value))
 
       const sigBytes = await adapter.signMessage(msgBytes)
       return sigBytes
@@ -77,16 +91,16 @@ export const createEdSigner = (
  * @returns A `SignerProvider` for classic elliptic-curve signing.
  */
 export const createClassicSigner = (privateKey: PrivateKeyType): SignerProvider => {
-  const privKey = PrivateKey.from(privateKey);
+  const privKey = PrivateKey.from(privateKey)
 
   return {
     pubKey: privKey.toPublic(),
     async sign(msg) {
-      const digest = typeof msg === 'string' ? hexToArray(msg) : msg;
-      const signature = privKey.signDigest(digest);
-      return hexToArray(signature.toHex().slice(2));
+      const digest = toMessageBytes(msg, hexToArray)
+      const signature = privKey.signDigest(digest)
+      return hexToArray(signature.toHex().slice(2))
     }
-  };
+  }
 }
 
 /** @Internal */
