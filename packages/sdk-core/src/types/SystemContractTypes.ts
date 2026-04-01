@@ -84,11 +84,14 @@ export interface SysioBiosBlockchainParametersType {
   max_transaction_cpu_usage: number
   min_transaction_cpu_usage: number
   max_transaction_lifetime: number
-  deferred_trx_expiration_window: number
   max_transaction_delay: number
   max_inline_action_size: number
   max_inline_action_depth: number
   max_authority_depth: number
+  max_action_return_value_size: number
+  max_kv_key_size: number
+  max_kv_value_size: number
+  max_kv_secondary_key_size: number
 }
 
 /** sysio.bios::deleteauth (action) */
@@ -232,13 +235,21 @@ export interface SysioBiosUpdateauthAction {
 
 // ── sysio.chalg ──
 
+/** sysio.chalg::ChallengeStatus (enum, int32) */
+export enum SysioChalgChallengestatus {
+  CHALLENGE_STATUS_CHALLENGE_SENT = 0,
+  CHALLENGE_STATUS_RESPONSE_RECEIVED = 1,
+  CHALLENGE_STATUS_RESOLVED = 2,
+  CHALLENGE_STATUS_ESCALATED = 3,
+}
+
 /** sysio.chalg::challenge_entry (type) */
 export interface SysioChalgChallengeEntryType {
   id: number
   chain_request_id: number
   epoch_index: number
   round: number
-  status: number
+  status: SysioChalgChallengestatus
   challenge_hash: string
   response_hash: string
   correct_operators: string[]
@@ -298,6 +309,25 @@ export interface SysioChalgSubmitrespAction {
 
 // ── sysio.epoch ──
 
+/** sysio.epoch::OperatorStatus (enum, int32) */
+export enum SysioEpochOperatorstatus {
+  OPERATOR_STATUS_UNKNOWN = 0,
+  OPERATOR_STATUS_WARMUP = 1,
+  OPERATOR_STATUS_COOLDOWN = 2,
+  OPERATOR_STATUS_ACTIVE = 3,
+  OPERATOR_STATUS_TERMINATED = 240,
+  OPERATOR_STATUS_SLASHED = 241,
+}
+
+/** sysio.epoch::OperatorType (enum, int32) */
+export enum SysioEpochOperatortype {
+  OPERATOR_TYPE_UNKNOWN = 0,
+  OPERATOR_TYPE_PRODUCER = 1,
+  OPERATOR_TYPE_BATCH = 2,
+  OPERATOR_TYPE_UNDERWRITER = 3,
+  OPERATOR_TYPE_CHALLENGER = 4,
+}
+
 /** sysio.epoch::chain_kind_t (enum, uint8) */
 export enum SysioEpochChainKindType {
   unknown = 0,
@@ -305,6 +335,11 @@ export enum SysioEpochChainKindType {
   ethereum = 2,
   solana = 3,
   sui = 4,
+}
+
+/** sysio.epoch::activateop (action) */
+export interface SysioEpochActivateopAction {
+  account: string
 }
 
 /** sysio.epoch::advance (action) */
@@ -339,8 +374,8 @@ export interface SysioEpochInitgroupsAction {
 /** sysio.epoch::operator_info (type) */
 export interface SysioEpochOperatorInfoType {
   account: string
-  type: number
-  status: number
+  type: SysioEpochOperatortype
+  status: SysioEpochOperatorstatus
   registered_epoch: number
   chain_addresses: SysioEpochPairChainKindTChecksum256Type[]
   collateral: SysioEpochPairChainKindTInt64Type[]
@@ -380,7 +415,7 @@ export interface SysioEpochPauseAction {
 /** sysio.epoch::regoperator (action) */
 export interface SysioEpochRegoperatorAction {
   account: string
-  type: number
+  type: SysioEpochOperatortype
 }
 
 /** sysio.epoch::regoutpost (action) */
@@ -415,6 +450,61 @@ export interface SysioEpochUnregoperAction {
 }
 
 // ── sysio.msgch ──
+
+/** sysio.msgch::AttestationType (enum, int32) */
+export enum SysioMsgchAttestationtype {
+  ATTESTATION_TYPE_UNSPECIFIED = 0,
+  ATTESTATION_TYPE_OPERATOR_ACTION = 2001,
+  ATTESTATION_TYPE_STAKE = 3001,
+  ATTESTATION_TYPE_UNSTAKE = 3002,
+  ATTESTATION_TYPE_PRETOKEN_PURCHASE = 3004,
+  ATTESTATION_TYPE_PRETOKEN_YIELD = 3006,
+  ATTESTATION_TYPE_RESERVE_BALANCE_SHEET = 43520,
+  ATTESTATION_TYPE_STAKE_UPDATE = 60928,
+  ATTESTATION_TYPE_NATIVE_YIELD_REWARD = 60929,
+  ATTESTATION_TYPE_WIRE_TOKEN_PURCHASE = 60930,
+  ATTESTATION_TYPE_CHALLENGE_RESPONSE = 60932,
+  ATTESTATION_TYPE_SLASH_OPERATOR = 60933,
+  ATTESTATION_TYPE_SWAP = 60934,
+  ATTESTATION_TYPE_UNDERWRITE_INTENT = 60935,
+  ATTESTATION_TYPE_UNDERWRITE_CONFIRM = 60936,
+  ATTESTATION_TYPE_UNDERWRITE_REJECT = 60937,
+  ATTESTATION_TYPE_REMIT = 60938,
+  ATTESTATION_TYPE_CHALLENGE_REQUEST = 60939,
+  ATTESTATION_TYPE_EPOCH_SYNC = 60940,
+  ATTESTATION_TYPE_ROSTER_UPDATE = 60941,
+  ATTESTATION_TYPE_REMIT_CONFIRM = 60942,
+}
+
+/** sysio.msgch::ChainRequestStatus (enum, int32) */
+export enum SysioMsgchChainrequeststatus {
+  CHAIN_REQUEST_STATUS_PENDING = 0,
+  CHAIN_REQUEST_STATUS_COLLECTING = 1,
+  CHAIN_REQUEST_STATUS_CONSENSUS_OK = 2,
+  CHAIN_REQUEST_STATUS_CONSENSUS_FAIL = 3,
+  CHAIN_REQUEST_STATUS_CHALLENGED = 4,
+}
+
+/** sysio.msgch::EnvelopeStatus (enum, int32) */
+export enum SysioMsgchEnvelopestatus {
+  ENVELOPE_STATUS_PENDING_DELIVERY = 0,
+  ENVELOPE_STATUS_DELIVERED = 1,
+  ENVELOPE_STATUS_CONFIRMED = 2,
+}
+
+/** sysio.msgch::MessageDirection (enum, int32) */
+export enum SysioMsgchMessagedirection {
+  MESSAGE_DIRECTION_INBOUND = 0,
+  MESSAGE_DIRECTION_OUTBOUND = 1,
+}
+
+/** sysio.msgch::MessageStatus (enum, int32) */
+export enum SysioMsgchMessagestatus {
+  MESSAGE_STATUS_PENDING = 0,
+  MESSAGE_STATUS_READY = 1,
+  MESSAGE_STATUS_PROCESSED = 2,
+  MESSAGE_STATUS_CANCELLED = 3,
+}
 
 /** sysio.msgch::buildenv (action) */
 export interface SysioMsgchBuildenvAction {
@@ -463,7 +553,7 @@ export interface SysioMsgchInboundChainRequestType {
   outpost_id: number
   epoch_index: number
   expected_start_msg: string
-  status: number
+  status: SysioMsgchChainrequeststatus
   delivery_count: number
 }
 
@@ -474,9 +564,9 @@ export interface SysioMsgchMessageEntryType {
   epoch_index: number
   message_id: string
   previous_message_id: string
-  direction: number
-  status: number
-  attestation_type: number
+  direction: SysioMsgchMessagedirection
+  status: SysioMsgchMessagestatus
+  attestation_type: SysioMsgchAttestationtype
   raw_payload: string
   received_at: string
   processed_at: string
@@ -491,7 +581,7 @@ export interface SysioMsgchOutboundEnvelopeType {
   merkle_root: string
   start_message_id: string
   end_message_id: string
-  status: number
+  status: SysioMsgchEnvelopestatus
   raw_envelope: string
 }
 
@@ -503,7 +593,7 @@ export interface SysioMsgchProcessmsgAction {
 /** sysio.msgch::queueout (action) */
 export interface SysioMsgchQueueoutAction {
   outpost_id: number
-  attest_type: number
+  attest_type: SysioMsgchAttestationtype
   data: string
 }
 
@@ -831,11 +921,14 @@ export interface SysioSystemBlockchainParametersType {
   max_transaction_cpu_usage: number
   min_transaction_cpu_usage: number
   max_transaction_lifetime: number
-  deferred_trx_expiration_window: number
   max_transaction_delay: number
   max_inline_action_size: number
   max_inline_action_depth: number
   max_authority_depth: number
+  max_action_return_value_size: number
+  max_kv_key_size: number
+  max_kv_value_size: number
+  max_kv_secondary_key_size: number
 }
 
 /** sysio.system::deleteauth (action) */
@@ -1251,6 +1344,15 @@ export interface SysioTokenTransferAction {
 
 // ── sysio.uwrit ──
 
+/** sysio.uwrit::UnderwriteStatus (enum, int32) */
+export enum SysioUwritUnderwritestatus {
+  UNDERWRITE_STATUS_INTENT_SUBMITTED = 0,
+  UNDERWRITE_STATUS_INTENT_CONFIRMED = 1,
+  UNDERWRITE_STATUS_COMPLETED = 2,
+  UNDERWRITE_STATUS_EXPIRED = 3,
+  UNDERWRITE_STATUS_SLASHED = 4,
+}
+
 /** sysio.uwrit::chain_kind_t (enum, uint8) */
 export enum SysioUwritChainKindType {
   unknown = 0,
@@ -1313,7 +1415,7 @@ export interface SysioUwritUnderwritingEntryType {
   id: number
   underwriter: string
   message_id: number
-  status: number
+  status: SysioUwritUnderwritestatus
   source_amount: string
   target_amount: string
   source_chain: SysioUwritChainKindType
