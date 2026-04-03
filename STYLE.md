@@ -2,6 +2,17 @@
 
 Organization-wide conventions for all TypeScript codebases — Node services, CLI tools, and web applications. Covers language idioms, project configuration, and packaging.
 
+
+---
+# Basics
+
+- **modern code** Use forEach, ... (spreads), map, filter, and reduce modern paradigms instead of for loops and other legacy style code
+- **OPP & FP (functional programming)** is preferred over old-school if/else/switch and generally branching code.
+    - Use `Future` from `@3fv/prelude-ts` for async flows.
+    - Use `Option`/`asOption` from `@3fv/prelude-ts` for optional values and chained flows.
+    - Use `Either` from `@3fv/prelude-ts` for error handling.
+    - Use `match` from `ts-pattern` for pattern matching.
+    
 ---
 
 # Part 1 — General (All TypeScript)
@@ -42,14 +53,14 @@ const label = match(status)
   .exhaustive() // compile error if a variant is missing
 ```
 
-### When to use `match()` vs. `switch`
+### Always use `match` (`ts-pattern`) over `switch`
 
 | Situation | Use                           |
 |---|-------------------------------|
 | Branching produces a value | `match().with().otherwise()`  |
 | Exhaustive check on a union/enum | `match().with().exhaustive()` |
 | Side-effect dispatch (start, stop, destroy) | `match().with().exhaustive()`          |
-| Single boolean check | `asOption(),filter()`           |
+
 
 ### Async arms
 

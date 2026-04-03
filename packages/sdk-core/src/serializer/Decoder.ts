@@ -2,9 +2,9 @@
  * Antelope/SYSIO ABI Decoder
  */
 
-import { ABI, ABIDef } from "../chain/Abi"
-import { Bytes, BytesType } from "../chain/Bytes"
-import { Variant } from "../chain/Variant"
+import { ABI, ABIDef } from "../chain/Abi.js"
+import { Bytes, BytesType } from "../chain/Bytes.js"
+import { Variant } from "../chain/Variant.js"
 
 import {
   ABISerializable,
@@ -13,16 +13,16 @@ import {
   abiTypeString,
   synthesizeABI,
   toTypeDescriptor
-} from "./Serializable"
+} from "./Serializable.js"
 
 import {
   buildTypeLookup,
   BuiltinTypes,
   getTypeName,
   TypeLookup
-} from "./Builtins"
+} from "./Builtins.js"
 
-import { isInstanceOf } from "../Utils"
+import { isInstanceOf } from "../Utils.js"
 
 interface DecodeArgsBase {
   abi?: ABIDef

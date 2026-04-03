@@ -1,1 +1,1 @@
-export * as SystemContracts from "./SystemContractTypes"
+export * as SystemContracts from "./SystemContractTypes.js"

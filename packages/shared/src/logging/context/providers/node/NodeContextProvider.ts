@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from "async_hooks"
 import { uniq } from "lodash"
-import type { LogContext } from "../../LogContext"
-import type { LogContextProvider } from "../../LogContextProvider"
+import type { LogContext } from "../../LogContext.js"
+import type { LogContextProvider } from "../../LogContextProvider.js"
 import { LogContextContainer } from "../../LogContextContainer.js"
 
 const contextStorage = new AsyncLocalStorage<Array<LogContext>>()

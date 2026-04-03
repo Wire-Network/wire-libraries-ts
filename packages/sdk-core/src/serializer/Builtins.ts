@@ -1,16 +1,16 @@
-import { ABIDecoder } from "./Decoder"
-import { ABIEncoder } from "./Encoder"
-import { ABIField, ABISerializableConstructor } from "./Serializable"
+import { ABIDecoder } from "./Decoder.js"
+import { ABIEncoder } from "./Encoder.js"
+import { ABIField, ABISerializableConstructor } from "./Serializable.js"
 
-import { Asset, ExtendedAsset } from "../chain/Asset"
-import { BlockTimestamp, TimePoint, TimePointSec } from "../chain/Time"
-import { Bytes } from "../chain/Bytes"
-import { Checksum160, Checksum256, Checksum512 } from "../chain/Checksum"
+import { Asset, ExtendedAsset } from "../chain/Asset.js"
+import { BlockTimestamp, TimePoint, TimePointSec } from "../chain/Time.js"
+import { Bytes } from "../chain/Bytes.js"
+import { Checksum160, Checksum256, Checksum512 } from "../chain/Checksum.js"
 import {
   Float128,
   Float32,
   Float64
-} from "../chain/Float"
+} from "../chain/Float.js"
 import {
   Int128,
   Int16,
@@ -24,11 +24,11 @@ import {
   UInt8,
   VarInt,
   VarUInt
-} from "../chain/Integer"
-import { Name } from "../chain/Name"
-import { PublicKey } from "../chain/PublicKey"
-import { Signature } from "../chain/Signature"
-import { Struct } from "../chain/Struct"
+} from "../chain/Integer.js"
+import { Name } from "../chain/Name.js"
+import { PublicKey } from "../chain/PublicKey.js"
+import { Signature } from "../chain/Signature.js"
+import { Struct } from "../chain/Struct.js"
 
 const StringType = {
   abiName: "string",

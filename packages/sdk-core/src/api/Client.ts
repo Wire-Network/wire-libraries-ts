@@ -1,31 +1,31 @@
-import { APIProvider, FetchProvider, FetchProviderOptions } from "./Provider"
+import { APIProvider, FetchProvider, FetchProviderOptions } from "./Provider.js"
 import {
   ABISerializableConstructor,
   ABISerializableType
-} from "../serializer/Serializable"
-import { abiDecode } from "../serializer/Decoder"
-import { ChainAPI } from "./v1/Chain"
-import { HistoryAPI } from "./v1/History"
-import { BuiltinTypes } from "../serializer/Builtins"
-import { HistoryAPIv2 } from "./v2/History"
-import { StateAPIv2 } from "./v2/State"
-import { StatsAPIv2 } from "./v2/Stats"
-import { GetRowsOptions, TransactionExtraOptions } from "./Types"
+} from "../serializer/Serializable.js"
+import { abiDecode } from "../serializer/Decoder.js"
+import { ChainAPI } from "./v1/Chain.js"
+import { HistoryAPI } from "./v1/History.js"
+import { BuiltinTypes } from "../serializer/Builtins.js"
+import { HistoryAPIv2 } from "./v2/History.js"
+import { StateAPIv2 } from "./v2/State.js"
+import { StatsAPIv2 } from "./v2/Stats.js"
+import { GetRowsOptions, TransactionExtraOptions } from "./Types.js"
 export { ChainAPI, HistoryAPI }
-import { ABI } from "../chain/Abi"
-import { Action, AnyAction } from "../chain/Action"
-import { KeyType } from "../chain/KeyType"
-import { NameType } from "../chain/Name"
-import { Signature } from "../chain/Signature"
+import { ABI } from "../chain/Abi.js"
+import { Action, AnyAction } from "../chain/Action.js"
+import { KeyType } from "../chain/KeyType.js"
+import { NameType } from "../chain/Name.js"
+import { Signature } from "../chain/Signature.js"
 import {
   Transaction,
   SignedTransaction,
   PackedTransaction,
   CompressionType
-} from "../chain/Transaction"
-import { UInt32Type } from "../chain/Integer"
-import { SignerProvider } from "../signing/SignerProvider"
-import * as v1 from "./v1/Types"
+} from "../chain/Transaction.js"
+import { UInt32Type } from "../chain/Integer.js"
+import { SignerProvider } from "../signing/SignerProvider.js"
+import * as v1 from "./v1/Types.js"
 
 export interface APIClientOptions extends FetchProviderOptions {
   /** URL to the API node to use, only used if the provider option is not set. */

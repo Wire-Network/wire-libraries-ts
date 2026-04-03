@@ -1,6 +1,8 @@
-import { ripemd160, sha256 } from "hash.js"
-import { arrayEquals } from "./Utils"
-import { Bytes, BytesType } from "./chain/Bytes"
+import hashjs from "hash.js"
+import { arrayEquals } from "./Utils.js"
+import { Bytes, BytesType } from "./chain/Bytes.js"
+
+const { sha256, ripemd160 } = hashjs
 
 export namespace Base58 {
   export enum ErrorCode {

@@ -1,5 +1,5 @@
-import { Fetch } from "../common/Types"
-import { APIMethods, APIResponse } from "./Client"
+import { Fetch } from "../common/Types.js"
+import { APIMethods, APIResponse } from "./Client.js"
 
 export interface APIProvider {
   /**

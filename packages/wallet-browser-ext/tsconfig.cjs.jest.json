@@ -1,0 +1,27 @@
+{
+  "extends": "../../etc/tsconfig/tsconfig.base.jest.json",
+  "compilerOptions": {
+    "rootDir": "tests",
+    "outDir": "lib/test-cjs",
+    "ignoreDeprecations": "6.0",
+    "composite": true,
+    "incremental": true,
+    "types": [
+      "chrome",
+      "node",
+      "jest"
+    ],
+    "paths": {
+      "@wireio/wallet-browser-ext": [
+        "./src"
+      ],
+      "@wireio/wallet-browser-ext/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "references": [
+    { "path": "./tsconfig.cjs.json" }
+  ],
+  "include": ["tests"]
+}

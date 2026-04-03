@@ -1,6 +1,6 @@
-import { Struct } from "../chain/Struct"
+import { Struct } from "../chain/Struct.js"
 
-import type { LogoType } from "./Types"
+import type { LogoType } from "./Types.js"
 
 @Struct.type("logo")
 export class Logo extends Struct {

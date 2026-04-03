@@ -1,9 +1,9 @@
 import BN from "bn.js"
 import { ethers } from "ethers"
-import { ABISerializableObject } from "../serializer/Serializable"
-import { ABIDecoder } from "../serializer/Decoder"
-import { ABIEncoder } from "../serializer/Encoder"
-import { isInstanceOf, secureRandom } from "../Utils"
+import { ABISerializableObject } from "../serializer/Serializable.js"
+import { ABIDecoder } from "../serializer/Decoder.js"
+import { ABIEncoder } from "../serializer/Encoder.js"
+import { isInstanceOf, secureRandom } from "../Utils.js"
 
 type IntType = Int | number | string | BN
 

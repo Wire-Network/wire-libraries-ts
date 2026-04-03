@@ -1,18 +1,18 @@
-import { ABIDecoder } from "../serializer/Decoder"
-import { ABIEncoder } from "../serializer/Encoder"
-import { ABISerializableObject } from "../serializer/Serializable"
+import { ABIDecoder } from "../serializer/Decoder.js"
+import { ABIEncoder } from "../serializer/Encoder.js"
+import { ABISerializableObject } from "../serializer/Serializable.js"
 
-import { Base58 } from "../Base58"
-import { arrayToHex, hexToArray, isInstanceOf } from "../Utils"
+import { Base58 } from "../Base58.js"
+import { arrayToHex, hexToArray, isInstanceOf } from "../Utils.js"
 
-import { Bytes, BytesType } from "./Bytes"
-import { Checksum256, Checksum256Type } from "./Checksum"
-import { KeyType } from "./KeyType"
-import { PublicKey } from "./PublicKey"
+import { Bytes, BytesType } from "./Bytes.js"
+import { Checksum256, Checksum256Type } from "./Checksum.js"
+import { KeyType } from "./KeyType.js"
+import { PublicKey } from "./PublicKey.js"
 
-import { blsEncode, blsDecode } from "../crypto/BLSSerdes"
-import { recover } from "../crypto/Recover"
-import { verify } from "../crypto/Verify"
+import { blsEncode, blsDecode } from "../crypto/BLSSerdes.js"
+import { recover } from "../crypto/Recover.js"
+import { verify } from "../crypto/Verify.js"
 
 export type SignatureType = Signature | SignatureParts | string
 

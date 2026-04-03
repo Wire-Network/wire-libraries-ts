@@ -1,4 +1,4 @@
-import type { TypeGuard, TypeGuardExtras } from "./types"
+import type { TypeGuard, TypeGuardExtras } from "./types.js"
 
 
 export function applyTypeGuardExtras<T>(fn:TypeGuard<T>):TypeGuardExtras<T> {

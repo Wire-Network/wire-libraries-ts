@@ -1,6 +1,6 @@
-import { ABISerializableObject } from "../serializer/Serializable"
-import { ABIEncoder } from "../serializer/Encoder"
-import { arrayEquals, isInstanceOf } from "../Utils"
+import { ABISerializableObject } from "../serializer/Serializable.js"
+import { ABIEncoder } from "../serializer/Encoder.js"
+import { arrayEquals, isInstanceOf } from "../Utils.js"
 
 export type BlobType = Blob | string
 

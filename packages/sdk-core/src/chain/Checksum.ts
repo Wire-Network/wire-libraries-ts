@@ -1,11 +1,11 @@
 import { ripemd160, sha256, sha512 } from "hash.js"
 
-import { ABIDecoder } from "../serializer/Decoder"
-import { ABIEncoder } from "../serializer/Encoder"
-import { ABISerializableObject } from "../serializer/Serializable"
-import { arrayEquals, arrayToHex, hexToArray, isInstanceOf } from "../Utils"
+import { ABIDecoder } from "../serializer/Decoder.js"
+import { ABIEncoder } from "../serializer/Encoder.js"
+import { ABISerializableObject } from "../serializer/Serializable.js"
+import { arrayEquals, arrayToHex, hexToArray, isInstanceOf } from "../Utils.js"
 
-import { Bytes, BytesType } from "./Bytes"
+import { Bytes, BytesType } from "./Bytes.js"
 
 type ChecksumType = Checksum | BytesType
 

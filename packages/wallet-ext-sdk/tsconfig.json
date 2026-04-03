@@ -1,10 +1,9 @@
 {
   "extends": "../../etc/tsconfig/tsconfig.base.json",
-  "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "lib",
-    "moduleResolution": "bundler",
-    "module": "ESNext"
-  },
-  "include": ["src"]
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.esm.json" },
+    { "path": "./tsconfig.cjs.json" },
+    { "path": "./tsconfig.cjs.jest.json" }
+  ]
 }

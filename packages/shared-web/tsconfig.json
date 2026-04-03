@@ -7,6 +7,7 @@
       
     },
     { "path": "./tsconfig.esm.json" },
+    { "path": "./tsconfig.cjs.json" } ,
     { "path": "./tsconfig.cjs.jest.json" }
   ]
 }

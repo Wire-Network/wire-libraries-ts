@@ -1,6 +1,6 @@
-import { Checksum256, Checksum256Type } from "../chain/Checksum"
-import { Logo } from "./Logo"
-import type { ChainDefinitionType, LogoType } from "./Types"
+import { Checksum256, Checksum256Type } from "../chain/Checksum.js"
+import { Logo } from "./Logo.js"
+import type { ChainDefinitionType, LogoType } from "./Types.js"
 
 export interface ChainDefinitionArgs {
   id: Checksum256Type

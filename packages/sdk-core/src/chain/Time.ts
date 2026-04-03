@@ -1,10 +1,10 @@
-import { ABIDecoder } from "../serializer/Decoder"
-import { ABIEncoder } from "../serializer/Encoder"
-import { ABISerializableObject } from "../serializer/Serializable"
-import { isInstanceOf } from "../Utils"
+import { ABIDecoder } from "../serializer/Decoder.js"
+import { ABIEncoder } from "../serializer/Encoder.js"
+import { ABISerializableObject } from "../serializer/Serializable.js"
+import { isInstanceOf } from "../Utils.js"
 
-import { AnyInt, Int64, Int64Type, UInt32, UInt32Type, UInt64 } from "./Integer"
-import { BLOCK_TIMESTAMP_EPOCH_MS, BLOCK_TIMESTAMP_INTERVAL_MS } from "./constants"
+import { AnyInt, Int64, Int64Type, UInt32, UInt32Type, UInt64 } from "./Integer.js"
+import { BLOCK_TIMESTAMP_EPOCH_MS, BLOCK_TIMESTAMP_INTERVAL_MS } from "./constants.js"
 
 export type TimePointType = TimePoint | TimePointSec | string | Date | AnyInt
 

@@ -1,13 +1,13 @@
-import { ABISerializableObject } from "../serializer/Serializable"
-import { ABIEncoder } from "../serializer/Encoder"
-import { ABIDecoder } from "../serializer/Decoder"
+import { ABISerializableObject } from "../serializer/Serializable.js"
+import { ABIEncoder } from "../serializer/Encoder.js"
+import { ABIDecoder } from "../serializer/Decoder.js"
 import {
   arrayEquals,
   arrayToHex,
   hexToArray,
   isInstanceOf,
   secureRandom
-} from "../Utils"
+} from "../Utils.js"
 
 export type BytesType =
   | Bytes

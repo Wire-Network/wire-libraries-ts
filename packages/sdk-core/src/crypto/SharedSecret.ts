@@ -1,7 +1,7 @@
 // src/crypto/shared-secret.ts
 
-import { KeyType } from "../chain/KeyType"
-import { getCurve } from "./Curves"
+import { KeyType } from "../chain/KeyType.js"
+import { getCurve } from "./Curves.js"
 
 /**
  * Derive shared secret for key pair.

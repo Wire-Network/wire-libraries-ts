@@ -1,9 +1,9 @@
-import { ABISerializableObject } from "../serializer/Serializable"
-import { ABIDecoder } from "../serializer/Decoder"
-import { ABIEncoder } from "../serializer/Encoder"
-import { isInstanceOf, secureRandom } from "../Utils"
+import { ABISerializableObject } from "../serializer/Serializable.js"
+import { ABIDecoder } from "../serializer/Decoder.js"
+import { ABIEncoder } from "../serializer/Encoder.js"
+import { isInstanceOf, secureRandom } from "../Utils.js"
 
-import { Bytes, BytesType } from "./Bytes"
+import { Bytes, BytesType } from "./Bytes.js"
 
 type FloatType = Float | number | string
 

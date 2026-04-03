@@ -1,8 +1,8 @@
-import { BNPrecision, Resources, SampleUsage } from "./IndexResources"
+import { BNPrecision, Resources, SampleUsage } from "./IndexResources.js"
 
-import { Asset } from "../chain/Asset"
-import { UInt64, UInt8 } from "../chain/Integer"
-import { Struct } from "../chain/Struct"
+import { Asset } from "../chain/Asset.js"
+import { UInt64, UInt8 } from "../chain/Integer.js"
+import { Struct } from "../chain/Struct.js"
 
 @Struct.type("rexstate")
 export class REXState extends Struct {

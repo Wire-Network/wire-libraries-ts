@@ -1,10 +1,10 @@
-import { ethers } from "ethers"
 import { Option } from "@3fv/prelude-ts"
-import { KeyType } from "../chain/KeyType"
-import { PrivateKey, type PrivateKeyType } from "../chain/PrivateKey"
-import { PublicKey } from "../chain/PublicKey"
-import { getCurve } from "../crypto/Curves"
-import { hexToArray } from "../Utils"
+import { ethers } from "ethers"
+import { KeyType } from "../chain/KeyType.js"
+import { PrivateKey, type PrivateKeyType } from "../chain/PrivateKey.js"
+import { PublicKey } from "../chain/PublicKey.js"
+import { getCurve } from "../crypto/Curves.js"
+import { hexToArray } from "../Utils.js"
 
 export interface SignerProvider {
   /**
@@ -90,7 +90,7 @@ export const createEdSigner = (
  * @param privateKey Private key in any supported `PrivateKeyType` representation.
  * @returns A `SignerProvider` for classic elliptic-curve signing.
  */
-export const createClassicSigner = (privateKey: PrivateKeyType): SignerProvider => {
+export function createClassicSigner(privateKey: PrivateKeyType): SignerProvider {
   const privKey = PrivateKey.from(privateKey)
 
   return {

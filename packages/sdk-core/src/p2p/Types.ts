@@ -1,15 +1,15 @@
-import { BlockId } from "../chain/BlockId"
-import { Bytes } from "../chain/Bytes"
-import { Checksum256 } from "../chain/Checksum"
-import { Int16, Int64, UInt16, UInt32, UInt8, VarUInt } from "../chain/Integer"
-import { Name } from "../chain/Name"
-import { PackedTransaction } from "../chain/Transaction"
-import { PublicKey } from "../chain/PublicKey"
-import { Signature } from "../chain/Signature"
-import { Struct } from "../chain/Struct"
-import { Variant } from "../chain/Variant"
+import { BlockId } from "../chain/BlockId.js"
+import { Bytes } from "../chain/Bytes.js"
+import { Checksum256 } from "../chain/Checksum.js"
+import { Int16, Int64, UInt16, UInt32, UInt8, VarUInt } from "../chain/Integer.js"
+import { Name } from "../chain/Name.js"
+import { PackedTransaction } from "../chain/Transaction.js"
+import { PublicKey } from "../chain/PublicKey.js"
+import { Signature } from "../chain/Signature.js"
+import { Struct } from "../chain/Struct.js"
+import { Variant } from "../chain/Variant.js"
 
-import { Serializer } from "../serializer/index"
+import { Serializer } from "../serializer/index.js"
 
 @Struct.type("handshake_message")
 export class HandshakeMessage extends Struct {

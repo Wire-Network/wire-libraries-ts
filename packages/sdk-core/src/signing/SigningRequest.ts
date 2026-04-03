@@ -2,38 +2,38 @@
  * SYSIO Signing Request (SSR).
  */
 
-import { ABI, ABIDef } from "../chain/Abi"
-import { ABIDecoder } from "../serializer/Decoder"
-import { ABIEncoder } from "../serializer/Encoder"
+import { ABI, ABIDef } from "../chain/Abi.js"
+import { ABIDecoder } from "../serializer/Decoder.js"
+import { ABIEncoder } from "../serializer/Encoder.js"
 import {
   ABISerializable,
   ABISerializableConstructor,
   ABISerializableType
-} from "../serializer/Serializable"
-import { Action, AnyAction } from "../chain/Action"
-import { AnyTransaction, Transaction, TransactionExtension } from "../chain/Transaction"
-import { Authority, AuthorityType } from "../chain/Authority"
-import { Bytes, BytesType } from "../chain/Bytes"
-import { Checksum256 } from "../chain/Checksum"
-import { isInstanceOf } from "../Utils"
-import { Name, NameType } from "../chain/Name"
-import { PermissionLevel, PermissionLevelType } from "../chain/PermissionLevel"
-import { PublicKey } from "../chain/PublicKey"
-import { Serializer } from "../serializer/index"
-import { Signature, SignatureType } from "../chain/Signature"
-import { Struct } from "../chain/Struct"
-import { TimePointSec, TimePointType } from "../chain/Time"
-import { UInt16, UInt32, UInt8, VarUInt } from "../chain/Integer"
-import { UInt16Type, UInt32Type } from "../chain/Integer"
+} from "../serializer/Serializable.js"
+import { Action, AnyAction } from "../chain/Action.js"
+import { AnyTransaction, Transaction, TransactionExtension } from "../chain/Transaction.js"
+import { Authority, AuthorityType } from "../chain/Authority.js"
+import { Bytes, BytesType } from "../chain/Bytes.js"
+import { Checksum256 } from "../chain/Checksum.js"
+import { isInstanceOf } from "../Utils.js"
+import { Name, NameType } from "../chain/Name.js"
+import { PermissionLevel, PermissionLevelType } from "../chain/PermissionLevel.js"
+import { PublicKey } from "../chain/PublicKey.js"
+import { Serializer } from "../serializer/index.js"
+import { Signature, SignatureType } from "../chain/Signature.js"
+import { Struct } from "../chain/Struct.js"
+import { TimePointSec, TimePointType } from "../chain/Time.js"
+import { UInt16, UInt32, UInt8, VarUInt } from "../chain/Integer.js"
+import { UInt16Type, UInt32Type } from "../chain/Integer.js"
 
-import * as base64u from "./Base64u"
+import * as base64u from "./Base64u.js"
 import {
   ChainAlias,
   ChainId,
   ChainIdType,
   ChainIdVariant,
   ChainName
-} from "./ChainId"
+} from "./ChainId.js"
 import {
   IdentityV2,
   IdentityV3,
@@ -42,12 +42,12 @@ import {
   RequestDataV3,
   RequestFlags,
   RequestSignature
-} from "./Abi"
+} from "./Abi.js"
 
-import * as Base64u from "./Base64u"
+import * as Base64u from "./Base64u.js"
 
-// import { IdentityProof } from './identity-proof'
-// import {IdentityProof} from './identity-proof'
+// import { IdentityProof } from './identity-proof.js'
+// import {IdentityProof} from './identity-proof.js'
 
 /** Current supported protocol version, backwards compatible with version 2. */
 export const ProtocolVersion = 3

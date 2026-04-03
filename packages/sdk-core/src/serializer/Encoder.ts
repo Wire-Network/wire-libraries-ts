@@ -1,10 +1,10 @@
 /**
  * Antelope/SYSIO ABI Encoder
  */
-import { ABI, ABIDef } from "../chain/Abi"
-import { Bytes } from "../chain/Bytes"
-import { Variant } from "../chain/Variant"
-import { isInstanceOf } from "../Utils"
+import { ABI, ABIDef } from "../chain/Abi.js"
+import { Bytes } from "../chain/Bytes.js"
+import { Variant } from "../chain/Variant.js"
+import { isInstanceOf } from "../Utils.js"
 
 import {
   ABISerializable,
@@ -14,8 +14,8 @@ import {
   abiTypeString,
   isTypeDescriptor,
   synthesizeABI
-} from "./Serializable"
-import { buildTypeLookup, getType, getTypeName } from "./Builtins"
+} from "./Serializable.js"
+import { buildTypeLookup, getType, getTypeName } from "./Builtins.js"
 
 class EncodingError extends Error {
   static __className = "EncodingError"

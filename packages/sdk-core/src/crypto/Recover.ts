@@ -1,8 +1,8 @@
 import { ethers } from "ethers"
-import { Bytes } from "../chain/Bytes"
-import { KeyType } from "../chain/KeyType"
-import { PublicKey } from "../chain/PublicKey"
-import { getCurve } from "./Curves"
+import { Bytes } from "../chain/Bytes.js"
+import { KeyType } from "../chain/KeyType.js"
+import { PublicKey } from "../chain/PublicKey.js"
+import { getCurve } from "./Curves.js"
 
 /**
  * Recover compressed public key from signature and recovery id.

@@ -9,7 +9,7 @@ const config: Config = {
     "^.+\\.ts$": [
       "ts-jest",
       {
-        tsconfig: "<rootDir>/../../etc/tsconfig/tsconfig.base.jest.json",
+        tsconfig: "<rootDir>/tsconfig.cjs.jest.json",
       },
     ],
   },
@@ -18,6 +18,7 @@ const config: Config = {
     "^@wireio/shared-web/(.*)$": "<rootDir>/src/$1",
     "^@wireio/shared$": "<rootDir>/../shared/src",
     "^@wireio/shared/(.*)$": "<rootDir>/../shared/src/$1",
+    "^(\\.\\.?/.*)\\.js$": "$1",
   },
 }
 

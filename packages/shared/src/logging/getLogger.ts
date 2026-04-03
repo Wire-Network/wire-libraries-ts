@@ -1,4 +1,4 @@
-import type { Logger, LoggerOptions } from "./Logger"
+import type { Logger, LoggerOptions } from "./Logger.js"
 import { getLoggingManager } from "./LoggingManager.js"
 
 export function getLogger(

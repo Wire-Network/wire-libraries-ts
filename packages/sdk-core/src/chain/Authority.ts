@@ -1,9 +1,9 @@
-import { UInt16, UInt16Type, UInt32, UInt32Type } from "./Integer"
-import { PermissionLevel, PermissionLevelType } from "./PermissionLevel"
-import { PublicKey, PublicKeyType } from "./PublicKey"
-import { Struct } from "./Struct"
-import { TypeAlias } from "./TypeAlias"
-import { isInstanceOf } from "../Utils"
+import { UInt16, UInt16Type, UInt32, UInt32Type } from "./Integer.js"
+import { PermissionLevel, PermissionLevelType } from "./PermissionLevel.js"
+import { PublicKey, PublicKeyType } from "./PublicKey.js"
+import { Struct } from "./Struct.js"
+import { TypeAlias } from "./TypeAlias.js"
+import { isInstanceOf } from "../Utils.js"
 
 @TypeAlias("weight_type")
 export class Weight extends UInt16 {}

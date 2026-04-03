@@ -1,20 +1,20 @@
 import {
   Bytes,
   BytesType
-} from "./Bytes"
+} from "./Bytes.js"
 import {
   Checksum256,
   Checksum256Type
-} from "./Checksum"
-import { isInstanceOf } from "../Utils"
+} from "./Checksum.js"
+import { isInstanceOf } from "../Utils.js"
 import {
   UInt32,
   UInt32Type
-} from "./Integer"
-import { ABIDecoder } from "../serializer/Decoder"
-import { ABIEncoder } from "../serializer/Encoder"
-import { ABISerializableObject } from "../serializer/Serializable"
-import { arrayEquals, arrayToHex } from "../Utils"
+} from "./Integer.js"
+import { ABIDecoder } from "../serializer/Decoder.js"
+import { ABIEncoder } from "../serializer/Encoder.js"
+import { ABISerializableObject } from "../serializer/Serializable.js"
+import { arrayEquals, arrayToHex } from "../Utils.js"
 
 export type BlockIdType =
   | BlockId

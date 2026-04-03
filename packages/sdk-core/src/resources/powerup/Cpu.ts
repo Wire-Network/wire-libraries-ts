@@ -1,8 +1,8 @@
-import { Struct, UInt128 } from "../../"
+import { Struct, UInt128 } from "../..//index.js"
 
-import { BNPrecision, SampleUsage } from "../IndexResources"
-import { PowerUpStateResource } from "./Abstract"
-import { PowerUpStateOptions } from "./Options"
+import { BNPrecision, SampleUsage } from "../IndexResources.js"
+import { PowerUpStateResource } from "./Abstract.js"
+import { PowerUpStateOptions } from "./Options.js"
 import BN from "bn.js"
 
 @Struct.type("powerupstateresourcecpu")

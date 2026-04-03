@@ -2,11 +2,27 @@
   "name": "@wireio/wallet-browser-ext",
   "version": "0.1.9",
   "private": true,
-  "type": "module",
+  "types": "lib/esm/Types.d.ts",
+  "main": "lib/cjs/Types.js",
+  "module": "lib/esm/Types.js",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/Types.js",
+      "require": "./lib/cjs/Types.js",
+      "types": "./lib/esm/Types.d.ts"
+    },
+    "./*": {
+      "import": "./lib/esm/*.js",
+      "require": "./lib/cjs/*.js",
+      "types": "./lib/esm/*.d.ts"
+    }
+  },
   "scripts": {
-    "build": "webpack --mode production",
-    "build:dev": "webpack --mode development --watch",
-    "clean": "rm -rf dist",
+    "build": "tsc -b tsconfig.json && node ../../scripts/fix-hybrid-output.mjs .",
+    "build:dev": "tsc -b tsconfig.json -w",
+    "bundle": "webpack --mode production",
+    "bundle:dev": "webpack --mode development --watch",
+    "clean": "rm -rf dist lib",
     "test": "jest"
   },
   "dependencies": {

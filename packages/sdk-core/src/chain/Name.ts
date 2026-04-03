@@ -1,9 +1,9 @@
-import { ABISerializableObject } from "../serializer/Serializable"
-import { ABIEncoder } from "../serializer/Encoder"
-import { ABIDecoder } from "../serializer/Decoder"
-import { isInstanceOf } from "../Utils"
+import { ABISerializableObject } from "../serializer/Serializable.js"
+import { ABIEncoder } from "../serializer/Encoder.js"
+import { ABIDecoder } from "../serializer/Decoder.js"
+import { isInstanceOf } from "../Utils.js"
 
-import { UInt64 } from "./Integer"
+import { UInt64 } from "./Integer.js"
 
 /** Type representing a name. */
 export type NameType = Name | UInt64 | string

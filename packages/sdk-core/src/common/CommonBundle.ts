@@ -1,4 +1,4 @@
-import * as pkg from "../index"
+import * as pkg from "../index.js"
 const Common = {}
 
 for (const key of Object.keys(pkg)) {

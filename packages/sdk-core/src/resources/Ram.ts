@@ -1,9 +1,9 @@
-import { Resources } from "./IndexResources"
+import { Resources } from "./IndexResources.js"
 
-import { Asset } from "../chain/Asset"
-import { Float64 } from "../chain/Float"
-import { Int64 } from "../chain/Integer"
-import { Struct } from "../chain/Struct"
+import { Asset } from "../chain/Asset.js"
+import { Float64 } from "../chain/Float.js"
+import { Int64 } from "../chain/Integer.js"
+import { Struct } from "../chain/Struct.js"
 
 @Struct.type("connector")
 export class Connector extends Struct {

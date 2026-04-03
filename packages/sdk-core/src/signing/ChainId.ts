@@ -1,8 +1,8 @@
-import { Checksum256, Checksum256Type } from "../chain/Checksum"
-import { isInstanceOf } from "../Utils"
-import { TypeAlias } from "../chain/TypeAlias"
-import { UInt8 } from "../chain/Integer"
-import { Variant } from "../chain/Variant"
+import { Checksum256, Checksum256Type } from "../chain/Checksum.js"
+import { isInstanceOf } from "../Utils.js"
+import { TypeAlias } from "../chain/TypeAlias.js"
+import { UInt8 } from "../chain/Integer.js"
+import { Variant } from "../chain/Variant.js"
 
 /** Chain ID aliases. */
 export enum ChainName {

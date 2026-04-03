@@ -89,9 +89,15 @@ Assets (Rust runtime, Solidity templates, Handlebars templates) are embedded via
 - Module name mapping strips `.js` extensions: `(^.{1,2}/.*)\\.js$` → `$1`
 - protoc plugins have no TS unit tests — tested via `pnpm generate:test` which runs protoc end-to-end
 
-## Code Style
+## Code Style & Approach
 
 Enforced by Prettier (`.prettierrc.js`):
+- **modern code** Use forEach, ... (spreads), map, filter, and reduce modern paradigms instead of for loops and other legacy style code
+- **OPP & FP (functional programming)** is preferred over old-school if/else/switch and generally branching code.
+    - Use `Future` from `@3fv/prelude-ts` for async flows.
+    - Use `Option`/`asOption` from `@3fv/prelude-ts` for optional values and chained flows.
+    - Use `Either` from `@3fv/prelude-ts` for error handling.
+    - Use `match` from `ts-pattern` for pattern matching.
 - No semicolons
 - Double quotes
 - No trailing commas

@@ -9,7 +9,7 @@ const config: Config = {
     "^.+\\.[tj]s$": [
       "ts-jest",
       {
-        tsconfig: "<rootDir>/../../etc/tsconfig/tsconfig.base.jest.json",
+        tsconfig: "<rootDir>/tsconfig.cjs.jest.json",
       },
     ],
   },
@@ -21,6 +21,7 @@ const config: Config = {
     "^@wireio/sdk-core$": "<rootDir>/src/index",
     "^@wireio/sdk-core/(.*)$": "<rootDir>/src/$1",
     "^@noble/curves/bls12-381$": "@noble/curves/bls12-381.js",
+    "^(\\.\\.?/.*)\\.js$": "$1",
   },
 }
 

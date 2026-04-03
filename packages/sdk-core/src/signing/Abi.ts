@@ -1,17 +1,17 @@
 /** SigningRequest ABI and typedefs. */
 
-import { Action } from "../chain/Action"
-import { Bytes } from "../chain/Bytes"
-import { Name } from "../chain/Name"
-import { PermissionLevel } from "../chain/PermissionLevel"
-import { Signature } from "../chain/Signature"
-import { Struct } from "../chain/Struct"
-import { Transaction } from "../chain/Transaction"
-import { TypeAlias } from "../chain/TypeAlias"
-import { UInt8 } from "../chain/Integer"
-import { Variant } from "../chain/Variant"
+import { Action } from "../chain/Action.js"
+import { Bytes } from "../chain/Bytes.js"
+import { Name } from "../chain/Name.js"
+import { PermissionLevel } from "../chain/PermissionLevel.js"
+import { Signature } from "../chain/Signature.js"
+import { Struct } from "../chain/Struct.js"
+import { Transaction } from "../chain/Transaction.js"
+import { TypeAlias } from "../chain/TypeAlias.js"
+import { UInt8 } from "../chain/Integer.js"
+import { Variant } from "../chain/Variant.js"
 
-import { ChainIdVariant } from "./ChainId"
+import { ChainIdVariant } from "./ChainId.js"
 
 @TypeAlias("account_name")
 export class AccountName extends Name {}

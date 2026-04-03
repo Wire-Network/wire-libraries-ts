@@ -8,10 +8,10 @@ import {
   UInt32,
   UInt64,
   UInt8
-} from "../../"
+} from "../..//index.js"
 
 import BN from "bn.js"
-import { PowerUpStateOptions } from "./Options"
+import { PowerUpStateOptions } from "./Options.js"
 import bigDecimal from "js-big-decimal"
 
 export abstract class PowerUpStateResource extends Struct {

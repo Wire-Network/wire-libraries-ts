@@ -1,6 +1,6 @@
-import { Serializer } from "../serializer/index"
-import { P2PErrorHandler, P2PHandler, P2PProvider } from "./Provider"
-import { NetMessage, TimeMessage } from "./Types"
+import { Serializer } from "../serializer/index.js"
+import { P2PErrorHandler, P2PHandler, P2PProvider } from "./Provider.js"
+import { NetMessage, TimeMessage } from "./Types.js"
 
 type SetTimeout = (handler: any, timeout: number, ...args: any[]) => number
 type TimeoutID = ReturnType<SetTimeout>

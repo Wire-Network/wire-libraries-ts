@@ -1,5 +1,5 @@
 import { ec } from "elliptic"
-import { KeyType } from "../chain/KeyType"
+import { KeyType } from "../chain/KeyType.js"
 
 const curves: { [type: string]: ec } = {}
 

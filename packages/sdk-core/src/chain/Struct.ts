@@ -3,11 +3,11 @@ import {
   ABISerializableConstructor,
   ABISerializableObject,
   ABITypeModifiers
-} from "../serializer/Serializable"
-import { abiDecode, Resolved } from "../serializer/Decoder"
-import { abiEncode } from "../serializer/Encoder"
-import { isInstanceOf } from "../Utils"
-import { ABI } from "./Abi"
+} from "../serializer/Serializable.js"
+import { abiDecode, Resolved } from "../serializer/Decoder.js"
+import { abiEncode } from "../serializer/Encoder.js"
+import { isInstanceOf } from "../Utils.js"
+import { ABI } from "./Abi.js"
 
 export interface StructConstructor extends ABISerializableConstructor {
   new <T extends Struct>(...args: any[]): T

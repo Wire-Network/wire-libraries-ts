@@ -6,10 +6,10 @@ import {
   ABITypeDescriptor,
   abiTypeString,
   toTypeDescriptor
-} from "../serializer/Serializable"
-import { abiDecode, Resolved } from "../serializer/Decoder"
-import { abiEncode } from "../serializer/Encoder"
-import { isInstanceOf } from "../Utils"
+} from "../serializer/Serializable.js"
+import { abiDecode, Resolved } from "../serializer/Decoder.js"
+import { abiEncode } from "../serializer/Encoder.js"
+import { isInstanceOf } from "../Utils.js"
 
 export interface VariantConstructor extends ABISerializableConstructor {
   new <T extends Variant>(...args: any[]): T

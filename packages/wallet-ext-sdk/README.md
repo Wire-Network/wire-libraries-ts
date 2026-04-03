@@ -8,7 +8,7 @@ Available on npm: <https://www.npmjs.com/package/@wireio/wallet-ext-sdk>
 
 This package provides a typed `WireWalletClient` class that wraps the `window.__WIRE_WALLET__` provider injected by the Wire Wallet browser extension. It handles provider detection, method calls, event subscriptions, and error handling with zero runtime dependencies (only `tslib`).
 
-The SDK is published as an ES module with full TypeScript declarations.
+The SDK is published as a hybrid ESM+CJS package with full TypeScript declarations.
 
 ## Install
 

@@ -1,10 +1,10 @@
-import { Asset } from "../chain/Asset"
-import { UInt32, UInt8 } from "../chain/Integer"
-import { Struct } from "../chain/Struct"
+import { Asset } from "../chain/Asset.js"
+import { UInt32, UInt8 } from "../chain/Integer.js"
+import { Struct } from "../chain/Struct.js"
 
-import { Resources } from "./IndexResources"
-import { PowerUpStateResourceCPU } from "./powerup/Cpu"
-import { PowerUpStateResourceNET } from "./powerup/Net"
+import { Resources } from "./IndexResources.js"
+import { PowerUpStateResourceCPU } from "./powerup/Cpu.js"
+import { PowerUpStateResourceNET } from "./powerup/Net.js"
 
 @Struct.type("powerupstate")
 export class PowerUpState extends Struct {

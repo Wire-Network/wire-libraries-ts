@@ -1,10 +1,10 @@
 import { ec } from "elliptic"
-import { getCurve } from "./Curves"
-import { KeyType } from "../chain/KeyType"
-import { SignatureParts } from "../chain/Signature"
+import { getCurve } from "./Curves.js"
+import { KeyType } from "../chain/KeyType.js"
+import { SignatureParts } from "../chain/Signature.js"
 import nacl from "tweetnacl"
 import { ethers } from "ethers"
-import { blsSign, skFromLE } from "./BLS"
+import { blsSign, skFromLE } from "./BLS.js"
 
 /**
  * Signs a message with a private key using various cryptographic algorithms.

@@ -1,5 +1,5 @@
-import { APIClient } from "../Client"
-import { GetAccountResponse, GetKeyAccountsResponse } from "./Types"
+import { APIClient } from "../Client.js"
+import { GetAccountResponse, GetKeyAccountsResponse } from "./Types.js"
 
 export class StateAPIv2 {
   constructor(private client: APIClient) {}

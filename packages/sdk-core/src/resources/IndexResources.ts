@@ -1,16 +1,16 @@
-import * as API from "../api/Types"
-import { APIClient, APIClientOptions } from "../api/Client"
-import { FetchProvider } from "../api/Provider"
-import { UInt128 } from "../chain/Integer"
+import * as API from "../api/Types.js"
+import { APIClient, APIClientOptions } from "../api/Client.js"
+import { FetchProvider } from "../api/Provider.js"
+import { UInt128 } from "../chain/Integer.js"
 import BN from "bn.js"
 
-import { PowerUpAPI } from "./Powerup"
-import { RAMAPI } from "./Ram"
-import { REXAPI } from "./Rex"
+import { PowerUpAPI } from "./Powerup.js"
+import { RAMAPI } from "./Ram.js"
+import { REXAPI } from "./Rex.js"
 
-export * from "./Powerup"
-export * from "./Ram"
-export * from "./Rex"
+export * from "./Powerup.js"
+export * from "./Ram.js"
+export * from "./Rex.js"
 
 interface ResourcesOptions extends APIClientOptions {
   api?: APIClient

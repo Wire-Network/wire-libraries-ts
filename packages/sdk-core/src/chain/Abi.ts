@@ -1,10 +1,10 @@
-import { isInstanceOf } from "../Utils"
-import type { ABISerializableObject } from "../serializer/Serializable"
-import { abiDecode, ABIDecoder } from "../serializer/Decoder"
-import { abiEncode, ABIEncoder } from "../serializer/Encoder"
+import { isInstanceOf } from "../Utils.js"
+import type { ABISerializableObject } from "../serializer/Serializable.js"
+import { abiDecode, ABIDecoder } from "../serializer/Decoder.js"
+import { abiEncode, ABIEncoder } from "../serializer/Encoder.js"
 
-import { Blob } from "./Blob"
-import { Name, NameType } from "./Name"
+import { Blob } from "./Blob.js"
+import { Name, NameType } from "./Name.js"
 
 export type ABIDef = string | Partial<ABI.Def> | ABI | Blob
 

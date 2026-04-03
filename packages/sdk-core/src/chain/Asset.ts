@@ -1,10 +1,10 @@
-import { ABISerializableObject } from "../serializer/Serializable"
-import { ABIEncoder } from "../serializer/Encoder"
-import { ABIDecoder } from "../serializer/Decoder"
-import { isInstanceOf } from "../Utils"
+import { ABISerializableObject } from "../serializer/Serializable.js"
+import { ABIEncoder } from "../serializer/Encoder.js"
+import { ABIDecoder } from "../serializer/Decoder.js"
+import { isInstanceOf } from "../Utils.js"
 
-import { Int64, Int64Type, UInt64 } from "./Integer"
-import { Name, NameType } from "./Name"
+import { Int64, Int64Type, UInt64 } from "./Integer.js"
+import { Name, NameType } from "./Name.js"
 
 export type AssetType = Asset | string
 

@@ -1,6 +1,6 @@
-import { ABI } from "../chain/Abi"
-import { ABIDecoder } from "./Decoder"
-import { ABIEncoder } from "./Encoder"
+import { ABI } from "../chain/Abi.js"
+import { ABIDecoder } from "./Decoder.js"
+import { ABIEncoder } from "./Encoder.js"
 
 /** A self-describing object that can be ABI encoded and decoded. */
 export type ABISerializable =

@@ -34,13 +34,13 @@ import {
   UInt32Type,
   UInt64,
   Weight
-} from "../../chain"
+} from "../../chain/index.js"
 
 import {
   ABISerializableObject,
   ABISerializableType,
   Serializer
-} from "../../serializer"
+} from "../../serializer/index.js"
 
 @Struct.type("account_linked_action")
 export class AccountLinkedAction extends Struct {

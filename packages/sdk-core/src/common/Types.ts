@@ -1,8 +1,8 @@
-import { Checksum256Type } from "../chain/Checksum"
+import { Checksum256Type } from "../chain/Checksum.js"
 
-import { ChainDefinition } from "./Chains"
-import { ExplorerDefinition } from "./Explorer"
-import { Logo } from "./Logo"
+import { ChainDefinition } from "./Chains.js"
+import { ExplorerDefinition } from "./Explorer.js"
+import { Logo } from "./Logo.js"
 
 export type Fetch = (input: any, init?: any) => Promise<any>
 

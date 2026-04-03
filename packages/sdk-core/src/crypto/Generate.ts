@@ -1,9 +1,9 @@
 // src/crypto/generate.ts
 
-import { KeyType } from "../chain/KeyType"
-import { getCurve } from "./Curves"
+import { KeyType } from "../chain/KeyType.js"
+import { getCurve } from "./Curves.js"
 import nacl from "tweetnacl"
-import { blsGenerate, skToLE } from "./BLS"
+import { blsGenerate, skToLE } from "./BLS.js"
 
 /**
  * Generate a new private key for given type.

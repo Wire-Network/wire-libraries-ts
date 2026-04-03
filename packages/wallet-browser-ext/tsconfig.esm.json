@@ -2,10 +2,15 @@
   "extends": "../../etc/tsconfig/tsconfig.base.esm.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "lib/esm"
+    "outDir": "lib/esm",
+    "types": [
+      "chrome",
+      "node",
+      "jest"
+    ]
   },
   "include": ["src"],
   "references": [
-    { "path": "../shared/tsconfig.json" }
+    { "path": "../sdk-core/tsconfig.json" }
   ]
 }

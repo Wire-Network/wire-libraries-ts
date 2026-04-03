@@ -36,17 +36,21 @@ The extension is part of the `wire-libraries-ts` monorepo and uses pnpm workspac
 # From the monorepo root
 pnpm install
 
-# Production build
+# Compile TypeScript (hybrid ESM+CJS output to lib/)
 pnpm --filter @wireio/wallet-browser-ext build
 
-# Development build (webpack watch mode)
-pnpm --filter @wireio/wallet-browser-ext build:dev
+# Bundle Chrome extension (webpack output to dist/)
+pnpm --filter @wireio/wallet-browser-ext bundle
+
+# Development builds (watch mode)
+pnpm --filter @wireio/wallet-browser-ext build:dev    # TypeScript watch
+pnpm --filter @wireio/wallet-browser-ext bundle:dev   # Webpack watch
 
 # Clean build artifacts
 pnpm --filter @wireio/wallet-browser-ext clean
 ```
 
-Both commands output to the `dist/` directory.
+The `build` command produces hybrid ESM+CJS output in `lib/`. The `bundle` command produces the Chrome extension in `dist/`.
 
 ## Loading in Chrome
 

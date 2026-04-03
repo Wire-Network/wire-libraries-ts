@@ -1,24 +1,24 @@
-import { Base58 } from "../Base58"
-import { hexToArray, isInstanceOf } from "../Utils"
+import { Base58 } from "../Base58.js"
+import { hexToArray, isInstanceOf } from "../Utils.js"
 
-import { getPublic } from "../crypto/GetPublic"
-import { sharedSecret } from "../crypto/SharedSecret"
-import { sign } from "../crypto/Sign"
-import { generate } from "../crypto/Generate"
+import { getPublic } from "../crypto/GetPublic.js"
+import { sharedSecret } from "../crypto/SharedSecret.js"
+import { sign } from "../crypto/Sign.js"
+import { generate } from "../crypto/Generate.js"
 
 import { ec as EC } from "elliptic"
 
 import { ethers } from "ethers"
 
-import { Bytes, BytesType } from "./Bytes"
-import { Checksum256, Checksum256Type } from "./Checksum"
-import { Checksum512 } from "./Checksum"
-import { KeyType } from "./KeyType"
-import { PublicKey } from "./PublicKey"
-import { Signature } from "./Signature"
-import { getCurve } from "../crypto/Curves"
-import { blsEncode, blsDecode } from "../crypto/BLSSerdes"
-import { blsKeyGen, blsProofOfPossession, skToLE } from "../crypto/BLS"
+import { Bytes, BytesType } from "./Bytes.js"
+import { Checksum256, Checksum256Type } from "./Checksum.js"
+import { Checksum512 } from "./Checksum.js"
+import { KeyType } from "./KeyType.js"
+import { PublicKey } from "./PublicKey.js"
+import { Signature } from "./Signature.js"
+import { getCurve } from "../crypto/Curves.js"
+import { blsEncode, blsDecode } from "../crypto/BLSSerdes.js"
+import { blsKeyGen, blsProofOfPossession, skToLE } from "../crypto/BLS.js"
 
 export type PrivateKeyType = PrivateKey | string
 
@@ -256,6 +256,31 @@ export class PrivateKey {
       return `PVT_BLS_${blsEncode(this.data.array)}`
     }
     return `PVT_${this.type}_${Base58.encodeRipemd160Check(this.data, this.type)}`
+  }
+
+  /**
+   * Return the private key in the native format expected by the
+   * signature_provider_manager_plugin's KEY: spec.
+   *
+   * - K1/R1: WIF string
+   * - EM (Ethereum): hex string (0x-prefixed)
+   * - ED (Solana): raw base58 of the 64-byte secret key
+   * - BLS: PVT_BLS_... encoded string
+   */
+  toNativeString(): string {
+    switch (this.type) {
+      case KeyType.K1:
+      case KeyType.R1:
+        return this.toWif()
+      case KeyType.EM:
+        return "0x" + Buffer.from(this.data.array).toString("hex")
+      case KeyType.ED:
+        return Base58.encode(this.data)
+      case KeyType.BLS:
+        return `PVT_BLS_${blsEncode(this.data.array)}`
+      default:
+        return this.toString()
+    }
   }
 
   toJSON() {

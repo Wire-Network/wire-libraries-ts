@@ -1,7 +1,7 @@
-import { KeyType } from "../chain/KeyType"
-import { getCurve } from "./Curves"
+import { KeyType } from "../chain/KeyType.js"
+import { getCurve } from "./Curves.js"
 import nacl from "tweetnacl"
-import { blsGetPublicKey, skFromLE } from "./BLS"
+import { blsGetPublicKey, skFromLE } from "./BLS.js"
 
 /**
  * Get public key corresponding to given private key.

@@ -1,5 +1,5 @@
-import { Name, NameType } from "./Name"
-import { Struct } from "./Struct"
+import { Name, NameType } from "./Name.js"
+import { Struct } from "./Struct.js"
 
 export type PermissionLevelType =
   | PermissionLevel

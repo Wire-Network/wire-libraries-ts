@@ -1,21 +1,21 @@
-import { abiEncode } from "../serializer/Encoder"
-import { abiDecode } from "../serializer/Decoder"
+import { abiEncode } from "../serializer/Encoder.js"
+import { abiDecode } from "../serializer/Decoder.js"
 import {
   ABISerializable,
   ABISerializableConstructor,
   ABISerializableObject,
   ABISerializableType,
   synthesizeABI
-} from "../serializer/Serializable"
+} from "../serializer/Serializable.js"
 
-import { arrayEquatableEquals } from "../Utils"
-import { BuiltinTypes, getType } from "../serializer/Builtins"
+import { arrayEquatableEquals } from "../Utils.js"
+import { BuiltinTypes, getType } from "../serializer/Builtins.js"
 
-import { ABI, ABIDef } from "./Abi"
-import { Bytes, BytesType } from "./Bytes"
-import { Name, NameType } from "./Name"
-import { PermissionLevel, PermissionLevelType } from "./PermissionLevel"
-import { Struct } from "./Struct"
+import { ABI, ABIDef } from "./Abi.js"
+import { Bytes, BytesType } from "./Bytes.js"
+import { Name, NameType } from "./Name.js"
+import { PermissionLevel, PermissionLevelType } from "./PermissionLevel.js"
+import { Struct } from "./Struct.js"
 
 interface ActionBase {
   /** The account (a.k.a. contract) to run action on. */

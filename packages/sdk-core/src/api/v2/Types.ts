@@ -1,5 +1,5 @@
-import { Signature, Struct } from "../../chain"
-import type { AnyAction, NameType } from "../../chain"
+import { Signature, Struct } from "../../chain/index.js"
+import type { AnyAction, NameType } from "../../chain/index.js"
 export interface HyperionBaseResponse {
   query_time_ms: number
   last_indexed_block: number

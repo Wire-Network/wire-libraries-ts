@@ -1,4 +1,4 @@
-import { APIClient } from "../Client"
+import { APIClient } from "../Client.js"
 
 import {
   BlockIdType,
@@ -17,7 +17,7 @@ import {
   UInt32,
   UInt32Type,
   UInt64
-} from "../../chain"
+} from "../../chain/index.js"
 
 import {
   AccountObject,
@@ -48,14 +48,14 @@ import {
   SendTransactionResponse,
   TableIndexType,
   TableIndexTypes
-} from "./Types"
+} from "./Types.js"
 
 import {
   ABISerializableConstructor,
   ABISerializableType,
   Serializer
-} from "../../serializer"
-import { isInstanceOf } from "../../Utils"
+} from "../../serializer/index.js"
+import { isInstanceOf } from "../../Utils.js"
 
 export class ChainAPI {
   constructor(private client: APIClient) {}

@@ -1,4 +1,4 @@
-import { SignerProvider } from "../signing/SignerProvider"
+import { SignerProvider } from "../signing/SignerProvider.js"
 
 export enum Curve {
   EC = "EC",

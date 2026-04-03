@@ -1,22 +1,22 @@
-import { abiEncode } from "./Encoder"
-import { abiDecode } from "./Decoder"
+import { abiEncode } from "./Encoder.js"
+import { abiDecode } from "./Decoder.js"
 import {
   ABISerializable,
   ABISerializableConstructor,
   synthesizeABI
-} from "./Serializable"
+} from "./Serializable.js"
 
-export { ABIEncoder } from "./Encoder"
-export { ABIDecoder } from "./Decoder"
+export { ABIEncoder } from "./Encoder.js"
+export { ABIDecoder } from "./Decoder.js"
 
-export { ManualWriter } from "./Writer"
+export { ManualWriter } from "./Writer.js"
 
 export type {
   ABISerializable,
   ABISerializableType,
   ABISerializableObject,
   ABISerializableConstructor
-} from "./Serializable"
+} from "./Serializable.js"
 
 export namespace Serializer {
   export const encode = abiEncode

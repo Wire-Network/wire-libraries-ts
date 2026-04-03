@@ -1,13 +1,13 @@
-import { ABISerializableObject } from "./serializer/Serializable"
+import { ABISerializableObject } from "./serializer/Serializable.js"
 import rand from "brorand"
-import { Base58 } from "./Base58"
-import { getCurve } from "./crypto/Curves"
-import { KeyType } from "./chain/KeyType"
-import { Name, NameType } from "./chain/Name"
-import { TimePoint } from "./chain/Time"
-import { BLOCK_TIMESTAMP_EPOCH_MS, BLOCK_TIMESTAMP_INTERVAL_MS } from "./chain/constants"
+import { Base58 } from "./Base58.js"
+import { getCurve } from "./crypto/Curves.js"
+import { KeyType } from "./chain/KeyType.js"
+import { Name, NameType } from "./chain/Name.js"
+import { TimePoint } from "./chain/Time.js"
+import { BLOCK_TIMESTAMP_EPOCH_MS, BLOCK_TIMESTAMP_INTERVAL_MS } from "./chain/constants.js"
 import { ethers } from "ethers"
-import { Serializer } from "./serializer/"
+import { Serializer } from "./serializer//index.js"
 
 export function arrayEquals(a: ArrayLike<number>, b: ArrayLike<number>) {
   const len = a.length

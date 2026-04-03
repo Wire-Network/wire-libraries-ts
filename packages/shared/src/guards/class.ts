@@ -6,7 +6,7 @@
  * @param {any} value
  * @returns {boolean}
  */
-import type { ClassConstructor, TypeGuard } from "./types"
+import type { ClassConstructor, TypeGuard } from "./types.js"
 
 export function isNativeClass <T = any>(value:any): value is ClassConstructor<T> {
   return typeof value === 'function' && value.toString().indexOf('class') === 0

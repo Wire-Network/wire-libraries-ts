@@ -9,7 +9,7 @@ const config: Config = {
     "^.+\\.tsx?$": [
       "ts-jest",
       {
-        tsconfig: "<rootDir>/../../etc/tsconfig/tsconfig.base.jest.json",
+        tsconfig: "<rootDir>/tsconfig.cjs.jest.json",
       },
     ],
   },
@@ -20,6 +20,7 @@ const config: Config = {
     "^@wireio/wallet-browser-ext/(.*)$": "<rootDir>/src/$1",
     "\\.css$": "<rootDir>/tests/__mocks__/styleMock.ts",
     "\\.svg$": "<rootDir>/tests/__mocks__/svgMock.ts",
+    "^(\\.\\.?/.*)\\.js$": "$1",
   },
   setupFiles: ["<rootDir>/tests/setup.ts"],
 }

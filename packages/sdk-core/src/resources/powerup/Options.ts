@@ -1,4 +1,4 @@
-import { TimePointType, UInt64 } from "../../"
+import { TimePointType, UInt64 } from "../..//index.js"
 
 export interface PowerUpStateOptions {
   // timestamp to base adjusted_utilization off

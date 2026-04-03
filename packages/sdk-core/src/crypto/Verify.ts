@@ -1,8 +1,8 @@
-import { getCurve } from "./Curves"
-import { KeyType } from "../chain/KeyType"
+import { getCurve } from "./Curves.js"
+import { KeyType } from "../chain/KeyType.js"
 import nacl from "tweetnacl"
 import { ethers } from "ethers"
-import { blsVerify } from "./BLS"
+import { blsVerify } from "./BLS.js"
 
 /**
  * Verify signature using message and public key.

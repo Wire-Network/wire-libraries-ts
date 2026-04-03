@@ -1,4 +1,4 @@
-import type { LogRecord } from "./LogRecord"
+import type { LogRecord } from "./LogRecord.js"
 
 export type Formatter<
   Output,

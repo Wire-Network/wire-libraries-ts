@@ -1,11 +1,11 @@
-import { APIClient } from "../Client"
+import { APIClient } from "../Client.js"
 import {
   GetActionsParams,
   GetActionsResponse,
   GetCreatedAccountsParams,
   GetCreatedAccountsResponse,
   GetTransactionResponse
-} from "./Types"
+} from "./Types.js"
 
 export class HistoryAPIv2 {
   constructor(private client: APIClient) {}

@@ -1,4 +1,4 @@
-import { Struct } from "../chain/Struct"
+import { Struct } from "../chain/Struct.js"
 
 @Struct.type("explorer_definition")
 export class ExplorerDefinition extends Struct {

@@ -1,4 +1,4 @@
-import { APIClient } from "../Client"
+import { APIClient } from "../Client.js"
 
 import {
   Checksum256,
@@ -11,14 +11,14 @@ import {
   PublicKeyType,
   UInt32,
   UInt32Type
-} from "../../chain"
+} from "../../chain/index.js"
 
 import {
   GetActionsResponse,
   GetControlledAccountsResponse,
   GetKeyAccountsResponse,
   GetTransactionResponse
-} from "./Types"
+} from "./Types.js"
 
 export class HistoryAPI {
   constructor(private client: APIClient) {}

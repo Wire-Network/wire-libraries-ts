@@ -1,6 +1,6 @@
 // noinspection JSValidateJSDoc
 
-import type { LogContext } from "./LogContext"
+import type { LogContext } from "./LogContext.js"
 
 
 

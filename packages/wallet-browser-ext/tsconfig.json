@@ -1,16 +1,9 @@
 {
   "extends": "../../etc/tsconfig/tsconfig.base.json",
-  "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "lib",
-    
-    "types": [
-      "chrome",
-//      "./src/ModuleResTypeDeclarations.d.ts"
-    ]
-  },
-  "include": ["src"],
+  "files": [],
   "references": [
-    { "path": "../sdk-core/tsconfig.json" }
+    { "path": "./tsconfig.esm.json" },
+    { "path": "./tsconfig.cjs.json" },
+    { "path": "./tsconfig.cjs.jest.json" }
   ]
 }

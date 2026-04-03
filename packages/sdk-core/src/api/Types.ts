@@ -1,9 +1,9 @@
-export * as v1 from "./v1/Types"
-export * as v2 from "./v2/Types"
+export * as v1 from "./v1/Types.js"
+export * as v2 from "./v2/Types.js"
 
-import { ActionType } from "../chain/Action"
-import { NameType } from "../chain/Name"
-import { TableIndexType, TableIndexTypes } from "./v1/Types"
+import { ActionType } from "../chain/Action.js"
+import { NameType } from "../chain/Name.js"
+import { TableIndexType, TableIndexTypes } from "./v1/Types.js"
 
 export interface GetRowsOptions {
   contract: NameType

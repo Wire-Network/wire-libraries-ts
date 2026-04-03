@@ -1,16 +1,16 @@
 /* eslint-disable no-console */
 // src/crypto/public_key.ts
 
-import { ABIDecoder } from "../serializer/Decoder"
-import { ABIEncoder } from "../serializer/Encoder"
-import { ABISerializableObject } from "../serializer/Serializable"
+import { ABIDecoder } from "../serializer/Decoder.js"
+import { ABIEncoder } from "../serializer/Encoder.js"
+import { ABISerializableObject } from "../serializer/Serializable.js"
 
-import { Base58 } from "../Base58"
-import { arrayToHex, hexToArray, isInstanceOf } from "../Utils"
+import { Base58 } from "../Base58.js"
+import { arrayToHex, hexToArray, isInstanceOf } from "../Utils.js"
 
-import { Bytes } from "./Bytes"
-import { KeyType } from "./KeyType"
-import { blsEncode, blsDecode } from "../crypto/BLSSerdes"
+import { Bytes } from "./Bytes.js"
+import { KeyType } from "./KeyType.js"
+import { blsEncode, blsDecode } from "../crypto/BLSSerdes.js"
 
 export type PublicKeyType =
   | PublicKey
@@ -182,6 +182,31 @@ export class PublicKey implements ABISerializableObject {
   toABI(encoder: ABIEncoder) {
     encoder.writeByte(KeyType.indexFor(this.type))
     encoder.writeArray(this.data.array)
+  }
+
+  /**
+   * Return the public key in the native format expected by the
+   * signature_provider_manager_plugin's spec.
+   *
+   * - K1/R1: Legacy SYS-prefixed string
+   * - EM (Ethereum): hex address (0x-prefixed, 20-byte keccak hash)
+   * - ED (Solana): raw base58 of the 32-byte public key
+   * - BLS: PUB_BLS_... encoded string
+   */
+  toNativeString(): string {
+    switch (this.type) {
+      case KeyType.K1:
+      case KeyType.R1:
+        return this.toLegacyString()
+      case KeyType.EM:
+        return "0x" + arrayToHex(this.data.array)
+      case KeyType.ED:
+        return Base58.encode(this.data)
+      case KeyType.BLS:
+        return `PUB_BLS_${blsEncode(this.data.array)}`
+      default:
+        return this.toString()
+    }
   }
 
   /** @internal */

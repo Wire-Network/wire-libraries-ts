@@ -1,4 +1,4 @@
-import { APIClient } from "../Client"
+import { APIClient } from "../Client.js"
 import {
   ApiUsageResponse,
   GetResourceUsageParams,
@@ -6,7 +6,7 @@ import {
   HealthResponse,
   MissedBlocksParams,
   MissedBlocksResponse
-} from "./Types"
+} from "./Types.js"
 
 export class StatsAPIv2 {
   constructor(private client: APIClient) {}

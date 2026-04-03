@@ -1,8 +1,8 @@
-import * as API from "./api/Types"
-import { APIClient } from "./api/Client"
-import { ABI, ABIDef } from "./chain/Abi"
-import { NameType } from "./chain/Name"
-import { AbiProvider } from "./signing/SigningRequest"
+import * as API from "./api/Types.js"
+import { APIClient } from "./api/Client.js"
+import { ABI, ABIDef } from "./chain/Abi.js"
+import { NameType } from "./chain/Name.js"
+import { AbiProvider } from "./signing/SigningRequest.js"
 
 export interface ABICacheInterface extends AbiProvider {
   readonly cache: Map<string, ABI>
