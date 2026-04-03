@@ -6,13 +6,17 @@ const config: Config = {
   roots: ["<rootDir>/tests"],
   testMatch: ["**/*.test.ts"],
   transform: {
-    "^.+\\.tsx?$": [
+    "^.+\\.[tj]sx?$": [
       "ts-jest",
       {
         tsconfig: "<rootDir>/tsconfig.cjs.jest.json",
       },
     ],
   },
+  transformIgnorePatterns: [
+    "/node_modules/.pnpm/(?!@noble|@3fv)",
+    "/node_modules/(?!(\\.pnpm|@noble|@3fv))",
+  ],
   moduleNameMapper: {
     "^@wireio/sdk-core$": "<rootDir>/../sdk-core/src/index",
     "^@wireio/sdk-core/(.*)$": "<rootDir>/../sdk-core/src/$1",

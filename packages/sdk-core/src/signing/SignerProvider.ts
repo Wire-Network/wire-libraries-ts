@@ -1,9 +1,8 @@
+import { identity } from "lodash"
 import { Option } from "@3fv/prelude-ts"
 import { ethers } from "ethers"
-import { KeyType } from "../chain/KeyType.js"
 import { PrivateKey, type PrivateKeyType } from "../chain/PrivateKey.js"
 import { PublicKey } from "../chain/PublicKey.js"
-import { getCurve } from "../crypto/Curves.js"
 import { hexToArray } from "../Utils.js"
 
 export interface SignerProvider {
@@ -26,12 +25,10 @@ const toMessageBytes = (
   return Option.of(msg)
     .filter((value): value is string => typeof value === "string")
     .map(mapStringValue)
-    .orCall(() =>
-      Option.of(msg).filter(
-        (value): value is Uint8Array => value instanceof Uint8Array
-      )
-    )
-    .get()
+    .match({
+      None: () => (msg instanceof Uint8Array ? msg : undefined),
+      Some: identity
+    })
 }
 
 /**
@@ -69,7 +66,9 @@ export const createEdSigner = (
   return {
     pubKey,
     async sign(msg) {
-      const msgBytes = toMessageBytes(msg, value => new TextEncoder().encode(value))
+      const msgBytes = toMessageBytes(msg, value =>
+        new TextEncoder().encode(value)
+      )
 
       const sigBytes = await adapter.signMessage(msgBytes)
       return sigBytes
@@ -90,7 +89,9 @@ export const createEdSigner = (
  * @param privateKey Private key in any supported `PrivateKeyType` representation.
  * @returns A `SignerProvider` for classic elliptic-curve signing.
  */
-export function createClassicSigner(privateKey: PrivateKeyType): SignerProvider {
+export function createClassicSigner(
+  privateKey: PrivateKeyType
+): SignerProvider {
   const privKey = PrivateKey.from(privateKey)
 
   return {
