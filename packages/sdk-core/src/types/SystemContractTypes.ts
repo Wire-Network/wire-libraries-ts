@@ -474,6 +474,7 @@ export enum SysioMsgchAttestationtype {
   ATTESTATION_TYPE_EPOCH_SYNC = 60940,
   ATTESTATION_TYPE_ROSTER_UPDATE = 60941,
   ATTESTATION_TYPE_REMIT_CONFIRM = 60942,
+  ATTESTATION_TYPE_BATCH_OPERATOR_NEXT_GROUP = 60943,
 }
 
 /** sysio.msgch::ChainRequestStatus (enum, int32) */
@@ -508,6 +509,7 @@ export enum SysioMsgchMessagestatus {
 
 /** sysio.msgch::buildenv (action) */
 export interface SysioMsgchBuildenvAction {
+  batch_op_name: string
   outpost_id: number
 }
 
@@ -529,6 +531,7 @@ export interface SysioMsgchCrankAction {
 
 /** sysio.msgch::createreq (action) */
 export interface SysioMsgchCreatereqAction {
+  batch_op_name: string
   outpost_id: number
 }
 
@@ -544,6 +547,7 @@ export interface SysioMsgchDeliverAction {
 
 /** sysio.msgch::evalcons (action) */
 export interface SysioMsgchEvalconsAction {
+  batch_op_name: string
   req_id: number
 }
 

@@ -46,9 +46,7 @@ export async function bundleCommand(args: BundleArgs): Promise<void> {
     // copying to the final output location.
     const genDir = Path.join(tmpDir, "generated")
     const isSolidity = args.target === "solidity"
-    const stagingDir = isSolidity
-      ? Path.join(tmpDir, "staging")
-      : outputDir
+    const stagingDir = isSolidity ? Path.join(tmpDir, "staging") : outputDir
 
     Fs.mkdirSync(stagingDir, { recursive: true })
 
@@ -94,7 +92,33 @@ export async function bundleCommand(args: BundleArgs): Promise<void> {
       log.info("Compiling TypeScript in %s", stagingDir)
       execFileSync(
         "npx",
-        ["-y", "-p", "typescript@3", "tsc", "-p", Path.join(stagingDir, "tsconfig.json")],
+        [
+          "-y",
+          "-p",
+          "typescript@3",
+          "tsc",
+          "-p",
+          Path.join(stagingDir, "tsconfig.json")
+        ],
+        {
+          stdio: ["pipe", "pipe", "inherit"],
+          cwd: stagingDir
+        }
+      )
+
+      log.info("Fixing import extensions in %s", stagingDir)
+      execFileSync(
+        "npx",
+        [
+          "-y",
+          "-p",
+          "tsc-alias",
+          "tsc-alias",
+          "-p",
+          Path.join(stagingDir, "tsconfig.json"),
+          "--resolve-full-paths",
+          "--verbose"
+        ],
         {
           stdio: ["pipe", "pipe", "inherit"],
           cwd: stagingDir
