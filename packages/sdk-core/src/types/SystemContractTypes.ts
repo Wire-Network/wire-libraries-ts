@@ -509,7 +509,6 @@ export enum SysioMsgchMessagestatus {
 
 /** sysio.msgch::buildenv (action) */
 export interface SysioMsgchBuildenvAction {
-  batch_op_name: string
   outpost_id: number
 }
 
@@ -525,24 +524,10 @@ export interface SysioMsgchChainDeliveryType {
   matches_consensus: boolean
 }
 
-/** sysio.msgch::crank (action) */
-export interface SysioMsgchCrankAction {
-}
-
-/** sysio.msgch::createreq (action) */
-export interface SysioMsgchCreatereqAction {
-  batch_op_name: string
-  outpost_id: number
-}
-
 /** sysio.msgch::deliver (action) */
 export interface SysioMsgchDeliverAction {
-  operator_acct: string
-  req_id: number
-  chain_hash: string
-  merkle_root: string
-  msg_count: number
-  raw_messages: string
+  batch_op_name: string
+  data: string
 }
 
 /** sysio.msgch::evalcons (action) */
