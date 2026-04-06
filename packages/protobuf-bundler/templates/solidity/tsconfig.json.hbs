@@ -1,17 +1,15 @@
 {
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "ES2020",
-    "moduleResolution": "node",
-    "declaration": true,
-    "declarationMap": true,
-    "strict": false,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-		"skipDefaultLibCheck": true,
-		"outDir": ".",
-    "rootDir": "."
+  "compilerOptions": 	{
+		"composite": true,
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true
   },
-  "include": ["**/*.ts"],
+	"files": [],
+	"references": [
+		{ "path": "./tsconfig.esm.json" },
+		{ "path": "./tsconfig.cjs.json" }
+	],
+  "include": [],
   "exclude": ["node_modules"]
 }

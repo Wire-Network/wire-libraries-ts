@@ -2,18 +2,30 @@
   "name": "{{packageName}}",
   "version": "{{version}}",
   "description": "Auto-generated protobuf types for Solidity",
-  "type": "module",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "types": "lib/esm/index.d.ts",
+	"main": "lib/cjs/index.js",
+	"module": "lib/esm/index.js",
   "files": [
     "contracts",
-    "**/*.ts",
-    "**/*.js",
-    "**/*.d.ts",
-    "**/*.d.ts.map",
-    "*.js",
+    "src/**/*.ts",
+    "lib/**/*.js",
+    "lib/**/*.d.ts",
+    "lib/**/*.d.ts.map",
     "README.md"
   ],
+	"exports": {
+		".": {
+			"import": "./lib/esm/index.js",
+			"require": "./lib/cjs/index.js",
+			"types": "./lib/esm/index.d.ts"
+		},
+		"./*": {
+			"import": "./lib/esm/*.js",
+			"require": "./lib/cjs/*.js",
+			"types": "./lib/esm/*.d.ts"
+		}
+	},
+	"access": "public",
   "dependencies": {
     "@protobuf-ts/runtime": "{{protobufTsRuntimeVersion}}"
   }{{#if additionalFields}},

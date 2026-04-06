@@ -18,6 +18,8 @@ export interface BundleArgs {
   publish: boolean
 }
 
+let skipCleanup = false
+
 export async function bundleCommand(args: BundleArgs): Promise<void> {
   const outputDir = Path.resolve(args.output)
 
@@ -95,9 +97,9 @@ export async function bundleCommand(args: BundleArgs): Promise<void> {
         [
           "-y",
           "-p",
-          "typescript@3",
+          "typescript@4",
           "tsc",
-          "-p",
+          "-b",
           Path.join(stagingDir, "tsconfig.json")
         ],
         {
@@ -107,23 +109,47 @@ export async function bundleCommand(args: BundleArgs): Promise<void> {
       )
 
       log.info("Fixing import extensions in %s", stagingDir)
-      execFileSync(
-        "npx",
-        [
-          "-y",
-          "-p",
-          "tsc-alias",
-          "tsc-alias",
-          "-p",
-          Path.join(stagingDir, "tsconfig.json"),
-          "--resolve-full-paths",
-          "--verbose"
-        ],
-        {
-          stdio: ["pipe", "pipe", "inherit"],
-          cwd: stagingDir
-        }
-      )
+      Array("tsconfig.cjs.json", "tsconfig.esm.json")
+        .map(tsConfigFileName => Path.join(stagingDir, tsConfigFileName))
+        .forEach(tsConfigPath => {
+          execFileSync(
+            "npx",
+            [
+              "-y",
+              "-p",
+              "tsc-alias",
+              "tsc-alias",
+              "-p",
+              tsConfigPath,
+              "-f",
+              "-fe",
+              ".js"
+            ],
+            {
+              stdio: ["pipe", "pipe", "inherit"],
+              cwd: stagingDir
+            }
+          )
+        })
+
+      // log.info("Fixing import extensions in %s", stagingDir)
+      // execFileSync(
+      //   "npx",
+      //   [
+      //     "-y",
+      //     "-p",
+      //     "tsc-alias",
+      //     "tsc-alias",
+      //     "-p",
+      //     Path.join(stagingDir, "tsconfig.json"),
+      //     "--resolve-full-paths",
+      //     "--verbose"
+      //   ],
+      //   {
+      //     stdio: ["pipe", "pipe", "inherit"],
+      //     cwd: stagingDir
+      //   }
+      // )
 
       // Step 4d: Copy everything except node_modules to output
       Fs.mkdirSync(outputDir, { recursive: true })
@@ -155,7 +181,11 @@ export async function bundleCommand(args: BundleArgs): Promise<void> {
         throw new Error(`npm publish failed: ${stderr || err.message}`)
       }
     }
+  } catch (err: any) {
+    skipCleanup = true
+    log.error(`Bundle failed: ${err.message}`, err)
   } finally {
+    if (skipCleanup) return
     try {
       Fs.rmSync(tmpDir, { recursive: true, force: true })
       log.debug("Cleaned up temp dir: %s", tmpDir)
