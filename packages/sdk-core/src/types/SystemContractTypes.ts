@@ -309,6 +309,15 @@ export interface SysioChalgSubmitrespAction {
 
 // ── sysio.epoch ──
 
+/** sysio.epoch::ChainKind (enum, int32) */
+export enum SysioEpochChainkind {
+  CHAIN_KIND_UNKNOWN = 0,
+  CHAIN_KIND_WIRE = 1,
+  CHAIN_KIND_ETHEREUM = 2,
+  CHAIN_KIND_SOLANA = 3,
+  CHAIN_KIND_SUI = 4,
+}
+
 /** sysio.epoch::OperatorStatus (enum, int32) */
 export enum SysioEpochOperatorstatus {
   OPERATOR_STATUS_UNKNOWN = 0,
@@ -326,15 +335,6 @@ export enum SysioEpochOperatortype {
   OPERATOR_TYPE_BATCH = 2,
   OPERATOR_TYPE_UNDERWRITER = 3,
   OPERATOR_TYPE_CHALLENGER = 4,
-}
-
-/** sysio.epoch::chain_kind_t (enum, uint8) */
-export enum SysioEpochChainKindType {
-  unknown = 0,
-  wire = 1,
-  ethereum = 2,
-  solana = 3,
-  sui = 4,
 }
 
 /** sysio.epoch::activateop (action) */
@@ -378,8 +378,8 @@ export interface SysioEpochOperatorInfoType {
   type: SysioEpochOperatortype
   status: SysioEpochOperatorstatus
   registered_epoch: number
-  chain_addresses: SysioEpochPairChainKindTChecksum256Type[]
-  collateral: SysioEpochPairChainKindTInt64Type[]
+  chain_addresses: SysioEpochPairChainkindChecksum256Type[]
+  collateral: SysioEpochPairChainkindInt64Type[]
   assigned_batch_op_group: number
   last_elected_epoch: number
   slash_count: number
@@ -389,7 +389,7 @@ export interface SysioEpochOperatorInfoType {
 /** sysio.epoch::outpost_info (type) */
 export interface SysioEpochOutpostInfoType {
   id: number
-  chain_kind: SysioEpochChainKindType
+  chain_kind: SysioEpochChainkind
   chain_id: number
   last_inbound_msg_id: string
   last_outbound_msg_id: string
@@ -397,15 +397,15 @@ export interface SysioEpochOutpostInfoType {
   last_outbound_epoch: number
 }
 
-/** sysio.epoch::pair_chain_kind_t_checksum256 (type) */
-export interface SysioEpochPairChainKindTChecksum256Type {
-  first: SysioEpochChainKindType
+/** sysio.epoch::pair_ChainKind_checksum256 (type) */
+export interface SysioEpochPairChainkindChecksum256Type {
+  first: SysioEpochChainkind
   second: string
 }
 
-/** sysio.epoch::pair_chain_kind_t_int64 (type) */
-export interface SysioEpochPairChainKindTInt64Type {
-  first: SysioEpochChainKindType
+/** sysio.epoch::pair_ChainKind_int64 (type) */
+export interface SysioEpochPairChainkindInt64Type {
+  first: SysioEpochChainkind
   second: number
 }
 
@@ -421,7 +421,7 @@ export interface SysioEpochRegoperatorAction {
 
 /** sysio.epoch::regoutpost (action) */
 export interface SysioEpochRegoutpostAction {
-  chain_kind: SysioEpochChainKindType
+  chain_kind: SysioEpochChainkind
   chain_id: number
 }
 
