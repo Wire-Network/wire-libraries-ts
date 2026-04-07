@@ -354,6 +354,7 @@ export interface SysioEpochEpochConfigType {
   batch_op_groups: number
   warmup_epochs: number
   cooldown_epochs: number
+  attestation_retention_epoch_count: number
 }
 
 /** sysio.epoch::epoch_state (type) */
@@ -438,6 +439,7 @@ export interface SysioEpochSetconfigAction {
   batch_op_groups: number
   warmup_epochs: number
   cooldown_epochs: number
+  attestation_retention_epoch_count: number
 }
 
 /** sysio.epoch::unpause (action) */
@@ -450,6 +452,13 @@ export interface SysioEpochUnregoperAction {
 }
 
 // ── sysio.msgch ──
+
+/** sysio.msgch::AttestationStatus (enum, int32) */
+export enum SysioMsgchAttestationstatus {
+  ATTESTATION_STATUS_PENDING = 0,
+  ATTESTATION_STATUS_READY = 1,
+  ATTESTATION_STATUS_PROCESSED = 2,
+}
 
 /** sysio.msgch::AttestationType (enum, int32) */
 export enum SysioMsgchAttestationtype {
@@ -469,21 +478,22 @@ export enum SysioMsgchAttestationtype {
   ATTESTATION_TYPE_UNDERWRITE_INTENT = 60935,
   ATTESTATION_TYPE_UNDERWRITE_CONFIRM = 60936,
   ATTESTATION_TYPE_UNDERWRITE_REJECT = 60937,
-  ATTESTATION_TYPE_REMIT = 60938,
-  ATTESTATION_TYPE_CHALLENGE_REQUEST = 60939,
-  ATTESTATION_TYPE_EPOCH_SYNC = 60940,
-  ATTESTATION_TYPE_ROSTER_UPDATE = 60941,
-  ATTESTATION_TYPE_REMIT_CONFIRM = 60942,
+  ATTESTATION_TYPE_UNDERWRITE_UNLOCK = 60938,
+  ATTESTATION_TYPE_REMIT = 60944,
+  ATTESTATION_TYPE_CHALLENGE_REQUEST = 60945,
+  ATTESTATION_TYPE_EPOCH_SYNC = 60946,
+  ATTESTATION_TYPE_ROSTER_UPDATE = 60947,
+  ATTESTATION_TYPE_REMIT_CONFIRM = 60948,
   ATTESTATION_TYPE_BATCH_OPERATOR_NEXT_GROUP = 60943,
 }
 
-/** sysio.msgch::ChainRequestStatus (enum, int32) */
-export enum SysioMsgchChainrequeststatus {
-  CHAIN_REQUEST_STATUS_PENDING = 0,
-  CHAIN_REQUEST_STATUS_COLLECTING = 1,
-  CHAIN_REQUEST_STATUS_CONSENSUS_OK = 2,
-  CHAIN_REQUEST_STATUS_CONSENSUS_FAIL = 3,
-  CHAIN_REQUEST_STATUS_CHALLENGED = 4,
+/** sysio.msgch::ChainKind (enum, int32) */
+export enum SysioMsgchChainkind {
+  CHAIN_KIND_UNKNOWN = 0,
+  CHAIN_KIND_WIRE = 1,
+  CHAIN_KIND_ETHEREUM = 2,
+  CHAIN_KIND_SOLANA = 3,
+  CHAIN_KIND_SUI = 4,
 }
 
 /** sysio.msgch::EnvelopeStatus (enum, int32) */
@@ -507,43 +517,52 @@ export enum SysioMsgchMessagestatus {
   MESSAGE_STATUS_CANCELLED = 3,
 }
 
+/** sysio.msgch::attestation_entry (type) */
+export interface SysioMsgchAttestationEntryType {
+  id: number
+  outpost_id: number
+  epoch_index: number
+  type: SysioMsgchAttestationtype
+  status: SysioMsgchAttestationstatus
+  data: string
+  pending_timestamp: number
+  ready_timestamp: number
+  processed_timestamp: number
+}
+
 /** sysio.msgch::buildenv (action) */
 export interface SysioMsgchBuildenvAction {
   outpost_id: number
 }
 
-/** sysio.msgch::chain_delivery (type) */
-export interface SysioMsgchChainDeliveryType {
-  id: number
-  chain_request_id: number
-  operator_account: string
-  chain_hash: string
-  merkle_root: string
-  message_count: number
-  delivered_at: string
-  matches_consensus: boolean
+/** sysio.msgch::cleanup (action) */
+export interface SysioMsgchCleanupAction {
+  before_epoch: number
 }
 
 /** sysio.msgch::deliver (action) */
 export interface SysioMsgchDeliverAction {
   batch_op_name: string
+  outpost_id: number
   data: string
+}
+
+/** sysio.msgch::envelope_entry (type) */
+export interface SysioMsgchEnvelopeEntryType {
+  id: number
+  outpost_id: number
+  epoch_index: number
+  batch_op_name: string
+  chain_kind: SysioMsgchChainkind
+  checksum: string
+  raw_data: string
+  received_at: string
 }
 
 /** sysio.msgch::evalcons (action) */
 export interface SysioMsgchEvalconsAction {
-  batch_op_name: string
-  req_id: number
-}
-
-/** sysio.msgch::inbound_chain_request (type) */
-export interface SysioMsgchInboundChainRequestType {
-  id: number
   outpost_id: number
   epoch_index: number
-  expected_start_msg: string
-  status: SysioMsgchChainrequeststatus
-  delivery_count: number
 }
 
 /** sysio.msgch::message_entry (type) */
@@ -555,7 +574,6 @@ export interface SysioMsgchMessageEntryType {
   previous_message_id: string
   direction: SysioMsgchMessagedirection
   status: SysioMsgchMessagestatus
-  attestation_type: SysioMsgchAttestationtype
   raw_payload: string
   received_at: string
   processed_at: string
@@ -572,11 +590,6 @@ export interface SysioMsgchOutboundEnvelopeType {
   end_message_id: string
   status: SysioMsgchEnvelopestatus
   raw_envelope: string
-}
-
-/** sysio.msgch::processmsg (action) */
-export interface SysioMsgchProcessmsgAction {
-  msg_id: number
 }
 
 /** sysio.msgch::queueout (action) */
@@ -1333,13 +1346,71 @@ export interface SysioTokenTransferAction {
 
 // ── sysio.uwrit ──
 
+/** sysio.uwrit::AttestationType (enum, int32) */
+export enum SysioUwritAttestationtype {
+  ATTESTATION_TYPE_UNSPECIFIED = 0,
+  ATTESTATION_TYPE_OPERATOR_ACTION = 2001,
+  ATTESTATION_TYPE_STAKE = 3001,
+  ATTESTATION_TYPE_UNSTAKE = 3002,
+  ATTESTATION_TYPE_PRETOKEN_PURCHASE = 3004,
+  ATTESTATION_TYPE_PRETOKEN_YIELD = 3006,
+  ATTESTATION_TYPE_RESERVE_BALANCE_SHEET = 43520,
+  ATTESTATION_TYPE_STAKE_UPDATE = 60928,
+  ATTESTATION_TYPE_NATIVE_YIELD_REWARD = 60929,
+  ATTESTATION_TYPE_WIRE_TOKEN_PURCHASE = 60930,
+  ATTESTATION_TYPE_CHALLENGE_RESPONSE = 60932,
+  ATTESTATION_TYPE_SLASH_OPERATOR = 60933,
+  ATTESTATION_TYPE_SWAP = 60934,
+  ATTESTATION_TYPE_UNDERWRITE_INTENT = 60935,
+  ATTESTATION_TYPE_UNDERWRITE_CONFIRM = 60936,
+  ATTESTATION_TYPE_UNDERWRITE_REJECT = 60937,
+  ATTESTATION_TYPE_UNDERWRITE_UNLOCK = 60938,
+  ATTESTATION_TYPE_REMIT = 60944,
+  ATTESTATION_TYPE_CHALLENGE_REQUEST = 60945,
+  ATTESTATION_TYPE_EPOCH_SYNC = 60946,
+  ATTESTATION_TYPE_ROSTER_UPDATE = 60947,
+  ATTESTATION_TYPE_REMIT_CONFIRM = 60948,
+  ATTESTATION_TYPE_BATCH_OPERATOR_NEXT_GROUP = 60943,
+}
+
+/** sysio.uwrit::ChainKind (enum, int32) */
+export enum SysioUwritChainkind {
+  CHAIN_KIND_UNKNOWN = 0,
+  CHAIN_KIND_WIRE = 1,
+  CHAIN_KIND_ETHEREUM = 2,
+  CHAIN_KIND_SOLANA = 3,
+  CHAIN_KIND_SUI = 4,
+}
+
+/** sysio.uwrit::TokenKind (enum, int32) */
+export enum SysioUwritTokenkind {
+  TOKEN_KIND_WIRE = 0,
+  TOKEN_KIND_ETH = 256,
+  TOKEN_KIND_ERC20 = 257,
+  TOKEN_KIND_ERC721 = 258,
+  TOKEN_KIND_ERC1155 = 259,
+  TOKEN_KIND_LIQETH = 496,
+  TOKEN_KIND_SOL = 512,
+  TOKEN_KIND_LIQSOL = 752,
+}
+
+/** sysio.uwrit::UnderwriteRequestStatus (enum, int32) */
+export enum SysioUwritUnderwriterequeststatus {
+  UNDERWRITE_REQUEST_STATUS_PENDING = 0,
+  UNDERWRITE_REQUEST_STATUS_CONFIRMED = 1,
+  UNDERWRITE_REQUEST_STATUS_REJECTED = 2,
+  UNDERWRITE_REQUEST_STATUS_COMPLETED = 3,
+  UNDERWRITE_REQUEST_STATUS_EXPIRED = 4,
+}
+
 /** sysio.uwrit::UnderwriteStatus (enum, int32) */
 export enum SysioUwritUnderwritestatus {
-  UNDERWRITE_STATUS_INTENT_SUBMITTED = 0,
-  UNDERWRITE_STATUS_INTENT_CONFIRMED = 1,
-  UNDERWRITE_STATUS_COMPLETED = 2,
-  UNDERWRITE_STATUS_EXPIRED = 3,
-  UNDERWRITE_STATUS_SLASHED = 4,
+  UNDERWRITE_STATUS_INTENT_CREATED = 0,
+  UNDERWRITE_STATUS_INTENT_SUBMITTED = 1,
+  UNDERWRITE_STATUS_INTENT_CONFIRMED = 2,
+  UNDERWRITE_STATUS_READY = 3,
+  UNDERWRITE_STATUS_RELEASED = 5,
+  UNDERWRITE_STATUS_SLASHED = 10,
 }
 
 /** sysio.uwrit::chain_kind_t (enum, uint8) */
@@ -1349,6 +1420,18 @@ export enum SysioUwritChainKindType {
   ethereum = 2,
   solana = 3,
   sui = 4,
+}
+
+/** sysio.uwrit::ChainId (type) */
+export interface SysioUwritChainidType {
+  kind: SysioUwritChainkind
+  id: SysioUwritVarintUint32Type
+}
+
+/** sysio.uwrit::TokenAmount (type) */
+export interface SysioUwritTokenamountType {
+  kind: SysioUwritTokenkind
+  amount: SysioUwritVarintInt64Type
 }
 
 /** sysio.uwrit::collateral_entry (type) */
@@ -1366,6 +1449,13 @@ export interface SysioUwritConfirmuwAction {
   uw_entry_id: number
 }
 
+/** sysio.uwrit::createuwreq (action) */
+export interface SysioUwritCreateuwreqAction {
+  attestation_id: number
+  type: SysioUwritAttestationtype
+  data: string
+}
+
 /** sysio.uwrit::distfee (action) */
 export interface SysioUwritDistfeeAction {
   uw_entry_id: number
@@ -1374,6 +1464,14 @@ export interface SysioUwritDistfeeAction {
 /** sysio.uwrit::expirelock (action) */
 export interface SysioUwritExpirelockAction {
   uw_entry_id: number
+}
+
+/** sysio.uwrit::locked_amount_t (type) */
+export interface SysioUwritLockedAmountTType {
+  chain_id: SysioUwritChainidType
+  amount: SysioUwritTokenamountType
+  lock_id: string
+  lock_timestamp: number
 }
 
 /** sysio.uwrit::setconfig (action) */
@@ -1431,6 +1529,28 @@ export interface SysioUwritUwConfigType {
   uw_fee_share_pct: number
   other_uw_share_pct: number
   batch_op_share_pct: number
+}
+
+/** sysio.uwrit::uw_request_t (type) */
+export interface SysioUwritUwRequestTType {
+  id: number
+  type: SysioUwritAttestationtype
+  status: SysioUwritUnderwriterequeststatus
+  uw_name: string
+  locked_amounts: SysioUwritLockedAmountTType[]
+  unlock_timestamp: number
+  released_timestamp: number
+  slashed_timestamp: number
+}
+
+/** sysio.uwrit::varint_int64 (type) */
+export interface SysioUwritVarintInt64Type {
+  value: number
+}
+
+/** sysio.uwrit::varint_uint32 (type) */
+export interface SysioUwritVarintUint32Type {
+  value: number
 }
 
 // ── sysio.wrap ──
