@@ -1,0 +1,207 @@
+import { APIClient } from "@wireio/sdk-core/api/Client"
+import type { APIProvider } from "@wireio/sdk-core/api/Provider"
+import type { APIResponse } from "@wireio/sdk-core/api/Client"
+
+// Tests for the wire-sysio PR #290 unified get_table_rows response
+// shape — KV-backed tables now return rows as `{key, value, payer?}`
+// objects instead of the legacy form (decoded struct directly, or
+// `{data, payer}` when show_payer is set). The Chain.get_table_rows
+// wrapper detects the new shape and unwraps it so downstream callers
+// keep seeing the same row layout they always have.
+
+// Minimal in-memory APIProvider for unit tests. Returns the JSON body
+// passed via the `responses` map keyed by request path.
+class MockProvider implements APIProvider {
+  constructor(private responses: Record<string, any>) {}
+  async call(args: { path: string; params?: unknown }): Promise<APIResponse> {
+    const json = this.responses[args.path]
+    if (json === undefined) {
+      throw new Error(`MockProvider: no response registered for ${args.path}`)
+    }
+    return {
+      status: 200,
+      headers: {},
+      json,
+      text: JSON.stringify(json)
+    } as unknown as APIResponse
+  }
+}
+
+function makeClient(responses: Record<string, any>): APIClient {
+  return new APIClient({
+    provider: new MockProvider(responses)
+  })
+}
+
+describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
+  test("unwraps the new {key, value, payer?} shape into plain rows", async () => {
+    const client = makeClient({
+      "/v1/chain/get_table_rows": {
+        rows: [
+          {
+            key: { scope: "alice", sym_code: "1397703940" },
+            value: { balance: "100.0000 SYS" }
+          },
+          {
+            key: { scope: "alice", sym_code: "1145521988" },
+            value: { balance: "200.0000 AAA" }
+          }
+        ],
+        more: false,
+        next_key: ""
+      }
+    })
+
+    const result = await client.v1.chain.get_table_rows({
+      code: "sysio.token",
+      scope: "alice",
+      table: "accounts"
+    })
+
+    expect(result.rows).toHaveLength(2)
+    // Each row is the unwrapped `value` (the decoded struct), not the
+    // outer `{key, value}` wrapper.
+    expect(result.rows[0]).toEqual({ balance: "100.0000 SYS" })
+    expect(result.rows[1]).toEqual({ balance: "200.0000 AAA" })
+    expect(result.more).toBe(false)
+    expect(result.ram_payers).toBeUndefined()
+  })
+
+  test("unwraps the new shape with show_payer and captures payers", async () => {
+    const client = makeClient({
+      "/v1/chain/get_table_rows": {
+        rows: [
+          {
+            key: { scope: "alice", sym_code: "1397703940" },
+            value: { balance: "100.0000 SYS" },
+            payer: "alice"
+          },
+          {
+            key: { scope: "alice", sym_code: "1145521988" },
+            value: { balance: "200.0000 AAA" },
+            payer: "sysio"
+          }
+        ],
+        more: false,
+        next_key: ""
+      }
+    })
+
+    const result = await client.v1.chain.get_table_rows({
+      code: "sysio.token",
+      scope: "alice",
+      table: "accounts",
+      show_payer: true
+    })
+
+    expect(result.rows).toHaveLength(2)
+    expect(result.rows[0]).toEqual({ balance: "100.0000 SYS" })
+    expect(result.rows[1]).toEqual({ balance: "200.0000 AAA" })
+    expect(result.ram_payers).toBeDefined()
+    expect(result.ram_payers).toHaveLength(2)
+    expect(String(result.ram_payers![0])).toBe("alice")
+    expect(String(result.ram_payers![1])).toBe("sysio")
+  })
+
+  test("preserves legacy plain-row shape from EOSIO chains", async () => {
+    // EOSIO chains still return rows as the decoded struct directly
+    // (no {key, value} wrapper). The wrapper must not touch these.
+    const client = makeClient({
+      "/v1/chain/get_table_rows": {
+        rows: [
+          { owner: "alice", balance: "100.0000 SYS" },
+          { owner: "bob", balance: "200.0000 SYS" }
+        ],
+        more: false,
+        next_key: ""
+      }
+    })
+
+    const result = await client.v1.chain.get_table_rows({
+      code: "sysio.token",
+      scope: "sysio.token",
+      table: "accounts"
+    })
+
+    expect(result.rows).toHaveLength(2)
+    expect(result.rows[0]).toEqual({ owner: "alice", balance: "100.0000 SYS" })
+    expect(result.rows[1]).toEqual({ owner: "bob", balance: "200.0000 SYS" })
+  })
+
+  test("preserves legacy {data, payer} show_payer shape from EOSIO chains", async () => {
+    const client = makeClient({
+      "/v1/chain/get_table_rows": {
+        rows: [
+          { data: { owner: "alice", balance: "100.0000 SYS" }, payer: "alice" },
+          { data: { owner: "bob", balance: "200.0000 SYS" }, payer: "sysio" }
+        ],
+        more: false,
+        next_key: ""
+      }
+    })
+
+    const result = await client.v1.chain.get_table_rows({
+      code: "sysio.token",
+      scope: "sysio.token",
+      table: "accounts",
+      show_payer: true
+    })
+
+    expect(result.rows).toHaveLength(2)
+    expect(result.rows[0]).toEqual({ owner: "alice", balance: "100.0000 SYS" })
+    expect(result.rows[1]).toEqual({ owner: "bob", balance: "200.0000 SYS" })
+    expect(result.ram_payers).toHaveLength(2)
+    expect(String(result.ram_payers![0])).toBe("alice")
+    expect(String(result.ram_payers![1])).toBe("sysio")
+  })
+
+  test("empty rows array works for both shapes", async () => {
+    const client = makeClient({
+      "/v1/chain/get_table_rows": {
+        rows: [],
+        more: false,
+        next_key: ""
+      }
+    })
+
+    const result = await client.v1.chain.get_table_rows({
+      code: "sysio.token",
+      scope: "alice",
+      table: "accounts"
+    })
+
+    expect(result.rows).toEqual([])
+    expect(result.more).toBe(false)
+  })
+
+  test("missing payer in new shape coerces to empty name", async () => {
+    // The unified API makes `payer` optional. When show_payer is true
+    // but a row was synthesized without a payer (edge case), the
+    // wrapper should not throw.
+    const client = makeClient({
+      "/v1/chain/get_table_rows": {
+        rows: [
+          {
+            key: { scope: "alice", sym_code: "1397703940" },
+            value: { balance: "100.0000 SYS" }
+            // payer intentionally omitted
+          }
+        ],
+        more: false,
+        next_key: ""
+      }
+    })
+
+    const result = await client.v1.chain.get_table_rows({
+      code: "sysio.token",
+      scope: "alice",
+      table: "accounts",
+      show_payer: true
+    })
+
+    expect(result.rows).toHaveLength(1)
+    expect(result.rows[0]).toEqual({ balance: "100.0000 SYS" })
+    expect(result.ram_payers).toHaveLength(1)
+    expect(String(result.ram_payers![0])).toBe("")
+  })
+})
