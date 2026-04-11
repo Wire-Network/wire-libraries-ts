@@ -103,6 +103,12 @@ importers:
       '@wireio/protoc-gen-solidity':
         specifier: workspace:*
         version: link:../protoc-gen-solidity
+      '@wireio/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@wireio/shared-node':
+        specifier: workspace:*
+        version: link:../shared-node
       '@yao-pkg/pkg':
         specifier: ^6.14.1
         version: 6.14.1
@@ -110,8 +116,8 @@ importers:
         specifier: ^2.8.4
         version: 2.8.4
       handlebars:
-        specifier: ^4.7.8
-        version: 4.7.8
+        specifier: ^4.7.9
+        version: 4.7.9
       protoc:
         specifier: ^34.0.0
         version: 34.0.0
@@ -196,6 +202,12 @@ importers:
 
   packages/sdk-core:
     dependencies:
+      '@3fv/prelude-ts':
+        specifier: ^0.8.37
+        version: 0.8.37
+      '@noble/curves':
+        specifier: 1.9.7
+        version: 1.9.7
       bn.js:
         specifier: ^4.11.9
         version: 4.12.3
@@ -214,6 +226,9 @@ importers:
       js-big-decimal:
         specifier: ^2.0.7
         version: 2.2.0
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
       pako:
         specifier: ^2.1.0
         version: 2.1.0
@@ -1226,9 +1241,17 @@ packages:
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
 
+  '@noble/curves@1.9.7':
+    resolution: {integrity: sha512-gbKGcRUYIjA3/zCCNaWDciTMFI0dCkvou3TL8Zmy5Nc7sJ47a0jtOeZoTaMxkuqRo9cRhjOdZJXegxYE5FN/xw==}
+    engines: {node: ^14.21.3 || >=16}
+
   '@noble/hashes@1.4.0':
     resolution: {integrity: sha512-V1JJ1WTRUqHHrOSh597hURcMqVKVGL/ea3kv0gSnEdsEZ0/+VyPghM1lMNGc00z7CIQorSvbKpuJkxvuHbvdbg==}
     engines: {node: '>= 16'}
+
+  '@noble/hashes@1.8.0':
+    resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
+    engines: {node: ^14.21.3 || >=16}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -2772,6 +2795,11 @@ packages:
 
   handlebars@4.7.8:
     resolution: {integrity: sha512-vafaFqs8MZkRrSX7sFVUdo3ap/eNiLnb4IakshzvP56X5Nr1iGKAIqdX6tMlm6HcNRIkr6AxO5jFEoJzzpT8aQ==}
+    engines: {node: '>=0.4.7'}
+    hasBin: true
+
+  handlebars@4.7.9:
+    resolution: {integrity: sha512-4E71E0rpOaQuJR2A3xDZ+GM1HyWYv1clR58tC8emQNeQe3RH7MAzSbat+V0wG78LQBo6m6bzSG/L4pBuCsgnUQ==}
     engines: {node: '>=0.4.7'}
     hasBin: true
 
@@ -5881,7 +5909,13 @@ snapshots:
       '@tybys/wasm-util': 0.10.1
     optional: true
 
+  '@noble/curves@1.9.7':
+    dependencies:
+      '@noble/hashes': 1.8.0
+
   '@noble/hashes@1.4.0': {}
+
+  '@noble/hashes@1.8.0': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -7678,6 +7712,15 @@ snapshots:
   handle-thing@2.0.1: {}
 
   handlebars@4.7.8:
+    dependencies:
+      minimist: 1.2.8
+      neo-async: 2.6.2
+      source-map: 0.6.1
+      wordwrap: 1.0.0
+    optionalDependencies:
+      uglify-js: 3.19.3
+
+  handlebars@4.7.9:
     dependencies:
       minimist: 1.2.8
       neo-async: 2.6.2

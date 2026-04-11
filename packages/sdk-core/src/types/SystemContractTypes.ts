@@ -318,30 +318,6 @@ export enum SysioEpochChainkind {
   CHAIN_KIND_SUI = 4,
 }
 
-/** sysio.epoch::OperatorStatus (enum, int32) */
-export enum SysioEpochOperatorstatus {
-  OPERATOR_STATUS_UNKNOWN = 0,
-  OPERATOR_STATUS_WARMUP = 1,
-  OPERATOR_STATUS_COOLDOWN = 2,
-  OPERATOR_STATUS_ACTIVE = 3,
-  OPERATOR_STATUS_TERMINATED = 240,
-  OPERATOR_STATUS_SLASHED = 241,
-}
-
-/** sysio.epoch::OperatorType (enum, int32) */
-export enum SysioEpochOperatortype {
-  OPERATOR_TYPE_UNKNOWN = 0,
-  OPERATOR_TYPE_PRODUCER = 1,
-  OPERATOR_TYPE_BATCH = 2,
-  OPERATOR_TYPE_UNDERWRITER = 3,
-  OPERATOR_TYPE_CHALLENGER = 4,
-}
-
-/** sysio.epoch::activateop (action) */
-export interface SysioEpochActivateopAction {
-  account: string
-}
-
 /** sysio.epoch::advance (action) */
 export interface SysioEpochAdvanceAction {
 }
@@ -352,8 +328,6 @@ export interface SysioEpochEpochConfigType {
   operators_per_epoch: number
   batch_operator_minimum_active: number
   batch_op_groups: number
-  warmup_epochs: number
-  cooldown_epochs: number
   attestation_retention_epoch_count: number
 }
 
@@ -372,20 +346,6 @@ export interface SysioEpochEpochStateType {
 export interface SysioEpochInitgroupsAction {
 }
 
-/** sysio.epoch::operator_info (type) */
-export interface SysioEpochOperatorInfoType {
-  account: string
-  type: SysioEpochOperatortype
-  status: SysioEpochOperatorstatus
-  registered_epoch: number
-  chain_addresses: SysioEpochPairChainkindChecksum256Type[]
-  collateral: SysioEpochPairChainkindInt64Type[]
-  assigned_batch_op_group: number
-  last_elected_epoch: number
-  slash_count: number
-  is_blacklisted: boolean
-}
-
 /** sysio.epoch::outpost_info (type) */
 export interface SysioEpochOutpostInfoType {
   id: number
@@ -397,26 +357,8 @@ export interface SysioEpochOutpostInfoType {
   last_outbound_epoch: number
 }
 
-/** sysio.epoch::pair_ChainKind_checksum256 (type) */
-export interface SysioEpochPairChainkindChecksum256Type {
-  first: SysioEpochChainkind
-  second: string
-}
-
-/** sysio.epoch::pair_ChainKind_int64 (type) */
-export interface SysioEpochPairChainkindInt64Type {
-  first: SysioEpochChainkind
-  second: number
-}
-
 /** sysio.epoch::pause (action) */
 export interface SysioEpochPauseAction {
-}
-
-/** sysio.epoch::regoperator (action) */
-export interface SysioEpochRegoperatorAction {
-  account: string
-  type: SysioEpochOperatortype
 }
 
 /** sysio.epoch::regoutpost (action) */
@@ -425,30 +367,17 @@ export interface SysioEpochRegoutpostAction {
   chain_id: number
 }
 
-/** sysio.epoch::replaceop (action) */
-export interface SysioEpochReplaceopAction {
-  old_op: string
-  new_op: string
-}
-
 /** sysio.epoch::setconfig (action) */
 export interface SysioEpochSetconfigAction {
   epoch_duration_sec: number
   operators_per_epoch: number
   batch_operator_minimum_active: number
   batch_op_groups: number
-  warmup_epochs: number
-  cooldown_epochs: number
   attestation_retention_epoch_count: number
 }
 
 /** sysio.epoch::unpause (action) */
 export interface SysioEpochUnpauseAction {
-}
-
-/** sysio.epoch::unregoper (action) */
-export interface SysioEpochUnregoperAction {
-  account: string
 }
 
 // ── sysio.msgch ──
@@ -485,6 +414,10 @@ export enum SysioMsgchAttestationtype {
   ATTESTATION_TYPE_ROSTER_UPDATE = 60947,
   ATTESTATION_TYPE_REMIT_CONFIRM = 60948,
   ATTESTATION_TYPE_BATCH_OPERATOR_NEXT_GROUP = 60943,
+  ATTESTATION_TYPE_NODE_OWNER_REG = 60949,
+  ATTESTATION_TYPE_STAKING_REWARD = 60950,
+  ATTESTATION_TYPE_STAKE_RESULT = 60951,
+  ATTESTATION_TYPE_ATTESTATION_PROCESSING_ERROR = 60952,
 }
 
 /** sysio.msgch::ChainKind (enum, int32) */
@@ -712,6 +645,156 @@ export interface SysioMsigUnapproveAction {
   proposer: string
   proposal_name: string
   level: SysioMsigPermissionLevelType
+}
+
+// ── sysio.opreg ──
+
+/** sysio.opreg::ChainKind (enum, int32) */
+export enum SysioOpregChainkind {
+  CHAIN_KIND_UNKNOWN = 0,
+  CHAIN_KIND_WIRE = 1,
+  CHAIN_KIND_ETHEREUM = 2,
+  CHAIN_KIND_SOLANA = 3,
+  CHAIN_KIND_SUI = 4,
+}
+
+/** sysio.opreg::OperatorStatus (enum, int32) */
+export enum SysioOpregOperatorstatus {
+  OPERATOR_STATUS_UNKNOWN = 0,
+  OPERATOR_STATUS_WARMUP = 1,
+  OPERATOR_STATUS_COOLDOWN = 2,
+  OPERATOR_STATUS_ACTIVE = 3,
+  OPERATOR_STATUS_TERMINATED = 240,
+  OPERATOR_STATUS_SLASHED = 241,
+}
+
+/** sysio.opreg::OperatorType (enum, int32) */
+export enum SysioOpregOperatortype {
+  OPERATOR_TYPE_UNKNOWN = 0,
+  OPERATOR_TYPE_PRODUCER = 1,
+  OPERATOR_TYPE_BATCH = 2,
+  OPERATOR_TYPE_UNDERWRITER = 3,
+  OPERATOR_TYPE_CHALLENGER = 4,
+}
+
+/** sysio.opreg::TokenKind (enum, int32) */
+export enum SysioOpregTokenkind {
+  TOKEN_KIND_WIRE = 0,
+  TOKEN_KIND_ETH = 256,
+  TOKEN_KIND_ERC20 = 257,
+  TOKEN_KIND_ERC721 = 258,
+  TOKEN_KIND_ERC1155 = 259,
+  TOKEN_KIND_LIQETH = 496,
+  TOKEN_KIND_SOL = 512,
+  TOKEN_KIND_LIQSOL = 752,
+}
+
+/** sysio.opreg::ChainAddress (type) */
+export interface SysioOpregChainaddressType {
+  kind: SysioOpregChainkind
+  address: string
+}
+
+/** sysio.opreg::TokenAmount (type) */
+export interface SysioOpregTokenamountType {
+  kind: SysioOpregTokenkind
+  amount: SysioOpregVarintInt64Type
+}
+
+/** sysio.opreg::op_config (type) */
+export interface SysioOpregOpConfigType {
+  req_prod_stakes: SysioOpregStakeRequirementType[]
+  req_batchop_stakes: SysioOpregStakeRequirementType[]
+  req_uw_stakes: SysioOpregStakeRequirementType[]
+  max_available_producers: number
+  max_available_batch_ops: number
+  max_available_underwriters: number
+  terminate_prune_delay_ms: number
+}
+
+/** sysio.opreg::operator_entry (type) */
+export interface SysioOpregOperatorEntryType {
+  account: string
+  type: SysioOpregOperatortype
+  status: SysioOpregOperatorstatus
+  is_bootstrapped: boolean
+  stakes: SysioOpregStakeEntryType[]
+  registered_at: number
+  available_at: number
+  slashed_at: number
+  terminated_at: number
+}
+
+/** sysio.opreg::processbatch (action) */
+export interface SysioOpregProcessbatchAction {
+  account: string
+  was_eligible: boolean
+  is_eligible: boolean
+}
+
+/** sysio.opreg::processprod (action) */
+export interface SysioOpregProcessprodAction {
+  account: string
+  was_eligible: boolean
+  is_eligible: boolean
+}
+
+/** sysio.opreg::processuw (action) */
+export interface SysioOpregProcessuwAction {
+  account: string
+  was_eligible: boolean
+  is_eligible: boolean
+}
+
+/** sysio.opreg::prune (action) */
+export interface SysioOpregPruneAction {
+}
+
+/** sysio.opreg::regoperator (action) */
+export interface SysioOpregRegoperatorAction {
+  account: string
+  type: SysioOpregOperatortype
+  is_bootstrapped: boolean
+}
+
+/** sysio.opreg::setconfig (action) */
+export interface SysioOpregSetconfigAction {
+  max_available_producers: number
+  max_available_batch_ops: number
+  max_available_underwriters: number
+  terminate_prune_delay_ms: number
+}
+
+/** sysio.opreg::slash (action) */
+export interface SysioOpregSlashAction {
+  account: string
+  reason: string
+}
+
+/** sysio.opreg::stake (action) */
+export interface SysioOpregStakeAction {
+  account: string
+  chain_addr: SysioOpregChainaddressType
+  amount: SysioOpregTokenamountType
+}
+
+/** sysio.opreg::stake_entry (type) */
+export interface SysioOpregStakeEntryType {
+  chain_addr: SysioOpregChainaddressType
+  amount: SysioOpregTokenamountType
+  timestamp_ms: number
+}
+
+/** sysio.opreg::stake_requirement (type) */
+export interface SysioOpregStakeRequirementType {
+  chain_addr: SysioOpregChainaddressType
+  min_amount: SysioOpregTokenamountType
+  config_timestamp_ms: number
+}
+
+/** sysio.opreg::varint_int64 (type) */
+export interface SysioOpregVarintInt64Type {
+  value: number
 }
 
 // ── sysio.roa ──
@@ -1371,6 +1454,10 @@ export enum SysioUwritAttestationtype {
   ATTESTATION_TYPE_ROSTER_UPDATE = 60947,
   ATTESTATION_TYPE_REMIT_CONFIRM = 60948,
   ATTESTATION_TYPE_BATCH_OPERATOR_NEXT_GROUP = 60943,
+  ATTESTATION_TYPE_NODE_OWNER_REG = 60949,
+  ATTESTATION_TYPE_STAKING_REWARD = 60950,
+  ATTESTATION_TYPE_STAKE_RESULT = 60951,
+  ATTESTATION_TYPE_ATTESTATION_PROCESSING_ERROR = 60952,
 }
 
 /** sysio.uwrit::ChainKind (enum, int32) */

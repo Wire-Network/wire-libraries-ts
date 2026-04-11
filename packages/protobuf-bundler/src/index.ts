@@ -80,7 +80,8 @@ async function main(): Promise<void> {
   }
 
   const packageVersion =
-    argv.packageVersion ?? resolveNextVersion(argv.packageName)
+    argv.packageVersion ??
+    (argv.target === "solana" ? "0.1.0" : resolveNextVersion(argv.packageName))
 
   await bundleCommand({
     repo: argv.repo,

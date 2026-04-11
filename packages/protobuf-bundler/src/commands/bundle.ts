@@ -1,3 +1,5 @@
+// noinspection ExceptionCaughtLocallyJS
+
 import { execFileSync, execSync } from "node:child_process"
 import Fs from "node:fs"
 import Path from "node:path"
@@ -7,6 +9,7 @@ import { fetchProtos } from "../steps/fetch-protos.js"
 import { runProtoc, type Target } from "../steps/run-protoc.js"
 import { generatePackage } from "../steps/generate-package.js"
 import { generateTypescript } from "../steps/generate-typescript.js"
+import { NestedError } from "@wireio/shared"
 
 export interface BundleArgs {
   repo: string
@@ -132,25 +135,6 @@ export async function bundleCommand(args: BundleArgs): Promise<void> {
           )
         })
 
-      // log.info("Fixing import extensions in %s", stagingDir)
-      // execFileSync(
-      //   "npx",
-      //   [
-      //     "-y",
-      //     "-p",
-      //     "tsc-alias",
-      //     "tsc-alias",
-      //     "-p",
-      //     Path.join(stagingDir, "tsconfig.json"),
-      //     "--resolve-full-paths",
-      //     "--verbose"
-      //   ],
-      //   {
-      //     stdio: ["pipe", "pipe", "inherit"],
-      //     cwd: stagingDir
-      //   }
-      // )
-
       // Step 4d: Copy everything except node_modules to output
       Fs.mkdirSync(outputDir, { recursive: true })
       copyDirExcluding(stagingDir, outputDir, new Set(["node_modules"]))
@@ -178,19 +162,23 @@ export async function bundleCommand(args: BundleArgs): Promise<void> {
         log.info("Published successfully: %s", result.trim())
       } catch (err: any) {
         const stderr: string = err.stderr?.toString() ?? ""
-        throw new Error(`npm publish failed: ${stderr || err.message}`)
+        NestedError.throwError(
+          `npm publish failed: ${stderr || err.message}`,
+          err
+        )
       }
     }
   } catch (err: any) {
     skipCleanup = true
     log.error(`Bundle failed: ${err.message}`, err)
   } finally {
-    if (skipCleanup) return
-    try {
-      Fs.rmSync(tmpDir, { recursive: true, force: true })
-      log.debug("Cleaned up temp dir: %s", tmpDir)
-    } catch (err: any) {
-      log.warn("Failed to clean temp dir %s: %s", tmpDir, err.message)
+    if (!skipCleanup) {
+      try {
+        Fs.rmSync(tmpDir, { recursive: true, force: true })
+        log.debug("Cleaned up temp dir: %s", tmpDir)
+      } catch (err: any) {
+        log.warn("Failed to clean temp dir %s: %s", tmpDir, err.message)
+      }
     }
   }
 }
