@@ -14,7 +14,6 @@ import {
   mkdirSync
 } from "fs"
 import { join, dirname } from "path"
-import { getLogger } from "@wireio/shared"
 
 const pkgDir = process.argv[2]
 if (!pkgDir) {
@@ -22,14 +21,19 @@ if (!pkgDir) {
   process.exit(1)
 }
 
-// 1. Create lib/cjs/package.json
+// 1. Create lib/cjs/package.json with {"type":"commonjs"}
 const cjsDir = join(pkgDir, "lib", "cjs")
 if (existsSync(cjsDir)) {
   writeFileSync(join(cjsDir, "package.json"), '{"type":"commonjs"}\n')
 }
 
-// 2. Fix ESM imports — add .js extensions for Node.js native ESM resolution
+// 2. Create lib/esm/package.json with {"type":"module"}
 const esmDir = join(pkgDir, "lib", "esm")
+if (existsSync(esmDir)) {
+  writeFileSync(join(esmDir, "package.json"), '{"type":"module"}\n')
+}
+
+// 3. Fix ESM imports — add .js extensions for Node.js native ESM resolution
 if (existsSync(esmDir)) {
   fixImports(esmDir)
 }
