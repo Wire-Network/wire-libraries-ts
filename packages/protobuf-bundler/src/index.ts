@@ -2,13 +2,19 @@ import Yargs from "yargs"
 import { hideBin } from "yargs/helpers"
 import { log, setLogLevel } from "./util/logger.js"
 import { bundleCommand } from "./commands/bundle.js"
-import { resolveNextVersion } from "./util/resolve-version.js"
+import { resolveSynchronizedVersion } from "./util/resolveVersion.js"
+import {
+  Target,
+  ALL_TARGETS,
+  PUBLISHABLE_TARGETS,
+  TARGET_BUILD_ORDER
+} from "./constants.js"
 
 async function main(): Promise<void> {
   const argv = await Yargs(hideBin(process.argv))
     .scriptName("protobuf-bundler")
     .usage(
-      "$0 --repo <repo> --target <target> --output <dir> --package-name <name>"
+      "$0 --repo <repo> --output <dir> [--output <dir2>] [--target <target>]"
     )
     .option("repo", {
       type: "string",
@@ -18,35 +24,27 @@ async function main(): Promise<void> {
     })
     .option("target", {
       type: "string",
-      demandOption: true,
-      choices: ["solana", "solidity"] as const,
-      describe: "Code generation target"
+      choices: ALL_TARGETS,
+      describe:
+        "Code generation target. When omitted, all targets are built."
     })
     .option("output", {
       type: "string",
+      array: true,
       demandOption: true,
-      describe: "Output directory for the generated package"
-    })
-    .option("package-name", {
-      type: "string",
-      demandOption: true,
-      describe: "Name for the generated package"
+      describe:
+        "Base output directory (repeatable). Packages are written to <output>/<target>/ in each."
     })
     .option("package-version", {
       type: "string",
       describe:
-        "Semver version for the generated package. If omitted, the latest version is fetched from npm and the patch number is incremented."
-    })
-    .option("package-data", {
-      type: "string",
-      default: "{}",
-      describe:
-        "Additional package metadata (JSON for solidity, TOML for solana)"
+        "Semver version. If omitted, resolved from npm (ts/solidity synced, solana defaults to 0.1.0)."
     })
     .option("publish", {
       type: "boolean",
       default: false,
-      describe: "Publish the generated package to npm after successful generation"
+      describe:
+        "Publish typescript/solidity packages to npm after generation."
     })
     .option("verbose", {
       type: "boolean",
@@ -54,12 +52,12 @@ async function main(): Promise<void> {
       describe: "Enable debug logging"
     })
     .example(
-      "$0 --repo 'Wire-Network/wire-sysio/libraries/opp#feature/protobuf-support-for-opp' --target solana --output build/generated/solana --package-name wire-opp-solana-models",
-      "Generate a Rust crate from proto files"
+      "$0 --repo 'Wire-Network/wire-sysio/libraries/opp#feature/protobuf-support-for-opp' --output build/generated",
+      "Generate all targets into a single output directory"
     )
     .example(
-      "$0 --repo 'Wire-Network/wire-sysio/libraries/opp#feature/protobuf-support-for-opp' --target solidity --output build/generated/solidity --package-name @wireio/opp-solidity-models",
-      "Generate an npm package from proto files"
+      "$0 --repo 'file:///local/path' --target typescript --output /tmp/out1 --output /tmp/out2",
+      "Generate typescript into multiple output directories"
     )
     .strict()
     .help()
@@ -71,25 +69,27 @@ async function main(): Promise<void> {
 
   log.info("protobuf-bundler starting")
 
-  let packageData: Record<string, any> = {}
-  try {
-    packageData = JSON.parse(argv.packageData)
-  } catch (err: any) {
-    log.error("Invalid --package-data JSON: %s", err.message)
-    process.exit(1)
-  }
+  // Determine which targets to build
+  const requestedTargets: Target[] = argv.target
+    ? [argv.target as Target]
+    : [...ALL_TARGETS]
 
-  const packageVersion =
-    argv.packageVersion ??
-    (argv.target === "solana" ? "0.1.0" : resolveNextVersion(argv.packageName))
+  // Sort into canonical build order
+  const targets = TARGET_BUILD_ORDER.filter(t =>
+    requestedTargets.includes(t)
+  )
+
+  // Resolve version — synchronized for ts/solidity if any are in the set
+  const hasNpmTargets = targets.some(t => PUBLISHABLE_TARGETS.includes(t)),
+    packageVersion =
+      argv.packageVersion ??
+      (hasNpmTargets ? resolveSynchronizedVersion() : "0.1.0")
 
   await bundleCommand({
     repo: argv.repo,
-    target: argv.target as "solana" | "solidity",
-    output: argv.output,
-    packageName: argv.packageName,
+    targets,
+    outputDirs: argv.output,
     packageVersion,
-    packageData,
     publish: argv.publish
   })
 }

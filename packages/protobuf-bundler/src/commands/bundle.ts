@@ -4,169 +4,82 @@ import { execFileSync, execSync } from "node:child_process"
 import Fs from "node:fs"
 import Path from "node:path"
 import Os from "node:os"
+import { match } from "ts-pattern"
 import { log } from "../util/logger.js"
-import { fetchProtos } from "../steps/fetch-protos.js"
-import { runProtoc, type Target } from "../steps/run-protoc.js"
-import { generatePackage } from "../steps/generate-package.js"
-import { generateTypescript } from "../steps/generate-typescript.js"
+import { fetchProtos } from "../steps/fetchProtos.js"
+import { runProtoc } from "../steps/runProtoc.js"
+import { generatePackage } from "../steps/generatePackage.js"
+import { generateTypescript } from "../steps/generateTypescript.js"
 import { NestedError } from "@wireio/shared"
+import { Target, PUBLISHABLE_TARGETS } from "../constants.js"
 
 export interface BundleArgs {
   repo: string
-  target: Target
-  output: string
-  packageName: string
+  targets: Target[]
+  outputDirs: string[]
   packageVersion: string
-  packageData: Record<string, any>
   publish: boolean
 }
 
 let skipCleanup = false
 
 export async function bundleCommand(args: BundleArgs): Promise<void> {
-  const outputDir = Path.resolve(args.output)
-
-  const tmpDir = Fs.mkdtempSync(Path.join(Os.tmpdir(), "protobuf-bundler-"))
+  const resolvedOutputDirs = args.outputDirs.map(d => Path.resolve(d)),
+    tmpDir = Fs.mkdtempSync(Path.join(Os.tmpdir(), "protobuf-bundler-"))
   log.debug("Using temp dir: %s", tmpDir)
 
   try {
-    // Step 1: Fetch proto files from GitHub
     const protoFiles = await fetchProtos({
-      repo: args.repo,
-      outputDir: tmpDir
-    })
+        repo: args.repo,
+        outputDir: tmpDir
+      }),
+      protoDir = Path.join(tmpDir, "proto")
 
-    const protoDir = Path.join(tmpDir, "proto")
+    // Build each target once in staging, then distribute to all output dirs
+    for (const target of args.targets) {
+      log.info("Building target: %s", target)
 
-    // Step 2: Run protoc with the appropriate Wire plugin
-    const generatedFiles = await runProtoc({
-      target: args.target,
-      protoFiles,
-      protoDir,
-      outputDir: tmpDir
-    })
-
-    // Step 3: Generate the publishable package
-    // For solidity, build in a staging dir so we can npm i + tsc before
-    // copying to the final output location.
-    const genDir = Path.join(tmpDir, "generated")
-    const isSolidity = args.target === "solidity"
-    const stagingDir = isSolidity ? Path.join(tmpDir, "staging") : outputDir
-
-    Fs.mkdirSync(stagingDir, { recursive: true })
-
-    await generatePackage({
-      target: args.target,
-      outputDir: stagingDir,
-      packageName: args.packageName,
-      packageVersion: args.packageVersion,
-      packageData: args.packageData,
-      generatedFiles,
-      genDir,
-      repo: args.repo
-    })
-
-    // Copy proto sources
-    const protoOutDir = Path.join(stagingDir, "proto")
-    Fs.mkdirSync(protoOutDir, { recursive: true })
-    for (const pf of protoFiles) {
-      const relative = Path.relative(protoDir, pf)
-      const dest = Path.join(protoOutDir, relative)
-      Fs.mkdirSync(Path.dirname(dest), { recursive: true })
-      Fs.copyFileSync(pf, dest)
-    }
-
-    if (isSolidity) {
-      // Step 4a: Generate TypeScript types into the staging dir
-      await generateTypescript({
-        protoFiles,
-        protoDir,
-        tmpDir,
-        outputDir: stagingDir
-      })
-
-      // Step 4b: Install dependencies in staging so tsc can resolve them
-      log.info("Installing dependencies in staging dir…")
-      execSync("npm i", {
-        cwd: stagingDir,
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "inherit"]
-      })
-
-      // Step 4c: Compile TypeScript (protobuf-ts clients require TS 3)
-      log.info("Compiling TypeScript in %s", stagingDir)
-      execFileSync(
-        "npx",
-        [
-          "-y",
-          "-p",
-          "typescript@4",
-          "tsc",
-          "-b",
-          Path.join(stagingDir, "tsconfig.json")
-        ],
-        {
-          stdio: ["pipe", "pipe", "inherit"],
-          cwd: stagingDir
-        }
-      )
-
-      log.info("Fixing import extensions in %s", stagingDir)
-      Array("tsconfig.cjs.json", "tsconfig.esm.json")
-        .map(tsConfigFileName => Path.join(stagingDir, tsConfigFileName))
-        .forEach(tsConfigPath => {
-          execFileSync(
-            "npx",
-            [
-              "-y",
-              "-p",
-              "tsc-alias",
-              "tsc-alias",
-              "-p",
-              tsConfigPath,
-              "-f",
-              "-fe",
-              ".js"
-            ],
-            {
-              stdio: ["pipe", "pipe", "inherit"],
-              cwd: stagingDir
-            }
-          )
-        })
-
-      // Step 4d: Copy everything except node_modules to output
-      Fs.mkdirSync(outputDir, { recursive: true })
-      copyDirExcluding(stagingDir, outputDir, new Set(["node_modules"]))
-
-      // Step 4e: Install production dependencies in the output dir
-      log.info("Installing dependencies in output dir…")
-      execSync("npm i", {
-        cwd: outputDir,
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "inherit"]
-      })
-    }
-
-    log.info("Bundle complete → %s", outputDir)
-
-    // Step 5 (optional): Publish the generated package
-    if (args.publish) {
-      log.info("Publishing package from %s…", outputDir)
-      try {
-        const result = execSync("npm publish --access public", {
-          cwd: outputDir,
-          encoding: "utf-8",
-          stdio: ["pipe", "pipe", "pipe"]
-        })
-        log.info("Published successfully: %s", result.trim())
-      } catch (err: any) {
-        const stderr: string = err.stderr?.toString() ?? ""
-        NestedError.throwError(
-          `npm publish failed: ${stderr || err.message}`,
-          err
+      const stagingDir = await match(target)
+        .with(Target.Solana, () =>
+          buildSolanaPackage(args, tmpDir, protoFiles, protoDir)
         )
-      }
+        .with(Target.Typescript, () =>
+          buildTypescriptPackage(args, tmpDir, protoFiles, protoDir)
+        )
+        .with(Target.Solidity, () =>
+          buildSolidityPackage(args, tmpDir, protoFiles, protoDir)
+        )
+        .exhaustive()
+
+      // Copy staging to all output dirs in parallel, then npm i in each
+      await Promise.all(
+        resolvedOutputDirs.map(async baseOutputDir => {
+          const targetOutputDir = Path.join(baseOutputDir, target)
+          log.info("Distributing %s → %s", target, targetOutputDir)
+          Fs.mkdirSync(targetOutputDir, { recursive: true })
+          copyDirExcluding(stagingDir, targetOutputDir, new Set(["node_modules"]))
+
+          // Solana doesn't need npm i
+          if (target !== Target.Solana) {
+            log.info("Installing dependencies in %s", targetOutputDir)
+            execSync("npm i", {
+              cwd: targetOutputDir,
+              encoding: "utf-8",
+              stdio: ["pipe", "pipe", "inherit"]
+            })
+          }
+        })
+      )
+    }
+
+    log.info(
+      "Bundle complete → %s",
+      resolvedOutputDirs.join(", ")
+    )
+
+    if (args.publish) {
+      // Publish from the first output dir only
+      await handlePublish(args, resolvedOutputDirs[0])
     }
   } catch (err: any) {
     skipCleanup = true
@@ -183,24 +96,224 @@ export async function bundleCommand(args: BundleArgs): Promise<void> {
   }
 }
 
-/**
- * Recursively copy a directory tree, skipping entries whose names
- * appear in the `exclude` set.
- */
+// ─── Per-target builders (return staging dir path) ──────────────────────────
+
+async function buildSolanaPackage(
+  args: BundleArgs,
+  tmpDir: string,
+  protoFiles: string[],
+  protoDir: string
+): Promise<string> {
+  const stagingDir = Path.join(tmpDir, "staging-solana")
+  Fs.mkdirSync(stagingDir, { recursive: true })
+
+  const generatedFiles = await runProtoc({
+      target: Target.Solana,
+      protoFiles,
+      protoDir,
+      outputDir: tmpDir
+    }),
+    genDir = Path.join(tmpDir, "generated")
+
+  await generatePackage({
+    target: Target.Solana,
+    outputDir: stagingDir,
+    packageVersion: args.packageVersion,
+    generatedFiles,
+    genDir,
+    repo: args.repo
+  })
+
+  copyProtoSources(protoFiles, protoDir, stagingDir)
+
+  return stagingDir
+}
+
+async function buildTypescriptPackage(
+  args: BundleArgs,
+  tmpDir: string,
+  protoFiles: string[],
+  protoDir: string
+): Promise<string> {
+  const stagingDir = Path.join(tmpDir, "staging-typescript")
+  Fs.mkdirSync(stagingDir, { recursive: true })
+
+  await generatePackage({
+    target: Target.Typescript,
+    outputDir: stagingDir,
+    packageVersion: args.packageVersion,
+    generatedFiles: [],
+    genDir: Path.join(tmpDir, "generated"),
+    repo: args.repo
+  })
+
+  copyProtoSources(protoFiles, protoDir, stagingDir)
+
+  await generateTypescript({
+    target: Target.Typescript,
+    protoFiles,
+    protoDir,
+    tmpDir,
+    outputDir: stagingDir
+  })
+
+  await installAndCompile(stagingDir)
+
+  return stagingDir
+}
+
+async function buildSolidityPackage(
+  args: BundleArgs,
+  tmpDir: string,
+  protoFiles: string[],
+  protoDir: string
+): Promise<string> {
+  const stagingDir = Path.join(tmpDir, "staging-solidity")
+  Fs.mkdirSync(stagingDir, { recursive: true })
+
+  const generatedFiles = await runProtoc({
+      target: Target.Solidity,
+      protoFiles,
+      protoDir,
+      outputDir: tmpDir
+    }),
+    genDir = Path.join(tmpDir, "generated")
+
+  await generatePackage({
+    target: Target.Solidity,
+    outputDir: stagingDir,
+    packageVersion: args.packageVersion,
+    generatedFiles,
+    genDir,
+    repo: args.repo
+  })
+
+  copyProtoSources(protoFiles, protoDir, stagingDir)
+
+  await generateTypescript({
+    target: Target.Solidity,
+    protoFiles,
+    protoDir,
+    tmpDir,
+    outputDir: stagingDir
+  })
+
+  await installAndCompile(stagingDir)
+
+  return stagingDir
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+async function installAndCompile(stagingDir: string): Promise<void> {
+  log.info("Installing dependencies in staging dir…")
+  execSync("npm i", {
+    cwd: stagingDir,
+    encoding: "utf-8",
+    stdio: ["pipe", "pipe", "inherit"]
+  })
+
+  log.info("Compiling TypeScript in %s", stagingDir)
+  execFileSync(
+    "npx",
+    [
+      "-y",
+      "-p",
+      "typescript@4",
+      "tsc",
+      "-b",
+      Path.join(stagingDir, "tsconfig.json")
+    ],
+    {
+      stdio: ["pipe", "pipe", "inherit"],
+      cwd: stagingDir
+    }
+  )
+
+  log.info("Fixing import extensions in %s", stagingDir)
+  Array("tsconfig.cjs.json", "tsconfig.esm.json")
+    .map(tsConfigFileName => Path.join(stagingDir, tsConfigFileName))
+    .forEach(tsConfigPath => {
+      execFileSync(
+        "npx",
+        [
+          "-y",
+          "-p",
+          "tsc-alias",
+          "tsc-alias",
+          "-p",
+          tsConfigPath,
+          "-f",
+          "-fe",
+          ".js"
+        ],
+        {
+          stdio: ["pipe", "pipe", "inherit"],
+          cwd: stagingDir
+        }
+      )
+    })
+}
+
+function copyProtoSources(
+  protoFiles: string[],
+  protoDir: string,
+  outputDir: string
+): void {
+  const protoOutDir = Path.join(outputDir, "proto")
+  Fs.mkdirSync(protoOutDir, { recursive: true })
+  protoFiles.forEach(pf => {
+    const relative = Path.relative(protoDir, pf),
+      dest = Path.join(protoOutDir, relative)
+    Fs.mkdirSync(Path.dirname(dest), { recursive: true })
+    Fs.copyFileSync(pf, dest)
+  })
+}
+
+function publishPackage(dir: string): void {
+  log.info("Publishing package from %s…", dir)
+  try {
+    const result = execSync("npm publish --access public", {
+      cwd: dir,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"]
+    })
+    log.info("Published successfully: %s", result.trim())
+  } catch (err: any) {
+    const stderr: string = err.stderr?.toString() ?? ""
+    NestedError.throwError(
+      `npm publish failed: ${stderr || err.message}`,
+      err
+    )
+  }
+}
+
+async function handlePublish(
+  args: BundleArgs,
+  baseOutputDir: string
+): Promise<void> {
+  args.targets
+    .filter(t => PUBLISHABLE_TARGETS.includes(t))
+    .forEach(target => {
+      publishPackage(Path.join(baseOutputDir, target))
+    })
+}
+
 function copyDirExcluding(
   src: string,
   dest: string,
   exclude: Set<string>
 ): void {
   Fs.mkdirSync(dest, { recursive: true })
-  for (const entry of Fs.readdirSync(src, { withFileTypes: true })) {
-    if (exclude.has(entry.name)) continue
-    const srcPath = Path.join(src, entry.name)
-    const destPath = Path.join(dest, entry.name)
-    if (entry.isDirectory()) {
-      copyDirExcluding(srcPath, destPath, exclude)
-    } else {
-      Fs.copyFileSync(srcPath, destPath)
-    }
-  }
+  Fs.readdirSync(src, { withFileTypes: true })
+    .filter(entry => !exclude.has(entry.name))
+    .forEach(entry => {
+      const srcPath = Path.join(src, entry.name),
+        destPath = Path.join(dest, entry.name)
+      if (entry.isDirectory()) {
+        copyDirExcluding(srcPath, destPath, exclude)
+      } else {
+        Fs.copyFileSync(srcPath, destPath)
+      }
+    })
 }

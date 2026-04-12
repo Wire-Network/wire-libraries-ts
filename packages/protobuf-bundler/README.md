@@ -3,7 +3,7 @@
 [![npm](https://img.shields.io/npm/v/@wireio/wire-protobuf-bundler)](https://www.npmjs.com/package/@wireio/wire-protobuf-bundler)
 
 CLI tool that fetches `.proto` files from a GitHub repository, runs `protoc` with Wire plugins, and generates
-publishable Rust crates or npm packages.
+publishable Rust crates or npm packages for OPP (On-chain Payment Protocol).
 
 > Part of the [`wire-libraries-ts`](../../README.md) monorepo.
 
@@ -31,7 +31,7 @@ npx @wireio/wire-protobuf-bundler --help
 ## Usage
 
 ```
-wire-protobuf-bundler --repo <repo> --target <target> --output <dir> --package-name <name>
+wire-protobuf-bundler --repo <repo> --output <dir> [--output <dir2>] [--target <target>]
 ```
 
 ### Options
@@ -39,63 +39,65 @@ wire-protobuf-bundler --repo <repo> --target <target> --output <dir> --package-n
 | Flag                | Required | Description                                                                           |
 |---------------------|----------|---------------------------------------------------------------------------------------|
 | `--repo`            | Yes      | GitHub repo or local path: `<owner/repo>[/<subfolder>][#<branch>]` or `file://<path>` |
-| `--target`          | Yes      | Code generation target: `solana` or `solidity`                                        |
-| `--output`          | Yes      | Output directory for the generated package                                            |
-| `--package-name`    | Yes      | Name for the generated package                                                        |
-| `--package-version` | No       | Version string for the generated package                                              |
-| `--package-data`    | No       | JSON string with additional package metadata                                          |
+| `--target`          | No       | Code generation target: `solana`, `solidity`, or `typescript`. Omit to build all.     |
+| `--output`          | Yes      | Base output directory (repeatable). Packages go to `<output>/<target>/`.              |
+| `--package-version` | No       | Semver version. Auto-resolved from npm for typescript/solidity.                       |
+| `--publish`         | No       | Publish typescript/solidity packages to npm after generation.                         |
 | `--verbose`         | No       | Enable debug logging                                                                  |
+
+### Targets
+
+| Target       | Package Name                    | Output                                        |
+|--------------|---------------------------------|-----------------------------------------------|
+| `solana`     | `wire-opp-solana-models`        | Rust crate with Cargo.toml                    |
+| `solidity`   | `@wireio/opp-solidity-models`   | Hybrid npm package (Solidity contracts + TypeScript types) |
+| `typescript` | `@wireio/opp-typescript-models` | npm package with TypeScript types only        |
 
 ### Examples
 
-Generate a Solidity npm package from a local proto directory:
+Build all targets into a single output directory:
 
 ```bash
 wire-protobuf-bundler \
     --repo 'file://../wire-sysio/libraries/opp/proto' \
+    --output build/generated
+```
+
+Build typescript into multiple output directories:
+
+```bash
+wire-protobuf-bundler \
+    --repo 'file://../wire-sysio/libraries/opp/proto' \
+    --target typescript \
+    --output /tmp/out1 \
+    --output /tmp/out2
+```
+
+Build solidity with a specific version:
+
+```bash
+wire-protobuf-bundler \
+    --repo 'Wire-Network/wire-sysio/libraries/opp/proto#master' \
     --target solidity \
-    --output build/generated/solidity \
-    --package-name '@wireio/opp-solidity-models' \
+    --output build/generated \
     --package-version 1.0.0
-```
-
-Generate a Rust crate from a GitHub repo:
-
-```bash
-wire-protobuf-bundler \
-    --repo 'Wire-Network/wire-sysio/libraries/opp/proto#master' \
-    --target solana \
-    --output build/generated/solana \
-    --package-name 'wire-opp-solana-models'
-```
-
-With additional package metadata:
-
-```bash
-wire-protobuf-bundler \
-    --repo 'Wire-Network/wire-sysio/libraries/opp/proto#master' \
-    --target solana \
-    --output build/generated/solana \
-    --package-name 'wire-opp-solana-models' \
-    --package-version 1.0.0 \
-    --package-data '{ "license": "MIT" }'
 ```
 
 ## Pipeline
 
-The tool executes a three-step pipeline:
+The tool executes a multi-step pipeline for each target:
 
 1. **Fetch** — Downloads proto files from the specified repo/path using `degit` (or copies from a local `file://` path)
-2. **Compile** — Runs `protoc` with the appropriate Wire plugin ([`protoc-gen-solana`](../protoc-gen-solana/) or [
-   `protoc-gen-solidity`](../protoc-gen-solidity/))
+2. **Compile** — Runs `protoc` with the appropriate Wire plugin ([`protoc-gen-solana`](../protoc-gen-solana/) or [`protoc-gen-solidity`](../protoc-gen-solidity/))
 3. **Package** — Renders Handlebars templates to produce a publishable crate or npm package
+4. **Distribute** — Copies the built package to all `--output` directories in parallel
 
 ## Output Structure
 
 ### Solana target (Rust crate)
 
 ```
-<output>/
+<output>/solana/
 ├── Cargo.toml
 ├── README.md
 ├── proto/                    # Original .proto source files
@@ -105,21 +107,39 @@ The tool executes a three-step pipeline:
     └── protobuf_runtime.rs   # Shared wire format primitives
 ```
 
-Publish with `cargo publish`.
-
-### Solidity target (npm package)
+### Solidity target (npm hybrid package)
 
 ```
-<output>/
+<output>/solidity/
 ├── package.json
-├── index.mjs
 ├── README.md
 ├── proto/                    # Original .proto source files
-└── contracts/
-    └── *.sol                 # Generated Solidity contracts
+├── contracts/
+│   └── *.sol                 # Generated Solidity contracts
+├── src/
+│   ├── index.ts              # Barrel re-exports
+│   └── **/*.ts               # Generated TypeScript types
+├── lib/
+│   ├── cjs/                  # CommonJS output
+│   └── esm/                  # ES Module output
+└── tsconfig*.json
 ```
 
-Publish with `npm publish`.
+### Typescript target (npm package)
+
+```
+<output>/typescript/
+├── package.json
+├── README.md
+├── proto/                    # Original .proto source files
+├── src/
+│   ├── index.ts              # Barrel re-exports
+│   └── **/*.ts               # Generated TypeScript types
+├── lib/
+│   ├── cjs/                  # CommonJS output
+│   └── esm/                  # ES Module output
+└── tsconfig*.json
+```
 
 ## Development
 

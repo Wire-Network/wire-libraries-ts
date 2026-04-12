@@ -1,7 +1,7 @@
 import Fs from "node:fs"
 import Path from "node:path"
 import Os from "node:os"
-import { exists } from "../src/util/filesystem-helper"
+import { exists } from "../src/util/filesystemHelper"
 
 describe("exists", () => {
   let tmpDir: string
