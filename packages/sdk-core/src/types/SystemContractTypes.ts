@@ -411,9 +411,9 @@ export enum SysioMsgchAttestationtype {
   ATTESTATION_TYPE_REMIT = 60944,
   ATTESTATION_TYPE_CHALLENGE_REQUEST = 60945,
   ATTESTATION_TYPE_EPOCH_SYNC = 60946,
-  ATTESTATION_TYPE_ROSTER_UPDATE = 60947,
+  ATTESTATION_TYPE_OPERATORS = 60947,
   ATTESTATION_TYPE_REMIT_CONFIRM = 60948,
-  ATTESTATION_TYPE_BATCH_OPERATOR_NEXT_GROUP = 60943,
+  ATTESTATION_TYPE_BATCH_OPERATOR_GROUPS = 60943,
   ATTESTATION_TYPE_NODE_OWNER_REG = 60949,
   ATTESTATION_TYPE_STAKING_REWARD = 60950,
   ATTESTATION_TYPE_STAKE_RESULT = 60951,
@@ -463,9 +463,17 @@ export interface SysioMsgchAttestationEntryType {
   processed_timestamp: number
 }
 
+/** sysio.msgch::bootstrap (action) */
+export interface SysioMsgchBootstrapAction {
+}
+
 /** sysio.msgch::buildenv (action) */
 export interface SysioMsgchBuildenvAction {
   outpost_id: number
+}
+
+/** sysio.msgch::chkcons (action) */
+export interface SysioMsgchChkconsAction {
 }
 
 /** sysio.msgch::cleanup (action) */
@@ -523,6 +531,13 @@ export interface SysioMsgchOutboundEnvelopeType {
   end_message_id: string
   status: SysioMsgchEnvelopestatus
   raw_envelope: string
+}
+
+/** sysio.msgch::outpost_consensus_entry (type) */
+export interface SysioMsgchOutpostConsensusEntryType {
+  outpost_id: number
+  epoch_index: number
+  consensus_reached: boolean
 }
 
 /** sysio.msgch::queueout (action) */
@@ -1451,9 +1466,9 @@ export enum SysioUwritAttestationtype {
   ATTESTATION_TYPE_REMIT = 60944,
   ATTESTATION_TYPE_CHALLENGE_REQUEST = 60945,
   ATTESTATION_TYPE_EPOCH_SYNC = 60946,
-  ATTESTATION_TYPE_ROSTER_UPDATE = 60947,
+  ATTESTATION_TYPE_OPERATORS = 60947,
   ATTESTATION_TYPE_REMIT_CONFIRM = 60948,
-  ATTESTATION_TYPE_BATCH_OPERATOR_NEXT_GROUP = 60943,
+  ATTESTATION_TYPE_BATCH_OPERATOR_GROUPS = 60943,
   ATTESTATION_TYPE_NODE_OWNER_REG = 60949,
   ATTESTATION_TYPE_STAKING_REWARD = 60950,
   ATTESTATION_TYPE_STAKE_RESULT = 60951,

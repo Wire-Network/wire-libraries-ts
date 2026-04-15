@@ -7,6 +7,12 @@
   "include": ["src"],
   "references": [
     {
+      "path": "../shared/tsconfig.json"
+    },
+    {
+      "path": "../shared-node/tsconfig.json"
+    },
+    {
       "path": "../protoc-gen-solana/tsconfig.json"
     },
     {
