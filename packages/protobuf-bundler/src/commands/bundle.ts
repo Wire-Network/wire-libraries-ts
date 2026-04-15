@@ -10,7 +10,7 @@ import { fetchProtos } from "../steps/fetchProtos.js"
 import { runProtoc } from "../steps/runProtoc.js"
 import { generatePackage } from "../steps/generatePackage.js"
 import { generateTypescript } from "../steps/generateTypescript.js"
-import { NestedError } from "@wireio/shared"
+// import { NestedError } from "@wireio/shared"
 import { Target, PUBLISHABLE_TARGETS } from "../constants.js"
 
 export interface BundleArgs {
@@ -57,7 +57,11 @@ export async function bundleCommand(args: BundleArgs): Promise<void> {
           const targetOutputDir = Path.join(baseOutputDir, target)
           log.info("Distributing %s → %s", target, targetOutputDir)
           Fs.mkdirSync(targetOutputDir, { recursive: true })
-          copyDirExcluding(stagingDir, targetOutputDir, new Set(["node_modules"]))
+          copyDirExcluding(
+            stagingDir,
+            targetOutputDir,
+            new Set(["node_modules"])
+          )
 
           // Solana doesn't need npm i
           if (target !== Target.Solana) {
@@ -72,10 +76,7 @@ export async function bundleCommand(args: BundleArgs): Promise<void> {
       )
     }
 
-    log.info(
-      "Bundle complete → %s",
-      resolvedOutputDirs.join(", ")
-    )
+    log.info("Bundle complete → %s", resolvedOutputDirs.join(", "))
 
     if (args.publish) {
       // Publish from the first output dir only
@@ -281,10 +282,7 @@ function publishPackage(dir: string): void {
     log.info("Published successfully: %s", result.trim())
   } catch (err: any) {
     const stderr: string = err.stderr?.toString() ?? ""
-    NestedError.throwError(
-      `npm publish failed: ${stderr || err.message}`,
-      err
-    )
+    throw new Error(`npm publish failed: ${stderr || err.message}`)
   }
 }
 
