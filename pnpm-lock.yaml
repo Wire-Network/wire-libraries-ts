@@ -20,6 +20,10 @@ overrides:
 importers:
 
   .:
+    dependencies:
+      '@wireio/opp-typescript-models':
+        specifier: link:../../../../../home/jglanz/.local/share/pnpm/global/5/node_modules/@wireio/opp-typescript-models
+        version: link:../../../../../home/jglanz/.local/share/pnpm/global/5/node_modules/@wireio/opp-typescript-models
     devDependencies:
       '@types/bluebird':
         specifier: 3.5.42
@@ -220,6 +224,9 @@ importers:
       '@noble/curves':
         specifier: 1.9.7
         version: 1.9.7
+      '@wireio/opp-typescript-models':
+        specifier: ^1.0.23
+        version: 1.0.23
       bn.js:
         specifier: ^4.11.9
         version: 4.12.3
@@ -244,6 +251,9 @@ importers:
       pako:
         specifier: ^2.1.0
         version: 2.1.0
+      ts-pattern:
+        specifier: ^5.9.0
+        version: 5.9.0
       tslib:
         specifier: ^2.1.0
         version: 2.8.1
@@ -1918,6 +1928,9 @@ packages:
     peerDependenciesMeta:
       webpack-dev-server:
         optional: true
+
+  '@wireio/opp-typescript-models@1.0.23':
+    resolution: {integrity: sha512-uuLu6preGO7RNOl6HQyY0iCViMrcNTTz3U1IAKez4hTlpohVlLuJarMwDcmIgEPbT+FEOW3zHWm2/FJUQCEfRA==}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -6753,6 +6766,10 @@ snapshots:
     dependencies:
       webpack: 5.104.1(webpack-cli@6.0.1)
       webpack-cli: 6.0.1(webpack@5.104.1)
+
+  '@wireio/opp-typescript-models@1.0.23':
+    dependencies:
+      '@protobuf-ts/runtime': 2.11.1
 
   '@xtuc/ieee754@1.2.0': {}
 

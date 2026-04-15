@@ -36,6 +36,7 @@
   "dependencies": {
     "@3fv/prelude-ts": "^0.8.37",
     "@noble/curves": "1.9.7",
+    "@wireio/opp-typescript-models": "^1.0.23",
     "bn.js": "^4.11.9",
     "brorand": "^1.1.0",
     "elliptic": "^6.5.4",
@@ -45,6 +46,7 @@
     "lodash":"^4.18.1",
     "pako": "^2.1.0",
     "tslib": "^2.1.0",
+    "ts-pattern":"^5.9.0",
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {

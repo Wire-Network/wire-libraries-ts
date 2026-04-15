@@ -70,7 +70,12 @@ export class PublicKey implements ABISerializableObject {
       let data: Bytes | Uint8Array
 
       try {
-        data = Base58.decodeRipemd160Check(payload, size, type)
+        if (type === KeyType.ED) {
+          // ED uses plain base58 (no ripemd160 checksum) to match fc
+          data = Base58.decode(payload)
+        } else {
+          data = Base58.decodeRipemd160Check(payload, size, type)
+        }
       } catch (e) {
         try {
           data = hexToArray(payload)
@@ -158,6 +163,11 @@ export class PublicKey implements ABISerializableObject {
 
     if (this.type === KeyType.K1 || this.type === KeyType.R1) {
       return `PUB_${this.type}_${Base58.encodeRipemd160Check(this.data, this.type)}`
+    }
+    // ED uses plain base58 (no checksum) to match fc's approach.
+    // EM uses hex.
+    if (this.type === KeyType.ED) {
+      return `PUB_${this.type}_${Base58.encode(this.data)}`
     }
     return `PUB_${this.type}_${arrayToHex(this.data.array)}`
   }

@@ -101,14 +101,13 @@ export class Signature implements ABISerializableObject {
     }
 
     try {
-      // 65 for ECDSA, 64 for ED
-      const length =
-        type === KeyType.K1 || type === KeyType.R1
-          ? 65
-          : type === KeyType.ED
-            ? 64
-            : undefined
-      data = Base58.decodeRipemd160Check(payload, length, type)
+      if (type === KeyType.ED) {
+        // ED uses plain base58 (no ripemd160 checksum) to match fc
+        data = Base58.decode(payload)
+      } else {
+        const length = type === KeyType.K1 || type === KeyType.R1 ? 65 : undefined
+        data = Base58.decodeRipemd160Check(payload, length, type)
+      }
     } catch (e) {
       try {
         data = hexToArray(payload)
@@ -317,6 +316,11 @@ export class Signature implements ABISerializableObject {
       return `SIG_${this.type}_${arrayToHex(out)}`
     }
 
+    // ED uses plain base58 (no ripemd160 checksum) to match fc's approach.
+    // K1/R1 use base58 with ripemd160 checksum.
+    if (this.type === KeyType.ED) {
+      return `SIG_${this.type}_${Base58.encode(this.data)}`
+    }
     return `SIG_${this.type}_${Base58.encodeRipemd160Check(this.data, this.type)}`
   }
 
