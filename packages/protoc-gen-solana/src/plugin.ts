@@ -2,7 +2,7 @@ import * as protobuf from "protobufjs"
 import { log, setLogLevel } from "./util/logger.js"
 import { protoFileToRsFile } from "./util/names.js"
 import { generateRsFile, generateRuntime } from "./generator/index.js"
-import type { MessageDescriptor, FieldInfo } from "./generator/index.js"
+import type { MessageDescriptor, FieldInfo, EnumDescriptor } from "./generator/index.js"
 
 // ── Protobuf schema for the plugin protocol ───────────────────────────
 // Defined programmatically so the plugin is fully self-contained
@@ -44,21 +44,35 @@ const FieldDescriptorProto = new protobuf.Type("FieldDescriptorProto")
 const MessageOptions = new protobuf.Type("MessageOptions")
   .add(new protobuf.Field("map_entry", 7, "bool", "optional"))
 
+const EnumValueDescriptorProto = new protobuf.Type("EnumValueDescriptorProto")
+  .add(new protobuf.Field("name", 1, "string", "optional"))
+  .add(new protobuf.Field("number", 2, "int32", "optional"))
+
+const EnumDescriptorProto = new protobuf.Type("EnumDescriptorProto")
+  .add(new protobuf.Field("name", 1, "string", "optional"))
+  .add(new protobuf.Field("value", 2, "EnumValueDescriptorProto", "repeated"))
+  .add(EnumValueDescriptorProto)
+
 const DescriptorProto = new protobuf.Type("DescriptorProto")
   .add(new protobuf.Field("name", 1, "string", "optional"))
   .add(new protobuf.Field("field", 2, "FieldDescriptorProto", "repeated"))
   .add(new protobuf.Field("nested_type", 3, "DescriptorProto", "repeated"))
+  .add(new protobuf.Field("enum_type", 4, "EnumDescriptorProto", "repeated"))
   .add(new protobuf.Field("options", 7, "MessageOptions", "optional"))
   .add(FieldDescriptorProto)
   .add(MessageOptions)
 
+// FileDescriptorProto owns EnumDescriptorProto as a nested type.
+// DescriptorProto resolves "EnumDescriptorProto" via the parent chain.
 const FileDescriptorProto = new protobuf.Type("FileDescriptorProto")
   .add(new protobuf.Field("name", 1, "string", "optional"))
   .add(new protobuf.Field("package", 2, "string", "optional"))
   .add(new protobuf.Field("dependency", 3, "string", "repeated"))
   .add(new protobuf.Field("message_type", 4, "DescriptorProto", "repeated"))
+  .add(new protobuf.Field("enum_type", 5, "EnumDescriptorProto", "repeated"))
   .add(new protobuf.Field("syntax", 12, "string", "optional"))
   .add(DescriptorProto)
+  .add(EnumDescriptorProto)
 
 // Wire types into namespaces
 const googlePb = new protobuf.Namespace("google")
@@ -137,17 +151,29 @@ function processRequest(stdin: Buffer): PluginResult {
 
     log.info("Generating for %s", fileName)
 
-    const messages = extractMessages(protoFile, protoFile.package ?? "")
-    if (messages.length === 0) {
-      log.info("No messages in %s, skipping", fileName)
+    const packageName = protoFile.package ?? ""
+    const messages = extractMessages(protoFile, packageName)
+    const enums = extractEnums(protoFile, packageName)
+
+    // Also collect enums nested inside messages
+    const nestedEnums = extractNestedEnums(protoFile.message_type ?? [], packageName)
+    const allEnums = [...enums, ...nestedEnums]
+
+    if (messages.length === 0 && allEnums.length === 0) {
+      log.info("No messages or enums in %s, skipping", fileName)
       continue
     }
 
-    const rsFileName = protoFileToRsFile(fileName, protoFile.package ?? "")
-    const rsContent = generateRsFile(messages, fileName, protoFile.package ?? "")
+    const rsFileName = protoFileToRsFile(fileName, packageName)
+    const rsContent = generateRsFile(messages, fileName, packageName, allEnums)
 
     files.push({ name: rsFileName, content: rsContent })
-    log.info("Generated %s (%d messages)", rsFileName, messages.length)
+    log.info(
+      "Generated %s (%d messages, %d enums)",
+      rsFileName,
+      messages.length,
+      allEnums.length
+    )
   }
 
   return { files }
@@ -168,6 +194,47 @@ function extractMessages(
   }
 
   return result
+}
+
+/**
+ * Walk FileDescriptorProto.enum_type, building EnumDescriptor models.
+ */
+function extractEnums(
+  protoFile: any,
+  packageName: string
+): EnumDescriptor[] {
+  return (protoFile.enum_type ?? []).map((e: any) =>
+    convertEnumDescriptor(e, packageName)
+  )
+}
+
+/**
+ * Recursively collect enums nested inside messages (DescriptorProto.enum_type).
+ */
+function extractNestedEnums(
+  messageTypes: any[],
+  parentFqn: string
+): EnumDescriptor[] {
+  const result: EnumDescriptor[] = []
+  for (const msg of messageTypes) {
+    const msgFqn = parentFqn ? `${parentFqn}.${msg.name ?? ""}` : (msg.name ?? "")
+    ;(msg.enum_type ?? []).forEach((e: any) =>
+      result.push(convertEnumDescriptor(e, msgFqn))
+    )
+    // Recurse into nested messages
+    result.push(...extractNestedEnums(msg.nested_type ?? [], msgFqn))
+  }
+  return result
+}
+
+function convertEnumDescriptor(desc: any, parentFqn: string): EnumDescriptor {
+  const name: string = desc.name ?? ""
+  const fullName = parentFqn ? `${parentFqn}.${name}` : name
+  const values = (desc.value ?? []).map((v: any) => ({
+    name: (v.name ?? "") as string,
+    number: (v.number ?? 0) as number
+  }))
+  return { name, fullName, values }
 }
 
 function convertDescriptor(desc: any, parentFqn: string): MessageDescriptor {

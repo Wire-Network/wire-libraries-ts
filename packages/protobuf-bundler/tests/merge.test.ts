@@ -15,7 +15,7 @@ describe("deepMerge", () => {
 
   it("should deep merge nested objects", () => {
     const target = { nested: { a: 1, b: 2 } }
-    const source = { nested: { b: 99 } }
+    const source = { nested: { b: 99 } } as any
     const result = deepMerge(target, source)
     expect(result).toEqual({ nested: { a: 1, b: 99 } })
   })

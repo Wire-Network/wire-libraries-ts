@@ -1,4 +1,4 @@
-import { FieldInfo, isRepeated, isMessage, genStructMember } from "../src/generator/field"
+import { FieldInfo, isRepeated, isMessage, isEnum, genStructMember } from "../src/generator/field"
 
 describe("isRepeated", () => {
   it("returns true when label is 3 (repeated)", () => {
@@ -37,6 +37,35 @@ describe("isMessage", () => {
   it("returns false for string type", () => {
     const field: FieldInfo = { name: "name", number: 1, type: 9, label: 1 }
     expect(isMessage(field)).toBe(false)
+  })
+})
+
+describe("isEnum", () => {
+  it("returns true when type is 14 (enum)", () => {
+    const field: FieldInfo = {
+      name: "role",
+      number: 1,
+      type: 14,
+      typeName: ".example.Role",
+      label: 1,
+    }
+    expect(isEnum(field)).toBe(true)
+  })
+
+  it("returns false for scalar types", () => {
+    const field: FieldInfo = { name: "count", number: 1, type: 5, label: 1 }
+    expect(isEnum(field)).toBe(false)
+  })
+
+  it("returns false for message types", () => {
+    const field: FieldInfo = {
+      name: "nested",
+      number: 1,
+      type: 11,
+      typeName: ".pkg.Nested",
+      label: 1,
+    }
+    expect(isEnum(field)).toBe(false)
   })
 })
 
@@ -121,5 +150,27 @@ describe("genStructMember", () => {
   it("generates bool field declaration", () => {
     const field: FieldInfo = { name: "is_active", number: 9, type: 8, label: 1 }
     expect(genStructMember(field)).toBe("    pub is_active: bool,")
+  })
+
+  it("generates an enum field with the enum type name", () => {
+    const field: FieldInfo = {
+      name: "role",
+      number: 5,
+      type: 14,
+      typeName: ".example.Role",
+      label: 1,
+    }
+    expect(genStructMember(field)).toBe("    pub role: Role,")
+  })
+
+  it("generates a repeated enum field as Vec", () => {
+    const field: FieldInfo = {
+      name: "roles",
+      number: 6,
+      type: 14,
+      typeName: ".example.Role",
+      label: 3,
+    }
+    expect(genStructMember(field)).toBe("    pub roles: Vec<Role>,")
   })
 })

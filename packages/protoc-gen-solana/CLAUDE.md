@@ -28,8 +28,9 @@ There is no unit test runner for the TypeScript code. Testing is done via `pnpm 
 1. **`src/index.ts`** — Entry point. Reads stdin buffer, calls `runPlugin()`, writes response to stdout. Diagnostics go to stderr.
 2. **`src/plugin.ts`** — Core protocol handler. Defines the protobuf plugin schema programmatically using `protobufjs` (no `.proto` files needed at runtime). Decodes the request, extracts `MessageDescriptor` trees from proto file descriptors, generates Rust files, encodes the response.
 3. **`src/generator/`** — Code generation:
-   - **`message.ts`** — Generates Rust struct definitions and `impl` blocks with `encode()`/`decode()` methods per message.
-   - **`field.ts`** — Field-level encode/decode logic. Handles scalars, nested messages, repeated fields, and maps.
+   - **`message.ts`** — Generates Rust struct definitions and `impl` blocks with `encode()`/`decode()` methods per message. Orchestrates enum + struct emission into each `.rs` file.
+   - **`enum.ts`** — Generates Rust `#[repr(i32)]` enum definitions with `Default`, `From<i32>`, and `Into<i32>` impls.
+   - **`field.ts`** — Field-level encode/decode logic. Handles scalars, nested messages, enums, repeated fields, and maps.
    - **`type-map.ts`** — Maps protobuf field type enum values (1–18) to Rust types, wire types, and runtime function names. Central reference for type resolution.
    - **`runtime.ts`** — Loads `rs/protobuf_runtime.rs` from disk and emits it as an output file.
 4. **`src/util/`** — `names.ts` converts proto names to Rust conventions (PascalCase structs, snake_case fields). `logger.ts` wraps `tracer` for stderr-only logging.
@@ -40,7 +41,7 @@ There is no unit test runner for the TypeScript code. Testing is done via `pnpm 
 - **Maps → parallel Vecs**: Proto map fields become `Vec<K>` + `Vec<V>` pairs rather than `HashMap`, for efficient Solana serialization.
 - **Self-contained plugin protocol**: The protobuf schema for `CodeGeneratorRequest`/`CodeGeneratorResponse` is defined programmatically in `plugin.ts`, not loaded from `.proto` files.
 - **Borsh integration**: Generated structs derive `borsh::BorshSerialize` and `borsh::BorshDeserialize` (feature-gated).
-- **Enums as i32**: Proto enums are represented as `i32` in generated Rust code.
+- **Enum generation**: Proto enums generate `#[repr(i32)]` Rust enums with `Default`, `From<i32>`, and `From<Enum> for i32` impls. Struct fields use the named enum type; wire encode/decode uses varint via `as i32`/`From<i32>` casts. Both top-level and message-nested enums are supported.
 - **Varint casting**: The type system tracks which types need `as u64`/`as T` casts for varint encode/decode since the runtime always works with `u64`.
 
 ### Build Pipeline

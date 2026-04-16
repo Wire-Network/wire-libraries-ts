@@ -4,7 +4,7 @@
   "description": "protoc plugin generating Rust encode/decode modules from protobuf3 definitions for Solana programs",
   "private": false,
   "type": "commonjs",
-  "types": "lib/index.d.ts",
+  "types": "lib/cjs/index.d.ts",
   "main": "dist/bundle/protoc-gen-solana.cjs",
   "bin": {
     "protoc-gen-solana": "dist/bin/protoc-gen-solana"
@@ -43,10 +43,13 @@
   },
   "devDependencies": {
     "@types/node": "^25.3.0",
+    "@types/shelljs": "^0.10.0",
     "esbuild": "^0.27.3",
     "prettier": "^3.8.1",
     "protoc": "^29.6.0",
-    "typescript": "^6.0.2"
+    "shelljs": "^0.10.0",
+    "typescript": "^6.0.2",
+    "zx": "^8.8.5"
   },
   "engines": {
     "node": ">=24"

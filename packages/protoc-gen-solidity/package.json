@@ -4,7 +4,7 @@
   "description": "protoc plugin generating Solidity encode/decode libraries from protobuf3 definitions",
   "private": false,
   "type": "commonjs",
-  "types": "lib/index.d.ts",
+  "types": "lib/cjs/index.d.ts",
   "main": "dist/bundle/protoc-gen-solidity.cjs",
   "bin": {
     "protoc-gen-solidity": "dist/bin/protoc-gen-solidity"

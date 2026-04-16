@@ -4,7 +4,7 @@
   "description": "CLI that fetches .proto files from GitHub, runs protoc with Wire plugins, and generates publishable packages",
   "private": false,
   "type": "commonjs",
-  "types": "lib/index.d.ts",
+  "types": "lib/cjs/index.d.ts",
   "main": "dist/bundle/wire-protobuf-bundler.cjs",
   "bin": {
     "wire-protobuf-bundler": "dist/bin/wire-protobuf-bundler"

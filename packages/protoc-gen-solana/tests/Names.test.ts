@@ -1,4 +1,4 @@
-import { protoNameToRust, toSnakeCase, protoFileToRsFile } from "../src/util/names"
+import { protoNameToRust, toSnakeCase, protoFileToRsFile, screamingSnakeToPascalCase } from "../src/util/names"
 
 describe("protoNameToRust", () => {
   it("extracts last segment from fully-qualified name", () => {
@@ -41,6 +41,28 @@ describe("toSnakeCase", () => {
 
   it("lowercases a single uppercase word", () => {
     expect(toSnakeCase("Name")).toBe("name")
+  })
+})
+
+describe("screamingSnakeToPascalCase", () => {
+  it("converts SCREAMING_SNAKE_CASE to PascalCase", () => {
+    expect(screamingSnakeToPascalCase("ROLE_UNSPECIFIED")).toBe("RoleUnspecified")
+  })
+
+  it("converts single-word screaming snake", () => {
+    expect(screamingSnakeToPascalCase("ADMIN")).toBe("Admin")
+  })
+
+  it("converts multi-segment names", () => {
+    expect(screamingSnakeToPascalCase("CHAIN_TYPE_ETH")).toBe("ChainTypeEth")
+  })
+
+  it("handles leading/trailing underscores", () => {
+    expect(screamingSnakeToPascalCase("_FOO_BAR_")).toBe("FooBar")
+  })
+
+  it("handles empty string", () => {
+    expect(screamingSnakeToPascalCase("")).toBe("")
   })
 })
 

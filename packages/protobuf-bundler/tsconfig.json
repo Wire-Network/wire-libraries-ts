@@ -1,22 +1,8 @@
 {
-  "extends": "../../etc/tsconfig/tsconfig.base.cjs.json",
-  "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "lib"
-  },
-  "include": ["src"],
+  "extends": "../../etc/tsconfig/tsconfig.base.json",
+  "files": [],
   "references": [
-    {
-      "path": "../shared/tsconfig.json"
-    },
-    {
-      "path": "../shared-node/tsconfig.json"
-    },
-    {
-      "path": "../protoc-gen-solana/tsconfig.json"
-    },
-    {
-      "path": "../protoc-gen-solidity/tsconfig.json"
-    }
+    { "path": "./tsconfig.cjs.json" },
+    { "path": "./tsconfig.cjs.jest.json" }
   ]
 }

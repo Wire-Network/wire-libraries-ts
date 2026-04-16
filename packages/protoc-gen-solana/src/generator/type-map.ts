@@ -198,8 +198,8 @@ export function resolveRustType(
   fieldType: number,
   typeName: string | undefined
 ): string {
-  if (fieldType === 11 && typeName) {
-    // Nested message → struct name (strip leading dot and package prefix)
+  if ((fieldType === 11 || fieldType === 14) && typeName) {
+    // Message or enum → type name (strip leading dot and package prefix)
     const parts = typeName.replace(/^\./, "").split(".")
     return parts[parts.length - 1]
   }

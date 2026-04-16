@@ -7,6 +7,8 @@ import {
   genFieldDecode
 } from "./field.js"
 import { PROTO_TYPE_MAP, WireType } from "./type-map.js"
+import { genEnum } from "./enum.js"
+import type { EnumDescriptor } from "./enum.js"
 
 /**
  * Descriptor subset for a protobuf message needed by the codegen.
@@ -31,9 +33,13 @@ export interface MessageDescriptor {
  */
 function collectExternalTypes(
   messages: MessageDescriptor[],
+  enums: EnumDescriptor[],
   currentProtoPackage: string
 ): Set<string> {
-  const localNames = new Set(messages.map(m => m.fullName))
+  const localNames = new Set([
+    ...messages.map(m => m.fullName),
+    ...enums.map(e => e.fullName)
+  ])
   // Also include nested (map entry) names
   for (const m of messages) {
     for (const nm of m.nestedMessages) {
@@ -44,7 +50,7 @@ function collectExternalTypes(
   const external = new Set<string>()
   for (const msg of messages) {
     for (const field of msg.fields) {
-      if (field.type === 11 && field.typeName) {
+      if ((field.type === 11 || field.type === 14) && field.typeName) {
         const fqn = field.typeName.startsWith(".")
           ? field.typeName
           : `.${field.typeName}`
@@ -81,9 +87,10 @@ function fqnToRustUsePath(fqn: string): string {
  */
 function genExternalImports(
   messages: MessageDescriptor[],
+  enums: EnumDescriptor[],
   currentProtoPackage: string
 ): string[] {
-  const external = collectExternalTypes(messages, currentProtoPackage)
+  const external = collectExternalTypes(messages, enums, currentProtoPackage)
   if (external.size === 0) return []
 
   // Build the current file's module path so we can exclude self-imports
@@ -124,7 +131,8 @@ function genExternalImports(
 export function generateRsFile(
   messages: MessageDescriptor[],
   protoFileName: string,
-  protoPackage?: string
+  protoPackage?: string,
+  enums: EnumDescriptor[] = []
 ): string {
   const lines: string[] = []
 
@@ -136,12 +144,18 @@ export function generateRsFile(
   lines.push(`use crate::protobuf_runtime::*;`)
 
   // Add cross-module imports for types from other proto files
-  const externalImports = genExternalImports(messages, protoPackage || "")
+  const externalImports = genExternalImports(messages, enums, protoPackage || "")
   for (const imp of externalImports) {
     lines.push(imp)
   }
 
   lines.push(``)
+
+  // Generate enum definitions first (structs may reference them)
+  for (const enumDesc of enums) {
+    lines.push(genEnum(enumDesc))
+    lines.push(``)
+  }
 
   // Generate structs with encode/decode impls
   for (const msg of messages) {

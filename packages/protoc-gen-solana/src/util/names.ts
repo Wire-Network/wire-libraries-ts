@@ -54,6 +54,19 @@ export function toRustFieldName(protoFieldName: string): string {
 }
 
 /**
+ * Convert a SCREAMING_SNAKE_CASE protobuf enum variant name to PascalCase.
+ * e.g. "ROLE_UNSPECIFIED" → "RoleUnspecified", "MY_VALUE" → "MyValue"
+ */
+export function screamingSnakeToPascalCase(name: string): string {
+  return name
+    .toLowerCase()
+    .split("_")
+    .filter(seg => seg.length > 0)
+    .map(seg => seg.charAt(0).toUpperCase() + seg.slice(1))
+    .join("")
+}
+
+/**
  * Generate output .rs filename for a given .proto file, optionally rooted
  * under a directory derived from the proto package name.
  * e.g. "my_service.proto" with package "example.nested"

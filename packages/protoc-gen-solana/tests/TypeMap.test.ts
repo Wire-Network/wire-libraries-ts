@@ -112,6 +112,18 @@ describe("resolveRustType", () => {
   it("uses typeName for TYPE_MESSAGE even if it has no package", () => {
     expect(resolveRustType(11, "SimpleMsg")).toBe("SimpleMsg")
   })
+
+  it("resolves TYPE_ENUM (14) from typeName, stripping package prefix", () => {
+    expect(resolveRustType(14, ".example.Role")).toBe("Role")
+  })
+
+  it("resolves TYPE_ENUM with deeply nested package", () => {
+    expect(resolveRustType(14, ".sysio.opp.types.ChainType")).toBe("ChainType")
+  })
+
+  it("falls back to i32 for TYPE_ENUM without typeName", () => {
+    expect(resolveRustType(14, undefined)).toBe("i32")
+  })
 })
 
 describe("fieldTag", () => {

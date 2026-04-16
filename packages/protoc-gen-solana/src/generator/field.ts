@@ -30,6 +30,11 @@ export function isMessage(field: FieldInfo): boolean {
   return field.type === 11
 }
 
+/** Check if field is an enum type (type == 14). */
+export function isEnum(field: FieldInfo): boolean {
+  return field.type === 14
+}
+
 /**
  * Generate the Rust struct member declaration for a field.
  */
@@ -118,6 +123,10 @@ export function genFieldDecode(field: FieldInfo): string {
 
   if (isMessage(field)) {
     return genMessageDecode(field, rustName, tag)
+  }
+
+  if (isEnum(field)) {
+    return genEnumDecode(field, rustName, tag)
   }
 
   return genScalarDecode(field, rustName, typeInfo, tag)
@@ -254,6 +263,21 @@ function genMapEncode(field: FieldInfo, tagHex: string): string {
   return lines.join("\n")
 }
 
+function genEnumDecode(
+  field: FieldInfo,
+  rustName: string,
+  tag: number
+): string {
+  const enumType = resolveRustType(field.type, field.typeName)
+  return [
+    `            ${tag} => {`,
+    `                let (v, new_pos) = decode_varint(data, pos)?;`,
+    `                msg.${rustName} = ${enumType}::from(v as i32);`,
+    `                pos = new_pos;`,
+    `            }`
+  ].join("\n")
+}
+
 function genScalarDecode(
   field: FieldInfo,
   rustName: string,
@@ -327,6 +351,17 @@ function genRepeatedDecode(
     ].join("\n")
   }
 
+  if (isEnum(field)) {
+    const enumType = resolveRustType(field.type, field.typeName)
+    return [
+      `            ${tag} => {`,
+      `                let (v, new_pos) = decode_varint(data, pos)?;`,
+      `                msg.${rustName}.push(${enumType}::from(v as i32));`,
+      `                pos = new_pos;`,
+      `            }`
+    ].join("\n")
+  }
+
   const cast = varintDecodeCast(field.type)
 
   if (field.type === 1) {
@@ -393,6 +428,15 @@ function genMapDecode(field: FieldInfo, rustName: string, tag: number): string {
       `                            let v_end = new_pos + v_len as usize;`,
       `                            val = ${valSol}::decode(&data[new_pos..v_end])?;`,
       `                            pos = v_end;`,
+      `                        }`
+    )
+  } else if (me.valueType === 14) {
+    const valTag = fieldTag(2, valInfo.wireType)
+    lines.push(
+      `                        ${valTag} => {`,
+      `                            let (v, new_pos) = decode_varint(data, pos)?;`,
+      `                            val = ${valSol}::from(v as i32);`,
+      `                            pos = new_pos;`,
       `                        }`
     )
   } else {
