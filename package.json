@@ -5,7 +5,8 @@
     "build": "tsc -b tsconfig.json",
     "build:dev": "tsc -b tsconfig.json -w  --preserveWatchOutput",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "test": "npm run build && jest"
+    "test": "pnpm run build && jest",
+    "clean": "./scripts/clean.sh && pnpm -r run clean"
   },
   "devDependencies": {
     "@types/bluebird": "3.5.42",
