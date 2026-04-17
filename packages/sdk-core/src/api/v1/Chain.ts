@@ -351,10 +351,11 @@ export class ChainAPI {
     //   {key: {scope, primary_key, ...}, value: <decoded>, payer?: <name>}
     // instead of the legacy shape (decoded struct directly, or
     // {data, payer} when show_payer is set). Detect by shape: each row
-    // must be an object whose `key` is itself an object (the wire-sysio
-    // key is always composite scope+primary_key) and also has a `value`
-    // field. Requiring `key` to be an object avoids misinterpreting user
-    // tables that happen to have scalar fields named `key` and `value`.
+    // must be an object whose `key` is itself a plain object (the
+    // wire-sysio key is always a composite scope+primary_key struct)
+    // and also has a `value` field. Requiring `key` to be a non-array
+    // object avoids misinterpreting user tables that happen to have
+    // scalar or array fields named `key` and `value`.
     //
     // Residual ambiguity: a user-defined row whose top-level struct
     // contains a nested struct named `key` AND a field named `value`
@@ -373,17 +374,24 @@ export class ChainAPI {
       "key" in rows[0] &&
       "value" in rows[0] &&
       typeof rows[0].key === "object" &&
-      rows[0].key !== null
+      rows[0].key !== null &&
+      !Array.isArray(rows[0].key)
+
+    type WireKvRow = {
+      key: Record<string, unknown>
+      value: unknown
+      payer?: string
+    }
 
     if (isWireKvShape) {
       if (params.show_payer) {
         ram_payers = []
-        rows = rows.map((row: { value: any; payer?: string }) => {
+        rows = rows.map((row: WireKvRow) => {
           ram_payers!.push(row.payer ? Name.from(row.payer) : undefined)
           return row.value
         })
       } else {
-        rows = rows.map((row: { value: any }) => row.value)
+        rows = rows.map((row: WireKvRow) => row.value)
       }
     } else if (params.show_payer) {
       // Legacy show_payer wrapper: {data, payer}

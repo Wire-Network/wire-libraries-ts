@@ -206,6 +206,33 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
     expect(result.ram_payers![0]).toBeUndefined()
   })
 
+  test("does not unwrap user table whose key field is an array", async () => {
+    // `typeof [] === "object"` in JS, so an array-valued `key` would
+    // pass an object-only check. The wire-sysio KV key is always a
+    // struct (Record<string, unknown>), never an array, so rejecting
+    // arrays tightens the discriminant at no cost to the real case.
+    const client = makeClient({
+      "/v1/chain/get_table_rows": {
+        rows: [
+          { key: ["a", 1], value: "first" },
+          { key: ["b", 2], value: "second" }
+        ],
+        more: false,
+        next_key: ""
+      }
+    })
+
+    const result = await client.v1.chain.get_table_rows({
+      code: "user.contract",
+      scope: "user.contract",
+      table: "tuple_keyed"
+    })
+
+    expect(result.rows).toHaveLength(2)
+    expect(result.rows[0]).toEqual({ key: ["a", 1], value: "first" })
+    expect(result.rows[1]).toEqual({ key: ["b", 2], value: "second" })
+  })
+
   test("does not unwrap user table that happens to have scalar key+value fields", async () => {
     // A user-defined table with struct {key: string, value: uint64} would
     // collide with the wire-sysio KV shape on field-name alone. Requiring

@@ -203,16 +203,13 @@ describe("ABI", () => {
       expect(decoded.enums[0].values).toHaveLength(2)
     })
 
-    test("encoder always emits protobuf_types (empty string by default)", () => {
-      // Verify that encoding an ABI with populated enums still ends
-      // with a length-prefixed empty protobuf_types string. Using an
-      // ABI with real content means the final two bytes are forced to
-      // be the varuint(0) length prefix + the empty string (both
-      // 0x00), rather than coincidentally 0x00 from another field. The
-      // golden-bytes test below pins the exact byte layout for a
-      // minimal ABI; this test exists as a sanity check that the
-      // protobuf_types trailer is present regardless of content, and
-      // that the round-trip preserves the rest of the ABI.
+    test("encoder emits protobuf_types for sysio::abi/1.x (default version)", () => {
+      // Default version is sysio::abi/1.1, so the encoder writes the
+      // length-prefixed empty protobuf_types trailer. The final byte
+      // is the varuint(0) length prefix for that empty string. Using
+      // an ABI with real content ensures the round-trip preserves
+      // earlier fields; the two golden-bytes tests below pin the
+      // exact layout for 1.x and non-1.x versions.
       const abi = new ABI({
         enums: [
           {
@@ -296,8 +293,14 @@ describe("ABI", () => {
       const baseBytes = encodeAbi(abi)
       // Append two extra length-prefixed strings: "foo" and "bar".
       const extra = new Uint8Array([
-        0x03, 0x66, 0x6f, 0x6f, // "foo"
-        0x03, 0x62, 0x61, 0x72 // "bar"
+        0x03,
+        0x66,
+        0x6f,
+        0x6f, // "foo"
+        0x03,
+        0x62,
+        0x61,
+        0x72 // "bar"
       ])
       const combined = new Uint8Array(baseBytes.length + extra.length)
       combined.set(baseBytes, 0)
@@ -342,7 +345,7 @@ describe("ABI", () => {
       // Keeping this as a pinned vector catches silent drift in field
       // order / widths without running an integration build.
       const abi = new ABI({
-        version: "v",
+        version: "sysio::abi/1.2",
         tables: [
           {
             name: "T",
@@ -357,17 +360,35 @@ describe("ABI", () => {
       })
       const bytes = encodeAbi(abi)
       const expected = new Uint8Array([
-        0x01, 0x76, // version "v"
+        0x0e,
+        0x73,
+        0x79,
+        0x73,
+        0x69,
+        0x6f,
+        0x3a,
+        0x3a,
+        0x61,
+        0x62,
+        0x69,
+        0x2f,
+        0x31,
+        0x2e,
+        0x32, // version "sysio::abi/1.2"
         0x00, // types
         0x00, // structs
         0x00, // actions
         0x01, // tables.length = 1
-        0x01, 0x54, // table[0].name = "T"
-        0x01, 0x69, // table[0].index_type = "i"
+        0x01,
+        0x54, // table[0].name = "T"
+        0x01,
+        0x69, // table[0].index_type = "i"
         0x00, // key_names
         0x00, // key_types
-        0x01, 0x72, // type = "r"
-        0x34, 0x12, // table_id = 0x1234 LE
+        0x01,
+        0x72, // type = "r"
+        0x34,
+        0x12, // table_id = 0x1234 LE
         0x00, // secondary_indexes.length = 0
         0x00, // ricardian_clauses
         0x00, // error_messages
@@ -375,7 +396,46 @@ describe("ABI", () => {
         0x00, // variants
         0x00, // action_results
         0x00, // enums
-        0x00 // protobuf_types = ""
+        0x00 // protobuf_types = "" (1.x trailer)
+      ])
+      expect(Array.from(bytes)).toEqual(Array.from(expected))
+    })
+
+    test("golden bytes: non-1.x ABI omits the protobuf_types trailer", () => {
+      // Encoder mirrors the decoder's version gate: only sysio::abi/1.x
+      // gets the empty protobuf_types trailer. A hypothetical 2.0 ABI
+      // encoded here carries no trailer, so round-tripping stays
+      // byte-exact for the version it claims.
+      const abi = new ABI({
+        version: "sysio::abi/2.0"
+      })
+      const bytes = encodeAbi(abi)
+      const expected = new Uint8Array([
+        0x0e,
+        0x73,
+        0x79,
+        0x73,
+        0x69,
+        0x6f,
+        0x3a,
+        0x3a,
+        0x61,
+        0x62,
+        0x69,
+        0x2f,
+        0x32,
+        0x2e,
+        0x30, // version "sysio::abi/2.0"
+        0x00, // types
+        0x00, // structs
+        0x00, // actions
+        0x00, // tables
+        0x00, // ricardian_clauses
+        0x00, // error_messages
+        0x00, // extensions
+        0x00, // variants
+        0x00, // action_results
+        0x00 // enums (no trailer)
       ])
       expect(Array.from(bytes)).toEqual(Array.from(expected))
     })
