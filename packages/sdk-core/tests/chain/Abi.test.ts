@@ -204,11 +204,33 @@ describe("ABI", () => {
     })
 
     test("encoder always emits protobuf_types (empty string by default)", () => {
-      // The encoded form should end with the varint-prefixed empty string
-      // for protobuf_types: 0x00 (length 0). Verify the last byte is 0x00.
-      const abi = new ABI({})
+      // Verify that encoding an ABI with populated enums still ends
+      // with a length-prefixed empty protobuf_types string. Using an
+      // ABI with real content means the final two bytes are forced to
+      // be the varuint(0) length prefix + the empty string (both
+      // 0x00), rather than coincidentally 0x00 from another field. The
+      // golden-bytes test below pins the exact byte layout for a
+      // minimal ABI; this test exists as a sanity check that the
+      // protobuf_types trailer is present regardless of content, and
+      // that the round-trip preserves the rest of the ABI.
+      const abi = new ABI({
+        enums: [
+          {
+            name: "color",
+            type: "uint8",
+            values: [{ name: "red", value: 0 }]
+          }
+        ]
+      })
       const bytes = encodeAbi(abi)
+      expect(bytes.length).toBeGreaterThan(2)
       expect(bytes[bytes.length - 1]).toBe(0x00)
+      // Round-trip must preserve the enums so we know the trailing
+      // 0x00 wasn't consumed as part of an earlier field.
+      const decoded = decodeAbi(bytes)
+      expect(decoded.enums).toHaveLength(1)
+      expect(decoded.enums[0].name).toBe("color")
+      expect(decoded.enums[0].values).toHaveLength(1)
     })
 
     test("encoder rejects table_id outside uint16 range", () => {
@@ -262,10 +284,11 @@ describe("ABI", () => {
       expect(() => encodeAbi(abi)).toThrow(/uint16/)
     })
 
-    test("decoder drains multiple trailing string-typed extensions", () => {
+    test("decoder drains multiple trailing string-typed extensions for sysio::abi/1.x", () => {
       // Simulate a future wire-sysio release that appends additional
       // string-typed extension fields after protobuf_types. The decoder
-      // must not choke on the extra data (forward-compat).
+      // must not choke on the extra data (forward-compat within the
+      // sysio::abi/1.x line).
       const abi = new ABI({
         version: "sysio::abi/1.2",
         tables: []
@@ -283,6 +306,33 @@ describe("ABI", () => {
       // Should decode cleanly without throwing.
       const decoded = decodeAbi(combined)
       expect(decoded.version).toBe("sysio::abi/1.2")
+      expect(decoded.tables).toHaveLength(0)
+    })
+
+    test("decoder does NOT drain trailing bytes for unknown ABI versions", () => {
+      // Version-gated safety: when the decoded ABI version is outside
+      // the sysio::abi/1.x line (e.g. a future sysio::abi/2.0), the
+      // drain loop is skipped so a non-string trailing extension can
+      // not be mis-parsed as a string. Previously-required fields
+      // parsed earlier are still populated correctly; trailing bytes
+      // are simply ignored. This test guarantees no throw and no
+      // silent corruption of the populated fields.
+      const abi = new ABI({
+        version: "sysio::abi/2.0",
+        tables: []
+      })
+      const baseBytes = encodeAbi(abi)
+      // Append bytes that would mis-parse as a giant string if drained
+      // (0xff is varuint continuation, leading to a multi-byte length
+      // prefix). A blind drain would hang or throw on underflow; with
+      // the version gate, these bytes are left untouched.
+      const extra = new Uint8Array([0xff, 0xff, 0xff, 0xff, 0x01])
+      const combined = new Uint8Array(baseBytes.length + extra.length)
+      combined.set(baseBytes, 0)
+      combined.set(extra, baseBytes.length)
+
+      const decoded = decodeAbi(combined)
+      expect(decoded.version).toBe("sysio::abi/2.0")
       expect(decoded.tables).toHaveLength(0)
     })
 
