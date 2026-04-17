@@ -366,6 +366,12 @@ export class ChainAPI {
     // See the test `does not unwrap user table whose key is itself an
     // object` for a pinned repro of this known false-positive so the
     // behavior is caught if the discriminant is ever tightened.
+    type WireKvRow = {
+      key: Record<string, unknown>
+      value: unknown
+      payer?: string
+    }
+
     const isWireKvShape =
       Array.isArray(rows) &&
       rows.length > 0 &&
@@ -376,12 +382,6 @@ export class ChainAPI {
       typeof rows[0].key === "object" &&
       rows[0].key !== null &&
       !Array.isArray(rows[0].key)
-
-    type WireKvRow = {
-      key: Record<string, unknown>
-      value: unknown
-      payer?: string
-    }
 
     if (isWireKvShape) {
       if (params.show_payer) {
