@@ -123,21 +123,17 @@ export class ABI implements ABISerializableObject {
       }
 
       const type = decoder.readString()
-      const tidLo = decoder.readByte()
-      const tidHi = decoder.readByte()
-      const table_id = tidLo | (tidHi << 8)
+      const table_id = ABI.readUint16LE(decoder)
       const secondary_indexes: ABI.Index[] = []
       const numIndexes = decoder.readVaruint32()
 
       for (let j = 0; j < numIndexes; j++) {
         const idxName = decoder.readString()
         const idxKeyType = decoder.readString()
-        const idxLo = decoder.readByte()
-        const idxHi = decoder.readByte()
         secondary_indexes.push({
           name: idxName,
           key_type: idxKeyType,
-          table_id: idxLo | (idxHi << 8)
+          table_id: ABI.readUint16LE(decoder)
         })
       }
 
@@ -243,12 +239,23 @@ export class ABI implements ABISerializableObject {
       }
     }
 
-    // protobuf_types and any further string-typed trailing extensions:
-    // drain them so a later-appended extension doesn't cause a decode
-    // error. The SDK does not consume these fields. Non-string extensions
-    // added in the future will need explicit handling here.
-    while (decoder.canRead()) {
-      decoder.readString()
+    // After enums, wire-sysio sysio::abi/1.x writes protobuf_types as the
+    // sole trailing extension (length-prefixed string). We drain any
+    // further string-typed trailers for forward-compat within the 1.x
+    // line, but only when `version` is a recognized 1.x tag — if a
+    // future release bumps the major or introduces a non-string trailing
+    // extension, a blind drain would mis-parse the length prefix as a
+    // string length and silently produce a corrupt ABI. Scoping the
+    // drain to known-safe versions makes that failure mode explicit:
+    // unrecognized versions stop here with any trailing bytes ignored,
+    // and extending this parser is required when the wire format grows
+    // a new non-string field. The SDK does not consume the string
+    // trailers; they are read purely to advance past them.
+    const knownStringOnlyTrailers = version.startsWith("sysio::abi/1.")
+    if (knownStringOnlyTrailers) {
+      while (decoder.canRead()) {
+        decoder.readString()
+      }
     }
 
     return new ABI({
@@ -297,6 +304,10 @@ export class ABI implements ABISerializableObject {
     encoder.writeVaruint32(this.tables.length)
 
     for (const table of this.tables) {
+      // Binary order matches sysio::chain::table_def: name (string),
+      // index_type, key_names, key_types, type, table_id (uint16 LE),
+      // secondary_indexes (vector<index_def>). Mirror of the layout
+      // consumed in fromABI — keep both sides in sync.
       encoder.writeString(table.name)
       encoder.writeString(table.index_type)
       encoder.writeVaruint32(table.key_names.length)
@@ -312,22 +323,16 @@ export class ABI implements ABISerializableObject {
       }
 
       encoder.writeString(table.type)
-      // table_id is uint16 LE; chain side computes DJB2(name) % 65536.
-      // Default to 0 for hand-built tables that omit it.
-      const tid = table.table_id ?? 0
-      ABI.assertUint16(tid, `table ${table.name} table_id`)
-      encoder.writeByte(tid & 0xff)
-      encoder.writeByte((tid >> 8) & 0xff)
+      // table_id defaults to 0 for hand-built tables that omit it;
+      // on-chain ABIs always carry a DJB2(name) % 65536 value.
+      ABI.writeUint16LE(encoder, table.table_id ?? 0, `table ${table.name} table_id`)
       const secIdx = table.secondary_indexes ?? []
       encoder.writeVaruint32(secIdx.length)
 
       for (const idx of secIdx) {
         encoder.writeString(idx.name)
         encoder.writeString(idx.key_type)
-        const idxTid = idx.table_id ?? 0
-        ABI.assertUint16(idxTid, `index ${idx.name} table_id`)
-        encoder.writeByte(idxTid & 0xff)
-        encoder.writeByte((idxTid >> 8) & 0xff)
+        ABI.writeUint16LE(encoder, idx.table_id ?? 0, `index ${idx.name} table_id`)
       }
     }
 
@@ -395,6 +400,22 @@ export class ABI implements ABISerializableObject {
         `ABI ${label} must be a uint16 in [0, 65535], got ${value}`
       )
     }
+  }
+
+  private static readUint16LE(decoder: ABIDecoder): number {
+    const lo = decoder.readByte()
+    const hi = decoder.readByte()
+    return lo | (hi << 8)
+  }
+
+  private static writeUint16LE(
+    encoder: ABIEncoder,
+    value: number,
+    label: string
+  ) {
+    ABI.assertUint16(value, label)
+    encoder.writeByte(value & 0xff)
+    encoder.writeByte((value >> 8) & 0xff)
   }
 
   resolveType(name: string): ABI.ResolvedType {
@@ -560,9 +581,14 @@ export namespace ABI {
   }
   // Per-secondary-index metadata embedded in Table. Mirrors
   // sysio::chain::index_def. table_id is a uint16 DJB2(name) % 65536.
+  // On-chain ABIs always carry a non-zero table_id (CDT computes it at
+  // compile time); the field is optional here to allow programmatic
+  // construction of ABI objects, in which case the encoder writes 0.
   export interface Index {
     name: string
     key_type: string
+    /** uint16 DJB2(name) % 65536; always present in on-chain ABIs,
+     *  defaults to 0 on encode when omitted from a hand-built ABI. */
     table_id?: number
   }
   // table_def.name is a free-form string (was sysio::name uint64 pre-wire),

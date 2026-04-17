@@ -355,6 +355,16 @@ export class ChainAPI {
     // key is always composite scope+primary_key) and also has a `value`
     // field. Requiring `key` to be an object avoids misinterpreting user
     // tables that happen to have scalar fields named `key` and `value`.
+    //
+    // Residual ambiguity: a user-defined row whose top-level struct
+    // contains a nested struct named `key` AND a field named `value`
+    // will still trigger the KV unwrap and be silently stripped to
+    // `value`. Row shapes like `{key: {...}, value: ...}` are rare in
+    // practice, but cannot be fully distinguished from the wire KV
+    // shape by heuristic alone — the ABI would need to be consulted.
+    // See the test `does not unwrap user table whose key is itself an
+    // object` for a pinned repro of this known false-positive so the
+    // behavior is caught if the discriminant is ever tightened.
     const isWireKvShape =
       Array.isArray(rows) &&
       rows.length > 0 &&

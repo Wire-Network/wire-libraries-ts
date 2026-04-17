@@ -232,4 +232,46 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
     expect(result.rows[0]).toEqual({ key: "some_setting", value: 42 })
     expect(result.rows[1]).toEqual({ key: "other_setting", value: 7 })
   })
+
+  test("does not unwrap user table whose key is itself an object", async () => {
+    // Pinned repro of the residual false-positive in isWireKvShape: a
+    // user-defined row whose top-level struct contains a nested struct
+    // named `key` AND a field named `value` is indistinguishable from
+    // the wire-sysio KV shape by heuristic alone. The current behavior
+    // is that these rows ARE silently unwrapped to `value`. This test
+    // documents that known limitation so future tightening of the
+    // heuristic (or an ABI-aware detection path) has a regression
+    // target to flip from xfail → pass.
+    const client = makeClient({
+      "/v1/chain/get_table_rows": {
+        rows: [
+          {
+            key: { name: "alice", perm: "active" },
+            value: 42
+          },
+          {
+            key: { name: "bob", perm: "active" },
+            value: 7
+          }
+        ],
+        more: false,
+        next_key: ""
+      }
+    })
+
+    const result = await client.v1.chain.get_table_rows({
+      code: "user.contract",
+      scope: "user.contract",
+      table: "nested_table"
+    })
+
+    // KNOWN FALSE-POSITIVE: the heuristic cannot distinguish this shape
+    // from the wire-sysio KV shape, so the rows are unwrapped to the
+    // `value` field. When the discriminant is strengthened (e.g. with
+    // ABI awareness) this expectation should flip to assert the
+    // original `{key, value}` objects are preserved.
+    expect(result.rows).toHaveLength(2)
+    expect(result.rows[0]).toBe(42)
+    expect(result.rows[1]).toBe(7)
+  })
 })
