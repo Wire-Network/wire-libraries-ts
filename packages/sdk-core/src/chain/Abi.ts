@@ -325,14 +325,22 @@ export class ABI implements ABISerializableObject {
       encoder.writeString(table.type)
       // table_id defaults to 0 for hand-built tables that omit it;
       // on-chain ABIs always carry a DJB2(name) % 65536 value.
-      ABI.writeUint16LE(encoder, table.table_id ?? 0, `table ${table.name} table_id`)
+      ABI.writeUint16LE(
+        encoder,
+        table.table_id ?? 0,
+        `table ${table.name} table_id`
+      )
       const secIdx = table.secondary_indexes ?? []
       encoder.writeVaruint32(secIdx.length)
 
       for (const idx of secIdx) {
         encoder.writeString(idx.name)
         encoder.writeString(idx.key_type)
-        ABI.writeUint16LE(encoder, idx.table_id ?? 0, `index ${idx.name} table_id`)
+        ABI.writeUint16LE(
+          encoder,
+          idx.table_id ?? 0,
+          `index ${idx.name} table_id`
+        )
       }
     }
 
@@ -389,9 +397,14 @@ export class ABI implements ABISerializableObject {
       }
     }
 
-    // protobuf_types: forward-compat extension; always written as an empty
-    // string for symmetry with the parser.
-    encoder.writeString("")
+    // protobuf_types trailer: only emitted for sysio::abi/1.x, matching
+    // the decoder's version gate in fromABI. For non-1.x versions (e.g.
+    // a future sysio::abi/2.0 whose trailer shape is unknown here), no
+    // trailer is written so round-tripping through this SDK stays
+    // byte-exact for whatever version the ABI claims.
+    if (this.version.startsWith("sysio::abi/1.")) {
+      encoder.writeString("")
+    }
   }
 
   private static assertUint16(value: number, label: string) {
