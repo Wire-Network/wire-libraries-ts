@@ -174,10 +174,11 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
     expect(result.more).toBe(false)
   })
 
-  test("missing payer in new shape coerces to empty name", async () => {
+  test("missing payer in new shape is reported as undefined", async () => {
     // The unified API makes `payer` optional. When show_payer is true
-    // but a row was synthesized without a payer (edge case), the
-    // wrapper should not throw.
+    // but a row was returned without a payer, the wrapper pushes
+    // `undefined` so the absent-payer case is explicit to callers rather
+    // than silently coerced to an empty Name.
     const client = makeClient({
       "/v1/chain/get_table_rows": {
         rows: [
@@ -202,6 +203,33 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
     expect(result.rows).toHaveLength(1)
     expect(result.rows[0]).toEqual({ balance: "100.0000 SYS" })
     expect(result.ram_payers).toHaveLength(1)
-    expect(String(result.ram_payers![0])).toBe("")
+    expect(result.ram_payers![0]).toBeUndefined()
+  })
+
+  test("does not unwrap user table that happens to have scalar key+value fields", async () => {
+    // A user-defined table with struct {key: string, value: uint64} would
+    // collide with the wire-sysio KV shape on field-name alone. Requiring
+    // `key` to be an object (wire KV keys are always composite) avoids
+    // misinterpreting these rows.
+    const client = makeClient({
+      "/v1/chain/get_table_rows": {
+        rows: [
+          { key: "some_setting", value: 42 },
+          { key: "other_setting", value: 7 }
+        ],
+        more: false,
+        next_key: ""
+      }
+    })
+
+    const result = await client.v1.chain.get_table_rows({
+      code: "user.contract",
+      scope: "user.contract",
+      table: "settings"
+    })
+
+    expect(result.rows).toHaveLength(2)
+    expect(result.rows[0]).toEqual({ key: "some_setting", value: 42 })
+    expect(result.rows[1]).toEqual({ key: "other_setting", value: 7 })
   })
 })
