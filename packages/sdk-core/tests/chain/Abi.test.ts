@@ -182,7 +182,10 @@ describe("ABI", () => {
       // Build an encoded ABI manually that includes a protobuf_types
       // string after the enums section. The parser should consume it
       // without error and not affect the rest of the decoded ABI.
+      // Version is pinned to 1.2 so the trailer-emission path in the
+      // encoder is exercised regardless of what the default version is.
       const original = new ABI({
+        version: "sysio::abi/1.2",
         enums: [
           {
             name: "color",
