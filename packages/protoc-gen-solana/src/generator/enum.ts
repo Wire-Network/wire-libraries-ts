@@ -48,9 +48,13 @@ export function genEnum(desc: EnumDescriptor): string {
       `            ${v.number} => ${enumName}::${screamingSnakeToPascalCase(v.name)},`
   )
 
+  const idlVariants = desc.values.map(
+    v =>
+      `            anchor_lang::idl::types::IdlEnumVariant { name: "${screamingSnakeToPascalCase(v.name)}".to_string(), fields: None },`
+  )
+
   return [
     `#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]`,
-    `#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]`,
     `#[repr(i32)]`,
     `pub enum ${enumName} {`,
     ...variants,
@@ -74,6 +78,49 @@ export function genEnum(desc: EnumDescriptor): string {
     `impl From<${enumName}> for i32 {`,
     `    fn from(value: ${enumName}) -> Self {`,
     `        value as i32`,
+    `    }`,
+    `}`,
+    ``,
+    `#[cfg(feature = "borsh")]`,
+    `impl borsh::BorshSerialize for ${enumName} {`,
+    `    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {`,
+    `        <i32 as borsh::BorshSerialize>::serialize(&(*self as i32), writer)`,
+    `    }`,
+    `}`,
+    ``,
+    `#[cfg(feature = "borsh")]`,
+    `impl borsh::BorshDeserialize for ${enumName} {`,
+    `    fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {`,
+    `        let discriminant = <i32 as borsh::BorshDeserialize>::deserialize_reader(reader)?;`,
+    `        Ok(${enumName}::from(discriminant))`,
+    `    }`,
+    `}`,
+    ``,
+    `#[cfg(feature = "idl-build")]`,
+    `impl anchor_lang::idl::build::IdlBuild for ${enumName} {`,
+    `    fn create_type() -> Option<anchor_lang::idl::types::IdlTypeDef> {`,
+    `        Some(anchor_lang::idl::types::IdlTypeDef {`,
+    `            name: Self::get_full_path(),`,
+    `            docs: vec![],`,
+    `            serialization: anchor_lang::idl::types::IdlSerialization::default(),`,
+    `            repr: None,`,
+    `            generics: vec![],`,
+    `            ty: anchor_lang::idl::types::IdlTypeDefTy::Enum {`,
+    `                variants: vec![`,
+    ...idlVariants,
+    `                ],`,
+    `            },`,
+    `        })`,
+    `    }`,
+    ``,
+    `    fn insert_types(types: &mut std::collections::BTreeMap<String, anchor_lang::idl::types::IdlTypeDef>) {`,
+    `        if let Some(ty) = Self::create_type() {`,
+    `            types.insert(Self::get_full_path(), ty);`,
+    `        }`,
+    `    }`,
+    ``,
+    `    fn get_full_path() -> String {`,
+    `        format!("{}::{}", module_path!(), stringify!(${enumName}))`,
     `    }`,
     `}`
   ].join("\n")

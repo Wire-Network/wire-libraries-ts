@@ -16,9 +16,11 @@ authors = [{{#each authors}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}]
 [features]
 default = []
 borsh = ["dep:borsh"]
+idl-build = ["dep:anchor-lang", "anchor-lang/idl-build"]
 
 [dependencies]
-borsh = { version = "1", optional = true }
+borsh = { version = "0.10", optional = true }
+anchor-lang = { version = "0.31", optional = true }
 {{#each dependencies}}
 {{@key}} = "{{this}}"
 {{/each}}

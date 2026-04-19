@@ -30,20 +30,28 @@ export interface MessageDescriptor {
  * Collect all cross-file message type references from a set of messages.
  * Returns the set of fully-qualified type names that are NOT defined in
  * the current file's message list.
+ *
+ * Protobuf field `typeName` values always carry a leading dot (e.g.
+ * `.sysio.opp.attestations.OperatorAction.ActionType`). We normalise every
+ * local FQN the same way so the Set lookup works correctly — without this,
+ * nested enum types (whose `fullName` has no leading dot) would never match
+ * and would be emitted as spurious cross-file imports.
  */
 function collectExternalTypes(
   messages: MessageDescriptor[],
   enums: EnumDescriptor[],
   currentProtoPackage: string
 ): Set<string> {
+  const dot = (fqn: string) => (fqn.startsWith(".") ? fqn : `.${fqn}`)
+
   const localNames = new Set([
-    ...messages.map(m => m.fullName),
-    ...enums.map(e => e.fullName)
+    ...messages.map(m => dot(m.fullName)),
+    ...enums.map(e => dot(e.fullName))
   ])
-  // Also include nested (map entry) names
+  // Also include nested (map entry) message names
   for (const m of messages) {
     for (const nm of m.nestedMessages) {
-      localNames.add(nm.fullName)
+      localNames.add(dot(nm.fullName))
     }
   }
 
@@ -51,9 +59,7 @@ function collectExternalTypes(
   for (const msg of messages) {
     for (const field of msg.fields) {
       if ((field.type === 11 || field.type === 14) && field.typeName) {
-        const fqn = field.typeName.startsWith(".")
-          ? field.typeName
-          : `.${field.typeName}`
+        const fqn = dot(field.typeName)
         if (!localNames.has(fqn)) {
           external.add(fqn)
         }

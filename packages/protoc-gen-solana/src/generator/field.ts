@@ -93,6 +93,10 @@ export function genFieldEncode(field: FieldInfo): string {
     return genMessageEncode(field, rustName, tagHex)
   }
 
+  if (isEnum(field)) {
+    return genEnumEncode(field, rustName, tagHex)
+  }
+
   return genScalarEncode(field, rustName, typeInfo, tagHex)
 }
 
@@ -133,6 +137,17 @@ export function genFieldDecode(field: FieldInfo): string {
 }
 
 // ── Internal codegen helpers ──────────────────────────────────────────
+
+function genEnumEncode(
+  field: FieldInfo,
+  rustName: string,
+  tagHex: string
+): string {
+  return [
+    `        encode_key(&mut buf, ${tagHex});`,
+    `        encode_varint(&mut buf, i32::from(self.${rustName}) as u64);`
+  ].join("\n")
+}
 
 function genScalarEncode(
   field: FieldInfo,
@@ -197,6 +212,8 @@ function genRepeatedEncode(
       `            encode_varint(&mut buf, elem_encoded.len() as u64);`,
       `            buf.extend_from_slice(&elem_encoded);`
     )
+  } else if (isEnum(field)) {
+    lines.push(`            encode_varint(&mut buf, i32::from(*elem) as u64);`)
   } else if (field.type === 1) {
     // repeated double
     lines.push(`            encode_fixed64(&mut buf, elem.to_bits());`)

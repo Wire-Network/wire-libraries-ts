@@ -113,6 +113,10 @@ GitHub Actions (`.github/workflows/publish-npm.yaml`):
 - Auto-commits `chore(release): bump patch [skip release]`
 - Publishes all non-private packages to npm (`pnpm -r publish --access public`)
 
+## Documentation Comments
+
+All generated or modified code **must** include JSDoc comments (`/** ... */`), compatible with Docusaurus.
+
 ## Gotchas
 
 - `pnpm test` runs `npm run build` first (not `pnpm build`), then jest — the build must succeed before tests run

@@ -5,7 +5,6 @@ overrides:
   '@3fv/prelude-ts': ^0.8.37
   '@aws-sdk/client-firehose': 3.972.0
   '@aws-sdk/client-sts': 3.972.0
-  '@wireio/opp-typescript-models': link:../../../../../home/jglanz/.local/share/pnpm/global/5/node_modules/@wireio/opp-typescript-models
   bluebird: 3.7.2
   debug: 4.3.4
   lodash: 4.17.21
