@@ -6,10 +6,10 @@ import nacl from "tweetnacl"
 import { isObject } from "@wireio/shared"
 import { ethers } from "ethers"
 import { blsSign, skFromLE } from "./BLS.js"
-import { ChainKind } from "@wireio/opp-typescript-models"
 import { asOption, Option } from "@3fv/prelude-ts"
 import { match } from "ts-pattern"
 import { defaults } from "lodash"
+import { ChainKind } from "../types"
 
 /**
  * Signs a message with a private key using various cryptographic algorithms.

@@ -105,6 +105,39 @@ Enforced by Prettier (`.prettierrc.js`):
 - Arrow parens: avoid when possible
 - No ESLint configured
 
+## Code Quality Invariants
+
+Apply these to every change. Check them before declaring a task complete — they are not optional polish.
+
+### 1. No duplicated helpers
+
+If the same function / guard / computation appears in two files, extract it. Pick the home by scope:
+
+- **Package-internal:** a `src/util/` module exported for in-package use.
+- **Shared across packages:** add to `@wireio/shared` (or `@wireio/shared-node` / `@wireio/shared-web` when the helper is environment-bound), then import from there. Never copy-paste across packages.
+- **Subclass-common behaviour:** a `protected` method on the base class (or a mixin), not repeated in every subclass.
+
+### 2. No magic literals
+
+Every string or numeric value that isn't a trivial array index / loop bound gets a named constant:
+
+- **Module-local:** `const X = ...` at the top of the file, or `as const` for tuples / objects when TypeScript should infer the narrowest literal types.
+- **Shared:** `export const` from a dedicated module (e.g. `constants.ts`).
+- **Command / CLI / event names, RPC method names, field keys:** group in an `enum` or `as const` object so autocomplete and find-usages work.
+
+### 3. Enums over raw values
+
+Closed-set values — command names, status codes, chain kinds, network types, event names — use an `enum` or an `as const` union, never the raw string or number:
+
+```ts
+enum ClusterCommand { create = "create", run = "run", destroy = "destroy" }
+// or, equivalent (often preferred in FP-heavy code):
+const ClusterCommand = { create: "create", run: "run", destroy: "destroy" } as const
+type ClusterCommand = typeof ClusterCommand[keyof typeof ClusterCommand]
+```
+
+Then `ClusterCommand.create`, never `"create"`. Rename propagates through the compiler; raw strings do not.
+
 ## CI/CD
 
 GitHub Actions (`.github/workflows/publish-npm.yaml`):

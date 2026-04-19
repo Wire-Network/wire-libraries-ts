@@ -5,6 +5,8 @@
 .env
 .envrc
 
+pnpm-lock.yaml
+
 # Dependencies
 node*compile*cache/
 node_modules/
