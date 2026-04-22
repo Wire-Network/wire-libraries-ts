@@ -125,7 +125,14 @@ Every string or numeric value that isn't a trivial array index / loop bound gets
 - **Shared:** `export const` from a dedicated module (e.g. `constants.ts`).
 - **Command / CLI / event names, RPC method names, field keys:** group in an `enum` or `as const` object so autocomplete and find-usages work.
 
-### 3. Enums over raw values
+### 3. Import/export path hygiene
+
+- **All relative imports include the `.js` extension.** `import { X } from "./foo.js"`, never `"./foo"`. Required by `nodenext`/Node-native ESM resolution.
+- **Never reference a directory directly.** Write `export * from "./rpc/index.js"` and `import { X } from "./rpc/index.js"`, not `"./rpc"`. Always spell out `index.js`.
+- **Barrel contents are `export * from "./<file>.js"` lines only.** No logic, no types, no constants. Parent barrels re-export child subdirectories via `export * from "./<subdir>/index.js"`.
+- **No wildcard re-exports of third-party surface.** Consumers import generated-model types from their source package.
+
+### 4. Enums over raw values
 
 Closed-set values — command names, status codes, chain kinds, network types, event names — use an `enum` or an `as const` union, never the raw string or number:
 

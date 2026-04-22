@@ -357,9 +357,22 @@ catch (err) {
 1. Node built-ins (`node:fs`, `node:path`)
 2. External packages (`lodash`, `ts-pattern`, `@3fv/prelude-ts`)
 3. Internal monorepo packages (`@wireio/shared`, `@wire-e2e-tests/harness`)
-4. Relative imports (`./utils`, `../config`)
+4. Relative imports (`./utils.js`, `../config.js`)
 
 Blank line between each group.
+
+### Relative import paths
+
+- **Always include the `.js` extension** on relative imports. `import { X } from "./foo.js"`, never `"./foo"`. Node's native ESM loader and `nodenext` module resolution both require the extension.
+- **Never reference a directory directly.** Write `import { X } from "./rpc/index.js"`, not `"./rpc"`. The resolver finds `index.ts` via the explicit `index.js` path; keeping the path explicit means no surprises across `moduleResolution` modes and no dependency on silent directory-resolution behaviour.
+
+### Barrel exports (`index.ts`)
+
+- Every subdirectory with public exports has an `index.ts` barrel of `export * from "./<file>.js"` lines only — no logic, types, or constants live in the barrel itself.
+- **File re-exports include the `.js` extension.** `export * from "./Paths.js"`, never `"./Paths"`.
+- **Parent barrels re-export child subdirectories** via `export * from "./<subdir>/index.js"` — NOT `./<subdir>`. Always spell the barrel path out.
+- Consumers import from the package root or a directory path (`import { Foo } from "@scope/pkg"`) — never from a specific file. Moving `Foo.ts` between subdirectories should not ripple through callers.
+- Never `export *` a third-party package from a local barrel.
 
 ### Lodash
 
