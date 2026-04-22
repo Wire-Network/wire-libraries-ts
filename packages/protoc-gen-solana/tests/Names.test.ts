@@ -1,4 +1,9 @@
-import { protoNameToRust, toSnakeCase, protoFileToRsFile, screamingSnakeToPascalCase } from "../src/util/names"
+import {
+  protoNameToRust,
+  toSnakeCase,
+  protoFileToRsFile,
+  screamingSnakeToPascalCase
+} from "@wireio/protoc-gen-solana/util/names"
 
 describe("protoNameToRust", () => {
   it("extracts last segment from fully-qualified name", () => {
@@ -46,7 +51,9 @@ describe("toSnakeCase", () => {
 
 describe("screamingSnakeToPascalCase", () => {
   it("converts SCREAMING_SNAKE_CASE to PascalCase", () => {
-    expect(screamingSnakeToPascalCase("ROLE_UNSPECIFIED")).toBe("RoleUnspecified")
+    expect(screamingSnakeToPascalCase("ROLE_UNSPECIFIED")).toBe(
+      "RoleUnspecified"
+    )
   })
 
   it("converts single-word screaming snake", () => {

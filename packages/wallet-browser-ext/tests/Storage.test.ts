@@ -1,5 +1,8 @@
-import type { ExtensionState } from "../src/Types"
-import { ChainKind, KeyType } from "../src/Types"
+import {
+  ExtensionState,
+  ChainKind,
+  KeyType
+} from "@wireio/wallet-browser-ext/Types"
 
 // Set up chrome mock before importing Storage module
 const mockStorage: Record<string, any> = {}
@@ -16,9 +19,9 @@ const chromeMock = {
       remove: jest.fn((key: string) => {
         delete mockStorage[key]
         return Promise.resolve()
-      }),
-    },
-  },
+      })
+    }
+  }
 }
 ;(globalThis as any).chrome = chromeMock
 
@@ -26,7 +29,7 @@ import {
   saveEncryptedState,
   loadEncryptedState,
   hasVault,
-  clearVault,
+  clearVault
 } from "../src/Storage"
 
 const sampleState: ExtensionState = {
@@ -36,31 +39,31 @@ const sampleState: ExtensionState = {
       name: "test-key",
       type: KeyType.K1,
       privateKey: "PVT_K1_test",
-      publicKey: "PUB_K1_test",
-    },
+      publicKey: "PUB_K1_test"
+    }
   ],
   endpoints: [
     {
       id: "ep-1",
       name: "local",
       kind: ChainKind.WIRE,
-      url: "http://localhost:8888",
-    },
+      url: "http://localhost:8888"
+    }
   ],
   accounts: [
     {
       id: "acct-1",
       name: "alice",
       endpoints: ["ep-1"],
-      keys: ["key-1"],
-    },
-  ],
+      keys: ["key-1"]
+    }
+  ]
 }
 
 describe("Storage", () => {
   beforeEach(() => {
     // Clear mock storage between tests
-    Object.keys(mockStorage).forEach((k) => delete mockStorage[k])
+    Object.keys(mockStorage).forEach(k => delete mockStorage[k])
     jest.clearAllMocks()
   })
 
@@ -120,8 +123,8 @@ describe("Storage", () => {
       activeAccount: {
         accountId: "acct-1",
         keyId: "key-1",
-        endpointId: "ep-1",
-      },
+        endpointId: "ep-1"
+      }
     }
     const password = "password"
     await saveEncryptedState(stateWithActive, password)
@@ -130,7 +133,7 @@ describe("Storage", () => {
     expect(loaded.activeAccount).toEqual({
       accountId: "acct-1",
       keyId: "key-1",
-      endpointId: "ep-1",
+      endpointId: "ep-1"
     })
   })
 })

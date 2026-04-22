@@ -1,4 +1,9 @@
-import { PROTO_TYPE_MAP, resolveSolType, fieldTag, WireType } from "../src/generator/type-map"
+import {
+  PROTO_TYPE_MAP,
+  resolveSolType,
+  fieldTag,
+  WireType
+} from "@wireio/protoc-gen-solidity/generator/type-map"
 
 describe("PROTO_TYPE_MAP", () => {
   it("maps TYPE_BOOL (8) to bool", () => {
@@ -60,7 +65,9 @@ describe("PROTO_TYPE_MAP", () => {
   })
 
   it("has entries for all expected types", () => {
-    const expectedTypes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18]
+    const expectedTypes = [
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18
+    ]
     for (const t of expectedTypes) {
       expect(PROTO_TYPE_MAP[t]).toBeDefined()
     }
@@ -93,7 +100,9 @@ describe("resolveSolType", () => {
   })
 
   it("throws for unsupported field type", () => {
-    expect(() => resolveSolType(99, undefined)).toThrow("Unsupported protobuf field type: 99")
+    expect(() => resolveSolType(99, undefined)).toThrow(
+      "Unsupported protobuf field type: 99"
+    )
   })
 })
 

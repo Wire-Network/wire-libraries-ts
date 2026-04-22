@@ -1,4 +1,7 @@
-import { genEnum, EnumDescriptor } from "../src/generator/enum"
+import {
+  genEnum,
+  EnumDescriptor
+} from "@wireio/protoc-gen-solana/generator/enum"
 
 describe("genEnum", () => {
   const roleEnum: EnumDescriptor = {
@@ -35,7 +38,9 @@ describe("genEnum", () => {
 
   it("generates standard derives (Clone, Copy, Debug, PartialEq, Eq, Hash)", () => {
     const output = genEnum(roleEnum)
-    expect(output).toContain("#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]")
+    expect(output).toContain(
+      "#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]"
+    )
   })
 
   it("generates Default impl using the zero-value variant", () => {

@@ -1,4 +1,4 @@
-import { deepMerge } from "../src/util/merge"
+import { deepMerge } from "@wireio/wire-protobuf-bundler/util/merge"
 
 describe("deepMerge", () => {
   it("should return a new object (not mutate target)", () => {

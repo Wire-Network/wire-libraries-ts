@@ -1,4 +1,4 @@
-import { encrypt, decrypt } from "../src/Crypto"
+import { encrypt, decrypt } from "@wireio/wallet-browser-ext/Crypto"
 
 describe("Crypto", () => {
   const password = "test-password-123"

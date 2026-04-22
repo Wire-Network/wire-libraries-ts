@@ -1,4 +1,10 @@
-import { FieldInfo, isRepeated, isMessage, isEnum, genStructMember } from "../src/generator/field"
+import {
+  FieldInfo,
+  isRepeated,
+  isMessage,
+  isEnum,
+  genStructMember
+} from "@wireio/protoc-gen-solana/generator/field"
 
 describe("isRepeated", () => {
   it("returns true when label is 3 (repeated)", () => {
@@ -24,7 +30,7 @@ describe("isMessage", () => {
       number: 1,
       type: 11,
       typeName: ".pkg.Nested",
-      label: 1,
+      label: 1
     }
     expect(isMessage(field)).toBe(true)
   })
@@ -47,7 +53,7 @@ describe("isEnum", () => {
       number: 1,
       type: 14,
       typeName: ".example.Role",
-      label: 1,
+      label: 1
     }
     expect(isEnum(field)).toBe(true)
   })
@@ -63,7 +69,7 @@ describe("isEnum", () => {
       number: 1,
       type: 11,
       typeName: ".pkg.Nested",
-      label: 1,
+      label: 1
     }
     expect(isEnum(field)).toBe(false)
   })
@@ -96,7 +102,7 @@ describe("genStructMember", () => {
       number: 5,
       type: 11,
       typeName: ".pkg.Item",
-      label: 3,
+      label: 3
     }
     expect(genStructMember(field)).toBe("    pub items: Vec<Item>,")
   })
@@ -107,7 +113,7 @@ describe("genStructMember", () => {
       number: 6,
       type: 11,
       typeName: ".example.v1.Metadata",
-      label: 1,
+      label: 1
     }
     expect(genStructMember(field)).toBe("    pub metadata: Metadata,")
   })
@@ -124,7 +130,7 @@ describe("genStructMember", () => {
       type: 11,
       typeName: ".pkg.AttributesEntry",
       label: 3,
-      mapEntry: { keyType: 9, valueType: 9 },
+      mapEntry: { keyType: 9, valueType: 9 }
     }
     const result = genStructMember(field)
     expect(result).toBe(
@@ -139,7 +145,7 @@ describe("genStructMember", () => {
       type: 11,
       typeName: ".pkg.EntriesEntry",
       label: 3,
-      mapEntry: { keyType: 5, valueType: 11, valueTypeName: ".pkg.Entry" },
+      mapEntry: { keyType: 5, valueType: 11, valueTypeName: ".pkg.Entry" }
     }
     const result = genStructMember(field)
     expect(result).toBe(
@@ -158,7 +164,7 @@ describe("genStructMember", () => {
       number: 5,
       type: 14,
       typeName: ".example.Role",
-      label: 1,
+      label: 1
     }
     expect(genStructMember(field)).toBe("    pub role: Role,")
   })
@@ -169,7 +175,7 @@ describe("genStructMember", () => {
       number: 6,
       type: 14,
       typeName: ".example.Role",
-      label: 3,
+      label: 3
     }
     expect(genStructMember(field)).toBe("    pub roles: Vec<Role>,")
   })
