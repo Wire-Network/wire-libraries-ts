@@ -10,12 +10,12 @@
     "wire-protobuf-bundler": "dist/bin/wire-protobuf-bundler"
   },
   "scripts": {
-    "build": "tsc -b tsconfig.json",
-    "build:dev": "tsc -b tsconfig.json -w",
+    "compile": "tsc -b tsconfig.json",
+    "compile:watch": "tsc -b tsconfig.json -w",
     "bundle": "node esbuild.config.js",
     "bundle:dev": "node esbuild.config.js -w",
     "dev": "concurrently npm:build:dev npm:bundle:dev",
-    "dist": "pnpm build && pnpm bundle && pkg -c package.json --output dist/bin/wire-protobuf-bundler dist/bundle/wire-protobuf-bundler.cjs",
+    "dist": "pnpm compile && pnpm bundle && pkg -c package.json --output dist/bin/wire-protobuf-bundler dist/bundle/wire-protobuf-bundler.cjs",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "postinstall": "pnpm run dist",
     "clean": "rm -rf lib dist",

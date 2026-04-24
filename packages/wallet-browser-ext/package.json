@@ -18,12 +18,13 @@
     }
   },
   "scripts": {
-    "build": "tsc -b tsconfig.json && node ../../scripts/fix-hybrid-output.mjs .",
-    "build:dev": "tsc -b tsconfig.json -w",
-    "bundle": "webpack --mode production",
+    "compile": "tsc -b tsconfig.json",
+    "compile:watch": "tsc -b tsconfig.json -w",
+    "build": "pnpm run compile && node ../../scripts/fix-hybrid-output.mjs .",
+    "test": "pnpm run bundle && jest",
+    "bundle": "pnpm run build && webpack --mode production",
     "bundle:dev": "webpack --mode development --watch",
-    "clean": "rm -rf dist lib",
-    "test": "jest"
+    "clean": "rm -rf dist lib"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.6.1",

@@ -26,9 +26,10 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "scripts": {
-    "build": "tsc -b tsconfig.json && node ../../scripts/fix-hybrid-output.mjs .",
-    "build:dev": "tsc -b tsconfig.json -w",
-    "test": "jest"
+    "compile": "tsc -b tsconfig.json",
+    "compile:watch": "tsc -b tsconfig.json -w",
+    "build": "pnpm run compile && node ../../scripts/fix-hybrid-output.mjs .",
+    "test": "pnpm run build && jest"
   },
   "dependencies": {
     "tslib": "^2.8.1",

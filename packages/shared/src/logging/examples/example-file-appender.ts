@@ -1,4 +1,4 @@
-import { FileAppender } from "../appenders/FileAppender.js"
+import { FileAppender } from "../../node/logging/appenders/FileAppender.js"
 import { getLogger } from "../getLogger.js"
 import { LevelNames } from "../Level.js"
 import { getLoggingManager } from "../LoggingManager.js"

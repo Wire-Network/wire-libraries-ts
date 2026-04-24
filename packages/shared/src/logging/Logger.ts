@@ -1,13 +1,14 @@
 import {
   assert,
   getValue,
+  isObject,
   isString,
   isDefined,
   isFunction,
   isNumber
 } from "../guards/index.js"
 import { Option } from "@3fv/prelude-ts"
-import { cloneDeep, isObject, pick } from "lodash"
+import { pick } from "lodash"
 import { LevelKind, LevelThresholds } from "./Level.js"
 import type { LoggingManager } from "./LoggingManager.js"
 import type { LogMetadata, LogRecord } from "./LogRecord.js"

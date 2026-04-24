@@ -1,2 +1,2 @@
 export * from "./index.js"
-export * from "./appenders/FileAppender.js"
+export * from "../node/logging/appenders/FileAppender.js"

@@ -28,8 +28,8 @@
   "access": "public",
   "license": "FSL-1.1-Apache-2.0",
   "scripts": {
-    "build": "tsc -b tsconfig.json",
-    "build:dev": "tsc -b tsconfig.json -w",
+    "compile": "tsc -b tsconfig.json",
+    "compile:watch": "tsc -b tsconfig.json -w",
     "test": "jest",
     "fix:hybrid:exports": "node ../../scripts/fix-hybrid-output.mjs ."
   },
