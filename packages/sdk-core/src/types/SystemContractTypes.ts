@@ -36,6 +36,11 @@ export interface SysioAuthexCreatelinkAction {
   nonce: number
 }
 
+/** sysio.authex::links_key (type) */
+export interface SysioAuthexLinksKeyType {
+  key: number
+}
+
 /** sysio.authex::links_s (type) */
 export interface SysioAuthexLinksSType {
   key: number
@@ -50,6 +55,11 @@ export interface SysioAuthexLinksSType {
 export interface SysioBiosAbiHashType {
   owner: string
   hash: string
+}
+
+/** sysio.bios::abihash_key (type) */
+export interface SysioBiosAbihashKeyType {
+  owner: number
 }
 
 /** sysio.bios::activate (action) */
@@ -258,6 +268,11 @@ export interface SysioChalgChallengeEntryType {
   responded_at: string
 }
 
+/** sysio.chalg::challenge_key (type) */
+export interface SysioChalgChallengeKeyType {
+  id: number
+}
+
 /** sysio.chalg::enforce (action) */
 export interface SysioChalgEnforceAction {
   resolution_id: number
@@ -282,6 +297,11 @@ export interface SysioChalgManualResolutionType {
   round2_chain_hash: string
   msig_proposal: string
   is_resolved: boolean
+}
+
+/** sysio.chalg::resolution_key (type) */
+export interface SysioChalgResolutionKeyType {
+  id: number
 }
 
 /** sysio.chalg::slashop (action) */
@@ -328,7 +348,7 @@ export interface SysioEpochEpochConfigType {
   operators_per_epoch: number
   batch_operator_minimum_active: number
   batch_op_groups: number
-  attestation_retention_epoch_count: number
+  epoch_retention_envelope_log_count: number
 }
 
 /** sysio.epoch::epoch_state (type) */
@@ -357,6 +377,11 @@ export interface SysioEpochOutpostInfoType {
   last_outbound_epoch: number
 }
 
+/** sysio.epoch::outpost_key (type) */
+export interface SysioEpochOutpostKeyType {
+  id: number
+}
+
 /** sysio.epoch::pause (action) */
 export interface SysioEpochPauseAction {
 }
@@ -373,7 +398,7 @@ export interface SysioEpochSetconfigAction {
   operators_per_epoch: number
   batch_operator_minimum_active: number
   batch_op_groups: number
-  attestation_retention_epoch_count: number
+  epoch_retention_envelope_log_count: number
 }
 
 /** sysio.epoch::unpause (action) */
@@ -450,6 +475,18 @@ export enum SysioMsgchMessagestatus {
   MESSAGE_STATUS_CANCELLED = 3,
 }
 
+/** sysio.msgch::ChainId (type) */
+export interface SysioMsgchChainidType {
+  kind: SysioMsgchChainkind
+  id: SysioMsgchVarintUint32Type
+}
+
+/** sysio.msgch::Endpoints (type) */
+export interface SysioMsgchEndpointsType {
+  start: SysioMsgchChainidType
+  end: SysioMsgchChainidType
+}
+
 /** sysio.msgch::attestation_entry (type) */
 export interface SysioMsgchAttestationEntryType {
   id: number
@@ -476,11 +513,6 @@ export interface SysioMsgchBuildenvAction {
 export interface SysioMsgchChkconsAction {
 }
 
-/** sysio.msgch::cleanup (action) */
-export interface SysioMsgchCleanupAction {
-  before_epoch: number
-}
-
 /** sysio.msgch::deliver (action) */
 export interface SysioMsgchDeliverAction {
   batch_op_name: string
@@ -500,10 +532,24 @@ export interface SysioMsgchEnvelopeEntryType {
   received_at: string
 }
 
+/** sysio.msgch::envelope_log_entry (type) */
+export interface SysioMsgchEnvelopeLogEntryType {
+  id: number
+  endpoints: SysioMsgchEndpointsType
+  epoch_index: number
+  checksum: string
+  emitted_at: string
+}
+
 /** sysio.msgch::evalcons (action) */
 export interface SysioMsgchEvalconsAction {
   outpost_id: number
   epoch_index: number
+}
+
+/** sysio.msgch::id_key (type) */
+export interface SysioMsgchIdKeyType {
+  id: number
 }
 
 /** sysio.msgch::message_entry (type) */
@@ -540,11 +586,21 @@ export interface SysioMsgchOutpostConsensusEntryType {
   consensus_reached: boolean
 }
 
+/** sysio.msgch::outpost_consensus_key (type) */
+export interface SysioMsgchOutpostConsensusKeyType {
+  outpost_id: number
+}
+
 /** sysio.msgch::queueout (action) */
 export interface SysioMsgchQueueoutAction {
   outpost_id: number
   attest_type: SysioMsgchAttestationtype
   data: string
+}
+
+/** sysio.msgch::varint_uint32 (type) */
+export interface SysioMsgchVarintUint32Type {
+  value: number
 }
 
 // ── sysio.msig ──
@@ -561,6 +617,11 @@ export interface SysioMsigActionType {
 export interface SysioMsigApprovalType {
   level: SysioMsigPermissionLevelType
   time: string
+}
+
+/** sysio.msig::approval_key (type) */
+export interface SysioMsigApprovalKeyType {
+  proposal_name: number
 }
 
 /** sysio.msig::approvals_info (type) */
@@ -599,6 +660,11 @@ export interface SysioMsigExtensionType {
   data: string
 }
 
+/** sysio.msig::inval_key (type) */
+export interface SysioMsigInvalKeyType {
+  account: number
+}
+
 /** sysio.msig::invalidate (action) */
 export interface SysioMsigInvalidateAction {
   account: string
@@ -608,6 +674,11 @@ export interface SysioMsigInvalidateAction {
 export interface SysioMsigInvalidationType {
   account: string
   last_invalidation_time: string
+}
+
+/** sysio.msig::old_approval_key (type) */
+export interface SysioMsigOldApprovalKeyType {
+  proposal_name: number
 }
 
 /** sysio.msig::old_approvals_info (type) */
@@ -628,6 +699,11 @@ export interface SysioMsigProposalType {
   proposal_name: string
   packed_transaction: string
   earliest_exec_time: unknown
+}
+
+/** sysio.msig::proposal_key (type) */
+export interface SysioMsigProposalKeyType {
+  proposal_name: number
 }
 
 /** sysio.msig::propose (action) */
@@ -738,6 +814,11 @@ export interface SysioOpregOperatorEntryType {
   available_at: number
   slashed_at: number
   terminated_at: number
+}
+
+/** sysio.opreg::operator_key (type) */
+export interface SysioOpregOperatorKeyType {
+  account: number
 }
 
 /** sysio.opreg::processbatch (action) */
@@ -872,6 +953,11 @@ export interface SysioRoaNewuserAction {
   pubkey: string
 }
 
+/** sysio.roa::nodeowner_key (type) */
+export interface SysioRoaNodeownerKeyType {
+  owner: number
+}
+
 /** sysio.roa::nodeownerreg (type) */
 export interface SysioRoaNodeownerregType {
   owner: string
@@ -880,6 +966,11 @@ export interface SysioRoaNodeownerregType {
   trx_signature: string
   tier: number
   block_num: string
+}
+
+/** sysio.roa::nodeownerreg_key (type) */
+export interface SysioRoaNodeownerregKeyType {
+  owner: number
 }
 
 /** sysio.roa::nodeowners (type) */
@@ -904,6 +995,11 @@ export interface SysioRoaPoliciesType {
   time_block: number
 }
 
+/** sysio.roa::policy_key (type) */
+export interface SysioRoaPolicyKeyType {
+  owner: number
+}
+
 /** sysio.roa::reducepolicy (action) */
 export interface SysioRoaReducepolicyAction {
   owner: string
@@ -920,6 +1016,11 @@ export interface SysioRoaReslimitType {
   net_weight: string
   cpu_weight: string
   ram_bytes: number
+}
+
+/** sysio.roa::reslimit_key (type) */
+export interface SysioRoaReslimitKeyType {
+  owner: number
 }
 
 /** sysio.roa::roa_state (type) */
@@ -950,10 +1051,20 @@ export interface SysioRoaSponsorType {
   username: string
 }
 
+/** sysio.roa::sponsor_key (type) */
+export interface SysioRoaSponsorKeyType {
+  nonce: number
+}
+
 /** sysio.roa::sponsorcount (type) */
 export interface SysioRoaSponsorcountType {
   owner: string
   count: number
+}
+
+/** sysio.roa::sponsorcount_key (type) */
+export interface SysioRoaSponsorcountKeyType {
+  owner: number
 }
 
 // ── sysio.system ──
@@ -969,6 +1080,11 @@ export enum SysioSystemTrxMatchType {
 export interface SysioSystemAbiHashType {
   owner: string
   hash: string
+}
+
+/** sysio.system::abihash_key (type) */
+export interface SysioSystemAbihashKeyType {
+  owner: number
 }
 
 /** sysio.system::actfinkey (action) */
@@ -1086,6 +1202,16 @@ export interface SysioSystemFinalizerKeyInfoType {
   finalizer_key_binary: string
 }
 
+/** sysio.system::finalizer_key_t (type) */
+export interface SysioSystemFinalizerKeyTType {
+  finalizer_name: number
+}
+
+/** sysio.system::finkey_key_t (type) */
+export interface SysioSystemFinkeyKeyTType {
+  id: number
+}
+
 /** sysio.system::init (action) */
 export interface SysioSystemInitAction {
   version: number
@@ -1103,11 +1229,24 @@ export interface SysioSystemLastPropFinalizersInfoType {
   last_proposed_finalizers: SysioSystemFinalizerAuthInfoType[]
 }
 
+/** sysio.system::limit_auth_change (type) */
+export interface SysioSystemLimitAuthChangeType {
+  version: number
+  account: string
+  allow_perms: string[]
+  disallow_perms: string[]
+}
+
 /** sysio.system::limitauthchg (action) */
 export interface SysioSystemLimitauthchgAction {
   account: string
   allow_perms: string[]
   disallow_perms: string[]
+}
+
+/** sysio.system::limitauthchg_key (type) */
+export interface SysioSystemLimitauthchgKeyType {
+  account: number
 }
 
 /** sysio.system::linkauth (action) */
@@ -1167,6 +1306,11 @@ export interface SysioSystemProducerInfoType {
 export interface SysioSystemProducerKeyType {
   producer_name: string
   block_signing_key: string
+}
+
+/** sysio.system::producer_key_t (type) */
+export interface SysioSystemProducerKeyTType {
+  owner: number
 }
 
 /** sysio.system::producer_schedule (type) */
@@ -1330,6 +1474,11 @@ export interface SysioSystemPeerKeyType {
   data: unknown
 }
 
+/** sysio.system::peerkey_key (type) */
+export interface SysioSystemPeerkeyKeyType {
+  account: number
+}
+
 /** sysio.system::peerkeys_t (type) */
 export interface SysioSystemPeerkeysTType {
   producer_name: string
@@ -1352,6 +1501,11 @@ export interface SysioSystemBlockInfoRecordType {
   version: number
   block_height: number
   block_timestamp: string
+}
+
+/** sysio.system::blockinfo_key (type) */
+export interface SysioSystemBlockinfoKeyType {
+  block_height: number
 }
 
 /** sysio.system::addtrxp (action) */
@@ -1380,12 +1534,9 @@ export interface SysioSystemTrxPrioGlobalType {
   last_trx_priority_update: string
 }
 
-/** sysio.system::limit_auth_change (type) */
-export interface SysioSystemLimitAuthChangeType {
-  version: number
-  account: string
-  allow_perms: string[]
-  disallow_perms: string[]
+/** sysio.system::trxprio_key (type) */
+export interface SysioSystemTrxprioKeyType {
+  priority: number
 }
 
 // ── sysio.token ──
@@ -1393,6 +1544,11 @@ export interface SysioSystemLimitAuthChangeType {
 /** sysio.token::account (type) */
 export interface SysioTokenAccountType {
   balance: string
+}
+
+/** sysio.token::acct_key (type) */
+export interface SysioTokenAcctKeyType {
+  sym_code: number
 }
 
 /** sysio.token::close (action) */
@@ -1432,6 +1588,11 @@ export interface SysioTokenOpenAction {
 export interface SysioTokenRetireAction {
   quantity: string
   memo: string
+}
+
+/** sysio.token::stat_key (type) */
+export interface SysioTokenStatKeyType {
+  sym_code: number
 }
 
 /** sysio.token::transfer (action) */
@@ -1568,6 +1729,11 @@ export interface SysioUwritExpirelockAction {
   uw_entry_id: number
 }
 
+/** sysio.uwrit::id_key (type) */
+export interface SysioUwritIdKeyType {
+  id: number
+}
+
 /** sysio.uwrit::locked_amount_t (type) */
 export interface SysioUwritLockedAmountTType {
   chain_id: SysioUwritChainidType
@@ -1643,6 +1809,8 @@ export interface SysioUwritUwRequestTType {
   unlock_timestamp: number
   released_timestamp: number
   slashed_timestamp: number
+  attestation_inbound_data: string
+  attestation_outbound_data: string
 }
 
 /** sysio.uwrit::varint_int64 (type) */
