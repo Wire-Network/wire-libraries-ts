@@ -34,19 +34,20 @@ function isDirectory(dirPath) {
  */
 const localOverrides = {}
 
-// NOTE: WE CAN NOT LINK AGAINST THE MODELS AS
-//   THE GENERATOR PLUGIN IS IN THIS REPO
-//
-// const wireOPPPkgPaths = ["typescript", "solidity"].map(target => [
-//   `@wireio/opp-${target}-models`,
-//   Path.resolve(__dirname, "..", "wire-opp", target)
-// ])
-//
-// wireOPPPkgPaths
-//   .filter(([, path]) => isDirectory(path))
-//   .forEach(([pkgName, path]) => {
-//     localOverrides[pkgName] = path
-//   })
+// AS THE PROTOBUF LIBS HAVE BEEN RELOCATED TO SYSIO
+// WE CAN NOW USE THE MODELS WITHOUT ISSUE.
+// CIRCULAR DEP REMOVED
+
+const wireOPPPkgPaths = ["typescript", "solidity"].map(target => [
+  `@wireio/opp-${target}-models`,
+  Path.resolve(__dirname, "..", "wire-sysio", "build", "opp", target)
+])
+
+wireOPPPkgPaths
+  .filter(([, path]) => isDirectory(path))
+  .forEach(([pkgName, path]) => {
+    localOverrides[pkgName] = path
+  })
 
 /**
  * `readPackage` hook, which links locally available versions of

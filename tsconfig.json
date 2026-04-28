@@ -34,15 +34,6 @@
     },
     {
       "path": "./examples/web-logging-example/tsconfig.json"
-    },
-    {
-      "path": "./packages/protoc-gen-solana/tsconfig.json"
-    },
-    {
-      "path": "./packages/protoc-gen-solidity/tsconfig.json"
-    },
-    {
-      "path": "./packages/protobuf-bundler/tsconfig.json"
     }
   ]
 }

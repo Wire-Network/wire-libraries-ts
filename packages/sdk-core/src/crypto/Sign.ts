@@ -9,7 +9,7 @@ import { blsSign, skFromLE } from "./BLS.js"
 import { asOption, Option } from "@3fv/prelude-ts"
 import { match } from "ts-pattern"
 import { defaults } from "lodash"
-import { ChainKind } from "../types"
+import { ChainKind } from "@wireio/opp-typescript-models"
 
 /**
  * Signs a message with a private key using various cryptographic algorithms.
