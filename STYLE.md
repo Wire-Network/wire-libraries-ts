@@ -79,9 +79,9 @@ import { asOption } from "@3fv/prelude-ts"
 
 // Construct + validate in one expression
 const exePaths: ExePaths = asOption({
-    nodeop: toBin("nodeop"),
-    kiod: toBin("kiod"),
-    clio: toBin("clio"),
+    serverBin: toBin("server"),
+    workerBin: toBin("worker"),
+    cliBin: toBin("cli"),
     ...
   })
   .tap(paths =>
@@ -206,17 +206,17 @@ For process-global resources, use a precondition-guarded `get()`:
 
 ```ts
 export class ProcessManager {
-  private static clusterPath: string
+  private static rootPath: string
   private static instance: ProcessManager
 
-  static setClusterPath(path: string): typeof ProcessManager {
-    assert(!this.clusterPath || this.clusterPath === path, "Already set")
-    this.clusterPath = path
+  static setRootPath(path: string): typeof ProcessManager {
+    assert(!this.rootPath || this.rootPath === path, "Already set")
+    this.rootPath = path
     return this
   }
 
   static get(): ProcessManager {
-    assert(!!this.clusterPath, "Cluster path must be set first")
+    assert(!!this.rootPath, "Root path must be set first")
     return (this.instance ??= new ProcessManager())
   }
 
@@ -260,14 +260,14 @@ The namespace serves three roles: default values/timeouts (process managers), pa
 
 ### Files
 
-- **PascalCase** for files exporting a class as primary export: `AnvilManager.ts`, `ClusterManager.ts`
+- **PascalCase** for files exporting a class as primary export: `FooManager.ts`, `ServiceRegistry.ts`
 - **camelCase** for functions, constants, utilities: `cli.ts`, `keyGen.ts`, `logger.ts`
 - **`index.ts`** for barrel re-exports only
-- Filename matches primary export: `AnvilManager.ts` → `export class AnvilManager`
+- Filename matches primary export: `FooManager.ts` → `export class FooManager`
 
 ### Variables
 
-- **Directory** references → suffix `Path`: `buildPath`, `clusterPath`, `dataPath`
+- **Directory** references → suffix `Path`: `buildPath`, `rootPath`, `dataPath`
 - **File** references → suffix `File`: `configFile`, `genesisFile`, `stateFile`
 - **Subpath constants** (relative segments) → suffix `Subpath`: `LedgerSubpath`, `StateSubpath`
 
@@ -298,8 +298,8 @@ Group related bindings into a single `const`:
 ```ts
 const argv = await parser.parse(),
   command = argv._[0] as Command,
-  clusterPath = Path.resolve(argv.clusterPath as string),
-  configFile = Path.join(clusterPath, "cluster-config.json"),
+  rootPath = Path.resolve(argv.rootPath as string),
+  configFile = Path.join(rootPath, "config.json"),
   force = argv.force as boolean
 ```
 
@@ -310,7 +310,7 @@ Use when bindings derive from the same source and share a lifecycle. Separate `c
 Methods that configure an instance return `this`:
 
 ```ts
-class ClusterManager {
+class FooManager {
   loadState(): this {
     // ...
     return this
@@ -318,7 +318,7 @@ class ClusterManager {
 }
 
 // Enables:
-await createClusterManager(config).loadState().startAndWait()
+await createFooManager(config).loadState().startAndWait()
 ```
 
 ---
@@ -356,7 +356,7 @@ catch (err) {
 
 1. Node built-ins (`node:fs`, `node:path`)
 2. External packages (`lodash`, `ts-pattern`, `@3fv/prelude-ts`)
-3. Internal monorepo packages (`@wireio/shared`, `@wireio/harness`)
+3. Internal monorepo packages (`@wireio/shared`)
 4. Relative imports (`./utils.js`, `../config.js`)
 
 Blank line between each group.
@@ -620,7 +620,7 @@ etc/tsconfig/
 This is the single source of truth for compiler settings and monorepo-wide path aliases. Every package's tsconfig extends one of the base configs, which all chain back to this file.
 
 ```jsonc
-// etc/tsconfig/tsconfig.base.json (from wire-e2e-tests)
+// etc/tsconfig/tsconfig.base.json
 {
   "compilerOptions": {
     "declaration": true,
@@ -653,14 +653,12 @@ This is the single source of truth for compiler settings and monorepo-wide path 
     "target": "ES2022",
     "types": ["node", "jest"],
     "paths": {
-      "@wireio/test-cluster-tool":   ["./packages/harness/src"],
-      "@wireio/test-cluster-tool/*": ["./packages/harness/src/*"],
-      "@wireio/test-flow-a":    ["./packages/flow-a/src"],
-      "@wireio/test-flow-a/*":  ["./packages/flow-a/src/*"],
-      "@wireio/test-flow-b":    ["./packages/flow-b/src"],
-      "@wireio/test-flow-b/*":  ["./packages/flow-b/src/*"],
-      "@wireio/test-flow-c":    ["./packages/flow-c/src"],
-      "@wireio/test-flow-c/*":  ["./packages/flow-c/src/*"]
+      "@wireio/shared":         ["./packages/shared/src"],
+      "@wireio/shared/*":       ["./packages/shared/src/*"],
+      "@wireio/shared-node":    ["./packages/shared-node/src"],
+      "@wireio/shared-node/*":  ["./packages/shared-node/src/*"],
+      "@wireio/sdk-core":       ["./packages/sdk-core/src"],
+      "@wireio/sdk-core/*":     ["./packages/sdk-core/src/*"]
     }
   },
   "include": ["src", "types"],
@@ -670,6 +668,8 @@ This is the single source of truth for compiler settings and monorepo-wide path 
   ]
 }
 ```
+
+> The example above is trimmed for clarity — every package in the monorepo gets a paired bare and deep-import alias; see `wire-libraries-ts/etc/tsconfig/tsconfig.base.json` for the full set (`shared-web`, `wallet-ext-sdk`, `protoc-gen-*`, `wire-protobuf-bundler`, …).
 
 ### Setting-by-setting rationale
 
@@ -702,8 +702,8 @@ Path aliases live in the base config and map `@scope/package-name` to `./package
 
 ```jsonc
 "paths": {
-  "@wireio/test-cluster-tool":   ["./packages/harness/src"],
-  "@wireio/test-cluster-tool/*": ["./packages/harness/src/*"]
+  "@wireio/sdk-core":   ["./packages/sdk-core/src"],
+  "@wireio/sdk-core/*": ["./packages/sdk-core/src/*"]
 }
 ```
 
@@ -759,24 +759,6 @@ Used for CJS output in hybrid packages and Node-native module resolution. `modul
 
 ### `tsconfig.base.jest.json` — Jest/test output
 
-For `wire-e2e-tests`:
-
-```jsonc
-{
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "nodenext",
-    "ignoreDeprecations": "6.0",
-    "composite": true,
-    "sourceMap": true,
-    "inlineSourceMap": false
-  }
-}
-```
-
-For `wire-libraries-ts`:
-
 ```jsonc
 {
   "extends": "./tsconfig.base.json",
@@ -790,7 +772,7 @@ For `wire-libraries-ts`:
 }
 ```
 
-Both flip to **external source maps** (`sourceMap: true`, `inlineSourceMap: false`) — Jest needs separate `.js.map` files for accurate stack traces and coverage mapping. `module` is set to CommonJS-compatible mode because Jest's default transform pipeline runs CJS. `ignoreDeprecations: "6.0"` silences warnings about `moduleResolution: "node"` being legacy.
+Flips to **external source maps** (`sourceMap: true`, `inlineSourceMap: false`) — Jest needs separate `.js.map` files for accurate stack traces and coverage mapping. `module` is set to a CommonJS-compatible mode (`node16` here, `CommonJS` + `moduleResolution: nodenext` in some downstream repos) because Jest's default transform pipeline runs CJS. `ignoreDeprecations: "6.0"` silences warnings about the legacy `node`/`node16` resolution modes.
 
 ---
 
@@ -991,9 +973,9 @@ Use the CLI framework's routing — don't rebuild it with `switch` or `match`:
 
 ```ts
 Yargs(cleanArgs)
-  .command(Command.create, "Create a new cluster", builder, handler)
-  .command(Command.run, "Start an existing cluster", identity, handler)
-  .command(Command.destroy, "Tear down a cluster", identity, handler)
+  .command(Command.create, "Create a new instance", builder, handler)
+  .command(Command.run, "Start an existing instance", identity, handler)
+  .command(Command.destroy, "Tear down an instance", identity, handler)
   .demandCommand(1)
   .strict()
   .parse()
@@ -1006,22 +988,22 @@ Yargs(cleanArgs)
 ### Shared state via middleware
 
 ```ts
-const globalArgs = { clusterPath: "", configFile: "", force: false }
+const globalArgs = { rootPath: "", configFile: "", force: false }
 
-.middleware(({ clusterPath, force }) => {
+.middleware(({ rootPath, force }) => {
   Object.assign(globalArgs, {
-    clusterPath,
-    configFile: Path.join(clusterPath, "config.json"),
+    rootPath,
+    configFile: Path.join(rootPath, "config.json"),
     force,
   })
-  ProcessManager.setClusterPath(clusterPath)
+  ProcessManager.setRootPath(rootPath)
 })
 ```
 
 ### Signal handlers at module scope
 
 ```ts
-let activeManager: ClusterManager | null = null
+let activeManager: FooManager | null = null
 
 const shutdown = async () => {
   log.info("Shutting down...")
@@ -1067,8 +1049,8 @@ Resolved config objects are serialized to JSON during `create` and loaded from d
 
 | Interface | Role | Fields optional? | Examples |
 |---|---|---|---|
-| `FooOptions` | Caller input | All optional | `AnvilOptions`, `KiodOptions` |
-| `FooConfig` | Runtime config | None (`Required<FooOptions>`) | `AnvilConfig`, `KiodConfig` |
+| `FooOptions` | Caller input | All optional | `ServerOptions`, `WorkerOptions` |
+| `FooConfig` | Runtime config | None (`Required<FooOptions>`) | `ServerConfig`, `WorkerConfig` |
 | `ExePaths` | Resolved binary locations | None (validated at build) | All paths checked with `existsSync` |
 | `ProcessConfig` | Spawn descriptor | Mix | `{ label, command, args, cwd?, env? }` |
 | `ProcessHandle` | Returned resource handle | None | `{ pid, kill(), wait() }` |
