@@ -356,7 +356,7 @@ catch (err) {
 
 1. Node built-ins (`node:fs`, `node:path`)
 2. External packages (`lodash`, `ts-pattern`, `@3fv/prelude-ts`)
-3. Internal monorepo packages (`@wireio/shared`, `@wire-e2e-tests/harness`)
+3. Internal monorepo packages (`@wireio/shared`, `@wireio/harness`)
 4. Relative imports (`./utils.js`, `../config.js`)
 
 Blank line between each group.
@@ -653,14 +653,14 @@ This is the single source of truth for compiler settings and monorepo-wide path 
     "target": "ES2022",
     "types": ["node", "jest"],
     "paths": {
-      "@wire-e2e-tests/harness":   ["./packages/harness/src"],
-      "@wire-e2e-tests/harness/*": ["./packages/harness/src/*"],
-      "@wire-e2e-tests/flow-a":    ["./packages/flow-a/src"],
-      "@wire-e2e-tests/flow-a/*":  ["./packages/flow-a/src/*"],
-      "@wire-e2e-tests/flow-b":    ["./packages/flow-b/src"],
-      "@wire-e2e-tests/flow-b/*":  ["./packages/flow-b/src/*"],
-      "@wire-e2e-tests/flow-c":    ["./packages/flow-c/src"],
-      "@wire-e2e-tests/flow-c/*":  ["./packages/flow-c/src/*"]
+      "@wireio/test-cluster-tool":   ["./packages/harness/src"],
+      "@wireio/test-cluster-tool/*": ["./packages/harness/src/*"],
+      "@wireio/test-flow-a":    ["./packages/flow-a/src"],
+      "@wireio/test-flow-a/*":  ["./packages/flow-a/src/*"],
+      "@wireio/test-flow-b":    ["./packages/flow-b/src"],
+      "@wireio/test-flow-b/*":  ["./packages/flow-b/src/*"],
+      "@wireio/test-flow-c":    ["./packages/flow-c/src"],
+      "@wireio/test-flow-c/*":  ["./packages/flow-c/src/*"]
     }
   },
   "include": ["src", "types"],
@@ -702,8 +702,8 @@ Path aliases live in the base config and map `@scope/package-name` to `./package
 
 ```jsonc
 "paths": {
-  "@wire-e2e-tests/harness":   ["./packages/harness/src"],
-  "@wire-e2e-tests/harness/*": ["./packages/harness/src/*"]
+  "@wireio/test-cluster-tool":   ["./packages/harness/src"],
+  "@wireio/test-cluster-tool/*": ["./packages/harness/src/*"]
 }
 ```
 
