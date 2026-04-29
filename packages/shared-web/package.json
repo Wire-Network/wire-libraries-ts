@@ -1,9 +1,9 @@
 {
   "name": "@wireio/shared-web",
   "version": "1.0.22",
-  "private": true,
+  "private": false,
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "files": [
     "lib",
