@@ -97,9 +97,9 @@ const exePaths: ExePaths = asOption({
 ```ts
 import { Deferred } from "@wireio/shared"
 
-function pm2LaunchBus(): Promise<any> {
+function example(): Promise<any> {
 	return Deferred.useCallback(d =>
-		pm2.launchBus((err, bus) => {
+		someNodeCallback(err => {
 			return err ? d.reject(err) : d.resolve(bus)
 		})
 	).promise
