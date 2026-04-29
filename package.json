@@ -42,6 +42,6 @@
     "browser": "last 5 versions"
   },
   "dependencies": {
-    "@wireio/opp-typescript-models": "link:../../../../../home/jglanz/.local/share/pnpm/global/5/node_modules/@wireio/opp-typescript-models"
+    "@wireio/opp-typescript-models": "^1.0.26"
   }
 }
