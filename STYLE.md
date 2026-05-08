@@ -178,7 +178,15 @@ export namespace FooManager {
 
 ## 4. Factory Model
 
-Classes that manage resources use an **async static factory** with a **private constructor**.
+Use the **async static factory** (`create()`) with a **private constructor** pattern only when one of the two criteria below is met. Plain synchronous constructors stay plain — adding a factory just to follow a pattern is overhead.
+
+**Use a factory when:**
+1. Construction is **genuinely async** — filesystem checks, binary lookups, ping handshakes, anything that has to `await` before the instance is usable. Constructors can't be `async`.
+2. The class is a **singleton** with a precondition that must be set before first use (see "Singleton variant" below).
+
+**Don't use a factory when:**
+- The constructor takes plain values and stores them — no I/O, no async, no validation that needs to fail loudly. A plain `new Foo(opts)` is clearer.
+- The "factory" only forwards args to `new`. That's pattern-matching for its own sake.
 
 ```ts
 export class FooManager {
@@ -389,7 +397,7 @@ Use for focused utilities only. Don't use for things native `Array`/`Object` met
 ## 9. General Rules
 
 - **No magic literals.** Extract to namespace constants if not trivially obvious.
-- **JSDoc on every interface field.** One-line description + default if applicable.
+- **JSDoc on every public / exported symbol.** That covers exported functions, exported classes, public methods, exported interfaces (and every interface field), type aliases, enums, exported constants, and public class fields/properties. **Skip:** local (function-scoped) variables and `private`/`protected` class fields — their names plus types already document them.
 - **`source-map-support/register`** at every CLI/service entry point.
 - **No default exports.** Named exports only.
 - **One concept per file.** One class, one factory, or one focused set of utilities.
