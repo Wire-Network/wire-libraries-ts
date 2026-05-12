@@ -14,13 +14,13 @@ export interface ExtendedAsset {
 
 // ── sysio.authex ──
 
-/** sysio.authex::chain_kind_t (enum, uint8) */
-export enum SysioAuthexChainKindType {
-  unknown = 0,
-  wire = 1,
-  ethereum = 2,
-  solana = 3,
-  sui = 4,
+/** sysio.authex::ChainKind (enum, int32) */
+export enum SysioAuthexChainkind {
+  CHAIN_KIND_UNKNOWN = 0,
+  CHAIN_KIND_WIRE = 1,
+  CHAIN_KIND_ETHEREUM = 2,
+  CHAIN_KIND_SOLANA = 3,
+  CHAIN_KIND_SUI = 4,
 }
 
 /** sysio.authex::clearlinks (action) */
@@ -29,7 +29,7 @@ export interface SysioAuthexClearlinksAction {
 
 /** sysio.authex::createlink (action) */
 export interface SysioAuthexCreatelinkAction {
-  chain_kind: SysioAuthexChainKindType
+  chain_kind: SysioAuthexChainkind
   account: string
   sig: string
   pub_key: string
@@ -45,7 +45,7 @@ export interface SysioAuthexLinksKeyType {
 export interface SysioAuthexLinksSType {
   key: number
   username: string
-  chain_kind: SysioAuthexChainKindType
+  chain_kind: SysioAuthexChainkind
   pub_key: string
 }
 
@@ -424,25 +424,27 @@ export enum SysioMsgchAttestationtype {
   ATTESTATION_TYPE_PRETOKEN_YIELD = 3006,
   ATTESTATION_TYPE_RESERVE_BALANCE_SHEET = 43520,
   ATTESTATION_TYPE_STAKE_UPDATE = 60928,
-  ATTESTATION_TYPE_NATIVE_YIELD_REWARD = 60929,
   ATTESTATION_TYPE_WIRE_TOKEN_PURCHASE = 60930,
   ATTESTATION_TYPE_CHALLENGE_RESPONSE = 60932,
-  ATTESTATION_TYPE_SLASH_OPERATOR = 60933,
-  ATTESTATION_TYPE_SWAP = 60934,
+  ATTESTATION_TYPE_SWAP_REQUEST = 60934,
   ATTESTATION_TYPE_UNDERWRITE_INTENT = 60935,
   ATTESTATION_TYPE_UNDERWRITE_CONFIRM = 60936,
   ATTESTATION_TYPE_UNDERWRITE_REJECT = 60937,
   ATTESTATION_TYPE_UNDERWRITE_UNLOCK = 60938,
-  ATTESTATION_TYPE_REMIT = 60944,
+  ATTESTATION_TYPE_SWAP_REMIT = 60944,
   ATTESTATION_TYPE_CHALLENGE_REQUEST = 60945,
   ATTESTATION_TYPE_EPOCH_SYNC = 60946,
   ATTESTATION_TYPE_OPERATORS = 60947,
-  ATTESTATION_TYPE_REMIT_CONFIRM = 60948,
   ATTESTATION_TYPE_BATCH_OPERATOR_GROUPS = 60943,
   ATTESTATION_TYPE_NODE_OWNER_REG = 60949,
   ATTESTATION_TYPE_STAKING_REWARD = 60950,
   ATTESTATION_TYPE_STAKE_RESULT = 60951,
   ATTESTATION_TYPE_ATTESTATION_PROCESSING_ERROR = 60952,
+  ATTESTATION_TYPE_UNDERWRITE_INTENT_COMMIT = 60953,
+  ATTESTATION_TYPE_UNDERWRITE_INTENT_REJECT = 60954,
+  ATTESTATION_TYPE_SWAP_REVERT = 60955,
+  ATTESTATION_TYPE_DEPOSIT_REVERT = 60956,
+  ATTESTATION_TYPE_SWAP_REJECTED = 60957,
 }
 
 /** sysio.msgch::ChainKind (enum, int32) */
@@ -740,6 +742,15 @@ export interface SysioMsigUnapproveAction {
 
 // ── sysio.opreg ──
 
+/** sysio.opreg::ActionType (enum, int32) */
+export enum SysioOpregActiontype {
+  ACTION_TYPE_UNKNOWN = 0,
+  ACTION_TYPE_DEPOSIT_REQUEST = 1,
+  ACTION_TYPE_WITHDRAW_REQUEST = 2,
+  ACTION_TYPE_WITHDRAW_REMIT = 3,
+  ACTION_TYPE_SLASH = 4,
+}
+
 /** sysio.opreg::ChainKind (enum, int32) */
 export enum SysioOpregChainkind {
   CHAIN_KIND_UNKNOWN = 0,
@@ -786,21 +797,110 @@ export interface SysioOpregChainaddressType {
   address: string
 }
 
+/** sysio.opreg::OperatorAction (type) */
+export interface SysioOpregOperatoractionType {
+  action_type: SysioOpregActiontype
+  op_address: SysioOpregChainaddressType
+  type: SysioOpregOperatortype
+  status: SysioOpregOperatorstatus
+  amount: SysioOpregTokenamountType
+  request_id: SysioOpregVarintUint64Type
+  chain: SysioOpregChainkind
+  reason: string
+}
+
+/** sysio.opreg::OperatorActionLog (type) */
+export interface SysioOpregOperatoractionlogType {
+  action: SysioOpregOperatoractionType
+  success: boolean
+  timestamp: SysioOpregVarintInt64Type
+  error_message: string
+}
+
 /** sysio.opreg::TokenAmount (type) */
 export interface SysioOpregTokenamountType {
   kind: SysioOpregTokenkind
   amount: SysioOpregVarintInt64Type
 }
 
+/** sysio.opreg::available (action) */
+export interface SysioOpregAvailableAction {
+  account: string
+  chain: SysioOpregChainkind
+  token_kind: SysioOpregTokenkind
+}
+
+/** sysio.opreg::balance_entry (type) */
+export interface SysioOpregBalanceEntryType {
+  chain: SysioOpregChainkind
+  token_kind: SysioOpregTokenkind
+  balance: number
+  last_updated_ms: number
+}
+
+/** sysio.opreg::cancelwtdw (action) */
+export interface SysioOpregCancelwtdwAction {
+  account: string
+  request_id: number
+}
+
+/** sysio.opreg::chain_min_bond (type) */
+export interface SysioOpregChainMinBondType {
+  chain: SysioOpregChainkind
+  token_kind: SysioOpregTokenkind
+  min_bond: number
+  config_timestamp_ms: number
+}
+
+/** sysio.opreg::delivery_key (type) */
+export interface SysioOpregDeliveryKeyType {
+  log_id: number
+}
+
+/** sysio.opreg::delivery_log_entry (type) */
+export interface SysioOpregDeliveryLogEntryType {
+  log_id: number
+  account: string
+  epoch: number
+  delivered: boolean
+  ts_ms: number
+}
+
+/** sysio.opreg::deposit (action) */
+export interface SysioOpregDepositAction {
+  account: string
+  amount: number
+}
+
+/** sysio.opreg::depositinle (action) */
+export interface SysioOpregDepositinleAction {
+  account: string
+  chain: SysioOpregChainkind
+  amount: SysioOpregTokenamountType
+  actor: SysioOpregChainaddressType
+  original_message_id: string
+}
+
+/** sysio.opreg::flushwtdw (action) */
+export interface SysioOpregFlushwtdwAction {
+  current_epoch: number
+}
+
 /** sysio.opreg::op_config (type) */
 export interface SysioOpregOpConfigType {
-  req_prod_stakes: SysioOpregStakeRequirementType[]
-  req_batchop_stakes: SysioOpregStakeRequirementType[]
-  req_uw_stakes: SysioOpregStakeRequirementType[]
+  req_prod_collat: SysioOpregChainMinBondType[]
+  req_batchop_collat: SysioOpregChainMinBondType[]
+  req_uw_collat: SysioOpregChainMinBondType[]
   max_available_producers: number
   max_available_batch_ops: number
   max_available_underwriters: number
   terminate_prune_delay_ms: number
+}
+
+/** sysio.opreg::op_counters (type) */
+export interface SysioOpregOpCountersType {
+  next_withdraw_id: number
+  next_dellog_id: number
 }
 
 /** sysio.opreg::operator_entry (type) */
@@ -809,11 +909,13 @@ export interface SysioOpregOperatorEntryType {
   type: SysioOpregOperatortype
   status: SysioOpregOperatorstatus
   is_bootstrapped: boolean
-  stakes: SysioOpregStakeEntryType[]
+  balances: SysioOpregBalanceEntryType[]
   registered_at: number
   available_at: number
-  slashed_at: number
+  updated_at: number
   terminated_at: number
+  status_reason: string
+  recent_actions: SysioOpregOperatoractionlogType[]
 }
 
 /** sysio.opreg::operator_key (type) */
@@ -846,11 +948,25 @@ export interface SysioOpregProcessuwAction {
 export interface SysioOpregPruneAction {
 }
 
+/** sysio.opreg::recorddel (action) */
+export interface SysioOpregRecorddelAction {
+  account: string
+  epoch: number
+  delivered: boolean
+}
+
 /** sysio.opreg::regoperator (action) */
 export interface SysioOpregRegoperatorAction {
   account: string
   type: SysioOpregOperatortype
   is_bootstrapped: boolean
+}
+
+/** sysio.opreg::releaselock (action) */
+export interface SysioOpregReleaselockAction {
+  account: string
+  chain: SysioOpregChainkind
+  amount: SysioOpregTokenamountType
 }
 
 /** sysio.opreg::setconfig (action) */
@@ -867,29 +983,147 @@ export interface SysioOpregSlashAction {
   reason: string
 }
 
-/** sysio.opreg::stake (action) */
-export interface SysioOpregStakeAction {
+/** sysio.opreg::termcheck (action) */
+export interface SysioOpregTermcheckAction {
   account: string
-  chain_addr: SysioOpregChainaddressType
-  amount: SysioOpregTokenamountType
 }
 
-/** sysio.opreg::stake_entry (type) */
-export interface SysioOpregStakeEntryType {
-  chain_addr: SysioOpregChainaddressType
-  amount: SysioOpregTokenamountType
-  timestamp_ms: number
-}
-
-/** sysio.opreg::stake_requirement (type) */
-export interface SysioOpregStakeRequirementType {
-  chain_addr: SysioOpregChainaddressType
-  min_amount: SysioOpregTokenamountType
-  config_timestamp_ms: number
+/** sysio.opreg::terminate (action) */
+export interface SysioOpregTerminateAction {
+  account: string
+  reason: string
 }
 
 /** sysio.opreg::varint_int64 (type) */
 export interface SysioOpregVarintInt64Type {
+  value: number
+}
+
+/** sysio.opreg::varint_uint64 (type) */
+export interface SysioOpregVarintUint64Type {
+  value: number
+}
+
+/** sysio.opreg::withdraw (action) */
+export interface SysioOpregWithdrawAction {
+  account: string
+  amount: number
+}
+
+/** sysio.opreg::withdraw_key (type) */
+export interface SysioOpregWithdrawKeyType {
+  request_id: number
+}
+
+/** sysio.opreg::withdraw_request (type) */
+export interface SysioOpregWithdrawRequestType {
+  request_id: number
+  account: string
+  chain: SysioOpregChainkind
+  token_kind: SysioOpregTokenkind
+  amount: number
+  eligible_at_epoch: number
+  requested_at_epoch: number
+}
+
+/** sysio.opreg::withdrawinle (action) */
+export interface SysioOpregWithdrawinleAction {
+  account: string
+  chain: SysioOpregChainkind
+  amount: SysioOpregTokenamountType
+}
+
+// ── sysio.reserv ──
+
+/** sysio.reserv::ChainKind (enum, int32) */
+export enum SysioReservChainkind {
+  CHAIN_KIND_UNKNOWN = 0,
+  CHAIN_KIND_WIRE = 1,
+  CHAIN_KIND_ETHEREUM = 2,
+  CHAIN_KIND_SOLANA = 3,
+  CHAIN_KIND_SUI = 4,
+}
+
+/** sysio.reserv::TokenKind (enum, int32) */
+export enum SysioReservTokenkind {
+  TOKEN_KIND_WIRE = 0,
+  TOKEN_KIND_ETH = 256,
+  TOKEN_KIND_ERC20 = 257,
+  TOKEN_KIND_ERC721 = 258,
+  TOKEN_KIND_ERC1155 = 259,
+  TOKEN_KIND_LIQETH = 496,
+  TOKEN_KIND_SOL = 512,
+  TOKEN_KIND_LIQSOL = 752,
+}
+
+/** sysio.reserv::ChainAddress (type) */
+export interface SysioReservChainaddressType {
+  kind: SysioReservChainkind
+  address: string
+}
+
+/** sysio.reserv::SwapRejected (type) */
+export interface SysioReservSwaprejectedType {
+  original_swap_remit_id: string
+  recipient: SysioReservChainaddressType
+  unremitted_amount: SysioReservTokenamountType
+  reason: string
+}
+
+/** sysio.reserv::TokenAmount (type) */
+export interface SysioReservTokenamountType {
+  kind: SysioReservTokenkind
+  amount: SysioReservVarintInt64Type
+}
+
+/** sysio.reserv::debit (action) */
+export interface SysioReservDebitAction {
+  chain: SysioReservChainkind
+  outpost_amount: SysioReservTokenamountType
+}
+
+/** sysio.reserv::onreject (action) */
+export interface SysioReservOnrejectAction {
+  rejected: SysioReservSwaprejectedType
+}
+
+/** sysio.reserv::onreward (action) */
+export interface SysioReservOnrewardAction {
+  chain: SysioReservChainkind
+  outpost_amount: SysioReservTokenamountType
+}
+
+/** sysio.reserv::reserve_entry (type) */
+export interface SysioReservReserveEntryType {
+  chain: SysioReservChainkind
+  reserve_outpost_amount: SysioReservTokenamountType
+  reserve_wire_amount: SysioReservTokenamountType
+  connector_weight_bps: number
+  last_updated_ms: number
+}
+
+/** sysio.reserv::reserve_key (type) */
+export interface SysioReservReserveKeyType {
+  chain_token: number
+}
+
+/** sysio.reserv::setreserve (action) */
+export interface SysioReservSetreserveAction {
+  chain: SysioReservChainkind
+  outpost_amount: SysioReservTokenamountType
+  wire_amount: SysioReservTokenamountType
+  connector_weight_bps: number
+}
+
+/** sysio.reserv::swapquote (action) */
+export interface SysioReservSwapquoteAction {
+  from_amount: SysioReservTokenamountType
+  to_chain: SysioReservChainkind
+  to_token: SysioReservTokenkind
+}
+
+/** sysio.reserv::varint_int64 (type) */
+export interface SysioReservVarintInt64Type {
   value: number
 }
 
@@ -1117,6 +1351,13 @@ export interface SysioSystemBlockHeaderType {
   new_producers?: SysioSystemProducerScheduleType | null
 }
 
+/** sysio.system::block_info_record (type) */
+export interface SysioSystemBlockInfoRecordType {
+  version: number
+  block_height: number
+  block_timestamp: string
+}
+
 /** sysio.system::block_signing_authority_v0 (type) */
 export interface SysioSystemBlockSigningAuthorityV0Type {
   threshold: number
@@ -1145,6 +1386,11 @@ export interface SysioSystemBlockchainParametersType {
   max_kv_key_size: number
   max_kv_value_size: number
   max_kv_secondary_key_size: number
+}
+
+/** sysio.system::blockinfo_key (type) */
+export interface SysioSystemBlockinfoKeyType {
+  block_height: number
 }
 
 /** sysio.system::deleteauth (action) */
@@ -1229,24 +1475,11 @@ export interface SysioSystemLastPropFinalizersInfoType {
   last_proposed_finalizers: SysioSystemFinalizerAuthInfoType[]
 }
 
-/** sysio.system::limit_auth_change (type) */
-export interface SysioSystemLimitAuthChangeType {
-  version: number
-  account: string
-  allow_perms: string[]
-  disallow_perms: string[]
-}
-
 /** sysio.system::limitauthchg (action) */
 export interface SysioSystemLimitauthchgAction {
   account: string
   allow_perms: string[]
   disallow_perms: string[]
-}
-
-/** sysio.system::limitauthchg_key (type) */
-export interface SysioSystemLimitauthchgKeyType {
-  account: number
 }
 
 /** sysio.system::linkauth (action) */
@@ -1458,6 +1691,19 @@ export interface SysioSystemWasmcfgAction {
   settings: string
 }
 
+/** sysio.system::limit_auth_change (type) */
+export interface SysioSystemLimitAuthChangeType {
+  version: number
+  account: string
+  allow_perms: string[]
+  disallow_perms: string[]
+}
+
+/** sysio.system::limitauthchg_key (type) */
+export interface SysioSystemLimitauthchgKeyType {
+  account: number
+}
+
 /** sysio.system::delpeerkey (action) */
 export interface SysioSystemDelpeerkeyAction {
   proposer_finalizer_name: string
@@ -1494,18 +1740,6 @@ export interface SysioSystemRegpeerkeyAction {
 /** sysio.system::v0_data (type) */
 export interface SysioSystemV0DataType {
   pubkey?: string | null
-}
-
-/** sysio.system::block_info_record (type) */
-export interface SysioSystemBlockInfoRecordType {
-  version: number
-  block_height: number
-  block_timestamp: string
-}
-
-/** sysio.system::blockinfo_key (type) */
-export interface SysioSystemBlockinfoKeyType {
-  block_height: number
 }
 
 /** sysio.system::addtrxp (action) */
@@ -1615,25 +1849,27 @@ export enum SysioUwritAttestationtype {
   ATTESTATION_TYPE_PRETOKEN_YIELD = 3006,
   ATTESTATION_TYPE_RESERVE_BALANCE_SHEET = 43520,
   ATTESTATION_TYPE_STAKE_UPDATE = 60928,
-  ATTESTATION_TYPE_NATIVE_YIELD_REWARD = 60929,
   ATTESTATION_TYPE_WIRE_TOKEN_PURCHASE = 60930,
   ATTESTATION_TYPE_CHALLENGE_RESPONSE = 60932,
-  ATTESTATION_TYPE_SLASH_OPERATOR = 60933,
-  ATTESTATION_TYPE_SWAP = 60934,
+  ATTESTATION_TYPE_SWAP_REQUEST = 60934,
   ATTESTATION_TYPE_UNDERWRITE_INTENT = 60935,
   ATTESTATION_TYPE_UNDERWRITE_CONFIRM = 60936,
   ATTESTATION_TYPE_UNDERWRITE_REJECT = 60937,
   ATTESTATION_TYPE_UNDERWRITE_UNLOCK = 60938,
-  ATTESTATION_TYPE_REMIT = 60944,
+  ATTESTATION_TYPE_SWAP_REMIT = 60944,
   ATTESTATION_TYPE_CHALLENGE_REQUEST = 60945,
   ATTESTATION_TYPE_EPOCH_SYNC = 60946,
   ATTESTATION_TYPE_OPERATORS = 60947,
-  ATTESTATION_TYPE_REMIT_CONFIRM = 60948,
   ATTESTATION_TYPE_BATCH_OPERATOR_GROUPS = 60943,
   ATTESTATION_TYPE_NODE_OWNER_REG = 60949,
   ATTESTATION_TYPE_STAKING_REWARD = 60950,
   ATTESTATION_TYPE_STAKE_RESULT = 60951,
   ATTESTATION_TYPE_ATTESTATION_PROCESSING_ERROR = 60952,
+  ATTESTATION_TYPE_UNDERWRITE_INTENT_COMMIT = 60953,
+  ATTESTATION_TYPE_UNDERWRITE_INTENT_REJECT = 60954,
+  ATTESTATION_TYPE_SWAP_REVERT = 60955,
+  ATTESTATION_TYPE_DEPOSIT_REVERT = 60956,
+  ATTESTATION_TYPE_SWAP_REJECTED = 60957,
 }
 
 /** sysio.uwrit::ChainKind (enum, int32) */
@@ -1676,57 +1912,26 @@ export enum SysioUwritUnderwritestatus {
   UNDERWRITE_STATUS_SLASHED = 10,
 }
 
-/** sysio.uwrit::chain_kind_t (enum, uint8) */
-export enum SysioUwritChainKindType {
-  unknown = 0,
-  wire = 1,
-  ethereum = 2,
-  solana = 3,
-  sui = 4,
-}
-
-/** sysio.uwrit::ChainId (type) */
-export interface SysioUwritChainidType {
-  kind: SysioUwritChainkind
-  id: SysioUwritVarintUint32Type
-}
-
-/** sysio.uwrit::TokenAmount (type) */
-export interface SysioUwritTokenamountType {
-  kind: SysioUwritTokenkind
-  amount: SysioUwritVarintInt64Type
-}
-
-/** sysio.uwrit::collateral_entry (type) */
-export interface SysioUwritCollateralEntryType {
-  id: number
+/** sysio.uwrit::commit_entry (type) */
+export interface SysioUwritCommitEntryType {
   underwriter: string
-  chain_kind: SysioUwritChainKindType
-  staked_amount: string
-  locked_amount: string
-  available_amount: string
-}
-
-/** sysio.uwrit::confirmuw (action) */
-export interface SysioUwritConfirmuwAction {
-  uw_entry_id: number
+  source_received_at_ms: number
+  dest_received_at_ms: number
+  status: SysioUwritUnderwritestatus
+  reason: string
 }
 
 /** sysio.uwrit::createuwreq (action) */
 export interface SysioUwritCreateuwreqAction {
   attestation_id: number
   type: SysioUwritAttestationtype
+  outpost_id: number
   data: string
-}
-
-/** sysio.uwrit::distfee (action) */
-export interface SysioUwritDistfeeAction {
-  uw_entry_id: number
 }
 
 /** sysio.uwrit::expirelock (action) */
 export interface SysioUwritExpirelockAction {
-  uw_entry_id: number
+  uwreq_id: number
 }
 
 /** sysio.uwrit::id_key (type) */
@@ -1734,69 +1939,62 @@ export interface SysioUwritIdKeyType {
   id: number
 }
 
-/** sysio.uwrit::locked_amount_t (type) */
-export interface SysioUwritLockedAmountTType {
-  chain_id: SysioUwritChainidType
-  amount: SysioUwritTokenamountType
-  lock_id: string
-  lock_timestamp: number
+/** sysio.uwrit::lock_entry (type) */
+export interface SysioUwritLockEntryType {
+  lock_id: number
+  uwreq_id: number
+  underwriter: string
+  chain: SysioUwritChainkind
+  token_kind: SysioUwritTokenkind
+  amount: number
+  created_at_epoch: number
+}
+
+/** sysio.uwrit::lock_key (type) */
+export interface SysioUwritLockKeyType {
+  lock_id: number
+}
+
+/** sysio.uwrit::rcrdcommit (action) */
+export interface SysioUwritRcrdcommitAction {
+  uwreq_id: number
+  underwriter: string
+  outpost_id: number
+  from_chain: SysioUwritChainkind
+}
+
+/** sysio.uwrit::rcrdreject (action) */
+export interface SysioUwritRcrdrejectAction {
+  uwreq_id: number
+  underwriter: string
+  reason: string
+}
+
+/** sysio.uwrit::release (action) */
+export interface SysioUwritReleaseAction {
+  uwreq_id: number
 }
 
 /** sysio.uwrit::setconfig (action) */
 export interface SysioUwritSetconfigAction {
   fee_bps: number
-  confirm_lock_sec: number
-  uw_fee_share_pct: number
-  other_uw_share_pct: number
-  batch_op_share_pct: number
 }
 
-/** sysio.uwrit::slash (action) */
-export interface SysioUwritSlashAction {
+/** sysio.uwrit::sumlocks (action) */
+export interface SysioUwritSumlocksAction {
   underwriter: string
-  reason: string
-}
-
-/** sysio.uwrit::submituw (action) */
-export interface SysioUwritSubmituwAction {
-  underwriter: string
-  msg_id: number
-  source_sig: string
-  target_sig: string
-}
-
-/** sysio.uwrit::underwriting_entry (type) */
-export interface SysioUwritUnderwritingEntryType {
-  id: number
-  underwriter: string
-  message_id: number
-  status: SysioUwritUnderwritestatus
-  source_amount: string
-  target_amount: string
-  source_chain: SysioUwritChainKindType
-  target_chain: SysioUwritChainKindType
-  intent_time: string
-  unlock_time: string
-  fee_earned: string
-  source_sig: string
-  target_sig: string
-}
-
-/** sysio.uwrit::updcltrl (action) */
-export interface SysioUwritUpdcltrlAction {
-  underwriter: string
-  chain_kind: SysioUwritChainKindType
-  amount: string
-  is_increase: boolean
+  chain: SysioUwritChainkind
+  token_kind: SysioUwritTokenkind
 }
 
 /** sysio.uwrit::uw_config (type) */
 export interface SysioUwritUwConfigType {
   fee_bps: number
-  confirm_lock_sec: number
-  uw_fee_share_pct: number
-  other_uw_share_pct: number
-  batch_op_share_pct: number
+}
+
+/** sysio.uwrit::uw_counters (type) */
+export interface SysioUwritUwCountersType {
+  next_lock_id: number
 }
 
 /** sysio.uwrit::uw_request_t (type) */
@@ -1804,23 +2002,19 @@ export interface SysioUwritUwRequestTType {
   id: number
   type: SysioUwritAttestationtype
   status: SysioUwritUnderwriterequeststatus
-  uw_name: string
-  locked_amounts: SysioUwritLockedAmountTType[]
-  unlock_timestamp: number
-  released_timestamp: number
-  slashed_timestamp: number
+  src_chain: SysioUwritChainkind
+  src_token_kind: SysioUwritTokenkind
+  src_amount: number
+  dst_chain: SysioUwritChainkind
+  dst_token_kind: SysioUwritTokenkind
+  dst_amount: number
+  commits_by: SysioUwritCommitEntryType[]
+  winner: string
+  committed_at_ms: number
+  settled_at_ms: number
+  expires_at_epoch: number
   attestation_inbound_data: string
   attestation_outbound_data: string
-}
-
-/** sysio.uwrit::varint_int64 (type) */
-export interface SysioUwritVarintInt64Type {
-  value: number
-}
-
-/** sysio.uwrit::varint_uint32 (type) */
-export interface SysioUwritVarintUint32Type {
-  value: number
 }
 
 // ── sysio.wrap ──
