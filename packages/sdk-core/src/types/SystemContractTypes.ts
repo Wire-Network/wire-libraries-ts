@@ -876,8 +876,10 @@ export interface SysioOpregDepositAction {
 export interface SysioOpregDepositinleAction {
   account: string
   chain: SysioOpregChainkind
-  amount: SysioOpregTokenamountType
-  actor: SysioOpregChainaddressType
+  token_kind: SysioOpregTokenkind
+  amount: number
+  actor_chain: SysioOpregChainkind
+  actor_address: string
   original_message_id: string
 }
 
@@ -895,6 +897,9 @@ export interface SysioOpregOpConfigType {
   max_available_batch_ops: number
   max_available_underwriters: number
   terminate_prune_delay_ms: number
+  terminate_max_consecutive_misses: number
+  terminate_max_pct_misses_24h: number
+  terminate_window_ms: number
 }
 
 /** sysio.opreg::op_counters (type) */
@@ -966,7 +971,8 @@ export interface SysioOpregRegoperatorAction {
 export interface SysioOpregReleaselockAction {
   account: string
   chain: SysioOpregChainkind
-  amount: SysioOpregTokenamountType
+  token_kind: SysioOpregTokenkind
+  amount: number
 }
 
 /** sysio.opreg::setconfig (action) */
@@ -975,6 +981,9 @@ export interface SysioOpregSetconfigAction {
   max_available_batch_ops: number
   max_available_underwriters: number
   terminate_prune_delay_ms: number
+  terminate_max_consecutive_misses: number
+  terminate_max_pct_misses_24h: number
+  terminate_window_ms: number
 }
 
 /** sysio.opreg::slash (action) */
@@ -1030,7 +1039,8 @@ export interface SysioOpregWithdrawRequestType {
 export interface SysioOpregWithdrawinleAction {
   account: string
   chain: SysioOpregChainkind
-  amount: SysioOpregTokenamountType
+  token_kind: SysioOpregTokenkind
+  amount: number
 }
 
 // ── sysio.reserv ──
@@ -1056,20 +1066,6 @@ export enum SysioReservTokenkind {
   TOKEN_KIND_LIQSOL = 752,
 }
 
-/** sysio.reserv::ChainAddress (type) */
-export interface SysioReservChainaddressType {
-  kind: SysioReservChainkind
-  address: string
-}
-
-/** sysio.reserv::SwapRejected (type) */
-export interface SysioReservSwaprejectedType {
-  original_swap_remit_id: string
-  recipient: SysioReservChainaddressType
-  unremitted_amount: SysioReservTokenamountType
-  reason: string
-}
-
 /** sysio.reserv::TokenAmount (type) */
 export interface SysioReservTokenamountType {
   kind: SysioReservTokenkind
@@ -1079,18 +1075,25 @@ export interface SysioReservTokenamountType {
 /** sysio.reserv::debit (action) */
 export interface SysioReservDebitAction {
   chain: SysioReservChainkind
-  outpost_amount: SysioReservTokenamountType
+  outpost_kind: SysioReservTokenkind
+  outpost_amount: number
 }
 
 /** sysio.reserv::onreject (action) */
 export interface SysioReservOnrejectAction {
-  rejected: SysioReservSwaprejectedType
+  original_swap_remit_id: string
+  recipient_kind: SysioReservChainkind
+  recipient_address: string
+  unremitted_kind: SysioReservTokenkind
+  unremitted_amount: number
+  reason: string
 }
 
 /** sysio.reserv::onreward (action) */
 export interface SysioReservOnrewardAction {
   chain: SysioReservChainkind
-  outpost_amount: SysioReservTokenamountType
+  outpost_kind: SysioReservTokenkind
+  outpost_amount: number
 }
 
 /** sysio.reserv::reserve_entry (type) */
@@ -1110,14 +1113,16 @@ export interface SysioReservReserveKeyType {
 /** sysio.reserv::setreserve (action) */
 export interface SysioReservSetreserveAction {
   chain: SysioReservChainkind
-  outpost_amount: SysioReservTokenamountType
-  wire_amount: SysioReservTokenamountType
+  outpost_kind: SysioReservTokenkind
+  outpost_amount: number
+  wire_amount: number
   connector_weight_bps: number
 }
 
 /** sysio.reserv::swapquote (action) */
 export interface SysioReservSwapquoteAction {
-  from_amount: SysioReservTokenamountType
+  from_kind: SysioReservTokenkind
+  from_amount: number
   to_chain: SysioReservChainkind
   to_token: SysioReservTokenkind
 }

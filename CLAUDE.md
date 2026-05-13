@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> **Opt-in deep reference**: the org-wide TypeScript style guide is at `STYLE.md` (~1000 lines). It is **NOT auto-imported** — pull it in deliberately for tasks that warrant it: `@STYLE.md`. The rules below cover the day-to-day invariants for this repo.
+
 ## Build & Development
 
 ```bash
