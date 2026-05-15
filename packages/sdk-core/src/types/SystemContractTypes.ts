@@ -427,10 +427,6 @@ export enum SysioMsgchAttestationtype {
   ATTESTATION_TYPE_WIRE_TOKEN_PURCHASE = 60930,
   ATTESTATION_TYPE_CHALLENGE_RESPONSE = 60932,
   ATTESTATION_TYPE_SWAP_REQUEST = 60934,
-  ATTESTATION_TYPE_UNDERWRITE_INTENT = 60935,
-  ATTESTATION_TYPE_UNDERWRITE_CONFIRM = 60936,
-  ATTESTATION_TYPE_UNDERWRITE_REJECT = 60937,
-  ATTESTATION_TYPE_UNDERWRITE_UNLOCK = 60938,
   ATTESTATION_TYPE_SWAP_REMIT = 60944,
   ATTESTATION_TYPE_CHALLENGE_REQUEST = 60945,
   ATTESTATION_TYPE_OPERATORS = 60947,
@@ -440,7 +436,6 @@ export enum SysioMsgchAttestationtype {
   ATTESTATION_TYPE_STAKE_RESULT = 60951,
   ATTESTATION_TYPE_ATTESTATION_PROCESSING_ERROR = 60952,
   ATTESTATION_TYPE_UNDERWRITE_INTENT_COMMIT = 60953,
-  ATTESTATION_TYPE_UNDERWRITE_INTENT_REJECT = 60954,
   ATTESTATION_TYPE_SWAP_REVERT = 60955,
   ATTESTATION_TYPE_DEPOSIT_REVERT = 60956,
   ATTESTATION_TYPE_SWAP_REJECTED = 60957,
@@ -1859,10 +1854,6 @@ export enum SysioUwritAttestationtype {
   ATTESTATION_TYPE_WIRE_TOKEN_PURCHASE = 60930,
   ATTESTATION_TYPE_CHALLENGE_RESPONSE = 60932,
   ATTESTATION_TYPE_SWAP_REQUEST = 60934,
-  ATTESTATION_TYPE_UNDERWRITE_INTENT = 60935,
-  ATTESTATION_TYPE_UNDERWRITE_CONFIRM = 60936,
-  ATTESTATION_TYPE_UNDERWRITE_REJECT = 60937,
-  ATTESTATION_TYPE_UNDERWRITE_UNLOCK = 60938,
   ATTESTATION_TYPE_SWAP_REMIT = 60944,
   ATTESTATION_TYPE_CHALLENGE_REQUEST = 60945,
   ATTESTATION_TYPE_OPERATORS = 60947,
@@ -1872,7 +1863,6 @@ export enum SysioUwritAttestationtype {
   ATTESTATION_TYPE_STAKE_RESULT = 60951,
   ATTESTATION_TYPE_ATTESTATION_PROCESSING_ERROR = 60952,
   ATTESTATION_TYPE_UNDERWRITE_INTENT_COMMIT = 60953,
-  ATTESTATION_TYPE_UNDERWRITE_INTENT_REJECT = 60954,
   ATTESTATION_TYPE_SWAP_REVERT = 60955,
   ATTESTATION_TYPE_DEPOSIT_REVERT = 60956,
   ATTESTATION_TYPE_SWAP_REJECTED = 60957,
@@ -1918,11 +1908,20 @@ export enum SysioUwritUnderwritestatus {
   UNDERWRITE_STATUS_SLASHED = 10,
 }
 
+/** sysio.uwrit::chklocks (action) */
+export interface SysioUwritChklocksAction {
+  up_to_epoch: number
+}
+
 /** sysio.uwrit::commit_entry (type) */
 export interface SysioUwritCommitEntryType {
   underwriter: string
   source_received_at_ms: number
+  source_outpost_id: number
+  source_uic_bytes: string
   dest_received_at_ms: number
+  dest_outpost_id: number
+  dest_uic_bytes: string
   status: SysioUwritUnderwritestatus
   reason: string
 }
@@ -1954,6 +1953,7 @@ export interface SysioUwritLockEntryType {
   token_kind: SysioUwritTokenkind
   amount: number
   created_at_epoch: number
+  expires_at_epoch: number
 }
 
 /** sysio.uwrit::lock_key (type) */
@@ -1967,13 +1967,7 @@ export interface SysioUwritRcrdcommitAction {
   underwriter: string
   outpost_id: number
   from_chain: SysioUwritChainkind
-}
-
-/** sysio.uwrit::rcrdreject (action) */
-export interface SysioUwritRcrdrejectAction {
-  uwreq_id: number
-  underwriter: string
-  reason: string
+  uic_bytes: string
 }
 
 /** sysio.uwrit::release (action) */
@@ -1984,6 +1978,10 @@ export interface SysioUwritReleaseAction {
 /** sysio.uwrit::setconfig (action) */
 export interface SysioUwritSetconfigAction {
   fee_bps: number
+  collateral_lock_duration_epoch_count: number
+  fee_split_winner_pct: number
+  fee_split_other_uw_pct: number
+  fee_split_batch_op_pct: number
 }
 
 /** sysio.uwrit::sumlocks (action) */
@@ -1996,6 +1994,10 @@ export interface SysioUwritSumlocksAction {
 /** sysio.uwrit::uw_config (type) */
 export interface SysioUwritUwConfigType {
   fee_bps: number
+  collateral_lock_duration_epoch_count: number
+  fee_split_winner_pct: number
+  fee_split_other_uw_pct: number
+  fee_split_batch_op_pct: number
 }
 
 /** sysio.uwrit::uw_counters (type) */
@@ -2014,6 +2016,7 @@ export interface SysioUwritUwRequestTType {
   dst_chain: SysioUwritChainkind
   dst_token_kind: SysioUwritTokenkind
   dst_amount: number
+  variance_tolerance_bps: number
   commits_by: SysioUwritCommitEntryType[]
   winner: string
   committed_at_ms: number
