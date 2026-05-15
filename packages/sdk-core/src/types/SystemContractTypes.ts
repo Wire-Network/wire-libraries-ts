@@ -362,10 +362,6 @@ export interface SysioEpochEpochStateType {
   is_paused: boolean
 }
 
-/** sysio.epoch::initgroups (action) */
-export interface SysioEpochInitgroupsAction {
-}
-
 /** sysio.epoch::outpost_info (type) */
 export interface SysioEpochOutpostInfoType {
   id: number
@@ -390,6 +386,10 @@ export interface SysioEpochPauseAction {
 export interface SysioEpochRegoutpostAction {
   chain_kind: SysioEpochChainkind
   chain_id: number
+}
+
+/** sysio.epoch::schbatchgps (action) */
+export interface SysioEpochSchbatchgpsAction {
 }
 
 /** sysio.epoch::setconfig (action) */
@@ -433,7 +433,6 @@ export enum SysioMsgchAttestationtype {
   ATTESTATION_TYPE_UNDERWRITE_UNLOCK = 60938,
   ATTESTATION_TYPE_SWAP_REMIT = 60944,
   ATTESTATION_TYPE_CHALLENGE_REQUEST = 60945,
-  ATTESTATION_TYPE_EPOCH_SYNC = 60946,
   ATTESTATION_TYPE_OPERATORS = 60947,
   ATTESTATION_TYPE_BATCH_OPERATOR_GROUPS = 60943,
   ATTESTATION_TYPE_NODE_OWNER_REG = 60949,
@@ -984,6 +983,9 @@ export interface SysioOpregSetconfigAction {
   terminate_max_consecutive_misses: number
   terminate_max_pct_misses_24h: number
   terminate_window_ms: number
+  req_prod_collat: SysioOpregChainMinBondType[]
+  req_batchop_collat: SysioOpregChainMinBondType[]
+  req_uw_collat: SysioOpregChainMinBondType[]
 }
 
 /** sysio.opreg::slash (action) */
@@ -1863,7 +1865,6 @@ export enum SysioUwritAttestationtype {
   ATTESTATION_TYPE_UNDERWRITE_UNLOCK = 60938,
   ATTESTATION_TYPE_SWAP_REMIT = 60944,
   ATTESTATION_TYPE_CHALLENGE_REQUEST = 60945,
-  ATTESTATION_TYPE_EPOCH_SYNC = 60946,
   ATTESTATION_TYPE_OPERATORS = 60947,
   ATTESTATION_TYPE_BATCH_OPERATOR_GROUPS = 60943,
   ATTESTATION_TYPE_NODE_OWNER_REG = 60949,
