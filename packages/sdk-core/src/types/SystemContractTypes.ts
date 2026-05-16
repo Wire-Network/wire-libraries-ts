@@ -1967,6 +1967,7 @@ export interface SysioUwritRcrdcommitAction {
   underwriter: string
   outpost_id: number
   from_chain: SysioUwritChainkind
+  from_token_kind: SysioUwritTokenkind
   uic_bytes: string
 }
 
@@ -2017,6 +2018,7 @@ export interface SysioUwritUwRequestTType {
   dst_token_kind: SysioUwritTokenkind
   dst_amount: number
   variance_tolerance_bps: number
+  source_tx_id: string
   commits_by: SysioUwritCommitEntryType[]
   winner: string
   committed_at_ms: number
