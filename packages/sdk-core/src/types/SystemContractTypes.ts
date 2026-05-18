@@ -2019,6 +2019,7 @@ export interface SysioUwritUwRequestTType {
   dst_amount: number
   variance_tolerance_bps: number
   source_tx_id: string
+  depositor: string
   commits_by: SysioUwritCommitEntryType[]
   winner: string
   committed_at_ms: number
