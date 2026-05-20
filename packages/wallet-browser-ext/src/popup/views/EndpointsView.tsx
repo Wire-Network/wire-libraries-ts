@@ -158,9 +158,9 @@ export function EndpointsView() {
                     }
                   >
                     <option value={ChainKind.WIRE}>WIRE</option>
-                    <option value={ChainKind.ETHEREUM}>ETHEREUM</option>
-                    <option value={ChainKind.SOLANA}>SOLANA</option>
-                    <option value={ChainKind.SUI}>SUI</option>
+                    <option value={ChainKind.EVM}>ETHEREUM</option>
+                    <option value={ChainKind.SVM}>SOLANA</option>
+                    <option value={ChainKind.UNKNOWN}>SUI</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -232,9 +232,9 @@ export function EndpointsView() {
             onChange={(e) => setAddKind(e.target.value as ChainKind)}
           >
             <option value={ChainKind.WIRE}>WIRE</option>
-            <option value={ChainKind.ETHEREUM}>ETHEREUM</option>
-            <option value={ChainKind.SOLANA}>SOLANA</option>
-            <option value={ChainKind.SUI}>SUI</option>
+            <option value={ChainKind.EVM}>ETHEREUM</option>
+            <option value={ChainKind.SVM}>SOLANA</option>
+            <option value={ChainKind.UNKNOWN}>SUI</option>
           </select>
         </div>
         <div className="form-group">

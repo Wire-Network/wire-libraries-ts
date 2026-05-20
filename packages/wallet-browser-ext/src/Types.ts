@@ -2,9 +2,9 @@ export { KeyType } from "@wireio/sdk-core"
 
 export enum ChainKind {
   WIRE = "WIRE",
-  ETHEREUM = "ETHEREUM",
-  SOLANA = "SOLANA",
-  SUI = "SUI",
+  EVM = "ETHEREUM",
+  SVM = "SOLANA",
+  UNKNOWN = "SUI",
 }
 
 export interface KeyPair {

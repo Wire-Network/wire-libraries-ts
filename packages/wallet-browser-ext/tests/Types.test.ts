@@ -16,15 +16,15 @@ describe("Types", () => {
     })
 
     it("has ETHEREUM value", () => {
-      expect(ChainKind.ETHEREUM).toBe("ETHEREUM")
+      expect(ChainKind.EVM).toBe("ETHEREUM")
     })
 
     it("has SOLANA value", () => {
-      expect(ChainKind.SOLANA).toBe("SOLANA")
+      expect(ChainKind.SVM).toBe("SOLANA")
     })
 
     it("has SUI value", () => {
-      expect(ChainKind.SUI).toBe("SUI")
+      expect(ChainKind.UNKNOWN).toBe("SUI")
     })
 
     it("has exactly 4 members", () => {

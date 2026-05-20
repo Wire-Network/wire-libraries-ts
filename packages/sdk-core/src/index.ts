@@ -7,6 +7,7 @@ export * from "./chain/index.js"
 // utils
 export * from "./serializer/index.js"
 export * from "./Base58.js"
+export * from "./SlugName.js"
 export * from "./Utils.js"
 
 // api

@@ -29,15 +29,15 @@ describe("ChainKind enum", () => {
   })
 
   test("has ETHEREUM value", () => {
-    expect(ChainKind.ETHEREUM).toBe("ETHEREUM")
+    expect(ChainKind.EVM).toBe("ETHEREUM")
   })
 
   test("has SOLANA value", () => {
-    expect(ChainKind.SOLANA).toBe("SOLANA")
+    expect(ChainKind.SVM).toBe("SOLANA")
   })
 
   test("has SUI value", () => {
-    expect(ChainKind.SUI).toBe("SUI")
+    expect(ChainKind.UNKNOWN).toBe("SUI")
   })
 
   test("has exactly 4 members", () => {

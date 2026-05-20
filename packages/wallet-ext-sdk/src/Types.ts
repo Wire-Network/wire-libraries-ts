@@ -10,9 +10,9 @@ export enum KeyType {
 /** Chain kinds supported by Wire */
 export enum ChainKind {
   WIRE = "WIRE",
-  ETHEREUM = "ETHEREUM",
-  SOLANA = "SOLANA",
-  SUI = "SUI",
+  EVM = "ETHEREUM",
+  SVM = "SOLANA",
+  UNKNOWN = "SUI",
 }
 
 /** Sign transaction request */

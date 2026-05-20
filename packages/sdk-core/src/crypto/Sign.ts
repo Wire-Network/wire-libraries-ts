@@ -42,7 +42,7 @@ export function sign<C extends ChainKind = ChainKind.UNKNOWN>(
 
     case KeyType.EM: {
       // Ethereum signature using EIP-191 prefix
-      const ethOptions = sign.getOptions(options, ChainKind.ETHEREUM)
+      const ethOptions = sign.getOptions(options, ChainKind.EVM)
       const hash = ethOptions.personalMessage
         ? ethers.utils.hashMessage(message)
         : ethers.utils.hexlify(message)
@@ -94,17 +94,17 @@ export namespace sign {
 
   export const DefaultBaseOptions: BaseOptions = { chain: ChainKind.UNKNOWN }
 
-  export interface EthereumOptions extends BaseOptions<ChainKind.ETHEREUM> {
+  export interface EthereumOptions extends BaseOptions<ChainKind.EVM> {
     personalMessage: boolean
   }
 
   export const DefaultEthereumOptions: EthereumOptions = {
-    chain: ChainKind.ETHEREUM,
+    chain: ChainKind.EVM,
     personalMessage: false
   }
 
   export type Options<C extends ChainKind = ChainKind.UNKNOWN> =
-    C extends ChainKind.ETHEREUM ? EthereumOptions : BaseOptions<C>
+    C extends ChainKind.EVM ? EthereumOptions : BaseOptions<C>
 
   export function getOptions<C extends ChainKind = ChainKind.UNKNOWN>(
     inOpts: object,
@@ -116,7 +116,7 @@ export namespace sign {
         .map(o => o as Options<C>)
         .getOrElse({ chain } as Options<C>),
       defaultOpts =
-        chain == ChainKind.ETHEREUM
+        chain == ChainKind.EVM
           ? DefaultEthereumOptions
           : DefaultBaseOptions
 
