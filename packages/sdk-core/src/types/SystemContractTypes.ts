@@ -501,10 +501,21 @@ export interface SysioMsgchEndpointsType {
   end: SysioMsgchChainidType
 }
 
+/** sysio.msgch::att_seq_entry (type) */
+export interface SysioMsgchAttSeqEntryType {
+  id: number
+  next: number
+}
+
+/** sysio.msgch::att_seq_key (type) */
+export interface SysioMsgchAttSeqKeyType {
+  id: number
+}
+
 /** sysio.msgch::attestation_entry (type) */
 export interface SysioMsgchAttestationEntryType {
   id: number
-  outpost_id: number
+  chain_code: number
   epoch_index: number
   type: SysioMsgchAttestationtype
   status: SysioMsgchAttestationstatus
@@ -520,7 +531,7 @@ export interface SysioMsgchBootstrapAction {
 
 /** sysio.msgch::buildenv (action) */
 export interface SysioMsgchBuildenvAction {
-  outpost_id: number
+  chain_code: number
 }
 
 /** sysio.msgch::chkcons (action) */
@@ -530,14 +541,14 @@ export interface SysioMsgchChkconsAction {
 /** sysio.msgch::deliver (action) */
 export interface SysioMsgchDeliverAction {
   batch_op_name: string
-  outpost_id: number
+  chain_code: number
   data: string
 }
 
 /** sysio.msgch::envelope_entry (type) */
 export interface SysioMsgchEnvelopeEntryType {
   id: number
-  outpost_id: number
+  chain_code: number
   epoch_index: number
   batch_op_name: string
   chain_kind: SysioMsgchChainkind
@@ -557,7 +568,7 @@ export interface SysioMsgchEnvelopeLogEntryType {
 
 /** sysio.msgch::evalcons (action) */
 export interface SysioMsgchEvalconsAction {
-  outpost_id: number
+  chain_code: number
   epoch_index: number
 }
 
@@ -569,7 +580,7 @@ export interface SysioMsgchIdKeyType {
 /** sysio.msgch::message_entry (type) */
 export interface SysioMsgchMessageEntryType {
   id: number
-  outpost_id: number
+  chain_code: number
   epoch_index: number
   message_id: string
   previous_message_id: string
@@ -583,7 +594,7 @@ export interface SysioMsgchMessageEntryType {
 /** sysio.msgch::outbound_envelope (type) */
 export interface SysioMsgchOutboundEnvelopeType {
   id: number
-  outpost_id: number
+  chain_code: number
   epoch_index: number
   envelope_hash: string
   merkle_root: string
@@ -595,19 +606,19 @@ export interface SysioMsgchOutboundEnvelopeType {
 
 /** sysio.msgch::outpost_consensus_entry (type) */
 export interface SysioMsgchOutpostConsensusEntryType {
-  outpost_id: number
+  chain_code: number
   epoch_index: number
   consensus_reached: boolean
 }
 
 /** sysio.msgch::outpost_consensus_key (type) */
 export interface SysioMsgchOutpostConsensusKeyType {
-  outpost_id: number
+  chain_code: number
 }
 
 /** sysio.msgch::queueout (action) */
 export interface SysioMsgchQueueoutAction {
-  outpost_id: number
+  chain_code: number
   attest_type: SysioMsgchAttestationtype
   data: string
 }
@@ -1948,7 +1959,6 @@ export interface SysioTokensChainTokenRowType {
   chain_code: SysioTokensSlugNameType
   token_code: SysioTokensSlugNameType
   contract_addr: string
-  precision_override: number
   is_native: boolean
   active: boolean
   registered_at_ms: number
@@ -1960,7 +1970,6 @@ export interface SysioTokensRegctokAction {
   chain_code: SysioTokensSlugNameType
   token_code: SysioTokensSlugNameType
   contract_addr: string
-  precision_override: number
   is_native: boolean
 }
 
@@ -2071,7 +2080,7 @@ export interface SysioUwritCommitEntryType {
 export interface SysioUwritCreateuwreqAction {
   attestation_id: number
   type: SysioUwritAttestationtype
-  outpost_id: number
+  chain_code: number
   data: string
 }
 
@@ -2107,7 +2116,7 @@ export interface SysioUwritLockKeyType {
 export interface SysioUwritRcrdcommitAction {
   uwreq_id: number
   underwriter: string
-  outpost_id: number
+  chain_code: number
   from_chain_code: SysioUwritSlugNameType
   from_token_code: SysioUwritSlugNameType
   reserve_code: SysioUwritSlugNameType
