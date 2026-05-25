@@ -36,7 +36,7 @@
     "typescript": "6.0.2"
   },
   "dependencies": {
-    "@3fv/prelude-ts": "^0.8.37",
+    "@3fv/prelude-ts": "^0.8.41",
     "@wireio/shared": "workspace:*"
   }
 }

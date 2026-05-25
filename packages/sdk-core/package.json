@@ -34,7 +34,7 @@
     "fix:hybrid:exports": "node ../../scripts/fix-hybrid-output.mjs ."
   },
   "dependencies": {
-    "@3fv/prelude-ts": "^0.8.37",
+    "@3fv/prelude-ts": "^0.8.41",
     "@noble/curves": "1.9.7",
     "@wireio/shared": "workspace:*",
     "@wireio/opp-typescript-models": "^1.0.26",

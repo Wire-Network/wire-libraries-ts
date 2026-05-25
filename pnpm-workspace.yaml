@@ -2,7 +2,7 @@ packages:
   - "packages/*"
   - "examples/*"
 overrides:
-  '@3fv/prelude-ts': ^0.8.37
+  '@3fv/prelude-ts': ^0.8.41
   '@aws-sdk/client-firehose': 3.972.0
   '@aws-sdk/client-sts': 3.972.0
   bluebird: 3.7.2
