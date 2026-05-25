@@ -685,6 +685,12 @@ export interface SysioMsigExtensionType {
   data: string
 }
 
+/** sysio.msig::get_proposal (type) */
+export interface SysioMsigGetProposalType {
+  proposer: string
+  proposal_name: string
+}
+
 /** sysio.msig::inval_key (type) */
 export interface SysioMsigInvalKeyType {
   account: number
@@ -719,11 +725,27 @@ export interface SysioMsigPermissionLevelType {
   permission: string
 }
 
+/** sysio.msig::propchunk (type) */
+export interface SysioMsigPropchunkType {
+  proposal_name: string
+  chunk_index: number
+  data: string
+}
+
+/** sysio.msig::propchunk_key (type) */
+export interface SysioMsigPropchunkKeyType {
+  proposal_name: number
+  chunk_index: number
+}
+
 /** sysio.msig::proposal (type) */
 export interface SysioMsigProposalType {
   proposal_name: string
   packed_transaction: string
   earliest_exec_time: unknown
+  chunk_count: unknown
+  total_size: unknown
+  trx_hash: unknown
 }
 
 /** sysio.msig::proposal_key (type) */
@@ -1423,13 +1445,6 @@ export interface SysioSystemBlockHeaderType {
   new_producers?: SysioSystemProducerScheduleType | null
 }
 
-/** sysio.system::block_info_record (type) */
-export interface SysioSystemBlockInfoRecordType {
-  version: number
-  block_height: number
-  block_timestamp: string
-}
-
 /** sysio.system::block_signing_authority_v0 (type) */
 export interface SysioSystemBlockSigningAuthorityV0Type {
   threshold: number
@@ -1458,11 +1473,6 @@ export interface SysioSystemBlockchainParametersType {
   max_kv_key_size: number
   max_kv_value_size: number
   max_kv_secondary_key_size: number
-}
-
-/** sysio.system::blockinfo_key (type) */
-export interface SysioSystemBlockinfoKeyType {
-  block_height: number
 }
 
 /** sysio.system::deleteauth (action) */
@@ -1763,17 +1773,16 @@ export interface SysioSystemWasmcfgAction {
   settings: string
 }
 
-/** sysio.system::limit_auth_change (type) */
-export interface SysioSystemLimitAuthChangeType {
+/** sysio.system::block_info_record (type) */
+export interface SysioSystemBlockInfoRecordType {
   version: number
-  account: string
-  allow_perms: string[]
-  disallow_perms: string[]
+  block_height: number
+  block_timestamp: string
 }
 
-/** sysio.system::limitauthchg_key (type) */
-export interface SysioSystemLimitauthchgKeyType {
-  account: number
+/** sysio.system::blockinfo_key (type) */
+export interface SysioSystemBlockinfoKeyType {
+  block_height: number
 }
 
 /** sysio.system::delpeerkey (action) */
@@ -1812,6 +1821,19 @@ export interface SysioSystemRegpeerkeyAction {
 /** sysio.system::v0_data (type) */
 export interface SysioSystemV0DataType {
   pubkey?: string | null
+}
+
+/** sysio.system::limit_auth_change (type) */
+export interface SysioSystemLimitAuthChangeType {
+  version: number
+  account: string
+  allow_perms: string[]
+  disallow_perms: string[]
+}
+
+/** sysio.system::limitauthchg_key (type) */
+export interface SysioSystemLimitauthchgKeyType {
+  account: number
 }
 
 /** sysio.system::addtrxp (action) */
