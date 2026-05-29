@@ -1,0 +1,40 @@
+# =============================================================================
+# wire-libraries-ts — @wireio/sdk-core, @wireio/shared, wallet ext, and the
+#                      OPP model code generators. pnpm workspace (packages/*).
+# =============================================================================
+# Chain position 3: depends on //wire-sysio:build. This is a REAL functional
+# edge, not just ordering: at `pnpm install` the repo's .pnpmfile.cjs resolves
+# @wireio/opp-typescript-models from wire-sysio/build/opp/typescript, and
+# sdk-core's tsc build references symbols from the current proto (e.g.
+# ChainKind.EVM). Build wire-sysio first and that codegen exists; skip it and
+# pnpm falls back to the stale registry @wireio/opp-typescript-models, which
+# fails to compile (verified 2026-05-26). The wire-sysio dep guarantees the
+# codegen is on disk before this runs.
+# =============================================================================
+
+load("//:build_defs.bzl", "js_workspace_build")
+
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "srcs",
+    srcs = glob(
+        ["**"],
+        exclude = [
+            "node_modules/**",
+            "**/lib/**",
+            "**/dist/**",
+            ".git/**",
+            "BUILD.bazel",
+        ],
+    ),
+)
+
+js_workspace_build(
+    name = "build",
+    # wire-sysio emits the OPP codegen this repo's .pnpmfile.cjs consumes.
+    deps = ["//wire-sysio:build"],
+    package_manager = "pnpm",
+    tags = ["ts"],
+    working_dir = "wire-libraries-ts",
+)
