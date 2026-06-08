@@ -48,6 +48,13 @@ export interface SysioAuthexLinksSType {
   pub_key: string
 }
 
+/** sysio.authex::recordlink (action) */
+export interface SysioAuthexRecordlinkAction {
+  account: string
+  chain_kind: SysioAuthexChainkind
+  pub_key: string
+}
+
 // ── sysio.bios ──
 
 /** sysio.bios::abi_hash (type) */
@@ -291,63 +298,58 @@ export interface SysioChainsSlugNameType {
 
 // ── sysio.chalg ──
 
-/** sysio.chalg::ChallengeStatus (enum, int32) */
-export enum SysioChalgChallengestatus {
-  CHALLENGE_STATUS_CHALLENGE_SENT = 0,
-  CHALLENGE_STATUS_RESPONSE_RECEIVED = 1,
-  CHALLENGE_STATUS_RESOLVED = 2,
-  CHALLENGE_STATUS_ESCALATED = 3,
+/** sysio.chalg::DisputeStatus (enum, int32) */
+export enum SysioChalgDisputestatus {
+  DISPUTE_STATUS_UNKNOWN = 0,
+  DISPUTE_STATUS_OPEN = 1,
+  DISPUTE_STATUS_RESOLVED = 2,
 }
 
-/** sysio.chalg::challenge_entry (type) */
-export interface SysioChalgChallengeEntryType {
+/** sysio.chalg::chkdispute (action) */
+export interface SysioChalgChkdisputeAction {
+  dispute_id: number
+}
+
+/** sysio.chalg::dispute_candidate (type) */
+export interface SysioChalgDisputeCandidateType {
+  checksum: string
+  operators: string[]
+}
+
+/** sysio.chalg::dispute_entry (type) */
+export interface SysioChalgDisputeEntryType {
   id: number
-  chain_request_id: number
+  chain_code: number
   epoch_index: number
-  round: number
-  status: SysioChalgChallengestatus
-  challenge_hash: string
-  response_hash: string
-  correct_operators: string[]
-  faulty_operators: string[]
-  challenged_at: string
-  responded_at: string
+  status: SysioChalgDisputestatus
+  winning_checksum: string
+  opened_at: string
+  deadline: string
+  candidates: SysioChalgDisputeCandidateType[]
 }
 
-/** sysio.chalg::challenge_key (type) */
-export interface SysioChalgChallengeKeyType {
+/** sysio.chalg::dispute_key (type) */
+export interface SysioChalgDisputeKeyType {
   id: number
 }
 
-/** sysio.chalg::enforce (action) */
-export interface SysioChalgEnforceAction {
-  resolution_id: number
+/** sysio.chalg::dispute_vote (type) */
+export interface SysioChalgDisputeVoteType {
+  owner: string
+  chosen_checksum: string
+  voted_at: string
 }
 
-/** sysio.chalg::escalate (action) */
-export interface SysioChalgEscalateAction {
-  challenge_id: number
+/** sysio.chalg::dispute_vote_key (type) */
+export interface SysioChalgDisputeVoteKeyType {
+  owner: number
 }
 
-/** sysio.chalg::initchal (action) */
-export interface SysioChalgInitchalAction {
-  chain_req_id: number
-}
-
-/** sysio.chalg::manual_resolution (type) */
-export interface SysioChalgManualResolutionType {
-  id: number
-  challenge_id: number
-  original_chain_hash: string
-  round1_chain_hash: string
-  round2_chain_hash: string
-  msig_proposal: string
-  is_resolved: boolean
-}
-
-/** sysio.chalg::resolution_key (type) */
-export interface SysioChalgResolutionKeyType {
-  id: number
+/** sysio.chalg::opendispute (action) */
+export interface SysioChalgOpendisputeAction {
+  chain_code: number
+  epoch_index: number
+  candidates: SysioChalgDisputeCandidateType[]
 }
 
 /** sysio.chalg::slashop (action) */
@@ -356,27 +358,159 @@ export interface SysioChalgSlashopAction {
   reason: string
 }
 
-/** sysio.chalg::submitres (action) */
-export interface SysioChalgSubmitresAction {
-  submitter: string
-  challenge_id: number
-  orig_hash: string
-  r1_hash: string
-  r2_hash: string
+/** sysio.chalg::votedispute (action) */
+export interface SysioChalgVotedisputeAction {
+  owner: string
+  dispute_id: number
+  chosen_checksum: string
 }
 
-/** sysio.chalg::submitresp (action) */
-export interface SysioChalgSubmitrespAction {
-  challenge_id: number
-  response_hash: string
-  correct_ops: string[]
-  faulty_ops: string[]
+// ── sysio.dclaim ──
+
+/** sysio.dclaim::ChainKind (enum, int32) */
+export enum SysioDclaimChainkind {
+  CHAIN_KIND_UNKNOWN = 0,
+  CHAIN_KIND_WIRE = 1,
+  CHAIN_KIND_EVM = 2,
+  CHAIN_KIND_SVM = 3,
+}
+
+/** sysio.dclaim::cap_config (type) */
+export interface SysioDclaimCapConfigType {
+  imported_complete: boolean
+  claim_window_sec: number
+}
+
+/** sysio.dclaim::cap_counters (type) */
+export interface SysioDclaimCapCountersType {
+  next_unmapped_id: number
+  next_cursor_id: number
+}
+
+/** sysio.dclaim::claim (action) */
+export interface SysioDclaimClaimAction {
+  wire_account: string
+}
+
+/** sysio.dclaim::flushexpired (action) */
+export interface SysioDclaimFlushexpiredAction {
+  max_rows: number
+}
+
+/** sysio.dclaim::import_credit (type) */
+export interface SysioDclaimImportCreditType {
+  native_address: string
+  wire_atomic: number
+}
+
+/** sysio.dclaim::importdone (action) */
+export interface SysioDclaimImportdoneAction {
+}
+
+/** sysio.dclaim::importseed (action) */
+export interface SysioDclaimImportseedAction {
+  chain: SysioDclaimChainkind
+  credits: SysioDclaimImportCreditType[]
+}
+
+/** sysio.dclaim::linkswept (action) */
+export interface SysioDclaimLinksweptAction {
+  wire_account: string
+  chain: SysioDclaimChainkind
+  native_pubkey: string
+}
+
+/** sysio.dclaim::onreward (action) */
+export interface SysioDclaimOnrewardAction {
+  chain_code: number
+  staker_wire_account: string
+  reward_chain: SysioDclaimChainkind
+  staker_native_addr: string
+  reward_amount: number
+  reward_epoch_index: number
+  external_epoch_ref: number
+  share_bps: number
+}
+
+/** sysio.dclaim::pclaim_key (type) */
+export interface SysioDclaimPclaimKeyType {
+  wire_account: number
+}
+
+/** sysio.dclaim::pending_claim (type) */
+export interface SysioDclaimPendingClaimType {
+  wire_account: string
+  balance: string
+  expires_at_sec: number
+}
+
+/** sysio.dclaim::reward_cursor (type) */
+export interface SysioDclaimRewardCursorType {
+  id: number
+  chain_code: number
+  chain: SysioDclaimChainkind
+  native_pubkey: string
+  last_external_epoch_ref: number
+}
+
+/** sysio.dclaim::rwdcur_key (type) */
+export interface SysioDclaimRwdcurKeyType {
+  id: number
+}
+
+/** sysio.dclaim::setclmwindow (action) */
+export interface SysioDclaimSetclmwindowAction {
+  window_sec: number
+}
+
+/** sysio.dclaim::setconfig (action) */
+export interface SysioDclaimSetconfigAction {
+}
+
+/** sysio.dclaim::unmapped_key (type) */
+export interface SysioDclaimUnmappedKeyType {
+  id: number
+}
+
+/** sysio.dclaim::unmapped_token (type) */
+export interface SysioDclaimUnmappedTokenType {
+  id: number
+  chain_kind: SysioDclaimChainkind
+  native_pubkey: string
+  balance: string
+  expires_at_sec: number
 }
 
 // ── sysio.epoch ──
 
+/** sysio.epoch::EmissionsBlockReason (enum, int32) */
+export enum SysioEpochEmissionsblockreason {
+  EMISSIONS_BLOCK_REASON_UNSPECIFIED = 0,
+  EMISSIONS_BLOCK_REASON_CONFIG_MISSING = 1,
+  EMISSIONS_BLOCK_REASON_STATE_UNINITIALIZED = 2,
+  EMISSIONS_BLOCK_REASON_TREASURY_EXHAUSTED = 3,
+  EMISSIONS_BLOCK_REASON_BALANCE_INSUFFICIENT = 4,
+}
+
 /** sysio.epoch::advance (action) */
 export interface SysioEpochAdvanceAction {
+}
+
+/** sysio.epoch::blocklog_entry (type) */
+export interface SysioEpochBlocklogEntryType {
+  epoch_index: number
+  reason: SysioEpochEmissionsblockreason
+  attempted_emission: number
+  treasury_remaining: number
+  sysio_balance: number
+  first_blocked_at: number
+  last_retry_at: number
+  retry_count: number
+}
+
+/** sysio.epoch::blocklog_key (type) */
+export interface SysioEpochBlocklogKeyType {
+  epoch_index: number
 }
 
 /** sysio.epoch::epoch_config (type) */
@@ -458,6 +592,7 @@ export enum SysioMsgchAttestationtype {
   ATTESTATION_TYPE_RESERVE_CREATE_CANCEL = 60959,
   ATTESTATION_TYPE_RESERVE_CREATE_CANCELLED = 60960,
   ATTESTATION_TYPE_RESERVE_READY = 60961,
+  ATTESTATION_TYPE_EMISSIONS_BLOCKED = 60962,
 }
 
 /** sysio.msgch::ChainKind (enum, int32) */
@@ -597,9 +732,6 @@ export interface SysioMsgchOutboundEnvelopeType {
   chain_code: number
   epoch_index: number
   envelope_hash: string
-  merkle_root: string
-  start_message_id: string
-  end_message_id: string
   status: SysioMsgchEnvelopestatus
   raw_envelope: string
 }
@@ -609,6 +741,7 @@ export interface SysioMsgchOutpostConsensusEntryType {
   chain_code: number
   epoch_index: number
   consensus_reached: boolean
+  winning_checksum: string
 }
 
 /** sysio.msgch::outpost_consensus_key (type) */
@@ -621,6 +754,13 @@ export interface SysioMsgchQueueoutAction {
   chain_code: number
   attest_type: SysioMsgchAttestationtype
   data: string
+}
+
+/** sysio.msgch::resolvedisp (action) */
+export interface SysioMsgchResolvedispAction {
+  chain_code: number
+  epoch_index: number
+  winning_checksum: string
 }
 
 /** sysio.msgch::varint_uint32 (type) */
@@ -685,8 +825,8 @@ export interface SysioMsigExtensionType {
   data: string
 }
 
-/** sysio.msig::get_proposal (type) */
-export interface SysioMsigGetProposalType {
+/** sysio.msig::getproposal (action) */
+export interface SysioMsigGetproposalAction {
   proposer: string
   proposal_name: string
 }
@@ -1257,21 +1397,23 @@ export interface SysioRoaExtendpolicyAction {
   new_time_block: number
 }
 
-/** sysio.roa::finalizereg (action) */
-export interface SysioRoaFinalizeregAction {
-  owner: string
-  status: number
-}
-
 /** sysio.roa::forcereg (action) */
 export interface SysioRoaForceregAction {
   owner: string
   tier: number
 }
 
-/** sysio.roa::initnodereg (action) */
-export interface SysioRoaInitnoderegAction {
-  owner: string
+/** sysio.roa::giftram (action) */
+export interface SysioRoaGiftramAction {
+  account: string
+  usage_before: number
+}
+
+/** sysio.roa::newnameduser (action) */
+export interface SysioRoaNewnameduserAction {
+  account: string
+  pubkey: string
+  tier: number
 }
 
 /** sysio.roa::newuser (action) */
@@ -1294,6 +1436,7 @@ export interface SysioRoaNodeownerregType {
   trx_signature: string
   tier: number
   block_num: string
+  reason: number
 }
 
 /** sysio.roa::nodeownerreg_key (type) */
@@ -1310,6 +1453,14 @@ export interface SysioRoaNodeownersType {
   allocated_bw: string
   allocated_ram: string
   network_gen: number
+}
+
+/** sysio.roa::nodeownreg (action) */
+export interface SysioRoaNodeownregAction {
+  owner: string
+  tier: number
+  eth_pub_key: string
+  wire_pub_key: string
 }
 
 /** sysio.roa::policies (type) */
@@ -1364,13 +1515,18 @@ export interface SysioRoaSetbytepriceAction {
   bytes_per_unit: number
 }
 
-/** sysio.roa::setpending (action) */
-export interface SysioRoaSetpendingAction {
-  owner: string
-  tier: number
-  trx_id: string
-  block_num: string
-  sig: string
+/** sysio.roa::setsysabi (action) */
+export interface SysioRoaSetsysabiAction {
+  account: string
+  abi: string
+}
+
+/** sysio.roa::setsyscode (action) */
+export interface SysioRoaSetsyscodeAction {
+  account: string
+  vmtype: number
+  vmversion: number
+  code: string
 }
 
 /** sysio.roa::sponsor (type) */
@@ -1415,6 +1571,13 @@ export interface SysioSystemAbihashKeyType {
   owner: number
 }
 
+/** sysio.system::accrueepoch (action) */
+export interface SysioSystemAccrueepochAction {
+  epoch_index: number
+  batch_group_index: number
+  per_epoch_emission: number
+}
+
 /** sysio.system::actfinkey (action) */
 export interface SysioSystemActfinkeyAction {
   finalizer_name: string
@@ -1424,6 +1587,12 @@ export interface SysioSystemActfinkeyAction {
 /** sysio.system::activate (action) */
 export interface SysioSystemActivateAction {
   feature_digest: string
+}
+
+/** sysio.system::addnodeowner (action) */
+export interface SysioSystemAddnodeownerAction {
+  account_name: string
+  tier: number
 }
 
 /** sysio.system::authority (type) */
@@ -1475,6 +1644,11 @@ export interface SysioSystemBlockchainParametersType {
   max_kv_secondary_key_size: number
 }
 
+/** sysio.system::claimnodedis (action) */
+export interface SysioSystemClaimnodedisAction {
+  account_name: string
+}
+
 /** sysio.system::deleteauth (action) */
 export interface SysioSystemDeleteauthAction {
   account: string
@@ -1488,12 +1662,62 @@ export interface SysioSystemDelfinkeyAction {
   finalizer_key: string
 }
 
-/** sysio.system::expandauth (action) */
-export interface SysioSystemExpandauthAction {
-  account: string
-  permission: string
-  keys: SysioSystemKeyWeightType[]
-  accounts: SysioSystemPermissionLevelWeightType[]
+/** sysio.system::emission_config (type) */
+export interface SysioSystemEmissionConfigType {
+  t1_allocation: number
+  t2_allocation: number
+  t3_allocation: number
+  t1_duration: number
+  t2_duration: number
+  t3_duration: number
+  min_claimable: number
+  t5_distributable: number
+  t5_floor: number
+  target_annual_decay_bps: number
+  annual_initial_emission: number
+  annual_max_emission: number
+  annual_min_emission: number
+  compute_bps: number
+  capex_bps: number
+  governance_bps: number
+  producer_bps: number
+  batch_op_bps: number
+  standby_end_rank: number
+  epoch_log_retention_count: number
+  pay_cadence_epochs: number
+}
+
+/** sysio.system::emission_state (type) */
+export interface SysioSystemEmissionStateType {
+  node_rewards_start: string
+}
+
+/** sysio.system::epoch_info_result (type) */
+export interface SysioSystemEpochInfoResultType {
+  epoch_count: number
+  last_epoch_index: number
+  last_epoch_time: string
+  last_epoch_emission: number
+  total_distributed: number
+  treasury_remaining: number
+  next_emission_est: number
+  seconds_until_next: number
+}
+
+/** sysio.system::epoch_log (type) */
+export interface SysioSystemEpochLogType {
+  sysio_epoch_index: number
+  epoch_count: number
+  timestamp: string
+  total_emission: number
+  compute_amount: number
+  capex_amount: number
+  governance_amount: number
+}
+
+/** sysio.system::epochlog_key (type) */
+export interface SysioSystemEpochlogKeyType {
+  sysio_epoch_index: number
 }
 
 /** sysio.system::fin_key_id_generator_info (type) */
@@ -1540,10 +1764,20 @@ export interface SysioSystemFinkeyKeyTType {
   id: number
 }
 
+/** sysio.system::fundclaim (action) */
+export interface SysioSystemFundclaimAction {
+  amount: number
+}
+
 /** sysio.system::init (action) */
 export interface SysioSystemInitAction {
   version: number
   core: string
+}
+
+/** sysio.system::initt5 (action) */
+export interface SysioSystemInitt5Action {
+  start_time: string
 }
 
 /** sysio.system::key_weight (type) */
@@ -1581,9 +1815,44 @@ export interface SysioSystemNewaccountAction {
   active: SysioSystemAuthorityType
 }
 
+/** sysio.system::node_claim_result (type) */
+export interface SysioSystemNodeClaimResultType {
+  total_allocation: string
+  claimed: string
+  claimable: string
+  can_claim: boolean
+}
+
+/** sysio.system::node_count_state (type) */
+export interface SysioSystemNodeCountStateType {
+  t1_count: number
+  t2_count: number
+  t3_count: number
+}
+
+/** sysio.system::node_owner_distribution (type) */
+export interface SysioSystemNodeOwnerDistributionType {
+  account_name: string
+  total_allocation: string
+  claimed: string
+  total_duration: number
+}
+
+/** sysio.system::nodedist_key (type) */
+export interface SysioSystemNodedistKeyType {
+  account_name: number
+}
+
 /** sysio.system::onblock (action) */
 export interface SysioSystemOnblockAction {
   header: SysioSystemBlockHeaderType
+}
+
+/** sysio.system::payepoch (action) */
+export interface SysioSystemPayepochAction {
+  epoch_index: number
+  batch_op_groups: string[][]
+  period_emission: number
 }
 
 /** sysio.system::permission_level (type) */
@@ -1615,6 +1884,9 @@ export interface SysioSystemProducerInfoType {
   last_claim_time: string
   location: number
   producer_authority: unknown
+  last_block_num: number
+  current_round_blocks: number
+  eligible_rounds: number
 }
 
 /** sysio.system::producer_key (type) */
@@ -1704,6 +1976,16 @@ export interface SysioSystemSetcodeAction {
   memo: unknown
 }
 
+/** sysio.system::setemitcfg (action) */
+export interface SysioSystemSetemitcfgAction {
+  cfg: SysioSystemEmissionConfigType
+}
+
+/** sysio.system::setinittime (action) */
+export interface SysioSystemSetinittimeAction {
+  no_reward_init_time: string
+}
+
 /** sysio.system::setparams (action) */
 export interface SysioSystemSetparamsAction {
   params: SysioSystemBlockchainParametersType
@@ -1746,6 +2028,20 @@ export interface SysioSystemSysioGlobalStateType {
   last_producer_schedule_size: number
 }
 
+/** sysio.system::t5_state (type) */
+export interface SysioSystemT5StateType {
+  start_time: string
+  epoch_count: number
+  last_epoch_index: number
+  last_epoch_time: string
+  last_epoch_emission: number
+  total_distributed: number
+  pending_emission_amount: number
+  period_start_epoch: number
+  batch_group_epochs: number[]
+  capital_shortfall_total: number
+}
+
 /** sysio.system::unlinkauth (action) */
 export interface SysioSystemUnlinkauthAction {
   account: string
@@ -1766,6 +2062,19 @@ export interface SysioSystemUpdateauthAction {
   parent: string
   auth: SysioSystemAuthorityType
   authorized_by: unknown
+}
+
+/** sysio.system::viewemitcfg (action) */
+export interface SysioSystemViewemitcfgAction {
+}
+
+/** sysio.system::viewepoch (action) */
+export interface SysioSystemViewepochAction {
+}
+
+/** sysio.system::viewnodedist (action) */
+export interface SysioSystemViewnodedistAction {
+  account_name: string
 }
 
 /** sysio.system::wasmcfg (action) */
@@ -2059,6 +2368,7 @@ export enum SysioUwritAttestationtype {
   ATTESTATION_TYPE_RESERVE_CREATE_CANCEL = 60959,
   ATTESTATION_TYPE_RESERVE_CREATE_CANCELLED = 60960,
   ATTESTATION_TYPE_RESERVE_READY = 60961,
+  ATTESTATION_TYPE_EMISSIONS_BLOCKED = 60962,
 }
 
 /** sysio.uwrit::UnderwriteRequestStatus (enum, int32) */
