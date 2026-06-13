@@ -1248,6 +1248,27 @@ export interface SysioReservChainaddressType {
   address: string
 }
 
+/** sysio.reserv::applyfromwire (action) */
+export interface SysioReservApplyfromwireAction {
+  dst_chain_code: SysioReservSlugNameType
+  dst_token_code: SysioReservSlugNameType
+  dst_reserve_code: SysioReservSlugNameType
+  wire_in: number
+  dst_amount: number
+}
+
+/** sysio.reserv::applyswap (action) */
+export interface SysioReservApplyswapAction {
+  src_chain_code: SysioReservSlugNameType
+  src_token_code: SysioReservSlugNameType
+  src_reserve_code: SysioReservSlugNameType
+  src_amount: number
+  dst_chain_code: SysioReservSlugNameType
+  dst_token_code: SysioReservSlugNameType
+  dst_reserve_code: SysioReservSlugNameType
+  dst_amount: number
+}
+
 /** sysio.reserv::debit (action) */
 export interface SysioReservDebitAction {
   chain_code: SysioReservSlugNameType
@@ -1286,6 +1307,8 @@ export interface SysioReservOncrtreserveAction {
   connector_weight_bps: number
   creator_chain_kind: SysioReservChainkind
   creator_chain_addr: string
+  is_private: boolean
+  creator_pub_key: string
 }
 
 /** sysio.reserv::onreject (action) */
@@ -1307,6 +1330,22 @@ export interface SysioReservOnrewardAction {
   outpost_amount: number
 }
 
+/** sysio.reserv::paywire (action) */
+export interface SysioReservPaywireAction {
+  src_chain_code: SysioReservSlugNameType
+  src_token_code: SysioReservSlugNameType
+  src_reserve_code: SysioReservSlugNameType
+  src_amount: number
+  recipient: string
+  wire_out: number
+}
+
+/** sysio.reserv::refundwire (action) */
+export interface SysioReservRefundwireAction {
+  recipient: string
+  wire_amount: number
+}
+
 /** sysio.reserv::regreserve (action) */
 export interface SysioReservRegreserveAction {
   chain_code: SysioReservSlugNameType
@@ -1317,6 +1356,8 @@ export interface SysioReservRegreserveAction {
   initial_chain_amount: number
   initial_wire_amount: number
   connector_weight_bps: number
+  is_private: boolean
+  owner: string
 }
 
 /** sysio.reserv::reserve_key (type) */
@@ -1343,6 +1384,9 @@ export interface SysioReservReserveRowType {
   registered_at_ms: number
   activated_at_ms: number
   cancelled_at_ms: number
+  is_private: boolean
+  owner: string
+  creator_pub_key: string
 }
 
 /** sysio.reserv::slug_name (type) */
@@ -1662,6 +1706,11 @@ export interface SysioSystemDelfinkeyAction {
   finalizer_key: string
 }
 
+/** sysio.system::delsnapprov (action) */
+export interface SysioSystemDelsnapprovAction {
+  account: string
+}
+
 /** sysio.system::emission_config (type) */
 export interface SysioSystemEmissionConfigType {
   t1_allocation: number
@@ -1767,6 +1816,11 @@ export interface SysioSystemFinkeyKeyTType {
 /** sysio.system::fundclaim (action) */
 export interface SysioSystemFundclaimAction {
   amount: number
+}
+
+/** sysio.system::getsnaphash (action) */
+export interface SysioSystemGetsnaphashAction {
+  block_num: number
 }
 
 /** sysio.system::init (action) */
@@ -1929,6 +1983,12 @@ export interface SysioSystemRegproducer2Action {
   location: number
 }
 
+/** sysio.system::regsnapprov (action) */
+export interface SysioSystemRegsnapprovAction {
+  producer: string
+  snap_account: string
+}
+
 /** sysio.system::rmvproducer (action) */
 export interface SysioSystemRmvproducerAction {
   producer: string
@@ -2018,6 +2078,56 @@ export interface SysioSystemSetrankAction {
   rank: number
 }
 
+/** sysio.system::setsnpcfg (action) */
+export interface SysioSystemSetsnpcfgAction {
+  min_providers: number
+  threshold_pct: number
+}
+
+/** sysio.system::snap_config (type) */
+export interface SysioSystemSnapConfigType {
+  min_providers: number
+  threshold_pct: number
+}
+
+/** sysio.system::snap_provider (type) */
+export interface SysioSystemSnapProviderType {
+  snap_account: string
+  producer: string
+}
+
+/** sysio.system::snap_provider_key_t (type) */
+export interface SysioSystemSnapProviderKeyTType {
+  snap_account: number
+}
+
+/** sysio.system::snap_record (type) */
+export interface SysioSystemSnapRecordType {
+  block_num: number
+  block_id: string
+  snapshot_hash: string
+  attested_at_block: number
+}
+
+/** sysio.system::snap_record_key_t (type) */
+export interface SysioSystemSnapRecordKeyTType {
+  block_num: number
+}
+
+/** sysio.system::snap_vote (type) */
+export interface SysioSystemSnapVoteType {
+  id: number
+  block_num: number
+  block_id: string
+  snapshot_hash: string
+  voters: string[]
+}
+
+/** sysio.system::snap_vote_key_t (type) */
+export interface SysioSystemSnapVoteKeyTType {
+  id: number
+}
+
 /** sysio.system::sysio_global_state (type) */
 export interface SysioSystemSysioGlobalStateType {
   max_ram_size: number
@@ -2077,21 +2187,16 @@ export interface SysioSystemViewnodedistAction {
   account_name: string
 }
 
+/** sysio.system::votesnaphash (action) */
+export interface SysioSystemVotesnaphashAction {
+  snap_account: string
+  block_id: string
+  snapshot_hash: string
+}
+
 /** sysio.system::wasmcfg (action) */
 export interface SysioSystemWasmcfgAction {
   settings: string
-}
-
-/** sysio.system::block_info_record (type) */
-export interface SysioSystemBlockInfoRecordType {
-  version: number
-  block_height: number
-  block_timestamp: string
-}
-
-/** sysio.system::blockinfo_key (type) */
-export interface SysioSystemBlockinfoKeyType {
-  block_height: number
 }
 
 /** sysio.system::delpeerkey (action) */
@@ -2132,17 +2237,16 @@ export interface SysioSystemV0DataType {
   pubkey?: string | null
 }
 
-/** sysio.system::limit_auth_change (type) */
-export interface SysioSystemLimitAuthChangeType {
+/** sysio.system::block_info_record (type) */
+export interface SysioSystemBlockInfoRecordType {
   version: number
-  account: string
-  allow_perms: string[]
-  disallow_perms: string[]
+  block_height: number
+  block_timestamp: string
 }
 
-/** sysio.system::limitauthchg_key (type) */
-export interface SysioSystemLimitauthchgKeyType {
-  account: number
+/** sysio.system::blockinfo_key (type) */
+export interface SysioSystemBlockinfoKeyType {
+  block_height: number
 }
 
 /** sysio.system::addtrxp (action) */
@@ -2174,6 +2278,19 @@ export interface SysioSystemTrxPrioGlobalType {
 /** sysio.system::trxprio_key (type) */
 export interface SysioSystemTrxprioKeyType {
   priority: number
+}
+
+/** sysio.system::limit_auth_change (type) */
+export interface SysioSystemLimitAuthChangeType {
+  version: number
+  account: string
+  allow_perms: string[]
+  disallow_perms: string[]
+}
+
+/** sysio.system::limitauthchg_key (type) */
+export interface SysioSystemLimitauthchgKeyType {
+  account: number
 }
 
 // ── sysio.token ──
@@ -2371,6 +2488,14 @@ export enum SysioUwritAttestationtype {
   ATTESTATION_TYPE_EMISSIONS_BLOCKED = 60962,
 }
 
+/** sysio.uwrit::ChainKind (enum, int32) */
+export enum SysioUwritChainkind {
+  CHAIN_KIND_UNKNOWN = 0,
+  CHAIN_KIND_WIRE = 1,
+  CHAIN_KIND_EVM = 2,
+  CHAIN_KIND_SVM = 3,
+}
+
 /** sysio.uwrit::UnderwriteRequestStatus (enum, int32) */
 export enum SysioUwritUnderwriterequeststatus {
   UNDERWRITE_REQUEST_STATUS_PENDING = 0,
@@ -2392,7 +2517,6 @@ export enum SysioUwritUnderwritestatus {
 
 /** sysio.uwrit::chklocks (action) */
 export interface SysioUwritChklocksAction {
-  up_to_epoch: number
 }
 
 /** sysio.uwrit::commit_entry (type) */
@@ -2416,9 +2540,28 @@ export interface SysioUwritCreateuwreqAction {
   data: string
 }
 
-/** sysio.uwrit::expirelock (action) */
-export interface SysioUwritExpirelockAction {
-  uwreq_id: number
+/** sysio.uwrit::drainfwq (action) */
+export interface SysioUwritDrainfwqAction {
+}
+
+/** sysio.uwrit::fromwire_q (type) */
+export interface SysioUwritFromwireQType {
+  id: number
+  user: string
+  wire_amount: number
+  dst_chain_code: SysioUwritSlugNameType
+  dst_token_code: SysioUwritSlugNameType
+  dst_reserve_code: SysioUwritSlugNameType
+  target_amount: number
+  variance_tolerance_bps: number
+  recipient_kind: SysioUwritChainkind
+  recipient_addr: string
+  created_at_epoch: number
+}
+
+/** sysio.uwrit::fw_key (type) */
+export interface SysioUwritFwKeyType {
+  id: number
 }
 
 /** sysio.uwrit::id_key (type) */
@@ -2435,8 +2578,8 @@ export interface SysioUwritLockEntryType {
   token_code: SysioUwritSlugNameType
   reserve_code: SysioUwritSlugNameType
   amount: number
-  created_at_epoch: number
-  expires_at_epoch: number
+  created_at_ms: number
+  expires_at_ms: number
 }
 
 /** sysio.uwrit::lock_key (type) */
@@ -2455,15 +2598,10 @@ export interface SysioUwritRcrdcommitAction {
   uic_bytes: string
 }
 
-/** sysio.uwrit::release (action) */
-export interface SysioUwritReleaseAction {
-  uwreq_id: number
-}
-
 /** sysio.uwrit::setconfig (action) */
 export interface SysioUwritSetconfigAction {
   fee_bps: number
-  collateral_lock_duration_epoch_count: number
+  collateral_lock_duration_ms: number
   fee_split_winner_pct: number
   fee_split_other_uw_pct: number
   fee_split_batch_op_pct: number
@@ -2481,10 +2619,23 @@ export interface SysioUwritSumlocksAction {
   token_code: SysioUwritSlugNameType
 }
 
+/** sysio.uwrit::swapfromwire (action) */
+export interface SysioUwritSwapfromwireAction {
+  user: string
+  wire_amount: number
+  dst_chain_code: SysioUwritSlugNameType
+  dst_token_code: SysioUwritSlugNameType
+  dst_reserve_code: SysioUwritSlugNameType
+  target_amount: number
+  target_tolerance_bps: number
+  recipient_kind: SysioUwritChainkind
+  recipient_addr: string
+}
+
 /** sysio.uwrit::uw_config (type) */
 export interface SysioUwritUwConfigType {
   fee_bps: number
-  collateral_lock_duration_epoch_count: number
+  collateral_lock_duration_ms: number
   fee_split_winner_pct: number
   fee_split_other_uw_pct: number
   fee_split_batch_op_pct: number
@@ -2493,6 +2644,7 @@ export interface SysioUwritUwConfigType {
 /** sysio.uwrit::uw_counters (type) */
 export interface SysioUwritUwCountersType {
   next_lock_id: number
+  next_fromwire_seq: number
 }
 
 /** sysio.uwrit::uw_request_t (type) */

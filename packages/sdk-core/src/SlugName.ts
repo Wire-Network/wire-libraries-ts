@@ -52,9 +52,13 @@ export class SlugName {
       } else {
         throw new Error(`SlugName.from: bad char in '${s}'`)
       }
-      // `slot * 2^(i*6)` — equivalent to `slot << (i*6)` but safe past
-      // bit 31 where the bitwise form would wrap to a 32-bit signed int.
-      v += slot * Math.pow(2, i * 6)
+      // Most-significant-symbol-first, mirroring slug_name.hpp exactly:
+      // char[i] occupies bits [42-i*6 .. 47-i*6] (char[0] is the HIGH
+      // slot, matching the contract-side `"X"_s` literals byte-for-byte).
+      // Arithmetic (`*`/`+`) rather than `<<` because JS bitwise ops
+      // truncate to 32-bit signed integers and every slot above char[5]
+      // lives past bit 31.
+      v += slot * Math.pow(2, 42 - i * 6)
     }
     return v
   }
@@ -70,10 +74,10 @@ export class SlugName {
    */
   static toString(n: number): string {
     let out = ""
-    let remaining = n
     for (let i = 0; i < 8; ++i) {
-      const slot = remaining % 64
-      remaining = Math.floor(remaining / 64)
+      // Slots read most-significant-first: char[i] at bits [42-i*6 ..
+      // 47-i*6], matching `slug_name::to_string` in slug_name.hpp.
+      const slot = Math.floor(n / Math.pow(2, 42 - i * 6)) % 64
       if (slot === 0) {
         break
       }
