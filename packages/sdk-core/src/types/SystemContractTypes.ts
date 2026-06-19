@@ -587,7 +587,6 @@ export enum SysioMsgchAttestationtype {
   ATTESTATION_TYPE_UNDERWRITE_INTENT_COMMIT = 60953,
   ATTESTATION_TYPE_SWAP_REVERT = 60955,
   ATTESTATION_TYPE_DEPOSIT_REVERT = 60956,
-  ATTESTATION_TYPE_SWAP_REJECTED = 60957,
   ATTESTATION_TYPE_RESERVE_CREATE = 60958,
   ATTESTATION_TYPE_RESERVE_CREATE_CANCEL = 60959,
   ATTESTATION_TYPE_RESERVE_CREATE_CANCELLED = 60960,
@@ -1311,17 +1310,6 @@ export interface SysioReservOncrtreserveAction {
   creator_pub_key: string
 }
 
-/** sysio.reserv::onreject (action) */
-export interface SysioReservOnrejectAction {
-  original_swap_remit_id: string
-  chain_code: SysioReservSlugNameType
-  token_code: SysioReservSlugNameType
-  reserve_code: SysioReservSlugNameType
-  unremitted_amount: number
-  recipient_address: string
-  reason: string
-}
-
 /** sysio.reserv::onreward (action) */
 export interface SysioReservOnrewardAction {
   chain_code: SysioReservSlugNameType
@@ -1387,6 +1375,16 @@ export interface SysioReservReserveRowType {
   is_private: boolean
   owner: string
   creator_pub_key: string
+}
+
+/** sysio.reserv::rewardbal (action) */
+export interface SysioReservRewardbalAction {
+}
+
+/** sysio.reserv::rewards_bucket (type) */
+export interface SysioReservRewardsBucketType {
+  balance: number
+  lifetime_accrued: number
 }
 
 /** sysio.reserv::slug_name (type) */
@@ -1476,10 +1474,7 @@ export interface SysioRoaNodeownerKeyType {
 export interface SysioRoaNodeownerregType {
   owner: string
   status: number
-  trx_id: string
-  trx_signature: string
   tier: number
-  block_num: string
   reason: number
 }
 
@@ -2480,7 +2475,6 @@ export enum SysioUwritAttestationtype {
   ATTESTATION_TYPE_UNDERWRITE_INTENT_COMMIT = 60953,
   ATTESTATION_TYPE_SWAP_REVERT = 60955,
   ATTESTATION_TYPE_DEPOSIT_REVERT = 60956,
-  ATTESTATION_TYPE_SWAP_REJECTED = 60957,
   ATTESTATION_TYPE_RESERVE_CREATE = 60958,
   ATTESTATION_TYPE_RESERVE_CREATE_CANCEL = 60959,
   ATTESTATION_TYPE_RESERVE_CREATE_CANCELLED = 60960,
@@ -2602,9 +2596,6 @@ export interface SysioUwritRcrdcommitAction {
 export interface SysioUwritSetconfigAction {
   fee_bps: number
   collateral_lock_duration_ms: number
-  fee_split_winner_pct: number
-  fee_split_other_uw_pct: number
-  fee_split_batch_op_pct: number
 }
 
 /** sysio.uwrit::slug_name (type) */
@@ -2636,9 +2627,6 @@ export interface SysioUwritSwapfromwireAction {
 export interface SysioUwritUwConfigType {
   fee_bps: number
   collateral_lock_duration_ms: number
-  fee_split_winner_pct: number
-  fee_split_other_uw_pct: number
-  fee_split_batch_op_pct: number
 }
 
 /** sysio.uwrit::uw_counters (type) */
