@@ -18,6 +18,8 @@ const config: Config = {
     "/node_modules/(?!(\\.pnpm|@noble))"
   ],
   moduleNameMapper: {
+    "^@wireio/shared$": "<rootDir>/../shared/src/index",
+    "^@wireio/shared/(.*)$": "<rootDir>/../shared/src/$1",
     "^@wireio/sdk-core$": "<rootDir>/src/index",
     "^@wireio/sdk-core/(.*)$": "<rootDir>/src/$1",
     "^@noble/curves/bls12-381$": "@noble/curves/bls12-381.js",
