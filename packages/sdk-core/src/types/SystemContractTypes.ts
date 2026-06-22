@@ -1276,6 +1276,11 @@ export interface SysioReservDebitAction {
   amount: number
 }
 
+/** sysio.reserv::drainrewards (action) */
+export interface SysioReservDrainrewardsAction {
+  amount: number
+}
+
 /** sysio.reserv::matchreserve (action) */
 export interface SysioReservMatchreserveAction {
   chain_code: SysioReservSlugNameType
@@ -1757,6 +1762,7 @@ export interface SysioSystemEpochLogType {
   compute_amount: number
   capex_amount: number
   governance_amount: number
+  fee_distributed: number
 }
 
 /** sysio.system::epochlog_key (type) */
@@ -2194,6 +2200,18 @@ export interface SysioSystemWasmcfgAction {
   settings: string
 }
 
+/** sysio.system::block_info_record (type) */
+export interface SysioSystemBlockInfoRecordType {
+  version: number
+  block_height: number
+  block_timestamp: string
+}
+
+/** sysio.system::blockinfo_key (type) */
+export interface SysioSystemBlockinfoKeyType {
+  block_height: number
+}
+
 /** sysio.system::delpeerkey (action) */
 export interface SysioSystemDelpeerkeyAction {
   proposer_finalizer_name: string
@@ -2232,16 +2250,17 @@ export interface SysioSystemV0DataType {
   pubkey?: string | null
 }
 
-/** sysio.system::block_info_record (type) */
-export interface SysioSystemBlockInfoRecordType {
+/** sysio.system::limit_auth_change (type) */
+export interface SysioSystemLimitAuthChangeType {
   version: number
-  block_height: number
-  block_timestamp: string
+  account: string
+  allow_perms: string[]
+  disallow_perms: string[]
 }
 
-/** sysio.system::blockinfo_key (type) */
-export interface SysioSystemBlockinfoKeyType {
-  block_height: number
+/** sysio.system::limitauthchg_key (type) */
+export interface SysioSystemLimitauthchgKeyType {
+  account: number
 }
 
 /** sysio.system::addtrxp (action) */
@@ -2273,19 +2292,6 @@ export interface SysioSystemTrxPrioGlobalType {
 /** sysio.system::trxprio_key (type) */
 export interface SysioSystemTrxprioKeyType {
   priority: number
-}
-
-/** sysio.system::limit_auth_change (type) */
-export interface SysioSystemLimitAuthChangeType {
-  version: number
-  account: string
-  allow_perms: string[]
-  disallow_perms: string[]
-}
-
-/** sysio.system::limitauthchg_key (type) */
-export interface SysioSystemLimitauthchgKeyType {
-  account: number
 }
 
 // ── sysio.token ──
@@ -2402,6 +2408,7 @@ export interface SysioTokensChainTokenRowType {
   chain_code: SysioTokensSlugNameType
   token_code: SysioTokensSlugNameType
   contract_addr: string
+  precision_override: number
   is_native: boolean
   active: boolean
   registered_at_ms: number
@@ -2413,6 +2420,7 @@ export interface SysioTokensRegctokAction {
   chain_code: SysioTokensSlugNameType
   token_code: SysioTokensSlugNameType
   contract_addr: string
+  precision_override: number
   is_native: boolean
 }
 
@@ -2507,6 +2515,7 @@ export enum SysioUwritUnderwritestatus {
   UNDERWRITE_STATUS_READY = 3,
   UNDERWRITE_STATUS_RELEASED = 5,
   UNDERWRITE_STATUS_SLASHED = 10,
+  UNDERWRITE_STATUS_DISQUALIFIED = 11,
 }
 
 /** sysio.uwrit::chklocks (action) */
