@@ -1,15 +1,15 @@
-import type { APIClient } from "../api/Client.js"
-import type { ABIDef } from "../chain/Abi.js"
-import type { AnyAction } from "../chain/Action.js"
-import type { Checksum256, Checksum256Type } from "../chain/Checksum.js"
-import type { NameType } from "../chain/Name.js"
-import type { PermissionLevelType } from "../chain/PermissionLevel.js"
+import type { APIClient } from "../../../api/Client.js"
+import type { ABIDef } from "../../../chain/Abi.js"
+import type { AnyAction } from "../../../chain/Action.js"
+import type { Checksum256, Checksum256Type } from "../../../chain/Checksum.js"
+import type { NameType } from "../../../chain/Name.js"
+import type { PermissionLevelType } from "../../../chain/PermissionLevel.js"
 import type {
   Transaction,
   TransactionHeaderType,
   TransactionType
-} from "../chain/Transaction.js"
-import type * as SystemContracts from "../types/SystemContractTypes.js"
+} from "../../../chain/Transaction.js"
+import type * as SystemContracts from "../../../types/SystemContractTypes.js"
 
 import type {
   MsigApprovalsInfo,
@@ -169,7 +169,7 @@ export interface DecodedProposalAction {
   /** Whether action data decoded successfully. */
   decoded: boolean
   /** Decode failure reason when `decoded` is false. */
-  error?: string
+  error: string | null
 }
 
 /** ABI profile detected for a deployed `sysio.msig` contract. */
@@ -298,7 +298,7 @@ export interface ProposalHashVerification {
   /** Whether the actual and expected hashes match. */
   matches: boolean | null
   /** Why verification is unavailable. */
-  reason?: ProposalHashUnavailableReason
+  reason: ProposalHashUnavailableReason | null
 }
 
 /** Feature flags carried with proposal details. */
@@ -336,7 +336,7 @@ export interface ProposalDetail {
   /** Approval information, when found. */
   approvals: MsigApprovalsResult | null
   /** Invalidation rows, when loaded by a consumer. */
-  invalidations?: MsigInvalidation[]
+  invalidations: MsigInvalidation[] | null
   /** Approval-list status summary. */
   status: ProposalStatus
 }
@@ -358,7 +358,7 @@ export interface ProposalStatus {
   /** Whether approval-list state suggests the proposal can execute. */
   canExecuteByRequestedList: boolean
   /** Caveat describing status limitations. */
-  caveat?: string
+  caveat: string | null
 }
 
 /** JSON row shape generated from `sysio.msig::proposal`. */

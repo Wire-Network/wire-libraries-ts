@@ -1,6 +1,6 @@
-import { Msig } from "@wireio/sdk-core"
+import { contracts } from "@wireio/sdk-core"
 
-const { capabilitiesFromAbi } = Msig
+const { capabilitiesFromAbi } = contracts.sysio.msig
 
 const baseActions = ["propose", "approve", "unapprove", "cancel", "exec", "invalidate"],
   baseTables = ["proposal", "approvals2", "approvals", "invals"]

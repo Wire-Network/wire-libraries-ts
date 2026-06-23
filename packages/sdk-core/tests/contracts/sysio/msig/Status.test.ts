@@ -1,6 +1,6 @@
-import { Msig } from "@wireio/sdk-core"
+import { contracts } from "@wireio/sdk-core"
 
-const { MsigApprovalsInfo, MsigProposal, getProposalStatus } = Msig
+const { MsigApprovalsInfo, MsigProposal, getProposalStatus } = contracts.sysio.msig
 
 describe("proposal status", () => {
   test("marks proposal fully approved when all requested approvals are provided", () => {

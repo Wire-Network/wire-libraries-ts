@@ -1,9 +1,9 @@
-import { Action } from "../chain/Action.js"
-import { Checksum256 } from "../chain/Checksum.js"
-import { Name, NameType } from "../chain/Name.js"
-import { PermissionLevel, PermissionLevelType } from "../chain/PermissionLevel.js"
-import { Transaction } from "../chain/Transaction.js"
-import type * as SystemContracts from "../types/SystemContractTypes.js"
+import { Action } from "../../../chain/Action.js"
+import { Checksum256 } from "../../../chain/Checksum.js"
+import { Name, NameType } from "../../../chain/Name.js"
+import { PermissionLevel, PermissionLevelType } from "../../../chain/PermissionLevel.js"
+import { Transaction } from "../../../chain/Transaction.js"
+import type * as SystemContracts from "../../../types/SystemContractTypes.js"
 
 import { DEFAULT_MSIG_CONTRACT } from "./Constants.js"
 import {

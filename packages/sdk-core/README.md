@@ -6,13 +6,13 @@ Available on npm: <https://www.npmjs.com/package/@wireio/sdk-core>
 
 ## Multisig
 
-`Msig` provides UI-neutral helpers for `sysio.msig` proposal workflows, including action builders, proposal reads, transaction decoding, hash verification, and legacy/chunked contract compatibility.
+`contracts.sysio.msig` provides UI-neutral helpers for `sysio.msig` proposal workflows, including action builders, proposal reads, transaction decoding, hash verification, and legacy/chunked contract compatibility.
 
 ```ts
-import { APIClient, Msig } from "@wireio/sdk-core"
+import { APIClient, contracts } from "@wireio/sdk-core"
 
 const api = new APIClient({ url: "https://example-wire-rpc.invalid" })
-const client = new Msig.MsigClient({ client: api })
+const client = new contracts.sysio.msig.MsigClient({ client: api })
 const detail = await client.getProposalDetail("alice", "upgrade1")
 ```
 

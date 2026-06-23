@@ -1,4 +1,4 @@
-import { CompressionType, PackedTransaction, Transaction } from "../chain/Transaction.js"
+import { CompressionType, PackedTransaction, Transaction } from "../../../chain/Transaction.js"
 
 import { verifyProposalHash } from "./Hash.js"
 import type { MsigProposal } from "./Structs.js"
@@ -47,9 +47,9 @@ export function createProposalDetail(args: {
   /** Approval row, when available. */
   approvals: MsigApprovalsResult | null
   /** ABI-derived contract capabilities. */
-  capabilities?: MsigCapabilities
+  capabilities: MsigCapabilities | null
   /** Read strategy used to retrieve this proposal. */
-  readStrategy?: MsigReadStrategy
+  readStrategy: MsigReadStrategy | null
 }): ProposalDetail {
   const transaction = tryUnpackProposalTransaction(args.proposal),
     features = {
@@ -71,6 +71,7 @@ export function createProposalDetail(args: {
     transaction,
     hash: verifyProposalHash(args.proposal, args.capabilities),
     approvals: args.approvals,
+    invalidations: null,
     status: getProposalStatus({
       proposal: args.proposal,
       approvals: args.approvals,

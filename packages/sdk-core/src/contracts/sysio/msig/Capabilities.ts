@@ -1,8 +1,8 @@
 import { match } from "ts-pattern"
 
-import type { APIClient } from "../api/Client.js"
-import { ABI } from "../chain/Abi.js"
-import { Name, NameType } from "../chain/Name.js"
+import type { APIClient } from "../../../api/Client.js"
+import { ABI } from "../../../chain/Abi.js"
+import { Name, NameType } from "../../../chain/Name.js"
 
 import { DEFAULT_MSIG_CONTRACT } from "./Constants.js"
 import type {
@@ -72,7 +72,7 @@ export const MSIG_PROPOSAL_FIELDS = [
   ...MSIG_CHUNKED_PROPOSAL_FIELDS
 ] as const satisfies readonly MsigProposalFieldName[]
 
-type AbiLike = ABI.Def | { abi?: ABI.Def | null } | null | undefined
+type AbiLike = ABI.Def | { abi?: ABI.Def | null } | null
 
 function resolveAbi(response: AbiLike): ABI.Def | null {
   const candidate =

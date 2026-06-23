@@ -26,8 +26,8 @@ export * from "./common/CommonModule.js"
 // resources
 export * from "./resources/IndexResources.js"
 
-// sysio.msig
-export * as Msig from "./multisig/index.js"
+// system contracts
+export * as contracts from "./contracts/index.js"
 
 // crypto
 export * as Crypto from "./crypto/index.js"

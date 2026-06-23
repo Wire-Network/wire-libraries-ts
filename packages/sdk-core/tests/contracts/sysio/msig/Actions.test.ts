@@ -1,6 +1,6 @@
 import { Checksum256 } from "@wireio/sdk-core/chain/Checksum"
 import { Transaction } from "@wireio/sdk-core/chain/Transaction"
-import { Msig } from "@wireio/sdk-core"
+import { contracts } from "@wireio/sdk-core"
 
 const {
   buildApproveAction,
@@ -17,7 +17,7 @@ const {
   MsigInvalidate,
   MsigPropose,
   MsigUnapprove
-} = Msig
+} = contracts.sysio.msig
 
 function transaction(): Transaction {
   return Transaction.from({

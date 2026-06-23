@@ -1,8 +1,8 @@
 import { Checksum256 } from "@wireio/sdk-core/chain/Checksum"
 import { Serializer } from "@wireio/sdk-core/serializer"
-import { Msig } from "@wireio/sdk-core"
+import { contracts } from "@wireio/sdk-core"
 
-const { MsigClient, MsigProposal, decodeReadOnlyProposalReturn } = Msig
+const { MsigClient, MsigProposal, decodeReadOnlyProposalReturn } = contracts.sysio.msig
 
 function chunkedAbi(): any {
   return {

@@ -1,8 +1,8 @@
-import type { APIClient } from "../api/Client.js"
-import type { ABIDef } from "../chain/Abi.js"
-import { Name, NameType } from "../chain/Name.js"
-import { Transaction } from "../chain/Transaction.js"
-import { Serializer } from "../serializer/index.js"
+import type { APIClient } from "../../../api/Client.js"
+import type { ABIDef } from "../../../chain/Abi.js"
+import { Name, NameType } from "../../../chain/Name.js"
+import { Transaction } from "../../../chain/Transaction.js"
+import { Serializer } from "../../../serializer/index.js"
 
 import type {
   BuildProposalTransactionOptions,
@@ -11,18 +11,18 @@ import type {
 } from "./Types.js"
 
 function actionAbiFor(
-  abis: ABIDef | { contract: NameType; abi: ABIDef }[] | undefined,
+  abis: ABIDef | { contract: NameType; abi: ABIDef }[] | null,
   account: NameType
-): ABIDef | undefined {
+): ABIDef | null {
   if (!abis) {
-    return undefined
+    return null
   }
 
   if (!Array.isArray(abis)) {
     return abis
   }
 
-  return abis.find(candidate => Name.from(candidate.contract).equals(account))?.abi
+  return abis.find(candidate => Name.from(candidate.contract).equals(account))?.abi ?? null
 }
 
 function objectify(value: unknown): unknown {
@@ -65,7 +65,7 @@ export async function createProposalTransaction(
 /** Decodes every action in a proposal transaction with optional contract ABIs. */
 export function decodeProposalTransactionActions(
   transaction: Transaction,
-  abis?: ABIDef | { contract: NameType; abi: ABIDef }[]
+  abis: ABIDef | { contract: NameType; abi: ABIDef }[] | null = null
 ): DecodedProposalAction[] {
   return transaction.actions.map(action => {
     const account = action.account.toString(),
@@ -95,7 +95,8 @@ export function decodeProposalTransactionActions(
         authorization,
         data: objectify(data),
         rawData,
-        decoded: true
+        decoded: true,
+        error: null
       }
     } catch (error) {
       return {

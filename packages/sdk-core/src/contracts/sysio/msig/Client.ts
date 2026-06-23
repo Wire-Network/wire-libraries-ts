@@ -1,11 +1,11 @@
 import { match } from "ts-pattern"
 
-import { APIClient } from "../api/Client.js"
-import { Action } from "../chain/Action.js"
-import { Bytes } from "../chain/Bytes.js"
-import { Name, NameType } from "../chain/Name.js"
-import { SignedTransaction } from "../chain/Transaction.js"
-import { Serializer } from "../serializer/index.js"
+import { APIClient } from "../../../api/Client.js"
+import { Action } from "../../../chain/Action.js"
+import { Bytes } from "../../../chain/Bytes.js"
+import { Name, NameType } from "../../../chain/Name.js"
+import { SignedTransaction } from "../../../chain/Transaction.js"
+import { Serializer } from "../../../serializer/index.js"
 
 import { buildGetProposalAction } from "./Actions.js"
 import { detectMsigCapabilities } from "./Capabilities.js"
@@ -45,7 +45,7 @@ function rowNameEquals(
 }
 
 function numberFromOptionalUInt32(value: unknown): number {
-  if (value === null || value === undefined) {
+  if (value == null) {
     return 0
   }
 
@@ -118,7 +118,7 @@ export class MsigClient {
   readonly contract: NameType
 
   private readonly configuredReadStrategy: MsigReadStrategy | "auto"
-  private capabilities?: Promise<MsigCapabilities>
+  private capabilities: Promise<MsigCapabilities> | null = null
 
   /** Creates a multisig client. */
   constructor(config: MsigClientOptions) {
@@ -153,12 +153,12 @@ export class MsigClient {
     const result = await this.client.v1.chain.get_table_by_scope({
       code: this.contract,
       table: "proposal",
-      lower_bound: options.lowerBound
-        ? Name.from(options.lowerBound).toString()
-        : undefined,
-      upper_bound: options.upperBound
-        ? Name.from(options.upperBound).toString()
-        : undefined,
+      ...(options.lowerBound
+        ? { lower_bound: Name.from(options.lowerBound).toString() }
+        : {}),
+      ...(options.upperBound
+        ? { upper_bound: Name.from(options.upperBound).toString() }
+        : {}),
       limit: options.limit || 100
     })
 
@@ -213,12 +213,12 @@ export class MsigClient {
         code: this.contract,
         scope: nameString(proposer),
         table: "proposal",
-        lower_bound: options.lowerBound
-          ? Name.from(options.lowerBound as NameType)
-          : undefined,
-        upper_bound: options.upperBound
-          ? Name.from(options.upperBound as NameType)
-          : undefined,
+        ...(options.lowerBound
+          ? { lower_bound: Name.from(options.lowerBound as NameType) }
+          : {}),
+        ...(options.upperBound
+          ? { upper_bound: Name.from(options.upperBound as NameType) }
+          : {}),
         limit
       })
 

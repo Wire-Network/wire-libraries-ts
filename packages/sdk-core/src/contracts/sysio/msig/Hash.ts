@@ -1,16 +1,16 @@
 import { match } from "ts-pattern"
 
-import { Checksum256 } from "../chain/Checksum.js"
+import { Checksum256 } from "../../../chain/Checksum.js"
 
 import type { MsigProposal } from "./Structs.js"
 import type { MsigCapabilities, ProposalHashVerification } from "./Types.js"
 
-function checksumOrNull(value: Checksum256 | null | undefined): Checksum256 | null {
+function checksumOrNull(value: Checksum256 | null): Checksum256 | null {
   return value ? Checksum256.from(value) : null
 }
 
 function numberFromOptionalUInt32(value: unknown): number {
-  if (value === null || value === undefined) {
+  if (value == null) {
     return 0
   }
 
@@ -54,10 +54,10 @@ export function hashProposalPackedTransaction(
 /** Verifies packed proposal bytes against the chunked-v2 `trx_hash` field. */
 export function verifyProposalHash(
   proposal: MsigProposal,
-  capabilities?: MsigCapabilities
+  capabilities: MsigCapabilities | null = null
 ): ProposalHashVerification {
   const actual = hashProposalPackedTransaction(proposal),
-    expected = checksumOrNull(proposal.trx_hash)
+    expected = checksumOrNull(proposal.trx_hash ?? null)
 
   return match({
     profileSupportsHash: capabilities ? capabilities.supports.proposalHash : true,
@@ -89,6 +89,7 @@ export function verifyProposalHash(
       status: actual!.equals(expected!) ? "verified" : "mismatch",
       actual,
       expected,
-      matches: actual!.equals(expected!)
+      matches: actual!.equals(expected!),
+      reason: null
     }))
 }

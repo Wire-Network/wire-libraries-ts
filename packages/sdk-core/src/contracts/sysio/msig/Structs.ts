@@ -1,11 +1,11 @@
-import { Bytes } from "../chain/Bytes.js"
-import { Checksum256 } from "../chain/Checksum.js"
-import { UInt32, UInt8 } from "../chain/Integer.js"
-import { Name } from "../chain/Name.js"
-import { PermissionLevel } from "../chain/PermissionLevel.js"
-import { Struct } from "../chain/Struct.js"
-import { TimePoint } from "../chain/Time.js"
-import { Transaction } from "../chain/Transaction.js"
+import { Bytes } from "../../../chain/Bytes.js"
+import { Checksum256 } from "../../../chain/Checksum.js"
+import { UInt32, UInt8 } from "../../../chain/Integer.js"
+import { Name } from "../../../chain/Name.js"
+import { PermissionLevel } from "../../../chain/PermissionLevel.js"
+import { Struct } from "../../../chain/Struct.js"
+import { TimePoint } from "../../../chain/Time.js"
+import { Transaction } from "../../../chain/Transaction.js"
 
 /** Runtime serializer for `sysio.msig::approval`. */
 @Struct.type("approval")
@@ -61,19 +61,19 @@ export class MsigProposal extends Struct {
 
   /** Optional earliest execution time. */
   @Struct.field("time_point", { optional: true, extension: true })
-  declare earliest_exec_time?: TimePoint | null
+  declare earliest_exec_time: TimePoint | null
 
   /** Chunk count used by chunked-v2 proposal parent rows. */
   @Struct.field("uint32", { extension: true })
-  declare chunk_count?: UInt32 | null
+  declare chunk_count: UInt32 | null
 
   /** Total assembled packed transaction size for chunked-v2 proposals. */
   @Struct.field("uint32", { extension: true })
-  declare total_size?: UInt32 | null
+  declare total_size: UInt32 | null
 
   /** Expected SHA-256 hash of the packed transaction for chunked-v2 proposals. */
   @Struct.field("checksum256", { extension: true })
-  declare trx_hash?: Checksum256 | null
+  declare trx_hash: Checksum256 | null
 }
 
 /** Runtime serializer for `sysio.msig::propchunk` rows. */
@@ -130,7 +130,7 @@ export class MsigApprove extends Struct {
 
   /** Optional proposal hash extension used by chunked-v2 contracts. */
   @Struct.field("checksum256", { extension: true })
-  declare proposal_hash?: Checksum256 | null
+  declare proposal_hash: Checksum256 | null
 }
 
 /** Runtime serializer for `sysio.msig::unapprove`. */

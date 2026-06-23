@@ -1,7 +1,7 @@
 import { Checksum256 } from "@wireio/sdk-core/chain/Checksum"
-import { Msig } from "@wireio/sdk-core"
+import { contracts } from "@wireio/sdk-core"
 
-const { capabilitiesFromAbi, createProposalDetail, MsigProposal } = Msig
+const { capabilitiesFromAbi, createProposalDetail, MsigProposal } = contracts.sysio.msig
 
 const packedTransaction = new Uint8Array([1, 2, 3, 4])
 
@@ -61,7 +61,8 @@ describe("proposal details", () => {
         proposer: "alice",
         proposal,
         approvals: null,
-        capabilities: chunkedCapabilities()
+        capabilities: chunkedCapabilities(),
+        readStrategy: null
       })
 
     expect(detail.profile).toBe("chunked-v2")
@@ -114,7 +115,8 @@ describe("proposal details", () => {
         proposer: "alice",
         proposal,
         approvals: null,
-        capabilities
+        capabilities,
+        readStrategy: null
       })
 
     expect(detail.profile).toBe("legacy")

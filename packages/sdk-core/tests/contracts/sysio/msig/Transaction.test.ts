@@ -1,9 +1,9 @@
 import { Action } from "@wireio/sdk-core/chain/Action"
 import { PermissionLevel } from "@wireio/sdk-core/chain/PermissionLevel"
 import { Transaction } from "@wireio/sdk-core/chain/Transaction"
-import { Msig } from "@wireio/sdk-core"
+import { contracts } from "@wireio/sdk-core"
 
-const { buildProposalTransaction, decodeProposalTransactionActions } = Msig
+const { buildProposalTransaction, decodeProposalTransactionActions } = contracts.sysio.msig
 
 const tokenAbi = {
   version: "eosio::abi/1.2",

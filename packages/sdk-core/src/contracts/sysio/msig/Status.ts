@@ -1,6 +1,6 @@
 import { match } from "ts-pattern"
 
-import type { Transaction } from "../chain/Transaction.js"
+import type { Transaction } from "../../../chain/Transaction.js"
 
 import type {
   MsigApproval,
