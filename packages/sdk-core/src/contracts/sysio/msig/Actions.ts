@@ -1,4 +1,5 @@
-import { Action } from "../../../chain/Action.js"
+import { buildContractAction } from "../../Contract.js"
+import type { Action } from "../../../chain/Action.js"
 import { Checksum256 } from "../../../chain/Checksum.js"
 import { Name, NameType } from "../../../chain/Name.js"
 import { PermissionLevel, PermissionLevelType } from "../../../chain/PermissionLevel.js"
@@ -6,6 +7,7 @@ import { Transaction } from "../../../chain/Transaction.js"
 import type * as SystemContracts from "../../../types/SystemContractTypes.js"
 
 import { DEFAULT_MSIG_CONTRACT } from "./Constants.js"
+import { descriptor as msigDescriptor } from "./Descriptor.js"
 import {
   MsigApprove,
   MsigCancel,
@@ -29,27 +31,19 @@ function permissionLevel(value: MsigPermissionLevel): PermissionLevel {
   return PermissionLevel.from(value as PermissionLevelType | string)
 }
 
-function buildAction(args: {
-  contract?: NameType
-  name: NameType
-  authorization: PermissionLevel[]
-  data: unknown
-}): Action {
-  return Action.from({
-    account: args.contract || DEFAULT_MSIG_CONTRACT,
-    name: args.name,
-    authorization: args.authorization,
-    data: args.data
-  })
-}
-
 /** Builds an unsigned `sysio.msig::propose` action. */
 export function buildProposeAction(options: BuildProposeActionOptions): Action {
   const proposer = Name.from(options.proposer)
 
-  return buildAction({
-    contract: options.contract,
-    name: "propose",
+  return buildContractAction({
+    contract: options.contract || DEFAULT_MSIG_CONTRACT,
+    descriptor: {
+      name: msigDescriptor.actions.propose.name,
+      // The generated SysioMsigProposeAction currently omits inherited
+      // transaction-header fields, so this builder keeps using the runtime
+      // Transaction serializer until generator metadata catches up.
+      serialize: null
+    },
     authorization: [
       PermissionLevel.from({
         actor: proposer,
@@ -80,11 +74,11 @@ export function buildApproveAction(options: BuildApproveActionOptions): Action {
         : null
     }
 
-  return buildAction({
-    contract: options.contract,
-    name: "approve",
+  return buildContractAction({
+    contract: options.contract || DEFAULT_MSIG_CONTRACT,
+    descriptor: msigDescriptor.actions.approve,
     authorization: [level],
-    data: MsigApprove.from(data)
+    data
   })
 }
 
@@ -100,11 +94,11 @@ export function buildUnapproveAction(options: BuildUnapproveActionOptions): Acti
       }
     }
 
-  return buildAction({
-    contract: options.contract,
-    name: "unapprove",
+  return buildContractAction({
+    contract: options.contract || DEFAULT_MSIG_CONTRACT,
+    descriptor: msigDescriptor.actions.unapprove,
     authorization: [level],
-    data: MsigUnapprove.from(data)
+    data
   })
 }
 
@@ -116,16 +110,16 @@ export function buildCancelAction(options: BuildCancelActionOptions): Action {
     canceler: Name.from(options.canceler).toString()
   }
 
-  return buildAction({
-    contract: options.contract,
-    name: "cancel",
+  return buildContractAction({
+    contract: options.contract || DEFAULT_MSIG_CONTRACT,
+    descriptor: msigDescriptor.actions.cancel,
     authorization: [
       PermissionLevel.from({
         actor: options.canceler,
         permission: options.cancelerPermission || "active"
       })
     ],
-    data: MsigCancel.from(data)
+    data
   })
 }
 
@@ -137,16 +131,16 @@ export function buildExecAction(options: BuildExecActionOptions): Action {
     executer: Name.from(options.executer).toString()
   }
 
-  return buildAction({
-    contract: options.contract,
-    name: "exec",
+  return buildContractAction({
+    contract: options.contract || DEFAULT_MSIG_CONTRACT,
+    descriptor: msigDescriptor.actions.exec,
     authorization: [
       PermissionLevel.from({
         actor: options.executer,
         permission: options.executerPermission || "active"
       })
     ],
-    data: MsigExec.from(data)
+    data
   })
 }
 
@@ -156,16 +150,16 @@ export function buildInvalidateAction(options: BuildInvalidateActionOptions): Ac
     account: Name.from(options.account).toString()
   }
 
-  return buildAction({
-    contract: options.contract,
-    name: "invalidate",
+  return buildContractAction({
+    contract: options.contract || DEFAULT_MSIG_CONTRACT,
+    descriptor: msigDescriptor.actions.invalidate,
     authorization: [
       PermissionLevel.from({
         actor: options.account,
         permission: options.permission || "active"
       })
     ],
-    data: MsigInvalidate.from(data)
+    data
   })
 }
 
@@ -180,11 +174,11 @@ export function buildGetProposalAction(
     proposal_name: Name.from(proposalName).toString()
   }
 
-  return buildAction({
+  return buildContractAction({
     contract,
-    name: "getproposal",
+    descriptor: msigDescriptor.actions.getproposal,
     authorization: [],
-    data: MsigGetProposal.from(data)
+    data
   })
 }
 

@@ -16,6 +16,22 @@ const client = new contracts.sysio.msig.MsigClient({ client: api })
 const detail = await client.getProposalDetail("alice", "upgrade1")
 ```
 
+System contract descriptors also feed a generic typed client factory. The current registry includes `sysio.msig`; future generated metadata can add the rest of the system contracts without changing the factory shape.
+
+```ts
+const msig = contracts.sysio.createClient({ client: api, name: "msig" })
+const approve = msig.actions.approve(
+  {
+    proposer: "alice",
+    proposal_name: "upgrade1",
+    level: { actor: "bob", permission: "active" },
+    proposal_hash: null
+  },
+  ["bob@active"]
+)
+const proposals = await msig.tables.proposal.rows({ scope: "alice" })
+```
+
 The multisig module supports:
 
 - unsigned action builders for `propose`, `approve`, `unapprove`, `cancel`, `exec`, `invalidate`, and read-only `getproposal`
