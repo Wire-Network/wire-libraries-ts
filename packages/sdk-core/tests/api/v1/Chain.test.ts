@@ -366,3 +366,33 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
     expect(result.rows[1]).toBe(7)
   })
 })
+
+describe("ChainAPI.get_table_by_scope", () => {
+  test("decodes Wire rows that omit payer and count", async () => {
+    const client = makeClient({
+      "/v1/chain/get_table_by_scope": {
+        rows: [
+          {
+            code: "sysio.msig",
+            scope: "alice",
+            table: "proposal"
+          }
+        ],
+        more: ""
+      }
+    })
+
+    const result = await client.v1.chain.get_table_by_scope({
+      code: "sysio.msig",
+      table: "proposal"
+    })
+
+    expect(result.rows).toHaveLength(1)
+    expect(result.rows[0].code.toString()).toBe("sysio.msig")
+    expect(result.rows[0].scope.toString()).toBe("alice")
+    expect(result.rows[0].table.toString()).toBe("proposal")
+    expect(result.rows[0].payer == null).toBe(true)
+    expect(result.rows[0].count == null).toBe(true)
+    expect(result.more).toBe("")
+  })
+})

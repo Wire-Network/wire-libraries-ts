@@ -647,8 +647,8 @@ export class GetTableByScopeResponseRow extends Struct {
   @Struct.field("name") declare code: Name
   @Struct.field("name") declare scope: Name
   @Struct.field("name") declare table: Name
-  @Struct.field("name") declare payer: Name
-  @Struct.field("uint32") declare count: UInt32
+  @Struct.field("name?") declare payer?: Name | null
+  @Struct.field("uint32?") declare count?: UInt32 | null
 }
 
 @Struct.type("get_table_by_scope_response")
