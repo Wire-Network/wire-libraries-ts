@@ -1,6 +1,6 @@
 {
   "name": "@wireio/shared",
-  "version": "1.0.30",
+  "version": "1.0.31",
   "private": false,
   "publishConfig": {
     "access": "public"
