@@ -397,6 +397,7 @@ Use for focused utilities only. Don't use for things native `Array`/`Object` met
 ## 9. General Rules
 
 - **No magic literals.** Extract to namespace constants if not trivially obvious.
+- **Use `null` for intentional absence.** Do not return or store `undefined` as a meaningful value in new code. Use optional properties only for caller-provided configuration surfaces, and normalize runtime absence to `null`.
 - **JSDoc on every public / exported symbol.** That covers exported functions, exported classes, public methods, exported interfaces (and every interface field), type aliases, enums, exported constants, and public class fields/properties. **Skip:** local (function-scoped) variables and `private`/`protected` class fields — their names plus types already document them.
 - **`source-map-support/register`** at every CLI/service entry point.
 - **No default exports.** Named exports only.

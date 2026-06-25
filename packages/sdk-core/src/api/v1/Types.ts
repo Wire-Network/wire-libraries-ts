@@ -297,8 +297,28 @@ export class TrxVariant implements ABISerializableObject {
   }
 }
 
+@Struct.type("get_block_qc_claim")
+export class GetBlockQcClaim extends Struct {
+  @Struct.field("uint32") declare block_num: UInt32
+  @Struct.field("bool") declare is_strong_qc: boolean
+}
+
+@Struct.type("get_block_qc_active_policy_sig")
+export class GetBlockQcActivePolicySig extends Struct {
+  @Struct.field("string") declare strong_votes: string
+  @Struct.field("string") declare sig: string
+}
+
+@Struct.type("get_block_qc")
+export class GetBlockQc extends Struct {
+  @Struct.field("uint32") declare block_num: UInt32
+  @Struct.field(GetBlockQcActivePolicySig)
+  declare active_policy_sig: GetBlockQcActivePolicySig
+}
+
 @Struct.type("get_block_response_receipt")
-export class GetBlockResponseTransactionReceipt extends TransactionReceipt {
+export class GetBlockResponseTransactionReceipt extends Struct {
+  @Struct.field("uint32", { array: true }) declare cpu_usage_us: UInt32[]
   @Struct.field(TrxVariant) declare trx: TrxVariant
   // NOTE: Sometimes the trx field is a raw {array: []} object containing the ID.
   // If so, do as follows to convert to hex trxId:
@@ -315,20 +335,19 @@ export class GetBlockResponseTransactionReceipt extends TransactionReceipt {
 export class GetBlockResponse extends Struct {
   @Struct.field("time_point") declare timestamp: TimePoint
   @Struct.field("name") declare producer: Name
-  @Struct.field("uint16") declare confirmed: UInt16
   @Struct.field(BlockId) declare previous: BlockId
   @Struct.field("checksum256") declare transaction_mroot: Checksum256
-  @Struct.field("checksum256") declare action_mroot: Checksum256
-  @Struct.field("uint32") declare schedule_version: UInt32
-  @Struct.field(NewProducers, { optional: true }) new_producers?: NewProducers
-  @Struct.field("header_extension", { optional: true })
-  header_extensions?: HeaderExtension[]
-  @Struct.field("any", { optional: true }) new_protocol_features?: any
-  @Struct.field("signature") declare producer_signature: Signature
+  @Struct.field("checksum256") declare finality_mroot: Checksum256
+  @Struct.field(GetBlockQcClaim) declare qc_claim: GetBlockQcClaim
+  @Struct.field("any", { optional: true })
+  declare new_finalizer_policy_diff?: any
+  @Struct.field("any", { optional: true })
+  declare new_proposer_policy_diff?: any
+  @Struct.field("signature", { array: true })
+  declare producer_signatures: Signature[]
   @Struct.field(GetBlockResponseTransactionReceipt, { array: true })
   declare transactions: GetBlockResponseTransactionReceipt[]
-  @Struct.field("block_extension", { optional: true })
-  declare block_extensions: BlockExtension[]
+  @Struct.field(GetBlockQc, { optional: true }) declare qc?: GetBlockQc
   @Struct.field(BlockId) declare id: BlockId
   @Struct.field("uint32") declare block_num: UInt32
   @Struct.field("uint32") declare ref_block_prefix: UInt32
@@ -337,16 +356,16 @@ export class GetBlockResponse extends Struct {
 @Struct.type("get_block_response")
 export class GetBlockInfoResponse extends Struct {
   @Struct.field("uint32") declare block_num: UInt32
-  @Struct.field("uint32") declare ref_block_num: UInt16
+  @Struct.field("uint16") declare ref_block_num: UInt16
   @Struct.field(BlockId) declare id: BlockId
   @Struct.field("time_point") declare timestamp: TimePoint
   @Struct.field("name") declare producer: Name
-  @Struct.field("uint16") declare confirmed: UInt16
   @Struct.field(BlockId) declare previous: BlockId
   @Struct.field("checksum256") declare transaction_mroot: Checksum256
-  @Struct.field("checksum256") declare action_mroot: Checksum256
-  @Struct.field("uint32") declare schedule_version: UInt32
-  @Struct.field("signature") declare producer_signature: Signature
+  @Struct.field("checksum256") declare finality_mroot: Checksum256
+  @Struct.field(GetBlockQcClaim) declare qc_claim: GetBlockQcClaim
+  @Struct.field("signature", { array: true })
+  declare producer_signatures: Signature[]
   @Struct.field("uint32") declare ref_block_prefix: UInt32
 }
 
@@ -628,8 +647,8 @@ export class GetTableByScopeResponseRow extends Struct {
   @Struct.field("name") declare code: Name
   @Struct.field("name") declare scope: Name
   @Struct.field("name") declare table: Name
-  @Struct.field("name") declare payer: Name
-  @Struct.field("uint32") declare count: UInt32
+  @Struct.field("name?") declare payer?: Name | null
+  @Struct.field("uint32?") declare count?: UInt32 | null
 }
 
 @Struct.type("get_table_by_scope_response")

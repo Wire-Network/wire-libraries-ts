@@ -9,7 +9,7 @@ A monorepo containing shared TypeScript libraries for Wire applications, providi
 | [`@wireio/shared`](packages/shared/) | Core shared utilities (logging, guards, helpers) | [![npm](https://img.shields.io/npm/v/@wireio/shared)](https://www.npmjs.com/package/@wireio/shared) |
 | [`@wireio/shared-web`](packages/shared-web/) | Web-specific utilities | *private* |
 | [`@wireio/shared-node`](packages/shared-node/) | Node.js-specific utilities | *private* |
-| [`@wireio/sdk-core`](packages/sdk-core/) | Wire blockchain SDK core types and primitives | [![npm](https://img.shields.io/npm/v/@wireio/sdk-core)](https://www.npmjs.com/package/@wireio/sdk-core) |
+| [`@wireio/sdk-core`](packages/sdk-core/) | Wire blockchain SDK core types, primitives, signing helpers, and system contract workflows such as `sysio.msig` | [![npm](https://img.shields.io/npm/v/@wireio/sdk-core)](https://www.npmjs.com/package/@wireio/sdk-core) |
 | [`@wireio/wallet-ext-sdk`](packages/wallet-ext-sdk/) | Client SDK for the Wire Wallet browser extension | [![npm](https://img.shields.io/npm/v/@wireio/wallet-ext-sdk)](https://www.npmjs.com/package/@wireio/wallet-ext-sdk) |
 | [`@wireio/wallet-browser-ext`](packages/wallet-browser-ext/) | Chrome extension developer wallet for Wire | *private* |
 | [`@wireio/protoc-gen-solana`](packages/protoc-gen-solana/) | protoc plugin — Rust/Solana codegen from proto3 | [![npm](https://img.shields.io/npm/v/@wireio/protoc-gen-solana)](https://www.npmjs.com/package/@wireio/protoc-gen-solana) |
