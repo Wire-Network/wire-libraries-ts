@@ -1,7 +1,7 @@
-// SELF-CONTAINED provider injected into the page context
-// No imports allowed - this runs in the page, not the extension
+// SELF-CONTAINED provider injected into the page context.
+// Runtime imports are not allowed because this runs in the page, not the extension.
 
-import { Checksum256 } from "@wireio/sdk-core"
+import type { Checksum256 } from "@wireio/sdk-core"
 
 declare global {
   interface Window {
@@ -19,12 +19,11 @@ declare global {
 
   const pendingRequests = new Map<string, PendingRequest>()
   const eventListeners = new Map<string, Set<Listener>>()
+  const PAGE_SIGNING_UNAVAILABLE_ERROR =
+    "Signing from web pages requires user approval and is not available yet"
 
   function generateId(): string {
-    return (
-      Math.random().toString(36).substring(2) +
-      Date.now().toString(36)
-    )
+    return Math.random().toString(36).substring(2) + Date.now().toString(36)
   }
 
   function sendMessage(message: any): Promise<any> {
@@ -36,7 +35,7 @@ declare global {
         {
           direction: "wire-wallet-to-content",
           id,
-          message,
+          message
         },
         "*"
       )
@@ -55,10 +54,7 @@ declare global {
   window.addEventListener("message", (event: MessageEvent) => {
     if (event.source !== window) return
 
-    if (
-      event.data &&
-      event.data.direction === "wire-wallet-to-page"
-    ) {
+    if (event.data && event.data.direction === "wire-wallet-to-page") {
       const { id, response } = event.data
       const pending = pendingRequests.get(id)
       if (pending) {
@@ -66,24 +62,17 @@ declare global {
         if (response && response.success) {
           pending.resolve(response.data)
         } else {
-          pending.reject(
-            new Error(
-              response?.error ?? "Unknown error"
-            )
-          )
+          pending.reject(new Error(response?.error ?? "Unknown error"))
         }
       }
     }
 
     // Handle wallet events
-    if (
-      event.data &&
-      event.data.direction === "wire-wallet-event"
-    ) {
+    if (event.data && event.data.direction === "wire-wallet-event") {
       const { event: eventName, data } = event.data
       const listeners = eventListeners.get(eventName)
       if (listeners) {
-        listeners.forEach((listener) => {
+        listeners.forEach(listener => {
           try {
             listener(data)
           } catch {
@@ -102,20 +91,15 @@ declare global {
       return sendMessage({ type: "IS_UNLOCKED" })
     },
 
-    async getAccounts(): Promise<
-      Array<{ id: string; name: string }>
-    > {
+    async getAccounts(): Promise<Array<{ id: string; name: string }>> {
       return sendMessage({ type: "GET_ACCOUNTS" })
     },
 
     async signTransaction(
-      digest: Checksum256,
-      accountId: string
+      _digest: Checksum256,
+      _accountId: string
     ): Promise<string> {
-      return sendMessage({
-        type: "SIGN_REQUEST",
-        payload: { digest, accountId },
-      })
+      throw new Error(PAGE_SIGNING_UNAVAILABLE_ERROR)
     },
 
     on(event: string, listener: Listener): void {
@@ -133,7 +117,7 @@ declare global {
           eventListeners.delete(event)
         }
       }
-    },
+    }
   }
 
   window.__WIRE_WALLET__ = wireWallet

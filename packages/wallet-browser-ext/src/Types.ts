@@ -1,10 +1,18 @@
+import type { PageBackgroundMessageType } from "./PageBridge"
+
 export { KeyType } from "@wireio/sdk-core"
+
+export {
+  PAGE_BACKGROUND_MESSAGE_TYPES,
+  PageBackgroundMessageType,
+  UNAUTHORIZED_PAGE_REQUEST_ERROR
+} from "./PageBridge"
 
 export enum ChainKind {
   WIRE = "WIRE",
   EVM = "ETHEREUM",
   SVM = "SOLANA",
-  UNKNOWN = "SUI",
+  UNKNOWN = "SUI"
 }
 
 export interface KeyPair {
@@ -54,6 +62,12 @@ export type BackgroundMessage =
   | { type: "GET_ACCOUNTS" }
   | { type: "IS_UNLOCKED" }
   | { type: "HAS_VAULT" }
+
+/** Narrow background messages permitted from webpage-originated provider traffic. */
+export type PageBackgroundMessage = Extract<
+  BackgroundMessage,
+  { type: PageBackgroundMessageType }
+>
 
 export type BackgroundResponse =
   | { success: true; data?: any }
