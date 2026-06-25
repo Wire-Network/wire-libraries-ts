@@ -1308,6 +1308,7 @@ export interface SysioReservOncrtreserveAction {
   description: string
   external_token_amount: number
   requested_wire_amount: number
+  source_token_precision: number
   connector_weight_bps: number
   creator_chain_kind: SysioReservChainkind
   creator_chain_addr: string
@@ -1348,6 +1349,7 @@ export interface SysioReservRegreserveAction {
   description: string
   initial_chain_amount: number
   initial_wire_amount: number
+  source_token_precision: number
   connector_weight_bps: number
   is_private: boolean
   owner: string
@@ -1370,6 +1372,7 @@ export interface SysioReservReserveRowType {
   status: SysioReservReservestatus
   reserve_chain_amount: number
   reserve_wire_amount: number
+  source_token_precision: number
   connector_weight_bps: number
   creator_addr: SysioReservChainaddressType
   requested_wire_amount: number
@@ -1658,6 +1661,13 @@ export interface SysioSystemBlockHeaderType {
   new_producers?: SysioSystemProducerScheduleType | null
 }
 
+/** sysio.system::block_info_record (type) */
+export interface SysioSystemBlockInfoRecordType {
+  version: number
+  block_height: number
+  block_timestamp: string
+}
+
 /** sysio.system::block_signing_authority_v0 (type) */
 export interface SysioSystemBlockSigningAuthorityV0Type {
   threshold: number
@@ -1686,6 +1696,11 @@ export interface SysioSystemBlockchainParametersType {
   max_kv_key_size: number
   max_kv_value_size: number
   max_kv_secondary_key_size: number
+}
+
+/** sysio.system::blockinfo_key (type) */
+export interface SysioSystemBlockinfoKeyType {
+  block_height: number
 }
 
 /** sysio.system::claimnodedis (action) */
@@ -2200,16 +2215,17 @@ export interface SysioSystemWasmcfgAction {
   settings: string
 }
 
-/** sysio.system::block_info_record (type) */
-export interface SysioSystemBlockInfoRecordType {
+/** sysio.system::limit_auth_change (type) */
+export interface SysioSystemLimitAuthChangeType {
   version: number
-  block_height: number
-  block_timestamp: string
+  account: string
+  allow_perms: string[]
+  disallow_perms: string[]
 }
 
-/** sysio.system::blockinfo_key (type) */
-export interface SysioSystemBlockinfoKeyType {
-  block_height: number
+/** sysio.system::limitauthchg_key (type) */
+export interface SysioSystemLimitauthchgKeyType {
+  account: number
 }
 
 /** sysio.system::delpeerkey (action) */
@@ -2248,19 +2264,6 @@ export interface SysioSystemRegpeerkeyAction {
 /** sysio.system::v0_data (type) */
 export interface SysioSystemV0DataType {
   pubkey?: string | null
-}
-
-/** sysio.system::limit_auth_change (type) */
-export interface SysioSystemLimitAuthChangeType {
-  version: number
-  account: string
-  allow_perms: string[]
-  disallow_perms: string[]
-}
-
-/** sysio.system::limitauthchg_key (type) */
-export interface SysioSystemLimitauthchgKeyType {
-  account: number
 }
 
 /** sysio.system::addtrxp (action) */
@@ -2408,7 +2411,6 @@ export interface SysioTokensChainTokenRowType {
   chain_code: SysioTokensSlugNameType
   token_code: SysioTokensSlugNameType
   contract_addr: string
-  precision_override: number
   is_native: boolean
   active: boolean
   registered_at_ms: number
@@ -2420,7 +2422,6 @@ export interface SysioTokensRegctokAction {
   chain_code: SysioTokensSlugNameType
   token_code: SysioTokensSlugNameType
   contract_addr: string
-  precision_override: number
   is_native: boolean
 }
 
