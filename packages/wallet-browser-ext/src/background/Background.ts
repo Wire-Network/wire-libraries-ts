@@ -1,14 +1,17 @@
 import { Checksum256, PrivateKey } from "@wireio/sdk-core"
-import {
-  saveEncryptedState,
-  loadEncryptedState,
-  hasVault,
-} from "../Storage"
+import { saveEncryptedState, loadEncryptedState, hasVault } from "../Storage"
 import type {
   BackgroundMessage,
   BackgroundResponse,
   ExtensionState,
+  PageBackgroundMessage
 } from "../Types"
+import {
+  PAGE_BACKGROUND_MESSAGE_TYPES,
+  UNAUTHORIZED_PAGE_REQUEST_ERROR
+} from "../PageBridge"
+
+const EXTENSION_URL_PREFIX = "chrome-extension://"
 
 let currentState: ExtensionState | null = null
 let currentPassword: string | null = null
@@ -85,9 +88,9 @@ async function handleMessage(
         return { success: false, error: "Wallet is locked" }
       }
       resetLockTimer()
-      const accounts = currentState.accounts.map((a) => ({
+      const accounts = currentState.accounts.map(a => ({
         id: a.id,
-        name: a.name,
+        name: a.name
       }))
       return { success: true, data: accounts }
     }
@@ -98,8 +101,8 @@ async function handleMessage(
       }
       resetLockTimer()
 
-      const { digest:digestHex, accountId } = message.payload
-      const account = currentState.accounts.find((a) => a.id === accountId)
+      const { digest: digestHex, accountId } = message.payload
+      const account = currentState.accounts.find(a => a.id === accountId)
       if (!account) {
         return { success: false, error: "Account not found" }
       }
@@ -110,7 +113,7 @@ async function handleMessage(
           ? currentState.activeAccount.keyId
           : account.keys[0]
 
-      const keyPair = currentState.keys.find((k) => k.id === activeKeyId)
+      const keyPair = currentState.keys.find(k => k.id === activeKeyId)
       if (!keyPair) {
         return { success: false, error: "Key not found" }
       }
@@ -123,7 +126,7 @@ async function handleMessage(
       } catch (err: any) {
         return {
           success: false,
-          error: `Signing failed: ${err?.message ?? String(err)}`,
+          error: `Signing failed: ${err?.message ?? String(err)}`
         }
       }
     }
@@ -134,16 +137,48 @@ async function handleMessage(
   }
 }
 
+/** Determine whether the runtime message came from a content script running in a web tab. */
+function isPageBridgeSender(sender: chrome.runtime.MessageSender): boolean {
+  return (
+    sender.tab !== undefined && !sender.url?.startsWith(EXTENSION_URL_PREFIX)
+  )
+}
+
+/** Handle the restricted set of background messages exposed to arbitrary web pages. */
+async function handlePageMessage(
+  message: BackgroundMessage
+): Promise<BackgroundResponse> {
+  if (
+    PAGE_BACKGROUND_MESSAGE_TYPES.has(
+      message.type as PageBackgroundMessage["type"]
+    )
+  ) {
+    return handleMessage(message as PageBackgroundMessage)
+  }
+
+  return { success: false, error: UNAUTHORIZED_PAGE_REQUEST_ERROR }
+}
+
+/** Route runtime messages through the correct trust boundary before dispatching. */
+function handleMessageForSender(
+  message: BackgroundMessage,
+  sender: chrome.runtime.MessageSender
+): Promise<BackgroundResponse> {
+  return isPageBridgeSender(sender)
+    ? handlePageMessage(message)
+    : handleMessage(message)
+}
+
 export function initBackground(): void {
   chrome.runtime.onMessage.addListener(
     (
       message: BackgroundMessage,
-      _sender: chrome.runtime.MessageSender,
+      sender: chrome.runtime.MessageSender,
       sendResponse: (response: BackgroundResponse) => void
     ) => {
-      handleMessage(message)
+      handleMessageForSender(message, sender)
         .then(sendResponse)
-        .catch((err) =>
+        .catch(err =>
           sendResponse({ success: false, error: err?.message ?? String(err) })
         )
       return true // keep channel open for async response

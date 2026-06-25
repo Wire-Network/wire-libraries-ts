@@ -208,7 +208,7 @@ These are passed as the `method` field of `request()`:
 | `wire_getActiveAccount` | Returns the currently active account (name, public key, endpoint) or `null` |
 | `wire_getPublicKeys` | Returns an array of public key strings for the active account |
 | `wire_getEndpoints` | Returns an array of configured chain endpoints |
-| `wire_signTransaction` | Signs a serialized transaction; params: `[{ serializedTransaction, chainId?, requiredKeys? }]` |
+| `wire_signTransaction` | Reserved for transaction signing after an explicit user-approval flow is implemented. |
 
 ### Events
 
@@ -234,8 +234,8 @@ Internal messages between the popup/content script and the background service wo
 | `LOCK` | Popup -> Background | Clear state from memory |
 | `GET_STATE` | Popup -> Background | Retrieve decrypted state |
 | `SAVE_STATE` | Popup -> Background | Encrypt and persist updated state |
-| `GET_ACCOUNTS` | Content -> Background | List accounts (used by provider) |
-| `SIGN_REQUEST` | Content -> Background | Sign a transaction (used by provider) |
+| `GET_ACCOUNTS` | Content -> Background | List sanitized accounts exposed to the provider |
+| `SIGN_REQUEST` | Extension UI -> Background | Internal signing primitive; not accepted from webpage-originated content-script messages without a user-approval flow |
 
 ## Features
 
