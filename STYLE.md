@@ -578,13 +578,7 @@ Web packages extend the libraries base config, which adds DOM libs and JSX suppo
       "@wireio/sdk-core":            ["./packages/sdk-core/src"],
       "@wireio/sdk-core/*":          ["./packages/sdk-core/src/*"],
       "@wireio/wallet-ext-sdk":      ["./packages/wallet-ext-sdk/src"],
-      "@wireio/wallet-ext-sdk/*":    ["./packages/wallet-ext-sdk/src/*"],
-      "@wireio/protoc-gen-solana":   ["./packages/protoc-gen-solana/src"],
-      "@wireio/protoc-gen-solana/*": ["./packages/protoc-gen-solana/src/*"],
-      "@wireio/protoc-gen-solidity":   ["./packages/protoc-gen-solidity/src"],
-      "@wireio/protoc-gen-solidity/*": ["./packages/protoc-gen-solidity/src/*"],
-      "@wireio/wire-protobuf-bundler":   ["./packages/protobuf-bundler/src"],
-      "@wireio/wire-protobuf-bundler/*": ["./packages/protobuf-bundler/src/*"]
+      "@wireio/wallet-ext-sdk/*":    ["./packages/wallet-ext-sdk/src/*"]
     }
   },
   "include": ["src", "types"],

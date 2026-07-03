@@ -12,9 +12,6 @@ A monorepo containing shared TypeScript libraries for Wire applications, providi
 | [`@wireio/sdk-core`](packages/sdk-core/) | Wire blockchain SDK core types and primitives | [![npm](https://img.shields.io/npm/v/@wireio/sdk-core)](https://www.npmjs.com/package/@wireio/sdk-core) |
 | [`@wireio/wallet-ext-sdk`](packages/wallet-ext-sdk/) | Client SDK for the Wire Wallet browser extension | [![npm](https://img.shields.io/npm/v/@wireio/wallet-ext-sdk)](https://www.npmjs.com/package/@wireio/wallet-ext-sdk) |
 | [`@wireio/wallet-browser-ext`](packages/wallet-browser-ext/) | Chrome extension developer wallet for Wire | *private* |
-| [`@wireio/protoc-gen-solana`](packages/protoc-gen-solana/) | protoc plugin — Rust/Solana codegen from proto3 | [![npm](https://img.shields.io/npm/v/@wireio/protoc-gen-solana)](https://www.npmjs.com/package/@wireio/protoc-gen-solana) |
-| [`@wireio/protoc-gen-solidity`](packages/protoc-gen-solidity/) | protoc plugin — Solidity codegen from proto3 | [![npm](https://img.shields.io/npm/v/@wireio/protoc-gen-solidity)](https://www.npmjs.com/package/@wireio/protoc-gen-solidity) |
-| [`@wireio/wire-protobuf-bundler`](packages/protobuf-bundler/) | CLI to fetch protos and generate publishable packages | [![npm](https://img.shields.io/npm/v/@wireio/wire-protobuf-bundler)](https://www.npmjs.com/package/@wireio/wire-protobuf-bundler) |
 
 ## Examples
 

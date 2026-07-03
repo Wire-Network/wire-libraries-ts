@@ -7,10 +7,7 @@ const config: Config = {
     "packages/shared-web",
     "packages/sdk-core",
     "packages/wallet-browser-ext",
-    "packages/wallet-ext-sdk",
-    "packages/protoc-gen-solana",
-    "packages/protoc-gen-solidity",
-    "packages/protobuf-bundler"
+    "packages/wallet-ext-sdk"
   ]
 }
 
