@@ -35,9 +35,6 @@ pnpm workspaces with TypeScript composite project references. No Lerna/Nx.
 | `@wireio/sdk-core` | Wire blockchain SDK types/primitives | Yes | Hybrid ESM+CJS |
 | `@wireio/wallet-ext-sdk` | Wallet extension client SDK | Yes | ESM |
 | `@wireio/wallet-browser-ext` | Chrome extension developer wallet | No | Webpack bundle |
-| `@wireio/protoc-gen-solana` | protoc plugin: proto3 → Rust/Solana | Yes | CJS + pkg binary |
-| `@wireio/protoc-gen-solidity` | protoc plugin: proto3 → Solidity | Yes | CJS + pkg binary |
-| `@wireio/wire-protobuf-bundler` | CLI: fetch protos → generate packages | Yes | CJS + pkg binary |
 
 ### Dependency Graph
 
