@@ -112,6 +112,34 @@ function example(): Promise<any> {
 - **`.tap()` for side effects, `.map()` for transforms.** Never mix them.
 - **`.get()` is a conscious unwrap.** It throws on `None`. Use when the value is definitely present. Use `.getOrElse(fallback)` or `.getOrUndefined()` when absence is possible.
 
+### `Either.try` vs `guard` vs `getValue` — pick by whether you USE the result
+
+Three primitives run a function that might throw. They are **not interchangeable** — choose by what you do with the outcome, never by which one you remember first:
+
+| You want to… | Use | From | Returns |
+|---|---|---|---|
+| run a throwing fn and **branch on success/failure** (`.match({Left,Right})`, `.getOrElse`, `.map`) | `Either.try(fn)` | `@3fv/prelude-ts` | `Either<Error, T>` |
+| run a side-effect **best-effort**, swallow any error, **ignore the result** | `guard(fn)` | `@wireio/shared` | `void` / `Promise<void>` |
+| run a fn, swallow any error, get **the value or a default** | `getValue(fn, default)` | `@wireio/shared` | `T` (or `default`) |
+
+```ts
+// ✗ WRONG — Either.try whose result is thrown away; liftEither THROWS on a
+//   void-returning fn ("liftEither got undefined!"), crashing the swallow path
+Either.try(() => Fs.rmSync(pidFile, { force: true }))
+
+// ✓ RIGHT — fire-and-forget side effect
+guard(() => Fs.rmSync(pidFile, { force: true }))
+
+// ✓ RIGHT — consuming the Either (what Either.try is FOR)
+Either.try(() => execFileSync("pgrep", ["-f", pattern], { stdio: "ignore" }))
+  .match({ Left: () => false, Right: () => true })
+
+// ✓ RIGHT — guarded value with a fallback
+const port = getValue(() => JSON.parse(Fs.readFileSync(f, "utf8")).port, DefaultPort)
+```
+
+**Never call `Either.try(fn)` and discard the returned `Either`.** If nothing consumes the `Either`, you wanted `guard` (or `getValue`). The `return null` trick to appease `liftEither` is not a fix — it still discards the result.
+
 ---
 
 ## 3. Configuration (Options / Config / Defaults)
@@ -173,6 +201,26 @@ export namespace FooManager {
   export const StartupTimeoutMs = 15_000
 }
 ```
+
+### Options compose domain types — never flat primitive bags
+
+An `Options` / `Config` / `Input` interface is a **composition of the richest existing domain types** that already describe the thing, never a re-spelling of their fields as primitives. If a caller has to hand-assemble endpoint strings, duplicate a value into two fields, pass empty arrays as role markers, or thread ten leaves that all came from one object — the shape is wrong.
+
+```ts
+// ✗ WRONG — primitive soup; every call site re-assembles what NodeConfig
+//   already carries, and httpPort double-carries httpServerAddress's port
+{ label, binary, p2pListenEndpoint: `${listen}:${p2pPort}`, httpServerAddress,
+  httpPort, producerNames: [], keys: [], configPath: nodePath, dataPath: nodePath }
+
+// ✓ RIGHT — compose the domain types; derive everything inside the component
+export interface NodeopOptions {
+  node: NodeConfig              // name/role/ports/peers + the cluster config
+  operator?: OperatorAccount    // the account the node acts for
+  tuning?: NodeopTuningOptions  // genuine per-instance leaves, typed + defaulted
+}
+```
+
+Rules of thumb: each member is the richest existing type for its concept; derivation (endpoint strings, paths, labels) happens **inside** the component, once; role/variant is expressed by the domain type, not degenerate values (`producerNames: []`); genuine per-instance leaves keep a typed `…TuningOptions` sub-group with defaults. If more than ~5 primitive fields survive, look again.
 
 ---
 
@@ -279,9 +327,25 @@ The namespace serves three roles: default values/timeouts (process managers), pa
 - **File** references → suffix `File`: `configFile`, `genesisFile`, `stateFile`
 - **Subpath constants** (relative segments) → suffix `Subpath`: `LedgerSubpath`, `StateSubpath`
 
+### Verbs — the standard stems
+
+Names are not free choices: find the standard stem (or the repo's existing name for the concept) and use it verbatim. A synonym for an established name is a fork.
+
+| Concept | Standard | BANNED synonyms |
+|---|---|---|
+| Get-or-throw / assertion helper | `assert*` (`assertOperator`, `assertProviderName`) | **`require*` — never.** `require` is the Node global module fn (worse under CJS output) |
+| Construction / factory | `create*` | `make*`, `build*` (for factories), `getOrMake` |
+| "new / newly created" | `new*` | `fresh*` |
+| Composition of builds / accumulation | `append` | `apply` (collides with `Function.apply`) |
+| Facade variant backend | `<facadeName><Variant>` (`toSignatureProviderEM`) | any different stem (`formatEMSignatureProvider`) |
+
+### No abbreviations
+
+Every word in an identifier is spelled out: `requiredBatchOperatorCollateral`, not `reqBatchopCollat`; `minimumBond`, not `minBond`. Only established short names (`id`) and unit suffixes (`Ms`, `Sec`) are exempt. Chain names use the **full word** — `ethereum` / `solana` for the blockchain (`ethereumWallet`, `solanaKeypair`); `ETH` / `SOL` only where the symbol genuinely means the *token*.
+
 ### Enums
 
-String enums with identity mapping:
+String enums with identity mapping — **value === key, character-for-character**:
 
 ```ts
 enum Command {
@@ -290,6 +354,10 @@ enum Command {
   destroy = "destroy",
 }
 ```
+
+If the value **cannot** equal the key because it is a meaningful non-identity string (an on-chain account name, an error substring, a wire-format spelling, a file extension), it is **not an identity enum** — either it duplicates a generated type (delete it, import the generated one) or it is a string-keyed lookup of external values (use a `const` object / `as const`, not an `enum`).
+
+**Enums are first-class at every call site.** Anything drawn from a closed set rides its typed enum — never the raw literal, even when a third-party API types the parameter as a string-literal union. POSIX signals go through the signal-name enum (`process.kill(pid, ProcessSignalName.SIGKILL)`, never `"SIGKILL"`); chain kinds, statuses, and attestation types come from their generated enums. Raw literals don't survive renames; enum members do.
 
 ### Numeric literals
 
@@ -356,6 +424,16 @@ catch (err) {
 }
 ```
 
+### RPC / chain / network errors are NEVER silent
+
+A `catch` around any RPC, chain, or network interaction (HTTP clients, `ethers`, `@solana/web3.js`, JSON-RPC `fetch`, …) must at minimum log through the framework — even when continuing past the error is correct behavior. A bare `catch {}` or comment-only `catch { /* transient */ }` converts a precise, localized failure into a confusing far-away symptom.
+
+Pick the level by intent, but always log, and always include the **error's message** (the remote reason is the whole point):
+
+- `log.debug` — genuinely-expected, high-frequency control flow (a retry/poll loop where "already resolved" is the normal case). Continue, but leave a breadcrumb.
+- `log.warn` — a transient you tolerate that shouldn't recur every iteration; persistent occurrence is a real bug.
+- `log.error` (usually + rethrow) — unexpected / fatal; never continue as if nothing happened.
+
 ---
 
 ## 8. Imports and Dependencies
@@ -401,6 +479,103 @@ Use for focused utilities only. Don't use for things native `Array`/`Object` met
 - **`source-map-support/register`** at every CLI/service entry point.
 - **No default exports.** Named exports only.
 - **One concept per file.** One class, one factory, or one focused set of utilities.
+- **Design decisions are never driven by file count or "simpler".** "Fewer files", "less surface area", "less ceremony", "let's consolidate" are not valid inputs to an architecture or API-shape decision. Decide on semantic correctness, the plan's intent, and these rules — if the semantically-correct answer is more files / more types, that is the answer.
+- **"No ceremony" means no EMPTY wrapping** — a lambda that wraps a single call, dead indirection, a band-aid. It never justifies collapsing *meaningful* typed/semantic structure to shrink a count. Judge by semantic content, not by number of symbols.
+
+---
+
+## 10. Logging
+
+Every file that logs diagnostics makes its **own** logger — the filename becomes the category, so every line is tagged with its source module for free:
+
+```ts
+import { getLogger } from "@wireio/shared"
+
+const log = getLogger(__filename)          // CJS
+// const log = getLogger(import.meta.filename)  // ESM
+```
+
+- **Never `export const log` and import it across files.** A shared `log` singleton erases the per-module category — every line looks like it came from `logger.ts`.
+- **Never `console.log` / `console.warn` / `console.error` in library, service, or harness code.** The framework logger writes through to its sinks immediately (jest buffers `console.*` until the run ends — useless for live diagnosis), carries timestamp/level/category, and level-filters.
+- **Never name a logger `out`** or anything ambiguous. `log` for diagnostics; dedicated `stdout` / `stderr` stream loggers (via a routing appender in the package's `logger.ts`) when a CLI needs a clean machine-readable data channel.
+- Carve-outs: a CLI `main()`'s first lines before the logger exists; build/deploy scripts whose stdout **is** the developer UI; tests that assert on stdout. Everything else uses the framework.
+
+---
+
+## 11. Timer Hygiene
+
+**Every `setTimeout` armed inside a `Promise.race` is cleared the moment the race settles.** A timer that loses the race but stays pending is a leaked handle: one per call parked on the event loop, and under jest it holds the worker open past its exit grace — the perennial *"A worker process has failed to exit gracefully"* warning traces to exactly this class (a phase executor's stale step timer, then a process manager's 30s graceful-kill escalation timer, each found the hard way).
+
+```ts
+let escalation: ReturnType<typeof setTimeout> | null = null
+const timer = new Promise<"timeout">(resolve => {
+  escalation = setTimeout(() => resolve("timeout"), GracefulKillMs)
+})
+const outcome = await Promise.race([exited, timer, aborted]).finally(() => {
+  if (escalation != null) clearTimeout(escalation)
+})
+```
+
+Long-lived module-scope timers (caches, lock expiries) that must not block process exit are `.unref()`d at creation.
+
+---
+
+## 12. `null` over `undefined`
+
+When the choice is yours, `null` is the "no value" sentinel — `undefined` is reserved for what the language forces (`?` optional params/props, `Promise<void>`, third-party APIs; normalize those at the boundary).
+
+**This repo compiles with `strictNullChecks: false`** (see `etc/tsconfig/tsconfig.base.json`), which changes what the rule buys you:
+
+- **Never write `?? null` to "normalize" a value** — `arr.find(...)`, `map.get(k)`, an optional field: return/pass them as-is. With the checker off, the coalesce is dead noise.
+- **Never append `| null` / `| undefined` to a return type or field** to satisfy the rule — write the plain type; callers guard with `!= null` (catches both).
+- Use an explicit `null` **only where it carries runtime meaning you rely on** — chiefly JSON persistence: `JSON.stringify({ x: undefined })` drops the key, `{ x: null }` survives. A persisted/serialized slot that must round-trip as present is the legitimate `null`.
+- `let pending: Foo | null = null` for assign-later locals remains the standing form (matches the codebase; the annotation documents intent even unchecked).
+
+---
+
+## 13. Generated Types First
+
+Before declaring **any** type touching chain state, OPP, attestations, or a network request/response shape: **grep the generated sources first**. In this repo that is `sdk-core`'s generated `SysioContractTypes.ts` (the `SysioContracts` namespace — per-contract action-data types, table-row types, contract enums, and the `SysioContractName` / `SysioContractMapping` / `SysioContractDefinitions` registry); in consumer repos it additionally includes `@wireio/opp-typescript-models`.
+
+- **Never hand-roll a duplicate** of a generated type. A dupe drifts the moment the proto/ABI changes and loses the precise field types.
+- **Never use `unknown` / `any` for a field that has a real type.** `amount` on a chain-token type is the generated amount type, never `unknown`. The only legitimate `unknown`s: a caught error, a raw not-yet-parsed blob, a documented type-erased existential. `any` only at a genuinely broken third-party boundary, normalized away immediately.
+
+---
+
+## 14. One Generic Facade per Concept
+
+When a single concept has several heterogeneous implementations keyed by a closed, typed discriminator (a `KeyType`, a `ChainKind`, a `Format`…), expose **one generic entry point** whose type parameter is that discriminator — never a scattered set of per-variant public functions callers must know to pick between.
+
+```ts
+export namespace KeyGenerator {
+  export async function create<T extends KeyType>(
+    type: T, context: Context, options: CreateOptions = {}
+  ): Promise<KeyPair<T>> {
+    const keyPair = await match(type as KeyType)
+      .with(KeyType.K1,  () => createK1(context.clio))
+      .with(KeyType.BLS, () => createBLS(context.sysUtil))
+      .with(KeyType.ED,  async () => createED())
+      .with(KeyType.EM,  async () => createEM(context.ethereumMnemonic, options.ethereumHdIndex))
+      .otherwise(() => { throw new Error(`KeyGenerator: unsupported key type ${KeyType[type] ?? type}`) })
+    return keyPair as KeyPair<T>   // the ONE cast — call sites stay precisely typed
+  }
+  // createK1 / createBLS / createED / createEM are PRIVATE backends.
+}
+```
+
+- Dispatch with `match` on the discriminator **inside** the facade; the single unavoidable cast lives at the dispatch point, never at call sites.
+- Variant backends are named `<facadeName><Variant>` (`toSignatureProviderK1`, `toSignatureProviderBLS`, …) — never a different stem.
+- Per-variant inputs ride a typed `Context` / `Options`, not the discriminator.
+- Adding a variant is a one-line change inside the facade; the closed discriminator + `match` makes the compiler flag an unhandled variant.
+
+---
+
+## 15. Testing
+
+- **Unit tests are mandatory for every new or modified symbol** — happy path plus at least one failure/edge case, shipped in the same change. Tests mirror the `src/` tree under `tests/`. No exceptions for "trivial" code.
+- **Never depend on incidental process ancestry.** A test that assumes `process.ppid` is a `node` binary breaks under wrapper chains (`npx` → `sh`, in-band jest). When a test needs a live pid with a known command basename, **spawn a real child** (`spawn(process.execPath, ["-e", …], { stdio: "ignore" })`, `.unref()` it, reap it in `afterAll`).
+- **Never bind or assert a fixed port.** Any test that produces a bind port or URL resolves an available one through the project's availability-checked helper (preferring the named default when free) in `beforeAll` — a hard-pinned port collides with parallel suites and co-resident dev servers.
+- Test children and fixtures must not outlive the worker: `.unref()` spawned helpers, clear armed timers, close servers in `afterAll`.
 
 ---
 
@@ -1044,6 +1219,50 @@ Resolved config objects are serialized to JSON during `create` and loaded from d
 - The persisted file is the single source of truth.
 - Config interfaces must be JSON-serializable.
 - Executable paths are resolved and validated in a dedicated `resolveExePaths()` function before the config is constructed.
+
+---
+
+## 8. ESM-only Dependencies from CJS
+
+A CJS-emitting package (`module: nodenext`, `"type": "commonjs"`) that needs an ESM-only dep (`get-port`, `nanoid` v4+, `chalk` v5+, `execa` v6+) cannot `import` it statically — that down-levels to `require()` and throws `ERR_REQUIRE_ESM`. The fix is a dynamic `import()`, done **once, through a single cached module accessor** — never scattered `await import()` calls:
+
+```ts
+import { Deferred } from "@wireio/shared"
+
+type GetPortModule = typeof import("get-port")              // whole module, typed from the dep
+type GetPortParameters = Parameters<GetPortModule["default"]>
+
+let getPortModule: Deferred<GetPortModule> | null = null
+
+/** Lazily import `get-port` once; every caller shares the same module. */
+function importGetPortModule(): Promise<GetPortModule> {
+  if (getPortModule === null) {
+    getPortModule = new Deferred()                          // assigned SYNC → no double-import race
+    import("get-port")
+      .then(mod => getPortModule.resolve(mod))
+      .catch(err => {
+        const failed = getPortModule
+        getPortModule = null                                // let a later call retry
+        failed.reject(err)                                  // never leave callers hanging
+      })
+  }
+  return getPortModule.promise
+}
+
+/** EVERY export goes through the one accessor — one cached module. */
+async function getPort(...args: GetPortParameters): Promise<number> {
+  return (await importGetPortModule()).default(...args)
+}
+async function clearPortLocks(): Promise<void> {
+  ;(await importGetPortModule()).clearLockedPorts()
+}
+```
+
+- **Cache assigned synchronously, before the first `await`** — `??=` with an `await` on the right side is a check-then-await race (two concurrent callers both fire `import()`).
+- **Cache the whole module**, so every export (default + named) is served from the one import.
+- **Type from the module** (`typeof import("dep")`, `Parameters<…>`) — never re-declare the dep's option/return types.
+- Under jest this requires `NODE_OPTIONS=--experimental-vm-modules` in the test script; with `module: nodenext`, ts-jest preserves the `import()` so the ESM dep loads under test too.
+- Deps that ship CJS (or dual) are imported statically — check the dep's `package.json` `"type"` / `exports` first.
 
 ---
 

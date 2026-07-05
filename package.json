@@ -7,10 +7,12 @@
     "build": "pnpm run compile",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "test": "pnpm run build && jest",
+    "test:ci": "pnpm run build && jest --reporters=default --reporters=jest-junit",
     "clean": "./scripts/clean.sh && pnpm -r run clean"
   },
   "devDependencies": {
     "@types/bluebird": "3.5.42",
+    "jest-junit": "^16.0.0",
     "@types/debug": "4.1.13",
     "@types/jest": "^30.0.0",
     "@types/lodash": "4.17.24",

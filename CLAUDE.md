@@ -142,7 +142,49 @@ const ClusterCommand = { create: "create", run: "run", destroy: "destroy" } as c
 type ClusterCommand = typeof ClusterCommand[keyof typeof ClusterCommand]
 ```
 
-Then `ClusterCommand.create`, never `"create"`. Rename propagates through the compiler; raw strings do not.
+Then `ClusterCommand.create`, never `"create"`. Rename propagates through the compiler; raw strings do not. This holds **at every call site**, even when a third-party API types the parameter as a string-literal union (POSIX signals go through the signal-name enum, never `"SIGKILL"`). String enums are identity-mapped — value === key; a meaningful non-identity string is NOT an enum (use a `const` object, or the generated type it duplicates). See STYLE.md §5.
+
+### 5. Names come from the standard stems
+
+`assert*` never `require*` (Node global collision); `create*` for factories, never `make*`/`build*`; `new*` never `fresh*`; `append` never `apply` (collides with `Function.apply`); facade variants are `<facadeName><Variant>`. Identifiers are abbreviation-free (only `id` and unit suffixes `Ms`/`Sec` exempt); `ethereum`/`solana` spelled out — `ETH`/`SOL` only for the token. See STYLE.md §5.
+
+### 6. Per-file logger, no `console.*`
+
+Every file that logs makes its own `const log = getLogger(__filename)` — never a shared/exported `log`, never `console.*` in library/service code (jest buffers it; the framework writes through with category + level). Carve-outs in STYLE.md §10.
+
+### 7. Timer hygiene
+
+Every `setTimeout` inside a `Promise.race` is cleared when the race settles (`.finally(() => clearTimeout(...))`); long-lived module timers are `.unref()`d. Leaked race timers are the historical cause of jest's "worker failed to exit gracefully" warning. See STYLE.md §11.
+
+### 8. `null` over `undefined` — without ceremony
+
+`null` is the intentional "no value" sentinel, but this repo compiles with `strictNullChecks: false`: never add `?? null` normalization or `| null` unions just to satisfy the rule — explicit `null` only where it has runtime meaning (JSON persistence: `undefined` drops the key, `null` survives). See STYLE.md §12.
+
+### 9. Generated types first; no `unknown` shortcuts
+
+Before declaring any chain/OPP/network shape, grep the generated sources (sdk-core's `SysioContracts` / `SysioContractTypes.ts`). Never duplicate a generated type; never type a real domain field as `unknown`/`any`. See STYLE.md §13.
+
+### 10. `Either.try` vs `guard` vs `getValue`
+
+Branch on the outcome → `Either.try(fn).match(...)`; best-effort side effect, result ignored → `guard(fn)`; value-or-default → `getValue(fn, fallback)` (both from `@wireio/shared`). Never discard a returned `Either`. RPC/chain `catch`es always log the error's message through the framework. See STYLE.md §2 and §7.
+
+### 11. Tests per symbol, environment-independent
+
+Every new/modified symbol ships unit tests in the same change. Tests never assume process ancestry (`process.ppid` is not reliably a `node` binary — spawn a real child when a live known-basename pid is needed), never hard-pin ports, and never leave children/timers/servers alive past the worker. See STYLE.md §15.
+
+## Cross-repo rules (authoritative)
+
+`wire-platform-manifest/.claude/rules/*.md` is the authoritative cross-repo rule set — read the relevant file before acting; the one-liners below only index the ones that bind this repo:
+
+- **`opp-models-packages.md` / `cross-repo.md`** — `@wireio/opp-typescript-models` and `@wireio/opp-solidity-models` MUST NOT appear in any `wire-libraries-ts` package: the generators that produce them live here (tool/output cycle). Sighting one under `node_modules/.pnpm/` here is a red flag.
+- **`standard-names-not-invented.md`** — the author's / repo's existing name for a concept is the spec; synonyms are violations (the `assert*`-not-`require*` table).
+- **`string-enum-value-equals-key.md`**, **`enums-are-first-class.md`** — identity string enums; typed enums at every layer, never raw literals/ints.
+- **`search-generated-types-before-creating-new.md`**, **`precise-types-no-unknown-shortcut.md`** — generated types first; no `unknown`/`any` for typed domain fields.
+- **`use-logging-framework.md`**, **`per-file-logger-and-std-streams.md`**, **`never-swallow-rpc-errors-ts.md`** — framework logging per file; RPC catches always log.
+- **`dynamic-import-esm-only-deps.md`** — one cached accessor per ESM-only dep (STYLE.md Part 3 §8).
+- **`either-try-vs-guard.md`** — pick by whether the result is used.
+- **`prefer-null-over-undefined.md`** — with the `strictNullChecks: false` nuance (no `?? null` / `| null` ceremony).
+- **`one-generic-facade-per-concept.md`**, **`compose-options-from-domain-types.md`**, **`design-not-driven-by-file-count-or-simplicity.md`** — facade + composition + decision-basis rules for any new API surface.
 
 ## CI/CD
 

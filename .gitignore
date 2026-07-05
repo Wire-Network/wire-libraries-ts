@@ -43,3 +43,6 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# JUnit test-result output (CI artifact)
+/reports/
