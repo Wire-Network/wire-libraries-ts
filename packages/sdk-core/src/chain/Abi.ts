@@ -4,6 +4,7 @@ import { abiDecode, ABIDecoder } from "../serializer/Decoder.js"
 import { abiEncode, ABIEncoder } from "../serializer/Encoder.js"
 
 import { Blob } from "./Blob.js"
+import { Int64 } from "./Integer.js"
 import { Name, NameType } from "./Name.js"
 
 export type ABIDef = string | Partial<ABI.Def> | ABI | Blob
@@ -217,21 +218,10 @@ export class ABI implements ABISerializableObject {
 
         for (let j = 0; j < numValues; j++) {
           const vname = decoder.readString()
-          // int64 value - read as two uint32s (little-endian), reconstruct as signed
-          const lo = decoder.readArray(4)
-          const hi = decoder.readArray(4)
-          const loVal =
-            lo[0] | (lo[1] << 8) | (lo[2] << 16) | ((lo[3] << 24) >>> 0)
-          const hiVal =
-            hi[0] | (hi[1] << 8) | (hi[2] << 16) | ((hi[3] << 24) >>> 0)
-          // Reconstruct as signed: if high bit set, value is negative
-          let value: number
-          if (hiVal >= 0x80000000) {
-            // Negative: compute -(2^64 - raw)
-            value = -(0x100000000 * (0x100000000 - hiVal) - loVal)
-          } else {
-            value = hiVal * 0x100000000 + loVal
-          }
+          const value = ABI.readEnumValue(
+            decoder,
+            `enum ${name}.${vname} value`
+          )
           values.push({ name: vname, value })
         }
 
@@ -380,20 +370,11 @@ export class ABI implements ABISerializableObject {
 
       for (const ev of enumDef.values) {
         encoder.writeString(ev.name)
-        // int64 value as two uint32 little-endian
-        const raw = ev.value < 0 ? ev.value + 0x10000000000000000 : ev.value
-        const lo = raw >>> 0
-        const hi = (raw / 0x100000000) >>> 0
-        const buf = new Uint8Array(8)
-        buf[0] = lo & 0xff
-        buf[1] = (lo >> 8) & 0xff
-        buf[2] = (lo >> 16) & 0xff
-        buf[3] = (lo >> 24) & 0xff
-        buf[4] = hi & 0xff
-        buf[5] = (hi >> 8) & 0xff
-        buf[6] = (hi >> 16) & 0xff
-        buf[7] = (hi >> 24) & 0xff
-        encoder.writeArray(buf)
+        ABI.writeEnumValue(
+          encoder,
+          ev.value,
+          `enum ${enumDef.name}.${ev.name} value`
+        )
       }
     }
 
@@ -405,6 +386,34 @@ export class ABI implements ABISerializableObject {
     if (this.version.startsWith("sysio::abi/1.")) {
       encoder.writeString("")
     }
+  }
+
+  /** Read an ABI enum discriminant encoded as signed int64. */
+  private static readEnumValue(decoder: ABIDecoder, label: string): number {
+    const value = Int64.fromABI(decoder)
+
+    try {
+      return value.toNumber()
+    } catch {
+      throw new Error(
+        `ABI ${label} must fit in a safe JavaScript number, got ${value.toString()}`
+      )
+    }
+  }
+
+  /** Write an ABI enum discriminant encoded as signed int64. */
+  private static writeEnumValue(
+    encoder: ABIEncoder,
+    value: number,
+    label: string
+  ) {
+    if (!Number.isSafeInteger(value)) {
+      throw new Error(
+        `ABI ${label} must be a safe JavaScript integer, got ${value}`
+      )
+    }
+
+    Int64.from(value).toABI(encoder)
   }
 
   private static assertUint16(value: number, label: string) {

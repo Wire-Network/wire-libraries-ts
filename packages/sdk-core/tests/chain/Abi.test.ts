@@ -20,6 +20,50 @@ function decodeAbi(bytes: Uint8Array): ABI {
   return ABI.fromABI(decoder)
 }
 
+const INT64_ENUM_SIGNED_INT32_MAX = 0x7fffffff
+const INT64_ENUM_SIGNED_INT32_HIGH_BIT = 0x80000000
+const INT64_ENUM_UNSIGNED_INT32_MAX = 0xffffffff
+const INT64_ENUM_SAFE_BOUNDARY_VALUES = [
+  -Number.MAX_SAFE_INTEGER,
+  -2,
+  -1,
+  0,
+  1,
+  INT64_ENUM_SIGNED_INT32_MAX,
+  INT64_ENUM_SIGNED_INT32_HIGH_BIT,
+  INT64_ENUM_UNSIGNED_INT32_MAX,
+  Number.MAX_SAFE_INTEGER
+]
+const INT64_ENUM_UNSAFE_POSITIVE_VALUE_BYTES = [
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00
+] as const
+const INT64_ENUM_UNSAFE_NEGATIVE_VALUE_BYTES = [
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0xff
+] as const
+
+/** Build an ABI byte stream with one raw int64 enum value. */
+function encodeRawInt64EnumValue(valueBytes: ArrayLike<number>): Uint8Array {
+  const encoder = new ABIEncoder()
+  encoder.writeString("sysio::abi/1.2")
+  encoder.writeVaruint32(0) // types
+  encoder.writeVaruint32(0) // structs
+  encoder.writeVaruint32(0) // actions
+  encoder.writeVaruint32(0) // tables
+  encoder.writeVaruint32(0) // ricardian_clauses
+  encoder.writeVaruint32(0) // error_messages
+  encoder.writeVaruint32(0) // extensions
+  encoder.writeVaruint32(0) // variants
+  encoder.writeVaruint32(0) // action_results
+  encoder.writeVaruint32(1) // enums
+  encoder.writeString("status")
+  encoder.writeString("int64")
+  encoder.writeVaruint32(1)
+  encoder.writeString("raw")
+  encoder.writeArray(valueBytes)
+  encoder.writeString("")
+  return encoder.getData()
+}
+
 describe("ABI", () => {
   describe("table_def binary format (wire-sysio PR #288)", () => {
     test("round-trips a table with table_id and empty secondary_indexes", () => {
@@ -174,6 +218,152 @@ describe("ABI", () => {
       const decoded = decodeAbi(encodeAbi(original))
       expect(decoded.tables[0].table_id).toBe(0)
       expect(decoded.tables[0].secondary_indexes).toEqual([])
+    })
+  })
+
+  describe("int64 enum binary format", () => {
+    test("round-trips safe int64 enum boundary values", () => {
+      const original = new ABI({
+        version: "sysio::abi/1.2",
+        enums: [
+          {
+            name: "status",
+            type: "int64",
+            values: INT64_ENUM_SAFE_BOUNDARY_VALUES.map((value, index) => ({
+              name: `v${index}`,
+              value
+            }))
+          }
+        ]
+      })
+
+      const decoded = decodeAbi(encodeAbi(original))
+      expect(decoded.enums[0].values.map(({ value }) => value)).toEqual(
+        INT64_ENUM_SAFE_BOUNDARY_VALUES
+      )
+    })
+
+    test("golden bytes: signed and high-bit int64 enum values match expected layout", () => {
+      const abi = new ABI({
+        version: "sysio::abi/1.2",
+        enums: [
+          {
+            name: "status",
+            type: "int64",
+            values: [
+              { name: "minus_one", value: -1 },
+              { name: "bit_31", value: INT64_ENUM_SIGNED_INT32_HIGH_BIT }
+            ]
+          }
+        ]
+      })
+      const bytes = encodeAbi(abi)
+      const expected = new Uint8Array([
+        0x0e,
+        0x73,
+        0x79,
+        0x73,
+        0x69,
+        0x6f,
+        0x3a,
+        0x3a,
+        0x61,
+        0x62,
+        0x69,
+        0x2f,
+        0x31,
+        0x2e,
+        0x32, // version "sysio::abi/1.2"
+        0x00, // types
+        0x00, // structs
+        0x00, // actions
+        0x00, // tables
+        0x00, // ricardian_clauses
+        0x00, // error_messages
+        0x00, // extensions
+        0x00, // variants
+        0x00, // action_results
+        0x01, // enums.length = 1
+        0x06,
+        0x73,
+        0x74,
+        0x61,
+        0x74,
+        0x75,
+        0x73, // enum[0].name = "status"
+        0x05,
+        0x69,
+        0x6e,
+        0x74,
+        0x36,
+        0x34, // enum[0].type = "int64"
+        0x02, // values.length = 2
+        0x09,
+        0x6d,
+        0x69,
+        0x6e,
+        0x75,
+        0x73,
+        0x5f,
+        0x6f,
+        0x6e,
+        0x65, // value[0].name = "minus_one"
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff, // value[0].value = -1
+        0x06,
+        0x62,
+        0x69,
+        0x74,
+        0x5f,
+        0x33,
+        0x31, // value[1].name = "bit_31"
+        0x00,
+        0x00,
+        0x00,
+        0x80,
+        0x00,
+        0x00,
+        0x00,
+        0x00, // value[1].value = 2147483648
+        0x00 // protobuf_types = "" (1.x trailer)
+      ])
+
+      expect(Array.from(bytes)).toEqual(Array.from(expected))
+      expect(decodeAbi(expected).enums[0].values).toEqual(abi.enums[0].values)
+    })
+
+    test("encoder rejects unsafe int64 enum numbers", () => {
+      const abi = new ABI({
+        enums: [
+          {
+            name: "status",
+            type: "int64",
+            values: [{ name: "unsafe", value: Number.MAX_SAFE_INTEGER + 1 }]
+          }
+        ]
+      })
+
+      expect(() => encodeAbi(abi)).toThrow(/safe JavaScript integer/)
+    })
+
+    test("decoder rejects int64 enum values outside safe number range", () => {
+      expect(() =>
+        decodeAbi(
+          encodeRawInt64EnumValue(INT64_ENUM_UNSAFE_POSITIVE_VALUE_BYTES)
+        )
+      ).toThrow(/safe JavaScript number/)
+
+      expect(() =>
+        decodeAbi(
+          encodeRawInt64EnumValue(INT64_ENUM_UNSAFE_NEGATIVE_VALUE_BYTES)
+        )
+      ).toThrow(/safe JavaScript number/)
     })
   })
 
