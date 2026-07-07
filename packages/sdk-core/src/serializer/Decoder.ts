@@ -264,7 +264,7 @@ function decodeBinary(
         const ev = enumInfo.values.find(v => v.value === numVal)
         return ev ? ev.name : intValue
       } else if (type.variant) {
-        const vIdx = decoder.readByte()
+        const vIdx = decoder.readVaruint32()
         const vType = type.variant[vIdx]
 
         if (!vType) {
