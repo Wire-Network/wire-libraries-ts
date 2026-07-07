@@ -3,7 +3,7 @@
 #                      OPP model code generators. pnpm workspace (packages/*).
 # =============================================================================
 # Chain position 3: depends on //wire-sysio:build. This is a REAL functional
-# edge, not just ordering: at `pnpm install` the repo's .pnpmfile.cjs resolves
+# edge, not just ordering: the repo's .pnpmfile.cjs resolves
 # @wireio/opp-typescript-models from wire-sysio/build/opp/typescript, and
 # sdk-core's tsc build references symbols from the current proto (e.g.
 # ChainKind.EVM). Build wire-sysio first and that codegen exists; skip it and
@@ -34,6 +34,7 @@ js_workspace_build(
     name = "build",
     # wire-sysio emits the OPP codegen this repo's .pnpmfile.cjs consumes.
     deps = ["//wire-sysio:build"],
+    install_cmd = "WIRE_LINK_LOCAL_OPP_MODELS=1 pnpm install --lockfile=false",
     package_manager = "pnpm",
     tags = ["ts"],
     working_dir = "wire-libraries-ts",

@@ -1,4 +1,4 @@
-import { ethers } from "ethers"
+import { ethers } from "../EthersCompat.js"
 import { Bytes } from "../chain/Bytes.js"
 import { KeyType } from "../chain/KeyType.js"
 import { PublicKey } from "../chain/PublicKey.js"

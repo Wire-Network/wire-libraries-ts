@@ -9,7 +9,7 @@ on:
 
 permissions:
   contents: write # needed to push the version-bump commit
-  id-token: none
+  id-token: write # needed for npm provenance
 
 concurrency:
   group: release-master
@@ -23,11 +23,6 @@ jobs:
       !contains(github.event.head_commit.message, '[skip release]')
 
     runs-on: ubuntu-latest
-
-    env:
-      # npm/pnpm will read this for auth when publishing
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      PKG_CACHE_PATH: /home/runner/.pkg-cache
 
     steps:
       - name: Checkout
@@ -46,11 +41,11 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
-      - name: Pre-fetch pkg base binary
-        run: mkdir -p ${PKG_CACHE_PATH} && npx @yao-pkg/pkg-fetch node24 linux x64
-
       - name: Install deps
-        run: pnpm install
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=moderate
 
       - name: Build
         run: pnpm run build
@@ -89,12 +84,15 @@ jobs:
             exit 0
           fi
 
-          git add -A
+          git add package.json pnpm-lock.yaml packages/*/package.json examples/*/package.json
           git commit -m "chore(release): bump patch [skip release]"
           git push
 
       - name: Publish to npm (all workspace packages)
+        env:
+          # npm/pnpm reads this token only while publishing.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           # Publishes all non-private packages in dependency order.
           # --no-git-checks avoids failure in CI environments.
-          pnpm -r publish --access public --no-git-checks
+          pnpm -r publish --access public --no-git-checks --provenance

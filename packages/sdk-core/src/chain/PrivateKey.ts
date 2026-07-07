@@ -8,7 +8,7 @@ import { generate } from "../crypto/Generate.js"
 
 import { ec as EC } from "elliptic"
 
-import { ethers } from "ethers"
+import { ethers } from "../EthersCompat.js"
 
 import { Bytes, BytesType } from "./Bytes.js"
 import { Checksum256, Checksum256Type } from "./Checksum.js"

@@ -7,7 +7,7 @@
     "build:dev": "webpack serve --mode development --port 9090 --host 0.0.0.0"
   },
   "dependencies": {
-    "@aws-sdk/client-firehose": "^3.700.0",
+    "@aws-sdk/client-firehose": "^3.1080.0",
     "@wireio/shared": "workspace:*",
     "@wireio/shared-web": "workspace:*"
   },
@@ -16,6 +16,6 @@
     "typescript": "^6.0.2",
     "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.3"
+    "webpack-dev-server": "^6.0.0"
   }
 }

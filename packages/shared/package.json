@@ -42,8 +42,8 @@
     "typescript": "6.0.2"
   },
   "dependencies": {
-    "@aws-sdk/client-firehose": "3.972.0",
-    "@aws-sdk/client-sts": "3.972.0",
+    "@aws-sdk/client-firehose": "3.1080.0",
+    "@aws-sdk/client-sts": "3.1080.0",
     "bluebird": "3.7.2",
     "debug": "^4.3.4",
     "eventemitter3": "^5.0.4",
