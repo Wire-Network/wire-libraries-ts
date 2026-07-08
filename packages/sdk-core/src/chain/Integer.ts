@@ -6,8 +6,10 @@ import { ABIEncoder } from "../serializer/Encoder.js"
 import { isInstanceOf, secureRandom } from "../Utils.js"
 
 type IntType = Int | number | string | BN
+type IntInput = IntType | bigint
 
 const DECIMAL_INTEGER_PATTERN = /^-?[0-9]+$/
+const UINT256_FIXED_POINT_PATTERN = /^(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)$/
 
 interface IntDescriptor {
   isSigned: boolean
@@ -17,6 +19,11 @@ interface IntDescriptor {
 /** Return true when a string is a strict base-10 integer literal. */
 function isDecimalIntegerString(value: string) {
   return DECIMAL_INTEGER_PATTERN.test(value)
+}
+
+/** Return true when a string is a strict unsigned fixed-point literal. */
+function isUInt256FixedPointString(value: string) {
+  return UINT256_FIXED_POINT_PATTERN.test(value)
 }
 
 /**
@@ -157,16 +164,16 @@ export class Int implements ABISerializableObject {
   /**
    * Create a new instance from value.
    * @param value Value to create new Int instance from, can be a string, number,
-   *              little-endian byte array or another Int instance.
+   *              bigint, BN, little-endian byte array or another Int instance.
    * @param overflow How to handle integer overflow, default behavior is to throw.
    */
   static from<T extends typeof Int>(
     this: T,
-    value: IntType | Uint8Array,
+    value: IntInput | Uint8Array,
     overflow?: OverflowBehavior
   ): InstanceType<T>
   static from(value: any, overflow?: OverflowBehavior): unknown
-  static from(value: IntType | Uint8Array, overflow?: OverflowBehavior): any {
+  static from(value: IntInput | Uint8Array, overflow?: OverflowBehavior): any {
     if (isInstanceOf(value, this)) {
       return value
     }
@@ -188,19 +195,20 @@ export class Int implements ABISerializableObject {
         throw new Error("Invalid number")
       }
 
-      if (typeof value === "number" && !Number.isFinite(value)) {
+      if (typeof value === "number" && !Number.isSafeInteger(value)) {
         throw new Error("Invalid number")
       }
 
       if (
         typeof value !== "string" &&
         typeof value !== "number" &&
+        typeof value !== "bigint" &&
         !BN.isBN(value)
       ) {
         throw new Error("Invalid number")
       }
 
-      bn = BN.isBN(value) ? value.clone() : new BN(value, 10)
+      bn = BN.isBN(value) ? value.clone() : new BN(value.toString(), 10)
 
       if (bn.isNeg() && !fromType.isSigned) {
         fromType = { byteWidth: fromType.byteWidth, isSigned: true }
@@ -298,7 +306,7 @@ export class Int implements ABISerializableObject {
    * Compare two integers, if strict is set to true the test will only consider integers
    * of the exact same type. I.e. Int64.from(1).equals(UInt64.from(1)) will return false.
    */
-  equals(other: IntType | Uint8Array, strict = false) {
+  equals(other: IntInput | Uint8Array, strict = false) {
     const self = this.constructor as typeof Int
 
     if (strict === true && isInstanceOf(other, Int)) {
@@ -607,7 +615,20 @@ export class UInt256 {
 
     // 6) Otherwise (number|string): parse as 18‐decimal fixed‐point
     //    (e.g. "1.5" → BN(1.5 × 10^18)).
+    if (typeof value === "number" && !Number.isFinite(value)) {
+      throw new Error("Invalid number")
+    }
+
+    if (typeof value !== "string" && typeof value !== "number") {
+      throw new Error("Invalid number")
+    }
+
     const valueStr = (value as number | string).toString()
+
+    if (!isUInt256FixedPointString(valueStr)) {
+      throw new Error("Invalid number")
+    }
+
     const [whole, frac = ""] = valueStr.split(".")
 
     const wholeBN = new BN(whole || "0", 10).mul(this.SCALE)

@@ -6,32 +6,54 @@ import {
   UInt32,
   UInt64,
   UInt128,
+  UInt256,
   VarUInt,
   VarInt
 } from "@wireio/sdk-core/chain/Integer"
 import { Serializer } from "@wireio/sdk-core/serializer"
 
-const MALFORMED_INTEGER_STRINGS = ["1.23", "0x10", "abc123", "+1000"]
-const INTEGER_STRING_ABI = {
-  structs: [
-    {
-      name: "row",
-      base: "",
-      fields: [
-        { name: "u", type: "uint64" },
-        { name: "i", type: "int64" },
-        { name: "v", type: "varuint32" }
+const ABI_INTEGER_TYPES = ["uint64", "int64", "varuint32"] as const
+const MALFORMED_INTEGER_STRINGS = [
+  "1.23",
+  "0x10",
+  "abc123",
+  "+1000",
+  " 100",
+  "42\n"
+]
+const INVALID_NUMBER_VALUES = [
+  1.23,
+  Number.NaN,
+  Number.POSITIVE_INFINITY,
+  Number.MAX_SAFE_INTEGER + 1
+]
+const MALFORMED_UINT256_STRINGS = [
+  "0x10",
+  "+1",
+  "abc123",
+  "1.2.3",
+  "",
+  ".",
+  " 1"
+]
+
+type AbiIntegerType = (typeof ABI_INTEGER_TYPES)[number]
+type IntegerAbiValue = string | String | number | bigint
+
+/** Encode one ABI integer field with a caller-provided runtime value. */
+function encodeIntegerValue(value: IntegerAbiValue, abiType: AbiIntegerType) {
+  return Serializer.encode({
+    object: { value },
+    type: "row",
+    abi: {
+      structs: [
+        {
+          name: "row",
+          base: "",
+          fields: [{ name: "value", type: abiType }]
+        }
       ]
     }
-  ]
-}
-
-/** Encode a row whose integer fields all receive the same runtime value. */
-function encodeIntegerStringRow(value: string | String) {
-  return Serializer.encode({
-    object: { u: value, i: value, v: value },
-    type: "row",
-    abi: INTEGER_STRING_ABI
   })
 }
 
@@ -50,8 +72,12 @@ describe("Integer", () => {
     })
 
     test("rejects malformed numeric strings through ABI serialization", () => {
-      MALFORMED_INTEGER_STRINGS.forEach(value => {
-        expect(() => encodeIntegerStringRow(value)).toThrow("Invalid number")
+      ABI_INTEGER_TYPES.forEach(abiType => {
+        MALFORMED_INTEGER_STRINGS.forEach(value => {
+          expect(() => encodeIntegerValue(value, abiType)).toThrow(
+            "Invalid number"
+          )
+        })
       })
     })
 
@@ -60,7 +86,29 @@ describe("Integer", () => {
 
       expect(() => UInt64.from(value as string)).toThrow("Invalid number")
       expect(() => Int64.from(value as string)).toThrow("Invalid number")
-      expect(() => encodeIntegerStringRow(value)).toThrow("Invalid number")
+      expect(() => encodeIntegerValue(value, "uint64")).toThrow(
+        "Invalid number"
+      )
+    })
+
+    test("rejects unsafe or fractional numbers", () => {
+      INVALID_NUMBER_VALUES.forEach(value => {
+        expect(() => UInt64.from(value)).toThrow("Invalid number")
+        expect(() => encodeIntegerValue(value, "uint64")).toThrow(
+          "Invalid number"
+        )
+      })
+    })
+
+    test("accepts bigint integer values", () => {
+      expect(UInt64.from(123n).toNumber()).toBe(123)
+      expect(UInt64.from(9007199254740992n).toString()).toBe("9007199254740992")
+      expect(() => encodeIntegerValue(123n, "uint64")).not.toThrow()
+    })
+
+    test("equals follows strict string parsing and bigint support", () => {
+      expect(UInt64.from(100).equals(100n)).toBe(true)
+      expect(UInt64.from(100).equals(" 100")).toBe(false)
     })
   })
 
@@ -113,6 +161,26 @@ describe("Integer", () => {
   describe("UInt128", () => {
     test("from(0) creates zero value", () => {
       expect(UInt128.from(0).toNumber()).toBe(0)
+    })
+  })
+
+  describe("UInt256", () => {
+    test("accepts strict fixed-point strings", () => {
+      expect(UInt256.from("1.5").toString()).toBe("1.5")
+      expect(UInt256.from(".5").toString()).toBe("0.5")
+      expect(UInt256.from("1.").toString()).toBe("1")
+    })
+
+    test("rejects malformed fixed-point strings", () => {
+      MALFORMED_UINT256_STRINGS.forEach(value => {
+        expect(() => UInt256.from(value)).toThrow("Invalid number")
+      })
+    })
+
+    test("rejects unsupported runtime values", () => {
+      const unsupportedValue = {} as { low: UInt128; high: UInt128 }
+
+      expect(() => UInt256.from(unsupportedValue)).toThrow("Invalid number")
     })
   })
 

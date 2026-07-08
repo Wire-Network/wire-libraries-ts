@@ -1,5 +1,31 @@
 import { Asset, ExtendedAsset } from "@wireio/sdk-core/chain/Asset"
 import { Name } from "@wireio/sdk-core/chain/Name"
+import { Serializer } from "@wireio/sdk-core/serializer"
+
+const MALFORMED_SYMBOL_STRINGS = [
+  "abc,SYS",
+  "4x,SYS",
+  "4,sys",
+  "4,SYS!",
+  " 4,SYS"
+]
+
+/** Encode one ABI symbol field with a caller-provided runtime value. */
+function encodeSymbolValue(value: string) {
+  return Serializer.encode({
+    object: { value },
+    type: "row",
+    abi: {
+      structs: [
+        {
+          name: "row",
+          base: "",
+          fields: [{ name: "value", type: "symbol" }]
+        }
+      ]
+    }
+  })
+}
 
 describe("Asset", () => {
   test("from string parses correctly", () => {
@@ -62,6 +88,18 @@ describe("Asset.Symbol", () => {
 
   test("toString returns precision,name format", () => {
     expect(Asset.Symbol.from("4,SYS").toString()).toBe("4,SYS")
+  })
+
+  test("rejects malformed symbol strings", () => {
+    MALFORMED_SYMBOL_STRINGS.forEach(value => {
+      expect(() => Asset.Symbol.from(value)).toThrow("Invalid symbol string")
+    })
+  })
+
+  test("rejects malformed symbol strings through ABI serialization", () => {
+    MALFORMED_SYMBOL_STRINGS.forEach(value => {
+      expect(() => encodeSymbolValue(value)).toThrow("Invalid symbol string")
+    })
   })
 })
 
