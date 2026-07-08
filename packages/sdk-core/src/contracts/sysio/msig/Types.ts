@@ -9,7 +9,7 @@ import type {
   TransactionHeaderType,
   TransactionType
 } from "../../../chain/Transaction.js"
-import type * as SystemContracts from "../../../types/SystemContractTypes.js"
+import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 
 import type {
   MsigApprovalsInfo,
@@ -21,7 +21,7 @@ import type {
 /** Permission level input accepted by multisig action builders. */
 export type MsigPermissionLevel =
   | PermissionLevelType
-  | SystemContracts.SysioMsigPermissionLevelType
+  | SysioContracts.SysioMsigPermissionLevelType
   | string
 
 /** Configuration for `MsigClient`. */
@@ -362,7 +362,7 @@ export interface ProposalStatus {
 }
 
 /** JSON row shape generated from `sysio.msig::proposal`. */
-export type SysioMsigProposalRow = SystemContracts.SysioMsigProposalType
+export type SysioMsigProposalRow = SysioContracts.SysioMsigProposalType
 
 /** JSON row shape generated from `sysio.msig::propchunk`. */
-export type SysioMsigPropchunkRow = SystemContracts.SysioMsigPropchunkType
+export type SysioMsigPropchunkRow = SysioContracts.SysioMsigPropchunkType

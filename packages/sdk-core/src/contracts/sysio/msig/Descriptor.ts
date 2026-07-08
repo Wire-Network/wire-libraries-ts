@@ -1,5 +1,5 @@
 import type { ContractDescriptor } from "../../Contract.js"
-import type * as SystemContracts from "../../../types/SystemContractTypes.js"
+import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 
 import { DEFAULT_MSIG_CONTRACT } from "./Constants.js"
 import {
@@ -14,12 +14,12 @@ import {
 
 /** Generated `sysio.msig` transaction body plus inherited transaction header. */
 export interface SysioMsigTransactionData
-  extends SystemContracts.SysioMsigTransactionHeaderType,
-    SystemContracts.SysioMsigTransactionType {}
+  extends SysioContracts.SysioMsigTransactionHeaderType,
+    SysioContracts.SysioMsigTransactionType {}
 
 /** Generated `sysio.msig::propose` data with complete transaction fields. */
 export interface SysioMsigProposeActionData
-  extends Omit<SystemContracts.SysioMsigProposeAction, "trx"> {
+  extends Omit<SysioContracts.SysioMsigProposeAction, "trx"> {
   /** Proposed transaction including header and action arrays. */
   trx: SysioMsigTransactionData
 }
@@ -29,37 +29,37 @@ export interface SysioMsigActionData {
   /** `sysio.msig::propose` action data. */
   propose: SysioMsigProposeActionData
   /** `sysio.msig::approve` action data. */
-  approve: SystemContracts.SysioMsigApproveAction
+  approve: SysioContracts.SysioMsigApproveAction
   /** `sysio.msig::unapprove` action data. */
-  unapprove: SystemContracts.SysioMsigUnapproveAction
+  unapprove: SysioContracts.SysioMsigUnapproveAction
   /** `sysio.msig::cancel` action data. */
-  cancel: SystemContracts.SysioMsigCancelAction
+  cancel: SysioContracts.SysioMsigCancelAction
   /** `sysio.msig::exec` action data. */
-  exec: SystemContracts.SysioMsigExecAction
+  exec: SysioContracts.SysioMsigExecAction
   /** `sysio.msig::invalidate` action data. */
-  invalidate: SystemContracts.SysioMsigInvalidateAction
+  invalidate: SysioContracts.SysioMsigInvalidateAction
   /** `sysio.msig::getproposal` action data. */
-  getproposal: SystemContracts.SysioMsigGetproposalAction
+  getproposal: SysioContracts.SysioMsigGetproposalAction
 }
 
 /** Generated `sysio.msig` table rows keyed by ABI table name. */
 export interface SysioMsigTableRows {
   /** `sysio.msig::proposal` table row. */
-  proposal: SystemContracts.SysioMsigProposalType
+  proposal: SysioContracts.SysioMsigProposalType
   /** `sysio.msig::approvals2` table row. */
-  approvals2: SystemContracts.SysioMsigApprovalsInfoType
+  approvals2: SysioContracts.SysioMsigApprovalsInfoType
   /** `sysio.msig::approvals` legacy table row. */
-  approvals: SystemContracts.SysioMsigOldApprovalsInfoType
+  approvals: SysioContracts.SysioMsigOldApprovalsInfoType
   /** `sysio.msig::invals` table row. */
-  invals: SystemContracts.SysioMsigInvalidationType
+  invals: SysioContracts.SysioMsigInvalidationType
   /** `sysio.msig::propchunks` chunked-v2 table row. */
-  propchunks: SystemContracts.SysioMsigPropchunkType
+  propchunks: SysioContracts.SysioMsigPropchunkType
 }
 
 /**
  * Runtime descriptor for `sysio.msig`.
  *
- * The type maps come from generated `SystemContractTypes`; the serializers are
+ * The type maps come from generated `SysioContractTypes`; the serializers are
  * currently supplied by hand-written `Struct` classes. A future generator can
  * emit this metadata directly for every system contract.
  */
