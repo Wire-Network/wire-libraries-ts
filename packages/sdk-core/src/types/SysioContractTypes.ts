@@ -1502,6 +1502,7 @@ export interface SysioReservPaywireAction {
 export interface SysioReservRefundwireAction {
   recipient: string
   wire_amount: number | string
+  revert_fee_bps: number
 }
 
 /** sysio.reserv::regreserve (action) */
@@ -2930,6 +2931,8 @@ export interface SysioUwritRcrdcommitAction {
 export interface SysioUwritSetconfigAction {
   fee_bps: number
   collateral_lock_duration_ms: number | string
+  min_fromwire_amount: number | string
+  fromwire_revert_fee_bps: number
 }
 
 /** sysio.uwrit::slug_name (type) */
@@ -2961,6 +2964,8 @@ export interface SysioUwritSwapfromwireAction {
 export interface SysioUwritUwConfigType {
   fee_bps: number
   collateral_lock_duration_ms: number | string
+  min_fromwire_amount: number | string
+  fromwire_revert_fee_bps: number
 }
 
 /** sysio.uwrit::uw_counters (type) */
