@@ -5,8 +5,11 @@ import { getCurve } from "./crypto/Curves.js"
 import { KeyType } from "./chain/KeyType.js"
 import { Name, NameType } from "./chain/Name.js"
 import { TimePoint } from "./chain/Time.js"
-import { BLOCK_TIMESTAMP_EPOCH_MS, BLOCK_TIMESTAMP_INTERVAL_MS } from "./chain/constants.js"
-import { ethers } from "ethers"
+import {
+  BLOCK_TIMESTAMP_EPOCH_MS,
+  BLOCK_TIMESTAMP_INTERVAL_MS
+} from "./chain/constants.js"
+import { ethers } from "./EthersCompat.js"
 import { Serializer } from "./serializer//index.js"
 
 export function arrayEquals(a: ArrayLike<number>, b: ArrayLike<number>) {
@@ -317,7 +320,8 @@ export const ensure0x = (hex: string): string => {
  */
 export const dateToBlockTimestamp = (date: TimePoint): number => {
   return Math.round(
-    (checkDateParse(date.toString() + "Z") - BLOCK_TIMESTAMP_EPOCH_MS) / BLOCK_TIMESTAMP_INTERVAL_MS
+    (checkDateParse(date.toString() + "Z") - BLOCK_TIMESTAMP_EPOCH_MS) /
+      BLOCK_TIMESTAMP_INTERVAL_MS
   )
 }
 

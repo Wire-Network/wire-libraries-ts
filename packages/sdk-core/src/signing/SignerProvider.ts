@@ -1,6 +1,6 @@
 import { identity } from "lodash"
 import { Option } from "@3fv/prelude-ts"
-import { ethers } from "ethers"
+import { ethers } from "../EthersCompat.js"
 import { PrivateKey, type PrivateKeyType } from "../chain/PrivateKey.js"
 import { PublicKey } from "../chain/PublicKey.js"
 import { hexToArray } from "../Utils.js"

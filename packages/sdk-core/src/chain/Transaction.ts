@@ -1,20 +1,34 @@
 import pako from "pako"
 
 import { abiEncode } from "../serializer/Encoder.js"
-import { padEdForTx, Signature, SignatureType, stripEdPad } from "./Signature.js"
+import {
+  padEdForTx,
+  Signature,
+  SignatureType,
+  stripEdPad
+} from "./Signature.js"
 import { abiDecode } from "../serializer/Decoder.js"
 
 import { ABIDef } from "./Abi.js"
 import { Action, ActionType, AnyAction } from "./Action.js"
 import { Bytes, BytesType } from "./Bytes.js"
 import { Checksum256, Checksum256Type } from "./Checksum.js"
-import { UInt16, UInt16Type, UInt32, UInt32Type, UInt8, UInt8Type, VarUInt, VarUIntType } from "./Integer.js"
+import {
+  UInt16,
+  UInt16Type,
+  UInt32,
+  UInt32Type,
+  UInt8,
+  UInt8Type,
+  VarUInt,
+  VarUIntType
+} from "./Integer.js"
 import { KeyType } from "./KeyType.js"
 import { Name, NameType } from "./Name.js"
 import { PublicKey, PublicKeyType } from "./PublicKey.js"
 import { Struct } from "./Struct.js"
 import { TimePointSec, TimePointType } from "./Time.js"
-import { ethers } from "ethers"
+import { ethers } from "../EthersCompat.js"
 import { concatBytes } from "../Utils.js"
 
 @Struct.type("transaction_extension")

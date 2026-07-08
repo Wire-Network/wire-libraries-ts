@@ -1,50 +1,67 @@
 /* eslint-disable typescript/no-explicit-any */
-import { isString } from '../../../guards/primitive.js'
-import { FirehoseClient, PutRecordBatchCommand, PutRecordBatchInput } from "@aws-sdk/client-firehose"
-import {
-  Credentials as IAWSTemporaryCredentials,
-  ExpiredTokenException,
-} from "@aws-sdk/client-sts"
+import type {
+  FirehoseClient,
+  PutRecordBatchInput
+} from "@aws-sdk/client-firehose"
 import { Level } from "../../Level.js"
 
-import AWSFirehoseCredentialManager from "./AWSFirehoseCredentialManager.js"
+import AWSFirehoseCredentialManager, {
+  type AWSCredentials
+} from "./AWSFirehoseCredentialManager.js"
 import { getInternalLogger } from "../../InternalLogger.js"
-import { getValue, guard } from "../../../guards/index.js"
-import { isEmpty, pick } from "lodash"
+import { pick } from "lodash"
 import { Deferred } from "../../../helpers/index.js"
 import { LogRecord } from "../../LogRecord.js"
 import { Appender } from "../../Appender.js"
 
 const LogQueueMaxRecords = 10000
+const ExpiredTokenExceptionCode = "ExpiredTokenException"
 
 const log = getInternalLogger()
+let firehoseModule: Promise<typeof import("@aws-sdk/client-firehose")> = null
 
-export class AWSFirehoseAppender<Record extends LogRecord = LogRecord>
-  implements Appender<Record> {
+function getFirehoseModule() {
+  if (!firehoseModule) {
+    firehoseModule = import("@aws-sdk/client-firehose").catch(err => {
+      firehoseModule = null
+      throw err
+    })
+  }
+
+  return firehoseModule
+}
+
+export class AWSFirehoseAppender<
+  Record extends LogRecord = LogRecord
+> implements Appender<Record> {
   private pendingRecords = Array<LogRecord>()
   private flushDeferred: Deferred<void>
-  private flushIntervalMs = 1000;
+  private flushIntervalMs = 1000
 
   public readonly credentialManager: AWSFirehoseCredentialManager
 
-  constructor(
-    public readonly credentialEndpointUrl: string) {
-    this.credentialManager = new AWSFirehoseCredentialManager(credentialEndpointUrl)
+  constructor(public readonly credentialEndpointUrl: string) {
+    this.credentialManager = new AWSFirehoseCredentialManager(
+      credentialEndpointUrl
+    )
     this.credentialManager.on("received", () => {
       log.info("Credentials received, initializing firehose client")
       if (!this.pendingRecords.length || !!this.flushDeferred) {
-        log.debug("Nothing to flush upon credential receipt OR flush already in progress")
+        log.debug(
+          "Nothing to flush upon credential receipt OR flush already in progress"
+        )
         return
       }
-      this.flush()
-        .catch((e: Error) => {
-          log.error(`Error flushing logs after credential receipt: ${e.message}`, e)
-        })
+      this.flush().catch((e: Error) => {
+        log.error(
+          `Error flushing logs after credential receipt: ${e.message}`,
+          e
+        )
+      })
     })
   }
   append(record: Record): void {
-    const
-      pendingCount = this.pendingRecords.length + 1,
+    const pendingCount = this.pendingRecords.length + 1,
       removeCount = LogQueueMaxRecords - pendingCount
 
     if (removeCount < 0) {
@@ -56,36 +73,28 @@ export class AWSFirehoseAppender<Record extends LogRecord = LogRecord>
       ...record,
       app: record.app?.length > 0 ? record.app : "UNKNOWN",
       env: record.env?.length > 0 ? record.env : "UNKNOWN",
-      url: typeof window === "undefined" ? "local://" : window.location.href,
+      url: typeof window === "undefined" ? "local://" : window.location.href
     })
 
     this.flush()
   }
 
   /**
-   * Create the firehose client and return
-   *
-   * @param {IAWSTemporaryCredentials} credentials
-   * @param {boolean} flush
-   * @returns {Firehose}
+   * Create the Firehose client for a loaded credential set.
+   * @param creds Loaded Firehose credentials.
+   * @returns Firehose client.
    */
-  private getFirehose(): FirehoseClient {
-    const creds = this.credentialManager.getCredentials()
-
-    if (!creds) {
-      log.warn("No credentials available for flush")
-      return null
-    }
-
+  private async getFirehose(creds: AWSCredentials): Promise<FirehoseClient> {
     const { region, streamName } = creds
 
     if (!region || !streamName) {
       throw new Error("Region or stream name not available")
     }
 
+    const { FirehoseClient } = await getFirehoseModule()
     const client = new FirehoseClient({
       region: creds.region,
-      credentials: pick(creds, "accessKeyId", "secretAccessKey", "sessionToken"),
+      credentials: pick(creds, "accessKeyId", "secretAccessKey", "sessionToken")
     })
 
     return client
@@ -111,26 +120,21 @@ export class AWSFirehoseAppender<Record extends LogRecord = LogRecord>
       log.warn("No credentials available for flush")
       return
     }
-    const { streamName } = creds,
-      client = this.getFirehose()
-    if (!client) {
-      log.warn("No firehose client available, skipping flush")
-      return
-    }
 
-    const deferred = this.flushDeferred = new Deferred<void>()
+    const deferred = (this.flushDeferred = new Deferred<void>())
     try {
+      const { streamName } = creds,
+        client = await this.getFirehose(creds),
+        { PutRecordBatchCommand } = await getFirehoseModule()
+
       while (this.pendingRecords.length) {
-        const
-          chunkSize = Math.min(this.pendingRecords.length, 10),
+        const chunkSize = Math.min(this.pendingRecords.length, 10),
           records = this.pendingRecords.splice(0, chunkSize),
           recordJsons = records.map(record => JSON.stringify(record))
 
-        if (log.isDebugEnabled())
-          log.debug("Records", records)
+        if (log.isDebugEnabled()) log.debug("Records", records)
 
-        const
-          textEncoder = new TextEncoder(),
+        const textEncoder = new TextEncoder(),
           batch: PutRecordBatchInput["Records"] = recordJsons.map(jsonStr => ({
             Data: textEncoder.encode(jsonStr)
           }))
@@ -139,7 +143,7 @@ export class AWSFirehoseAppender<Record extends LogRecord = LogRecord>
 
         const cmd = new PutRecordBatchCommand({
           DeliveryStreamName: streamName,
-          Records: batch,
+          Records: batch
         })
 
         const resp = await client.send(cmd)
@@ -148,7 +152,9 @@ export class AWSFirehoseAppender<Record extends LogRecord = LogRecord>
           const rr = resp.RequestResponses || []
           for (let i = 0; i < rr.length; i++) {
             if (rr[i].ErrorCode) {
-              log.warn(`Record failed: ${rr[i].ErrorCode} ${rr[i].ErrorMessage}`)
+              log.warn(
+                `Record failed: ${rr[i].ErrorCode} ${rr[i].ErrorMessage}`
+              )
               //this.pendingRecords.unshift(records[i])
             }
           }
@@ -156,11 +162,11 @@ export class AWSFirehoseAppender<Record extends LogRecord = LogRecord>
         } else {
           log.info(`PutRecordBatch ok count=${records.length}`)
         }
-
       }
+      deferred.resolve()
     } catch (err) {
       log.error("Failed to push logs", err)
-      if (err.code === ExpiredTokenException) {
+      if (err.name === ExpiredTokenExceptionCode) {
         this.credentialManager.forceUpdateCredentials()
       }
       deferred.reject(err)
@@ -173,8 +179,6 @@ export class AWSFirehoseAppender<Record extends LogRecord = LogRecord>
 
     return deferred.promise
   }
-
-
 }
 
 export default AWSFirehoseAppender

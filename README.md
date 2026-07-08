@@ -30,6 +30,9 @@ A monorepo containing shared TypeScript libraries for Wire applications, providi
 # Install dependencies
 pnpm install
 
+# Install with locally generated OPP models from wire-sysio
+WIRE_LINK_LOCAL_OPP_MODELS=1 pnpm install --lockfile=false
+
 # Build all packages
 pnpm build
 

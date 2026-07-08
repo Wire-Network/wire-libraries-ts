@@ -14,6 +14,9 @@
 const Path = require("path")
 const Fs = require("node:fs")
 
+const linkLocalOppModelsEnv = "WIRE_LINK_LOCAL_OPP_MODELS"
+const localOppModelTargets = ["typescript", "solidity"]
+
 /**
  * Checks whether a path exists and is a directory, without throwing.
  *
@@ -34,20 +37,31 @@ function isDirectory(dirPath) {
  */
 const localOverrides = {}
 
-// AS THE PROTOBUF LIBS HAVE BEEN RELOCATED TO SYSIO
-// WE CAN NOW USE THE MODELS WITHOUT ISSUE.
-// CIRCULAR DEP REMOVED
+/**
+ * Links local OPP model outputs for platform builds that already built wire-sysio.
+ * Normal package installs keep registry resolution so pnpm-lock.yaml is portable.
+ */
+function appendLocalOppModelOverrides() {
+  const shouldLinkLocalOppModels =
+    process.env[linkLocalOppModelsEnv] === "1" ||
+    process.env[linkLocalOppModelsEnv] === "true"
 
-const wireOPPPkgPaths = ["typescript", "solidity"].map(target => [
-  `@wireio/opp-${target}-models`,
-  Path.resolve(__dirname, "..", "wire-sysio", "build", "opp", target)
-])
+  if (!shouldLinkLocalOppModels) {
+    return
+  }
 
-wireOPPPkgPaths
-  .filter(([, path]) => isDirectory(path))
-  .forEach(([pkgName, path]) => {
-    localOverrides[pkgName] = path
-  })
+  localOppModelTargets
+    .map(target => [
+      `@wireio/opp-${target}-models`,
+      Path.resolve(__dirname, "..", "wire-sysio", "build", "opp", target)
+    ])
+    .filter(([, path]) => isDirectory(path))
+    .forEach(([pkgName, path]) => {
+      localOverrides[pkgName] = path
+    })
+}
+
+appendLocalOppModelOverrides()
 
 /**
  * `readPackage` hook, which links locally available versions of

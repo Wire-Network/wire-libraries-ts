@@ -1,4 +1,3 @@
-import { FirehoseClient, PutRecordBatchCommand } from "@aws-sdk/client-firehose"
 import { Deferred } from "../../../helpers/index.js"
 import { getInternalLogger } from "../../InternalLogger.js"
 import EventEmitter3 from "eventemitter3"
@@ -22,13 +21,10 @@ export interface AWSFirehoseCredentialManagerEventMap {
 }
 
 export class AWSFirehoseCredentialManager extends EventEmitter3<AWSFirehoseCredentialManagerEventMap> {
+  private refreshTimer: ReturnType<typeof setTimeout> = null
+  private loadDeferred: Deferred<AWSCredentials> = null
 
-  private refreshTimer: ReturnType<typeof setTimeout> = null;
-  private loadDeferred: Deferred<AWSCredentials> = null;
-
-  constructor(
-    public readonly credentialEndpointUrl: string,
-  ) {
+  constructor(public readonly credentialEndpointUrl: string) {
     super()
   }
 
@@ -68,18 +64,19 @@ export class AWSFirehoseCredentialManager extends EventEmitter3<AWSFirehoseCrede
     if (this.loadDeferred && !this.loadDeferred.isRejected())
       return this.loadDeferred.promise
 
-    const deferred = this.loadDeferred = new Deferred<AWSCredentials>()
+    const deferred = (this.loadDeferred = new Deferred<AWSCredentials>())
     try {
       const r = await fetch(this.credentialEndpointUrl, {
         method: "GET",
-        credentials: "include",
+        credentials: "include"
       })
       if (!r.ok) throw new Error(`creds http ${r.status}`)
       const creds: AWSCredentials = await r.json()
 
-
       this.scheduleRefresh(creds)
-      log.info(`Got creds, expire=${creds.expiration}, stream=${creds.streamName}, region=${creds.region}`)
+      log.info(
+        `Got creds, expire=${creds.expiration}, stream=${creds.streamName}, region=${creds.region}`
+      )
       deferred.resolve(creds)
       this.emit("received", creds)
       return deferred.promise
@@ -94,26 +91,25 @@ export class AWSFirehoseCredentialManager extends EventEmitter3<AWSFirehoseCrede
       clearTimeout(this.refreshTimer)
       this.refreshTimer = null
     }
-    if (!credsOrMillis)
-      return
+    if (!credsOrMillis) return
 
     let refreshInMs: number
     if (typeof credsOrMillis === "number") {
       refreshInMs = credsOrMillis
     } else {
-      const
-        creds = credsOrMillis,
+      const creds = credsOrMillis,
         expMs = Date.parse(creds.expiration)
 
       refreshInMs = expMs - Date.now() - CRED_BUFFER_PADDING_MS
-
     }
 
     refreshInMs = Math.max(100, refreshInMs)
 
     this.refreshTimer = setTimeout(() => {
       this.loadDeferred = null
-      this.load().catch((e: Error) => log.error(`refresh failed: ${e.message}`, e))
+      this.load().catch((e: Error) =>
+        log.error(`refresh failed: ${e.message}`, e)
+      )
     }, refreshInMs)
   }
 
@@ -132,6 +128,5 @@ export class AWSFirehoseCredentialManager extends EventEmitter3<AWSFirehoseCrede
     this.loadDeferred = null
   }
 }
-
 
 export default AWSFirehoseCredentialManager

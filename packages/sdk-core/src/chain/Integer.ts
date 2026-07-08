@@ -1,5 +1,5 @@
 import BN from "bn.js"
-import { ethers } from "ethers"
+import { ethers } from "../EthersCompat.js"
 import { ABISerializableObject } from "../serializer/Serializable.js"
 import { ABIDecoder } from "../serializer/Decoder.js"
 import { ABIEncoder } from "../serializer/Encoder.js"

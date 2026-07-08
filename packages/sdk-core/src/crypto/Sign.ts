@@ -4,7 +4,7 @@ import { KeyType } from "../chain/KeyType.js"
 import { SignatureParts } from "../chain/Signature.js"
 import nacl from "tweetnacl"
 import { isObject } from "@wireio/shared"
-import { ethers } from "ethers"
+import { ethers } from "../EthersCompat.js"
 import { blsSign, skFromLE } from "./BLS.js"
 import { asOption, Option } from "@3fv/prelude-ts"
 import { match } from "ts-pattern"
@@ -116,9 +116,7 @@ export namespace sign {
         .map(o => o as Options<C>)
         .getOrElse({ chain } as Options<C>),
       defaultOpts =
-        chain == ChainKind.EVM
-          ? DefaultEthereumOptions
-          : DefaultBaseOptions
+        chain == ChainKind.EVM ? DefaultEthereumOptions : DefaultBaseOptions
 
     return defaults(opts, defaultOpts)
   }

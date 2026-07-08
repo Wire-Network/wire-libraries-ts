@@ -5,8 +5,10 @@
 ## Build & Development
 
 ```bash
-pnpm install                # Install all deps (requires pnpm 10.32.1, Node >=22)
-pnpm build                  # Build all packages via tsc -b (composite project references)
+pnpm install                # Install registry deps (pnpm 10.32.1, Node >=22)
+# Link local OPP models from wire-sysio:
+WIRE_LINK_LOCAL_OPP_MODELS=1 pnpm install --lockfile=false
+pnpm build                  # Build all packages via tsc -b
 pnpm build:dev              # Watch mode (incremental)
 pnpm test                   # Build + jest (all packages)
 pnpm format                 # Prettier on **/*.{ts,tsx,md}

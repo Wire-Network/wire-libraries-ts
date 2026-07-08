@@ -1,7 +1,7 @@
 import { getCurve } from "./Curves.js"
 import { KeyType } from "../chain/KeyType.js"
 import nacl from "tweetnacl"
-import { ethers } from "ethers"
+import { ethers } from "../EthersCompat.js"
 import { blsVerify } from "./BLS.js"
 
 /**
