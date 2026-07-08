@@ -243,6 +243,30 @@ describe("ABI", () => {
       )
     })
 
+    test("encodes safe int64 enum values loaded as numeric strings", () => {
+      const original = ABI.from(
+        JSON.stringify({
+          version: "sysio::abi/1.2",
+          enums: [
+            {
+              name: "status",
+              type: "int64",
+              values: [
+                { name: "quoted", value: "4294967296" },
+                { name: "negative", value: "-4294967296" }
+              ]
+            }
+          ]
+        })
+      )
+
+      const decoded = decodeAbi(encodeAbi(original))
+      expect(decoded.enums[0].values).toEqual([
+        { name: "quoted", value: 4294967296 },
+        { name: "negative", value: -4294967296 }
+      ])
+    })
+
     test("golden bytes: signed and high-bit int64 enum values match expected layout", () => {
       const abi = new ABI({
         version: "sysio::abi/1.2",
@@ -349,7 +373,23 @@ describe("ABI", () => {
         ]
       })
 
-      expect(() => encodeAbi(abi)).toThrow(/safe JavaScript integer/)
+      expect(() => encodeAbi(abi)).toThrow(/safe JavaScript number/)
+    })
+
+    test("encoder rejects unsafe int64 enum numeric strings", () => {
+      const abi = ABI.from(
+        JSON.stringify({
+          enums: [
+            {
+              name: "status",
+              type: "int64",
+              values: [{ name: "unsafe", value: "9007199254740992" }]
+            }
+          ]
+        })
+      )
+
+      expect(() => encodeAbi(abi)).toThrow(/safe JavaScript number/)
     })
 
     test("decoder rejects int64 enum values outside safe number range", () => {

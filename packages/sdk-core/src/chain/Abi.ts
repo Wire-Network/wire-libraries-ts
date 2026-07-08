@@ -390,8 +390,28 @@ export class ABI implements ABISerializableObject {
 
   /** Read an ABI enum discriminant encoded as signed int64. */
   private static readEnumValue(decoder: ABIDecoder, label: string): number {
-    const value = Int64.fromABI(decoder)
+    return ABI.assertSafeEnumValue(Int64.fromABI(decoder), label)
+  }
 
+  /** Write an ABI enum discriminant encoded as signed int64. */
+  private static writeEnumValue(
+    encoder: ABIEncoder,
+    value: number | string,
+    label: string
+  ) {
+    if (typeof value === "number" && !Number.isSafeInteger(value)) {
+      throw new Error(
+        `ABI ${label} must fit in a safe JavaScript number, got ${value}`
+      )
+    }
+
+    const enumValue = Int64.from(value)
+    ABI.assertSafeEnumValue(enumValue, label)
+    enumValue.toABI(encoder)
+  }
+
+  /** Assert an ABI enum discriminant fits the public number-shaped API. */
+  private static assertSafeEnumValue(value: Int64, label: string): number {
     try {
       return value.toNumber()
     } catch {
@@ -399,21 +419,6 @@ export class ABI implements ABISerializableObject {
         `ABI ${label} must fit in a safe JavaScript number, got ${value.toString()}`
       )
     }
-  }
-
-  /** Write an ABI enum discriminant encoded as signed int64. */
-  private static writeEnumValue(
-    encoder: ABIEncoder,
-    value: number,
-    label: string
-  ) {
-    if (!Number.isSafeInteger(value)) {
-      throw new Error(
-        `ABI ${label} must be a safe JavaScript integer, got ${value}`
-      )
-    }
-
-    Int64.from(value).toABI(encoder)
   }
 
   private static assertUint16(value: number, label: string) {
