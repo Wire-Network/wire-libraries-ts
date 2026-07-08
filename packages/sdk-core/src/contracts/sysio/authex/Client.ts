@@ -33,7 +33,7 @@ import type {
   ListLinksOptions,
   PushCreateLinkOptions
 } from "./Types.js"
-import type * as SystemContracts from "../../../types/SystemContractTypes.js"
+import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 
 function accountString(value: NameType): string {
   return Name.from(value).toString()
@@ -133,7 +133,7 @@ export class AuthexClient {
   /** Lists AuthEx link rows. */
   async listLinks(
     options: ContractTableRowsOptions = {}
-  ): Promise<SystemContracts.SysioAuthexLinksSType[]> {
+  ): Promise<SysioContracts.SysioAuthexLinksSType[]> {
     const result = await this.contractClient.tables.links.rows({
       limit: 100,
       ...options
@@ -146,7 +146,7 @@ export class AuthexClient {
   async getLinks(
     account: NameType,
     options: ListLinksOptions = {}
-  ): Promise<SystemContracts.SysioAuthexLinksSType[]> {
+  ): Promise<SysioContracts.SysioAuthexLinksSType[]> {
     const name = accountString(account),
       result = await this.contractClient.tables.links.rows<string>({
         index_position: "tertiary",
@@ -161,8 +161,8 @@ export class AuthexClient {
   /** Reads the link for one Wire account and chain kind, when present. */
   async getLink(
     account: NameType,
-    chainKind: SystemContracts.SysioAuthexChainkind
-  ): Promise<SystemContracts.SysioAuthexLinksSType | null> {
+    chainKind: SysioContracts.SysioAuthexChainkind
+  ): Promise<SysioContracts.SysioAuthexLinksSType | null> {
     const links = await this.getLinks(account)
     return links.find(row => row.chain_kind === chainKind) || null
   }
@@ -170,7 +170,7 @@ export class AuthexClient {
   /** Reads the first link matching an external public key using the `bypubkey` index. */
   async getLinkByPublicKey(
     publicKey: PublicKeyType
-  ): Promise<SystemContracts.SysioAuthexLinksSType | null> {
+  ): Promise<SysioContracts.SysioAuthexLinksSType | null> {
     const key = PublicKey.from(publicKey),
       hash = publicKeyHash(key),
       result = await this.contractClient.tables.links.rows<Checksum256>({

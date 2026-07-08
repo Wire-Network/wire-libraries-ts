@@ -4,16 +4,16 @@ import type { NameType } from "../../../chain/Name.js"
 import type { PublicKeyType } from "../../../chain/PublicKey.js"
 import type { SignatureType } from "../../../chain/Signature.js"
 import type { SignerProvider } from "../../../signing/SignerProvider.js"
-import type * as SystemContracts from "../../../types/SystemContractTypes.js"
+import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 import type { APIClient } from "../../../api/Client.js"
 
 /** AuthEx chain kind enum generated from `sysio.authex::ChainKind`. */
-export type AuthexChainKind = SystemContracts.SysioAuthexChainkind
+export type AuthexChainKind = SysioContracts.SysioAuthexChainkind
 
 /** Supported user-created AuthEx link chain kinds. */
 export type AuthexSupportedLinkChainKind =
-  | SystemContracts.SysioAuthexChainkind.CHAIN_KIND_EVM
-  | SystemContracts.SysioAuthexChainkind.CHAIN_KIND_SVM
+  | SysioContracts.SysioAuthexChainkind.CHAIN_KIND_EVM
+  | SysioContracts.SysioAuthexChainkind.CHAIN_KIND_SVM
 
 /** Configuration for `AuthexClient`. */
 export interface AuthexClientOptions {

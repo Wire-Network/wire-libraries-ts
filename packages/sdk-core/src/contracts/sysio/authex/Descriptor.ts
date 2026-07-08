@@ -1,5 +1,5 @@
 import type { ContractDescriptor } from "../../Contract.js"
-import type * as SystemContracts from "../../../types/SystemContractTypes.js"
+import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 
 import { DEFAULT_AUTHEX_CONTRACT } from "./Constants.js"
 import {
@@ -11,23 +11,23 @@ import {
 /** Generated `sysio.authex` action data keyed by ABI action name. */
 export interface SysioAuthexActionData {
   /** `sysio.authex::createlink` action data. */
-  createlink: SystemContracts.SysioAuthexCreatelinkAction
+  createlink: SysioContracts.SysioAuthexCreatelinkAction
   /** `sysio.authex::recordlink` action data. */
-  recordlink: SystemContracts.SysioAuthexRecordlinkAction
+  recordlink: SysioContracts.SysioAuthexRecordlinkAction
   /** `sysio.authex::clearlinks` action data. */
-  clearlinks: SystemContracts.SysioAuthexClearlinksAction
+  clearlinks: SysioContracts.SysioAuthexClearlinksAction
 }
 
 /** Generated `sysio.authex` table rows keyed by ABI table name. */
 export interface SysioAuthexTableRows {
   /** `sysio.authex::links` table row. */
-  links: SystemContracts.SysioAuthexLinksSType
+  links: SysioContracts.SysioAuthexLinksSType
 }
 
 /**
  * Runtime descriptor for `sysio.authex`.
  *
- * The data interfaces come from generated `SystemContractTypes`; the serializers
+ * The data interfaces come from generated `SysioContractTypes`; the serializers
  * mirror the deployed ABI so callers can build typed actions without fetching
  * an ABI before serialization.
  */

@@ -1,4 +1,4 @@
-import { ethers } from "ethers"
+import { ethers } from "../../../EthersCompat.js"
 
 import { Bytes } from "../../../chain/Bytes.js"
 import { KeyType } from "../../../chain/KeyType.js"
@@ -6,7 +6,7 @@ import { Name, type NameType } from "../../../chain/Name.js"
 import { PublicKey, type PublicKeyType } from "../../../chain/PublicKey.js"
 import { Signature } from "../../../chain/Signature.js"
 import type { SignerProvider } from "../../../signing/SignerProvider.js"
-import type * as SystemContracts from "../../../types/SystemContractTypes.js"
+import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 
 import {
   AUTHEX_CREATE_LINK_AUTH_SUFFIX,
@@ -22,7 +22,7 @@ import type {
 
 /** Returns true when the chain kind can be created by the user-facing link flow. */
 export function isSupportedCreateLinkChainKind(
-  chainKind: SystemContracts.SysioAuthexChainkind
+  chainKind: SysioContracts.SysioAuthexChainkind
 ): chainKind is AuthexSupportedLinkChainKind {
   return (
     chainKind === 2 ||
@@ -32,7 +32,7 @@ export function isSupportedCreateLinkChainKind(
 
 /** Normalizes and validates a user-facing create-link chain kind. */
 export function requireSupportedCreateLinkChainKind(
-  chainKind: SystemContracts.SysioAuthexChainkind
+  chainKind: SysioContracts.SysioAuthexChainkind
 ): AuthexSupportedLinkChainKind {
   if (!isSupportedCreateLinkChainKind(chainKind)) {
     throw new Error("AuthEx create-link supports only EVM(2) and SVM(3).")
@@ -45,7 +45,7 @@ export function requireSupportedCreateLinkChainKind(
 export function buildCreateLinkMessage(
   publicKey: PublicKeyType,
   account: NameType,
-  chainKind: SystemContracts.SysioAuthexChainkind,
+  chainKind: SysioContracts.SysioAuthexChainkind,
   nonce: number
 ): string {
   return [

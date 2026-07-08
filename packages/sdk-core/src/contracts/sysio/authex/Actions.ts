@@ -4,7 +4,7 @@ import { Name } from "../../../chain/Name.js"
 import { PermissionLevel } from "../../../chain/PermissionLevel.js"
 import { PublicKey } from "../../../chain/PublicKey.js"
 import { Signature } from "../../../chain/Signature.js"
-import type * as SystemContracts from "../../../types/SystemContractTypes.js"
+import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 
 import { DEFAULT_AUTHEX_CONTRACT } from "./Constants.js"
 import { descriptor as authexDescriptor } from "./Descriptor.js"
@@ -23,7 +23,7 @@ import { requireSupportedCreateLinkChainKind } from "./Signing.js"
 /** Builds generated action data for `sysio.authex::createlink`. */
 export function createLinkActionData(
   options: BuildCreateLinkActionOptions
-): SystemContracts.SysioAuthexCreatelinkAction {
+): SysioContracts.SysioAuthexCreatelinkAction {
   const chainKind = requireSupportedCreateLinkChainKind(options.chainKind)
 
   return {
@@ -55,7 +55,7 @@ export function buildCreateLinkAction(options: BuildCreateLinkActionOptions): Ac
 /** Builds generated action data for `sysio.authex::recordlink`. */
 export function recordLinkActionData(
   options: BuildRecordLinkActionOptions
-): SystemContracts.SysioAuthexRecordlinkAction {
+): SysioContracts.SysioAuthexRecordlinkAction {
   return {
     account: Name.from(options.account).toString(),
     chain_kind: requireSupportedCreateLinkChainKind(options.chainKind),
