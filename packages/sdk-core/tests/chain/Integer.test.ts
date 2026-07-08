@@ -9,8 +9,61 @@ import {
   VarUInt,
   VarInt
 } from "@wireio/sdk-core/chain/Integer"
+import { Serializer } from "@wireio/sdk-core/serializer"
+
+const MALFORMED_INTEGER_STRINGS = ["1.23", "0x10", "abc123", "+1000"]
+const INTEGER_STRING_ABI = {
+  structs: [
+    {
+      name: "row",
+      base: "",
+      fields: [
+        { name: "u", type: "uint64" },
+        { name: "i", type: "int64" },
+        { name: "v", type: "varuint32" }
+      ]
+    }
+  ]
+}
+
+/** Encode a row whose integer fields all receive the same runtime value. */
+function encodeIntegerStringRow(value: string | String) {
+  return Serializer.encode({
+    object: { u: value, i: value, v: value },
+    type: "row",
+    abi: INTEGER_STRING_ABI
+  })
+}
 
 describe("Integer", () => {
+  describe("string parsing", () => {
+    test("accepts strict decimal integer strings", () => {
+      expect(UInt64.from("100").toNumber()).toBe(100)
+      expect(Int64.from("-100").toNumber()).toBe(-100)
+    })
+
+    test("rejects malformed numeric strings", () => {
+      MALFORMED_INTEGER_STRINGS.forEach(value => {
+        expect(() => UInt64.from(value)).toThrow("Invalid number")
+        expect(() => Int64.from(value)).toThrow("Invalid number")
+      })
+    })
+
+    test("rejects malformed numeric strings through ABI serialization", () => {
+      MALFORMED_INTEGER_STRINGS.forEach(value => {
+        expect(() => encodeIntegerStringRow(value)).toThrow("Invalid number")
+      })
+    })
+
+    test("rejects boxed string values", () => {
+      const value = new String("abc123")
+
+      expect(() => UInt64.from(value as string)).toThrow("Invalid number")
+      expect(() => Int64.from(value as string)).toThrow("Invalid number")
+      expect(() => encodeIntegerStringRow(value)).toThrow("Invalid number")
+    })
+  })
+
   describe("UInt64", () => {
     test("from(0) creates zero value", () => {
       const val = UInt64.from(0)

@@ -7,9 +7,16 @@ import { isInstanceOf, secureRandom } from "../Utils.js"
 
 type IntType = Int | number | string | BN
 
+const DECIMAL_INTEGER_PATTERN = /^-?[0-9]+$/
+
 interface IntDescriptor {
   isSigned: boolean
   byteWidth: number
+}
+
+/** Return true when a string is a strict base-10 integer literal. */
+function isDecimalIntegerString(value: string) {
+  return DECIMAL_INTEGER_PATTERN.test(value)
 }
 
 /**
@@ -177,9 +184,18 @@ export class Int implements ABISerializableObject {
         bn = bn.fromTwos(fromType.byteWidth * 8)
       }
     } else {
+      if (typeof value === "string" && !isDecimalIntegerString(value)) {
+        throw new Error("Invalid number")
+      }
+
+      if (typeof value === "number" && !Number.isFinite(value)) {
+        throw new Error("Invalid number")
+      }
+
       if (
-        (typeof value === "string" && !/[0-9]+/.test(value)) ||
-        (typeof value === "number" && !Number.isFinite(value))
+        typeof value !== "string" &&
+        typeof value !== "number" &&
+        !BN.isBN(value)
       ) {
         throw new Error("Invalid number")
       }
