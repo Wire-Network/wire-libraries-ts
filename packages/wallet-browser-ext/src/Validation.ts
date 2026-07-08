@@ -1,5 +1,14 @@
+import { Name } from "@wireio/sdk-core"
+
+const AccountNameMaxLength = 12
+
+/** Return true when the wallet account name is canonical and fits account-name length limits. */
 export function isValidAccountName(name: string): boolean {
-  return /^[a-z1-5.]{1,12}$/.test(name)
+  return (
+    name.length >= 1 &&
+    name.length <= AccountNameMaxLength &&
+    Name.isValid(name)
+  )
 }
 
 export function isValidUrl(url: string): boolean {
@@ -11,10 +20,7 @@ export function isValidUrl(url: string): boolean {
   }
 }
 
-export function isValidKeyName(
-  name: string,
-  existingNames: string[]
-): boolean {
+export function isValidKeyName(name: string, existingNames: string[]): boolean {
   if (!name.trim()) return false
   return !existingNames.includes(name.trim())
 }

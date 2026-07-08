@@ -287,9 +287,9 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
     })
 
     const result = await client.v1.chain.get_table_rows({
-      code: "user.contract",
-      scope: "user.contract",
-      table: "tuple_keyed"
+      code: "usr.contract",
+      scope: "usr.contract",
+      table: "tuplekeyed"
     })
 
     expect(result.rows).toHaveLength(2)
@@ -314,8 +314,8 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
     })
 
     const result = await client.v1.chain.get_table_rows({
-      code: "user.contract",
-      scope: "user.contract",
+      code: "usr.contract",
+      scope: "usr.contract",
       table: "settings"
     })
 
@@ -351,9 +351,9 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
     })
 
     const result = await client.v1.chain.get_table_rows({
-      code: "user.contract",
-      scope: "user.contract",
-      table: "nested_table"
+      code: "usr.contract",
+      scope: "usr.contract",
+      table: "nestedtable"
     })
 
     // KNOWN FALSE-POSITIVE: the heuristic cannot distinguish this shape

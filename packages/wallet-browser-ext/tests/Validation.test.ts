@@ -2,7 +2,7 @@ import {
   isValidAccountName,
   isValidUrl,
   isValidKeyName,
-  isValidEndpointName,
+  isValidEndpointName
 } from "../src/Validation"
 
 describe("Validation", () => {
@@ -24,7 +24,11 @@ describe("Validation", () => {
     })
 
     it("accepts 12 character name", () => {
-      expect(isValidAccountName("abcde12345..")).toBe(true)
+      expect(isValidAccountName("abcde1234512")).toBe(true)
+    })
+
+    it("rejects trailing dots that would be removed before signing", () => {
+      expect(isValidAccountName("abcde12345..")).toBe(false)
     })
 
     it("rejects empty string", () => {
@@ -40,7 +44,7 @@ describe("Validation", () => {
     })
 
     it("rejects names longer than 12 characters", () => {
-      expect(isValidAccountName("1234567890abc")).toBe(false)
+      expect(isValidAccountName("abcdefghijkl1")).toBe(false)
     })
 
     it("rejects hyphens", () => {

@@ -8,6 +8,14 @@ describe("PermissionLevel", () => {
       expect(String(perm.actor)).toBe("sysio")
       expect(String(perm.permission)).toBe("active")
     })
+
+    it("rejects malformed permission level strings", () => {
+      for (const value of ["alice@@active", "alice@", "@active", "alice"]) {
+        expect(() => PermissionLevel.from(value)).toThrow(
+          "Invalid permission level string"
+        )
+      }
+    })
   })
 
   describe("from object", () => {
@@ -18,6 +26,15 @@ describe("PermissionLevel", () => {
       })
       expect(String(perm.actor)).toBe("sysio")
       expect(String(perm.permission)).toBe("active")
+    })
+
+    it("rejects empty actor or permission object values", () => {
+      expect(() =>
+        PermissionLevel.from({ actor: "", permission: "active" })
+      ).toThrow("Invalid permission level string")
+      expect(() =>
+        PermissionLevel.from({ actor: "alice", permission: "" })
+      ).toThrow("Invalid permission level string")
     })
   })
 

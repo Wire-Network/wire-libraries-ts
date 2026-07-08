@@ -5,14 +5,20 @@ import { isInstanceOf } from "../Utils.js"
 
 import { UInt64 } from "./Integer.js"
 
+const InvalidNameMessage = "Invalid name"
+
+/** Pattern for strings that can be packed as a Wire name without canonicalization. */
+const CanonicalNamePattern =
+  /^(?:|[a-z1-5.]{0,11}[a-z1-5]|[a-z1-5.]{12}[a-j1-5])$/
+
 /** Type representing a name. */
 export type NameType = Name | UInt64 | string
 
 export class Name implements ABISerializableObject {
   static abiName = "name"
 
-  /** Regex pattern matching a Wire name, case-sensitive. */
-  static pattern = /^[a-z1-5.]{0,13}$/
+  /** Regex pattern matching a canonical Wire name string, case-sensitive. */
+  static pattern = CanonicalNamePattern
 
   /** The numeric representation of the name. */
   value: UInt64
@@ -30,12 +36,23 @@ export class Name implements ABISerializableObject {
     if (isInstanceOf(value, Name)) {
       return value
     } else if (typeof value === "string") {
+      if (!Name.isValid(value)) {
+        throw new Error(InvalidNameMessage)
+      }
+
       return new Name(stringToName(value))
     } else if (isInstanceOf(value, UInt64)) {
       return new Name(value)
     } else {
-      throw new Error("Invalid name")
+      throw new Error(InvalidNameMessage)
     }
+  }
+
+  /** Return true when a string is a canonical Wire name and will not be rewritten when packed. */
+  static isValid(value: string): boolean {
+    return (
+      Name.pattern.test(value) && nameToString(stringToName(value)) === value
+    )
   }
 
   static fromABI(decoder: ABIDecoder) {

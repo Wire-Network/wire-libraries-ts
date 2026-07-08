@@ -1,6 +1,9 @@
 import { Name, NameType } from "./Name.js"
 import { Struct } from "./Struct.js"
 
+const InvalidPermissionLevelMessage =
+  "Invalid permission level string, should be in the format <actor>@<permission>"
+
 export type PermissionLevelType =
   | PermissionLevel
   | { actor: NameType; permission: NameType }
@@ -16,16 +19,27 @@ export class PermissionLevel extends Struct {
     if (typeof value === "string") {
       const parts = value.split("@")
 
-      if (parts.length !== 2 && parts[0].length > 0 && parts[1].length > 0) {
-        throw new Error(
-          "Invalid permission level string, should be in the format <actor>@<permission>"
-        )
+      if (
+        parts.length !== 2 ||
+        parts[0].length === 0 ||
+        parts[1].length === 0
+      ) {
+        throw new Error(InvalidPermissionLevelMessage)
       }
 
       value = { actor: parts[0], permission: parts[1] }
     }
 
-    return super.from(value) as PermissionLevel
+    const permissionLevel = super.from(value) as PermissionLevel
+
+    if (
+      permissionLevel.actor.toString().length === 0 ||
+      permissionLevel.permission.toString().length === 0
+    ) {
+      throw new Error(InvalidPermissionLevelMessage)
+    }
+
+    return permissionLevel
   }
 
   /** Return true if this permission level equals other. */
