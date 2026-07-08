@@ -11,13 +11,20 @@ import {
   ABISerializableType
 } from "../serializer/Serializable.js"
 import { Action, AnyAction } from "../chain/Action.js"
-import { AnyTransaction, Transaction, TransactionExtension } from "../chain/Transaction.js"
+import {
+  AnyTransaction,
+  Transaction,
+  TransactionExtension
+} from "../chain/Transaction.js"
 import { Authority, AuthorityType } from "../chain/Authority.js"
 import { Bytes, BytesType } from "../chain/Bytes.js"
 import { Checksum256 } from "../chain/Checksum.js"
 import { isInstanceOf } from "../Utils.js"
 import { Name, NameType } from "../chain/Name.js"
-import { PermissionLevel, PermissionLevelType } from "../chain/PermissionLevel.js"
+import {
+  PermissionLevel,
+  PermissionLevelType
+} from "../chain/PermissionLevel.js"
 import { PublicKey } from "../chain/PublicKey.js"
 import { Serializer } from "../serializer/index.js"
 import { Signature, SignatureType } from "../chain/Signature.js"
@@ -562,7 +569,7 @@ export class SigningRequest {
     const encoder = new ABIEncoder()
     encoder.writeByte(2) // header
     encoder.writeArray(Serializer.encode({ object: id.chainVariant }).array)
-    encoder.writeByte(2) // transaction variant
+    encoder.writeVaruint32(2) // transaction variant
     encoder.writeArray(Bytes.from(serializedTransaction).array)
     encoder.writeByte(RequestFlags.broadcast)
     encoder.writeByte(0) // callback

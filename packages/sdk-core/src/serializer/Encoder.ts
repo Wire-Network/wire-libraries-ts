@@ -16,6 +16,12 @@ import {
   synthesizeABI
 } from "./Serializable.js"
 import { buildTypeLookup, getType, getTypeName } from "./Builtins.js"
+import {
+  VARUINT32_CONTINUATION_BIT,
+  VARUINT32_MAX_BYTES,
+  VARUINT32_PAYLOAD_BITS,
+  VARUINT32_PAYLOAD_MASK
+} from "./Varuint.js"
 
 class EncodingError extends Error {
   static __className = "EncodingError"
@@ -389,12 +395,13 @@ export class ABIEncoder {
   }
 
   writeVaruint32(v: number) {
-    this.ensure(4)
+    this.ensure(VARUINT32_MAX_BYTES)
 
     for (;;) {
-      if (v >>> 7) {
-        this.array[this.pos++] = 0x80 | (v & 0x7f)
-        v = v >>> 7
+      if (v >>> VARUINT32_PAYLOAD_BITS) {
+        this.array[this.pos++] =
+          VARUINT32_CONTINUATION_BIT | (v & VARUINT32_PAYLOAD_MASK)
+        v = v >>> VARUINT32_PAYLOAD_BITS
       } else {
         this.array[this.pos++] = v
         break
