@@ -2,6 +2,11 @@
   "name": "@wireio/shared-web",
   "version": "1.0.39",
   "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Wire-Network/wire-libraries-ts",
+    "directory": "packages/shared-web"
+  },
   "publishConfig": {
     "access": "public"
   },
