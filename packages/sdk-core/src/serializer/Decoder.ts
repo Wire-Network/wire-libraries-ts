@@ -21,6 +21,12 @@ import {
   getTypeName,
   TypeLookup
 } from "./Builtins.js"
+import {
+  VARUINT32_CONTINUATION_BIT,
+  VARUINT32_MAX_BITS,
+  VARUINT32_PAYLOAD_BITS,
+  VARUINT32_PAYLOAD_MASK
+} from "./Varuint.js"
 
 import { isInstanceOf } from "../Utils.js"
 
@@ -587,10 +593,10 @@ export class ABIDecoder {
 
     for (;;) {
       const b = this.readByte()
-      v |= (b & 0x7f) << bit
-      bit += 7
+      v |= (b & VARUINT32_PAYLOAD_MASK) << bit
+      bit += VARUINT32_PAYLOAD_BITS
 
-      if (!(b & 0x80)) {
+      if (!(b & VARUINT32_CONTINUATION_BIT) || bit >= VARUINT32_MAX_BITS) {
         break
       }
     }
