@@ -4,7 +4,7 @@ import { Checksum256 } from "../../../chain/Checksum.js"
 import { Name, NameType } from "../../../chain/Name.js"
 import { PermissionLevel, PermissionLevelType } from "../../../chain/PermissionLevel.js"
 import { Transaction } from "../../../chain/Transaction.js"
-import type * as SystemContracts from "../../../types/SystemContractTypes.js"
+import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 
 import { DEFAULT_MSIG_CONTRACT } from "./Constants.js"
 import { descriptor as msigDescriptor } from "./Descriptor.js"
@@ -62,7 +62,7 @@ export function buildProposeAction(options: BuildProposeActionOptions): Action {
 /** Builds an unsigned `sysio.msig::approve` action. */
 export function buildApproveAction(options: BuildApproveActionOptions): Action {
   const level = permissionLevel(options.level),
-    data: SystemContracts.SysioMsigApproveAction = {
+    data: SysioContracts.SysioMsigApproveAction = {
       proposer: Name.from(options.proposer).toString(),
       proposal_name: Name.from(options.proposalName).toString(),
       level: {
@@ -85,7 +85,7 @@ export function buildApproveAction(options: BuildApproveActionOptions): Action {
 /** Builds an unsigned `sysio.msig::unapprove` action. */
 export function buildUnapproveAction(options: BuildUnapproveActionOptions): Action {
   const level = permissionLevel(options.level),
-    data: SystemContracts.SysioMsigUnapproveAction = {
+    data: SysioContracts.SysioMsigUnapproveAction = {
       proposer: Name.from(options.proposer).toString(),
       proposal_name: Name.from(options.proposalName).toString(),
       level: {
@@ -104,7 +104,7 @@ export function buildUnapproveAction(options: BuildUnapproveActionOptions): Acti
 
 /** Builds an unsigned `sysio.msig::cancel` action. */
 export function buildCancelAction(options: BuildCancelActionOptions): Action {
-  const data: SystemContracts.SysioMsigCancelAction = {
+  const data: SysioContracts.SysioMsigCancelAction = {
     proposer: Name.from(options.proposer).toString(),
     proposal_name: Name.from(options.proposalName).toString(),
     canceler: Name.from(options.canceler).toString()
@@ -125,7 +125,7 @@ export function buildCancelAction(options: BuildCancelActionOptions): Action {
 
 /** Builds an unsigned `sysio.msig::exec` action. */
 export function buildExecAction(options: BuildExecActionOptions): Action {
-  const data: SystemContracts.SysioMsigExecAction = {
+  const data: SysioContracts.SysioMsigExecAction = {
     proposer: Name.from(options.proposer).toString(),
     proposal_name: Name.from(options.proposalName).toString(),
     executer: Name.from(options.executer).toString()
@@ -146,7 +146,7 @@ export function buildExecAction(options: BuildExecActionOptions): Action {
 
 /** Builds an unsigned `sysio.msig::invalidate` action. */
 export function buildInvalidateAction(options: BuildInvalidateActionOptions): Action {
-  const data: SystemContracts.SysioMsigInvalidateAction = {
+  const data: SysioContracts.SysioMsigInvalidateAction = {
     account: Name.from(options.account).toString()
   }
 
@@ -169,7 +169,7 @@ export function buildGetProposalAction(
   proposalName: NameType,
   contract: NameType = DEFAULT_MSIG_CONTRACT
 ): Action {
-  const data: SystemContracts.SysioMsigGetproposalAction = {
+  const data: SysioContracts.SysioMsigGetproposalAction = {
     proposer: Name.from(proposer).toString(),
     proposal_name: Name.from(proposalName).toString()
   }
