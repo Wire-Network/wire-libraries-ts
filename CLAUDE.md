@@ -194,7 +194,8 @@ GitHub Actions (`.github/workflows/publish-npm.yaml`):
 - Triggers on push to `master` (skips if `[skip release]` in commit message)
 - Bumps all packages patch version (`pnpm -r exec -- pnpm version patch`)
 - Auto-commits `chore(release): bump patch [skip release]`
-- Publishes all non-private packages to npm (`pnpm -r publish --access public`)
+- Publishes all non-private packages to npm with provenance (`pnpm -r publish --access public --provenance`)
+- Published package manifests must keep `repository.url` set to `https://github.com/Wire-Network/wire-libraries-ts` so npm provenance matches GitHub Actions source metadata.
 
 ## Documentation Comments
 

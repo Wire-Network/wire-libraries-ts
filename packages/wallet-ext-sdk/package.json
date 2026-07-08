@@ -3,6 +3,11 @@
   "description": "Client SDK for the Wire Wallet browser extension",
   "version": "0.1.27",
   "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Wire-Network/wire-libraries-ts",
+    "directory": "packages/wallet-ext-sdk"
+  },
   "publishConfig": {
     "access": "public"
   },

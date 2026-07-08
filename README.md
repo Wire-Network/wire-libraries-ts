@@ -43,6 +43,10 @@ pnpm build:dev
 pnpm test
 ```
 
+## Publishing
+
+GitHub Actions publishes non-private workspace packages to npm with provenance. Each published package manifest must keep `repository.url` set to `https://github.com/Wire-Network/wire-libraries-ts` or npm will reject provenance validation.
+
 ## Project Structure
 
 ```
