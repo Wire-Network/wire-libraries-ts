@@ -30,6 +30,7 @@ import { Struct } from "./Struct.js"
 import { TimePointSec, TimePointType } from "./Time.js"
 import { ethers } from "../EthersCompat.js"
 import { concatBytes } from "../Utils.js"
+import { inflatePackedTransaction } from "./PackedTransactionCompression.js"
 
 @Struct.type("transaction_extension")
 export class TransactionExtension extends Struct {
@@ -335,7 +336,7 @@ export class PackedTransaction extends Struct {
 
       // zlib compressed
       case CompressionType.zlib: {
-        const inflated = pako.inflate(this.packed_trx.array)
+        const inflated = inflatePackedTransaction(this.packed_trx)
         return abiDecode({ data: inflated, type: Transaction })
       }
 
