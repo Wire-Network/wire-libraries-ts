@@ -5,7 +5,9 @@ import type {
 } from "@aws-sdk/client-firehose"
 import { Level } from "../../Level.js"
 
-import AWSFirehoseCredentialManager from "./AWSFirehoseCredentialManager.js"
+import AWSFirehoseCredentialManager, {
+  type AWSCredentials
+} from "./AWSFirehoseCredentialManager.js"
 import { getInternalLogger } from "../../InternalLogger.js"
 import { pick } from "lodash"
 import { Deferred } from "../../../helpers/index.js"
@@ -20,7 +22,10 @@ let firehoseModule: Promise<typeof import("@aws-sdk/client-firehose")> = null
 
 function getFirehoseModule() {
   if (!firehoseModule) {
-    firehoseModule = import("@aws-sdk/client-firehose")
+    firehoseModule = import("@aws-sdk/client-firehose").catch(err => {
+      firehoseModule = null
+      throw err
+    })
   }
 
   return firehoseModule
@@ -75,20 +80,11 @@ export class AWSFirehoseAppender<
   }
 
   /**
-   * Create the firehose client and return
-   *
-   * @param {IAWSTemporaryCredentials} credentials
-   * @param {boolean} flush
-   * @returns {Firehose}
+   * Create the Firehose client for a loaded credential set.
+   * @param creds Loaded Firehose credentials.
+   * @returns Firehose client.
    */
-  private async getFirehose(): Promise<FirehoseClient> {
-    const creds = this.credentialManager.getCredentials()
-
-    if (!creds) {
-      log.warn("No credentials available for flush")
-      return null
-    }
-
+  private async getFirehose(creds: AWSCredentials): Promise<FirehoseClient> {
     const { region, streamName } = creds
 
     if (!region || !streamName) {
@@ -124,16 +120,13 @@ export class AWSFirehoseAppender<
       log.warn("No credentials available for flush")
       return
     }
-    const { streamName } = creds,
-      client = await this.getFirehose()
-    if (!client) {
-      log.warn("No firehose client available, skipping flush")
-      return
-    }
 
-    const { PutRecordBatchCommand } = await getFirehoseModule()
     const deferred = (this.flushDeferred = new Deferred<void>())
     try {
+      const { streamName } = creds,
+        client = await this.getFirehose(creds),
+        { PutRecordBatchCommand } = await getFirehoseModule()
+
       while (this.pendingRecords.length) {
         const chunkSize = Math.min(this.pendingRecords.length, 10),
           records = this.pendingRecords.splice(0, chunkSize),
@@ -170,9 +163,10 @@ export class AWSFirehoseAppender<
           log.info(`PutRecordBatch ok count=${records.length}`)
         }
       }
+      deferred.resolve()
     } catch (err) {
       log.error("Failed to push logs", err)
-      if (err.code === ExpiredTokenExceptionCode) {
+      if (err.name === ExpiredTokenExceptionCode) {
         this.credentialManager.forceUpdateCredentials()
       }
       deferred.reject(err)
