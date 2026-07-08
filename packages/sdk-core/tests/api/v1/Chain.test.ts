@@ -1,6 +1,11 @@
 import { APIClient } from "@wireio/sdk-core/api/Client"
 import type { APIProvider } from "@wireio/sdk-core/api/Provider"
 import type { APIResponse } from "@wireio/sdk-core/api/Client"
+import {
+  GetBlockInfoResponse,
+  GetBlockResponse
+} from "@wireio/sdk-core/api/v1/Types"
+import { Serializer } from "@wireio/sdk-core/serializer"
 
 // Tests for the wire-sysio PR #290 unified get_table_rows response
 // shape — KV-backed tables now return rows as `{key, value, payer?}`
@@ -32,6 +37,65 @@ function makeClient(responses: Record<string, any>): APIClient {
     provider: new MockProvider(responses)
   })
 }
+
+describe("ChainAPI.get_block", () => {
+  test("decodes Wire transaction receipt shape", () => {
+    const transactionId = "1".repeat(64),
+      block = Serializer.decode({
+        type: GetBlockResponse,
+        object: {
+          timestamp: "2024-01-01T00:00:00.000",
+          producer: "sysio",
+          previous: "0".repeat(64),
+          transaction_mroot: "0".repeat(64),
+          finality_mroot: "0".repeat(64),
+          qc_claim: {
+            block_num: 1,
+            is_strong_qc: false
+          },
+          producer_signatures: [],
+          transactions: [
+            {
+              cpu_usage_us: [1570],
+              trx: transactionId
+            }
+          ],
+          id: "0".repeat(64),
+          block_num: 1,
+          ref_block_prefix: 0
+        }
+      })
+
+    expect(Number(block.transactions[0].cpu_usage_us[0])).toBe(1570)
+    expect(String(block.transactions[0].id)).toBe(transactionId)
+  })
+
+  test("decodes Wire block info response shape", () => {
+    const info = Serializer.decode({
+      type: GetBlockInfoResponse,
+      object: {
+        block_num: 1,
+        ref_block_num: 1,
+        id: "0".repeat(64),
+        timestamp: "2024-01-01T00:00:00.000",
+        producer: "sysio",
+        previous: "0".repeat(64),
+        transaction_mroot: "0".repeat(64),
+        finality_mroot: "0".repeat(64),
+        qc_claim: {
+          block_num: 1,
+          is_strong_qc: false
+        },
+        producer_signatures: [],
+        ref_block_prefix: 0
+      }
+    })
+
+    expect(Number(info.block_num)).toBe(1)
+    expect(Number(info.qc_claim.block_num)).toBe(1)
+    expect(info.producer_signatures).toEqual([])
+  })
+})
 
 describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
   test("unwraps the new {key, value, payer?} shape into plain rows", async () => {
@@ -300,5 +364,35 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
     expect(result.rows).toHaveLength(2)
     expect(result.rows[0]).toBe(42)
     expect(result.rows[1]).toBe(7)
+  })
+})
+
+describe("ChainAPI.get_table_by_scope", () => {
+  test("decodes Wire rows that omit payer and count", async () => {
+    const client = makeClient({
+      "/v1/chain/get_table_by_scope": {
+        rows: [
+          {
+            code: "sysio.msig",
+            scope: "alice",
+            table: "proposal"
+          }
+        ],
+        more: ""
+      }
+    })
+
+    const result = await client.v1.chain.get_table_by_scope({
+      code: "sysio.msig",
+      table: "proposal"
+    })
+
+    expect(result.rows).toHaveLength(1)
+    expect(result.rows[0].code.toString()).toBe("sysio.msig")
+    expect(result.rows[0].scope.toString()).toBe("alice")
+    expect(result.rows[0].table.toString()).toBe("proposal")
+    expect(result.rows[0].payer == null).toBe(true)
+    expect(result.rows[0].count == null).toBe(true)
+    expect(result.more).toBe("")
   })
 })
