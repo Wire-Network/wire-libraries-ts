@@ -1,17 +1,7 @@
-import { Transaction } from "@wireio/sdk-core/chain/Transaction"
 import { Serializer } from "@wireio/sdk-core/serializer"
 import { ChainName } from "@wireio/sdk-core/signing/ChainId"
 import { SigningRequest } from "@wireio/sdk-core/signing/SigningRequest"
-
-const createEmptyTransaction = () =>
-  Transaction.from({
-    expiration: "1970-01-01T00:00:00.000",
-    ref_block_num: 0,
-    ref_block_prefix: 0,
-    context_free_actions: [],
-    actions: [],
-    transaction_extensions: []
-  })
+import { createEmptyTransaction } from "../support/transactions.js"
 
 describe("SigningRequest", () => {
   describe("fromTransaction", () => {

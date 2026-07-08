@@ -11,8 +11,8 @@ export interface InflatePackedTransactionOptions {
 
 /** Constants used while inflating zlib-compressed packed transaction bytes. */
 export namespace PackedTransactionCompression {
-  /** Default maximum decompressed byte length for packed transaction payloads. */
-  export const DefaultMaxInflatedBytes = 1_048_576
+  /** Default maximum decompressed byte length for packed transaction payloads, matching nodeop's zlib decompression limiter. */
+  export const DefaultMaxInflatedBytes = 10_485_760
 
   /** Output chunk size used by the streaming zlib inflater. */
   export const InflateChunkSizeBytes = 65_536
@@ -35,11 +35,7 @@ export function inflatePackedTransaction(
     chunkSize: PackedTransactionCompression.InflateChunkSizeBytes
   })
 
-  inflator.onData = (chunk: Uint8Array | string) => {
-    if (!(chunk instanceof Uint8Array)) {
-      throw new Error("Packed transaction zlib output must be binary")
-    }
-
+  inflator.onData = (chunk: Uint8Array) => {
     inflatedBytes += chunk.byteLength
 
     if (inflatedBytes > maxInflatedBytes) {
@@ -59,12 +55,20 @@ export function inflatePackedTransaction(
     )
   }
 
+  if (!inflator.ended) {
+    throw new Error(
+      "Unable to inflate packed transaction: incomplete zlib stream"
+    )
+  }
+
   return Bytes.from(concatBytes(...chunks))
 }
 
 /** Assert that a packed transaction inflate limit is representable and usable. */
 function assertMaxInflatedBytes(maxInflatedBytes: number) {
   if (!Number.isSafeInteger(maxInflatedBytes) || maxInflatedBytes < 0) {
-    throw new Error("Packed transaction inflate limit must be a safe integer")
+    throw new Error(
+      "Packed transaction inflate limit must be a non-negative safe integer"
+    )
   }
 }
