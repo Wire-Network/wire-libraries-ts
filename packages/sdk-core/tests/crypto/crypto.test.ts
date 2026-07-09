@@ -21,6 +21,19 @@ function sha256(data: string): Uint8Array {
   return new Uint8Array(createHash("sha256").update(data).digest())
 }
 
+const EXTERNAL_EM_PRIVATE_KEY_HEX =
+  "4646464646464646464646464646464646464646464646464646464646464646"
+const EXTERNAL_EM_PUBLIC_KEY_HEX =
+  "024bc2a31265153f07e70e0bab08724e6b85e217f8cd628ceb62974247bb493382"
+// Known-answer values generated with ethers EIP-191 personal signing.
+const EXTERNAL_EM_MESSAGE = new Uint8Array([0xde, 0xad, 0xbe, 0xef])
+const EXTERNAL_EM_MESSAGE_SIGNATURE =
+  "SIG_EM_e634c2b988f47ed8fe2bfda5c5a47dbc69016c87623a0833e92a9c1e81fdb03d671324c546436acaa3d12be447248b3892477b274a85cc2c20a0a49cd2d04cad1b"
+const EXTERNAL_EM_DIGEST_HEX =
+  "5f78c33274e43fa9de5659265c1d917e25c03722dcb0b8d27db8d5feaa813953"
+const EXTERNAL_EM_DIGEST_SIGNATURE =
+  "SIG_EM_04aa0eac2aceafd510b9f3c04c4afbecc499d127062d68e4c93d7ebfe44293e70c8b9c9b61b8a2c2b674313542916d191d9c444918820bfce0af0594c87165fb1c"
+
 /** Convert SignatureParts to wire-format Uint8Array for low-level verify/recover. */
 function sigPartsToBytes(parts: {
   r: Uint8Array
@@ -162,6 +175,35 @@ describe("PrivateKey sign and verify", () => {
       expect(signature.equals(sig)).toBe(true)
       expect(signature.verifyMessage(message, pub)).toBe(true)
     })
+  })
+
+  test("EM signatures match ethers EIP-191 known-answer vectors", () => {
+    const pvt = PrivateKey.regenerate(
+      KeyType.EM,
+      hexToArray(EXTERNAL_EM_PRIVATE_KEY_HEX)
+    )
+    const pub = PublicKey.from({
+      type: KeyType.EM,
+      compressed: hexToArray(EXTERNAL_EM_PUBLIC_KEY_HEX)
+    })
+    const digest = Checksum256.hash(EXTERNAL_EM_MESSAGE)
+    const externalMessageSig = Signature.from(EXTERNAL_EM_MESSAGE_SIGNATURE)
+    const externalDigestSig = Signature.from(EXTERNAL_EM_DIGEST_SIGNATURE)
+
+    expect(pvt.toPublic().equals(pub)).toBe(true)
+    expect(digest.toString()).toBe(EXTERNAL_EM_DIGEST_HEX)
+    expect(pvt.signMessage(EXTERNAL_EM_MESSAGE).toString()).toBe(
+      EXTERNAL_EM_MESSAGE_SIGNATURE
+    )
+    expect(pvt.signDigest(digest).toString()).toBe(EXTERNAL_EM_DIGEST_SIGNATURE)
+    expect(externalMessageSig.verifyMessage(EXTERNAL_EM_MESSAGE, pub)).toBe(
+      true
+    )
+    expect(
+      externalMessageSig.recoverMessage(EXTERNAL_EM_MESSAGE).equals(pub)
+    ).toBe(true)
+    expect(externalDigestSig.verifyDigest(digest, pub)).toBe(true)
+    expect(externalDigestSig.recoverDigest(digest).equals(pub)).toBe(true)
   })
 
   test("EM verification fails with wrong public key", () => {

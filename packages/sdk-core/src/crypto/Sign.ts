@@ -50,6 +50,8 @@ export function sign<C extends ChainKind = ChainKind.UNKNOWN>(
       const sig = signer.signDigest(hash)
       const r = ethers.utils.arrayify(sig.r)
       const s = ethers.utils.arrayify(sig.s)
+      // Signature.from applies the +31 wire offset, preserving
+      // vWire = recoveryParam + 31 = ethV + 4 for EM signatures.
       const recid = sig.recoveryParam!
       return { type, r, s, recid }
     }
