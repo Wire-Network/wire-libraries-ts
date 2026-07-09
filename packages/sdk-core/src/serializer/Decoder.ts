@@ -30,6 +30,10 @@ import {
 
 import { isInstanceOf } from "../Utils.js"
 
+/** Error reported when an array element cannot advance the binary decoder. */
+const ZERO_CONSUMPTION_ARRAY_ELEMENT_ERROR =
+  "Array element decoded without consuming input"
+
 interface DecodeArgsBase {
   abi?: ABIDef
   data?: BytesType | ABIDecoder
@@ -217,8 +221,15 @@ function decodeBinary(
     const rv: any[] = []
 
     for (let i = 0; i < len; i++) {
+      const startPosition = decoder.getPosition()
       ctx.codingPath.push({ field: i, type })
-      rv.push(decodeInner())
+      const value = decodeInner()
+
+      if (decoder.getPosition() === startPosition) {
+        throw new Error(ZERO_CONSUMPTION_ARRAY_ELEMENT_ERROR)
+      }
+
+      rv.push(value)
       ctx.codingPath.pop()
     }
 
