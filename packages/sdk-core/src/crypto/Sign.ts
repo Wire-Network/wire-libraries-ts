@@ -29,7 +29,7 @@ export function sign<C extends ChainKind = ChainKind.UNKNOWN>(
   secret: Uint8Array,
   message: Uint8Array,
   type: KeyType,
-  options: sign.Options<C> = null
+  options: sign.Options<C> | null = null
 ): SignatureParts {
   switch (type) {
     case KeyType.ED: {
@@ -110,7 +110,7 @@ export namespace sign {
     C extends ChainKind.EVM ? EthereumOptions : BaseOptions<C>
 
   export function getOptions<C extends ChainKind = ChainKind.UNKNOWN>(
-    inOpts: object,
+    inOpts: object | null,
     chain: C
   ): Options<C> {
     const opts = asOption(inOpts)
