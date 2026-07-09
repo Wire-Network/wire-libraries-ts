@@ -1,7 +1,27 @@
 import { Asset, ExtendedAsset } from "@wireio/sdk-core/chain/Asset"
+import { UInt64 } from "@wireio/sdk-core/chain/Integer"
 import { Name } from "@wireio/sdk-core/chain/Name"
 import { Serializer } from "@wireio/sdk-core/serializer"
 
+const ABI_FIELD_NAME = "value"
+const ABI_ROW_NAME = "row"
+const SDK_ABI_TYPES = {
+  asset: "asset",
+  symbol: "symbol",
+  symbolCode: "symbol_code"
+} as const
+
+type SdkAbiType = (typeof SDK_ABI_TYPES)[keyof typeof SDK_ABI_TYPES]
+
+const OVERLONG_SYMBOL_CODE = "ABCDEFGH"
+const OVERLONG_ASSET = `1.0000 ${OVERLONG_SYMBOL_CODE}`
+const INVALID_SYMBOL_CODE_CHARACTER = "!"
+const INVALID_SYMBOL_CODE_NUMBER = INVALID_SYMBOL_CODE_CHARACTER.charCodeAt(0)
+const OVERLONG_RAW_SYMBOL_CODE = UInt64.from(
+  new Uint8Array(
+    Array.from(OVERLONG_SYMBOL_CODE).map(char => char.charCodeAt(0))
+  )
+)
 const MALFORMED_SYMBOL_STRINGS = [
   "abc,SYS",
   "4x,SYS",
@@ -10,17 +30,17 @@ const MALFORMED_SYMBOL_STRINGS = [
   " 4,SYS"
 ]
 
-/** Encode one ABI symbol field with a caller-provided runtime value. */
-function encodeSymbolValue(value: string) {
+/** Encode one ABI builtin field with a caller-provided runtime value. */
+function encodeBuiltinValue(value: string | number | UInt64, type: SdkAbiType) {
   return Serializer.encode({
-    object: { value },
-    type: "row",
+    object: { [ABI_FIELD_NAME]: value },
+    type: ABI_ROW_NAME,
     abi: {
       structs: [
         {
-          name: "row",
+          name: ABI_ROW_NAME,
           base: "",
-          fields: [{ name: "value", type: "symbol" }]
+          fields: [{ name: ABI_FIELD_NAME, type }]
         }
       ]
     }
@@ -70,6 +90,16 @@ describe("Asset", () => {
   test("equals returns false for different assets", () => {
     expect(Asset.from("1.0000 SYS").equals("2.0000 SYS")).toBe(false)
   })
+
+  test("rejects overlong symbol names", () => {
+    expect(() => Asset.from(OVERLONG_ASSET)).toThrow("Invalid asset symbol")
+  })
+
+  test("rejects overlong symbol names through ABI serialization", () => {
+    expect(() =>
+      encodeBuiltinValue(OVERLONG_ASSET, SDK_ABI_TYPES.asset)
+    ).toThrow("Invalid asset symbol")
+  })
 })
 
 describe("Asset.Symbol", () => {
@@ -98,7 +128,9 @@ describe("Asset.Symbol", () => {
 
   test("rejects malformed symbol strings through ABI serialization", () => {
     MALFORMED_SYMBOL_STRINGS.forEach(value => {
-      expect(() => encodeSymbolValue(value)).toThrow("Invalid symbol string")
+      expect(() => encodeBuiltinValue(value, SDK_ABI_TYPES.symbol)).toThrow(
+        "Invalid symbol string"
+      )
     })
   })
 })
@@ -111,6 +143,42 @@ describe("Asset.SymbolCode", () => {
 
   test("toString returns name", () => {
     expect(Asset.SymbolCode.from("SYS").toString()).toBe("SYS")
+  })
+
+  test("rejects overlong symbol codes", () => {
+    expect(() => Asset.SymbolCode.from(OVERLONG_SYMBOL_CODE)).toThrow(
+      "Invalid asset symbol"
+    )
+  })
+
+  test("rejects malformed numeric symbol codes", () => {
+    expect(() => Asset.SymbolCode.from(INVALID_SYMBOL_CODE_NUMBER)).toThrow(
+      "Invalid asset symbol"
+    )
+  })
+
+  test("rejects overlong raw symbol codes", () => {
+    expect(() => Asset.SymbolCode.from(OVERLONG_RAW_SYMBOL_CODE)).toThrow(
+      "Invalid asset symbol"
+    )
+  })
+
+  test("rejects overlong symbol codes through ABI serialization", () => {
+    expect(() =>
+      encodeBuiltinValue(OVERLONG_SYMBOL_CODE, SDK_ABI_TYPES.symbolCode)
+    ).toThrow("Invalid asset symbol")
+  })
+
+  test("rejects malformed numeric symbol codes through ABI serialization", () => {
+    expect(() =>
+      encodeBuiltinValue(INVALID_SYMBOL_CODE_NUMBER, SDK_ABI_TYPES.symbolCode)
+    ).toThrow("Invalid asset symbol")
+  })
+
+  test("rejects overlong raw symbol codes through ABI serialization", () => {
+    expect(() =>
+      encodeBuiltinValue(OVERLONG_RAW_SYMBOL_CODE, SDK_ABI_TYPES.symbolCode)
+    ).toThrow("Invalid asset symbol")
   })
 })
 

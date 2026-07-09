@@ -6,11 +6,34 @@ import { isInstanceOf } from "../Utils.js"
 import { Int64, Int64Type, UInt64 } from "./Integer.js"
 import { Name, NameType } from "./Name.js"
 
-const SYMBOL_STRING_PATTERN = /^[0-9]+,[A-Z]{0,7}$/
+const MAX_SYMBOL_PRECISION = 18
+const MAX_SYMBOL_CODE_LENGTH = 7
+const SYMBOL_CODE_PATTERN = new RegExp(`^[A-Z]{0,${MAX_SYMBOL_CODE_LENGTH}}$`)
+const SYMBOL_STRING_PATTERN = new RegExp(
+  `^[0-9]+,[A-Z]{0,${MAX_SYMBOL_CODE_LENGTH}}$`
+)
 
 /** Return true when a string is a strict ABI symbol literal. */
 function isSymbolString(value: string) {
   return SYMBOL_STRING_PATTERN.test(value)
+}
+
+/** Throw when a symbol code name cannot be represented without changing it. */
+function assertSymbolCodeName(name: string) {
+  if (!SYMBOL_CODE_PATTERN.test(name)) {
+    throw new Error("Invalid asset symbol, name must be uppercase A-Z")
+  }
+}
+
+/** Throw when a symbol precision cannot be represented exactly. */
+function assertSymbolPrecision(precision: number) {
+  if (
+    !Number.isInteger(precision) ||
+    precision < 0 ||
+    precision > MAX_SYMBOL_PRECISION
+  ) {
+    throw new Error("Invalid asset symbol, precision too large")
+  }
 }
 
 export type AssetType = Asset | string
@@ -141,7 +164,7 @@ export namespace Asset {
   export type SymbolType = Symbol | UInt64 | string
   export class Symbol implements ABISerializableObject {
     static abiName = "symbol"
-    static maxPrecision = 18
+    static maxPrecision = MAX_SYMBOL_PRECISION
 
     static from(value: SymbolType) {
       if (isInstanceOf(value, Symbol)) {
@@ -157,11 +180,13 @@ export namespace Asset {
       }
 
       const [precisionValue, name] = value.split(",")
-      const precision = Number.parseInt(precisionValue, 10)
+      const precision = Number(precisionValue)
       return Symbol.fromParts(name, precision)
     }
 
     static fromParts(name: string, precision: number) {
+      assertSymbolCodeName(name)
+      assertSymbolPrecision(precision)
       return new Symbol(toRawSymbol(name, precision))
     }
 
@@ -236,7 +261,7 @@ export namespace Asset {
   export type SymbolCodeType = SymbolCode | UInt64 | string | number
   export class SymbolCode implements ABISerializableObject {
     static abiName = "symbol_code"
-    static pattern = /^[A-Z]{0,7}$/
+    static pattern = SYMBOL_CODE_PATTERN
 
     static from(value: SymbolCodeType) {
       if (isInstanceOf(value, SymbolCode)) {
@@ -244,6 +269,7 @@ export namespace Asset {
       }
 
       if (typeof value === "string") {
+        assertSymbolCodeName(value)
         value = UInt64.from(toRawSymbolCode(value))
       }
 
@@ -261,8 +287,8 @@ export namespace Asset {
     value: UInt64
 
     constructor(value: UInt64) {
-      if (!value.equals(0) && !SymbolCode.pattern.test(toSymbolName(value))) {
-        throw new Error("Invalid asset symbol, name must be uppercase A-Z")
+      if (!value.equals(0)) {
+        assertSymbolCodeName(toSymbolCodeName(value))
       }
 
       this.value = value
@@ -277,7 +303,7 @@ export namespace Asset {
     }
 
     toString() {
-      return charsToSymbolName(this.value.value.toArray("be"))
+      return toSymbolCodeName(this.value)
     }
 
     toJSON() {
@@ -387,6 +413,10 @@ function toSymbolName(rawSymbol: UInt64) {
   return charsToSymbolName(chars)
 }
 
+function toSymbolCodeName(rawSymbolCode: UInt64) {
+  return charsToSymbolName(rawSymbolCode.value.toArray("be"))
+}
+
 function charsToSymbolName(chars: number[]) {
   return chars
     .map(char => String.fromCharCode(char))
@@ -403,10 +433,11 @@ function toRawSymbol(name: string, precision: number) {
 }
 
 function toRawSymbolCode(name: string) {
-  const length = Math.min(name.length, 7)
-  const bytes = new Uint8Array(length)
+  assertSymbolCodeName(name)
 
-  for (let i = 0; i < length; i++) {
+  const bytes = new Uint8Array(name.length)
+
+  for (let i = 0; i < name.length; i++) {
     bytes[i] = name.charCodeAt(i)
   }
 
