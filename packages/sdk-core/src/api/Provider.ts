@@ -27,7 +27,12 @@ export interface FetchProviderOptions {
   headers?: Record<string, string>
   /** Maximum time to wait for the request and response body, in milliseconds. */
   timeoutMs?: number
-  /** Maximum response body size to read before JSON parsing. */
+  /**
+   * Maximum response body size to read before JSON parsing.
+   *
+   * Non-streaming fetch fallbacks must provide a valid Content-Length within
+   * this limit before FetchProvider can call response.arrayBuffer().
+   */
   maxResponseBytes?: number
 }
 
@@ -46,12 +51,24 @@ const FetchProviderOptionName = {
 } as const
 
 const ResponseHeaderName = {
+  contentEncoding: "content-encoding",
   contentLength: "content-length"
+} as const
+
+const ResponseHeaderDisplayName = {
+  contentEncoding: "Content-Encoding",
+  contentLength: "Content-Length"
+} as const
+
+const ResponseContentEncoding = {
+  identity: "identity"
 } as const
 
 const ResponseBodyContext = "FetchProvider response body"
 
 const ResponseBodyBufferInitialBytes = 16_384
+
+const ContentLengthValuePattern = /^\d+$/
 
 /** Default provider that uses the Fetch API to call a single node. */
 export class FetchProvider implements APIProvider {
@@ -208,12 +225,22 @@ async function readBoundedResponseText(
   }
 
   if (typeof response.arrayBuffer === "function") {
-    const body = new Uint8Array(await response.arrayBuffer())
-    assertMaxResponseBytes(body.byteLength, maxResponseBytes)
-    return decodeResponseBytes(body)
+    return readArrayBufferFallback(response, maxResponseBytes)
   }
 
   throw new Error(`${ResponseBodyContext} is not readable`)
+}
+
+/** Read an arrayBuffer fallback only after Content-Length bounds allocation. */
+async function readArrayBufferFallback(
+  response: any,
+  maxResponseBytes: number
+): Promise<string> {
+  assertFallbackContentEncodingIdentity(response.headers)
+  assertFallbackContentLengthWithinLimit(response.headers, maxResponseBytes)
+  const body = new Uint8Array(await response.arrayBuffer())
+  assertMaxResponseBytes(body.byteLength, maxResponseBytes)
+  return decodeResponseBytes(body)
 }
 
 /** Read a web ReadableStream while enforcing the configured byte limit. */
@@ -314,25 +341,75 @@ function assertContentLengthWithinLimit(
   headers: any,
   maxResponseBytes: number
 ) {
+  const contentLengthBytes = getContentLengthBytes(headers)
+
+  if (contentLengthBytes === undefined) {
+    return
+  }
+
+  assertMaxResponseBytes(contentLengthBytes, maxResponseBytes)
+}
+
+/** Require fallback Content-Length before arrayBuffer can allocate a body. */
+function assertFallbackContentLengthWithinLimit(
+  headers: any,
+  maxResponseBytes: number
+) {
+  const contentLengthBytes = getContentLengthBytes(headers)
+
+  if (contentLengthBytes === undefined) {
+    throw new Error(
+      `${ResponseBodyContext} fallback requires a valid ${ResponseHeaderDisplayName.contentLength} header`
+    )
+  }
+
+  assertMaxResponseBytes(contentLengthBytes, maxResponseBytes)
+}
+
+/** Reject encoded fallback bodies because decoded bytes can exceed Content-Length. */
+function assertFallbackContentEncodingIdentity(headers: any) {
+  const contentEncoding = getHeaderValue(
+    headers,
+    ResponseHeaderName.contentEncoding
+  )
+
+  if (contentEncoding === undefined) {
+    return
+  }
+
+  if (
+    contentEncoding.trim().toLowerCase() === ResponseContentEncoding.identity
+  ) {
+    return
+  }
+
+  throw new Error(
+    `${ResponseBodyContext} fallback does not support ${ResponseHeaderDisplayName.contentEncoding}`
+  )
+}
+
+/** Parse a trusted decimal Content-Length header value. */
+function getContentLengthBytes(headers: any): number | undefined {
   const contentLength = getHeaderValue(
     headers,
     ResponseHeaderName.contentLength
   )
 
-  if (!contentLength) {
-    return
+  if (contentLength === undefined) {
+    return undefined
   }
 
-  const contentLengthBytes = Number(contentLength)
+  const normalizedContentLength = contentLength.trim()
 
-  if (
-    Number.isSafeInteger(contentLengthBytes) &&
-    contentLengthBytes > maxResponseBytes
-  ) {
-    throw new Error(
-      `${ResponseBodyContext} exceeds ${maxResponseBytes} byte limit`
-    )
+  if (!ContentLengthValuePattern.test(normalizedContentLength)) {
+    return undefined
   }
+
+  const contentLengthBytes = Number(normalizedContentLength)
+
+  return Number.isSafeInteger(contentLengthBytes)
+    ? contentLengthBytes
+    : undefined
 }
 
 /** Read a header from fetch Headers or a plain header object. */
