@@ -18,7 +18,12 @@ import { PublicKey } from "./PublicKey.js"
 import { Signature } from "./Signature.js"
 import { getCurve } from "../crypto/Curves.js"
 import { blsEncode, blsDecode } from "../crypto/BLSSerdes.js"
-import { blsKeyGen, blsProofOfPossession, skToLE } from "../crypto/BLS.js"
+import {
+  blsKeyGen,
+  blsProofOfPossession,
+  skFromLE,
+  skToLE
+} from "../crypto/BLS.js"
 
 export type PrivateKeyType = PrivateKey | string
 
@@ -168,7 +173,10 @@ export class PrivateKey {
 
   get proofOfPossessionData(): Uint8Array {
     if (this.type === KeyType.BLS) {
-      return blsProofOfPossession(this.blsDataBE.array)
+      const skBE = this.blsDataBE
+        ? this.blsDataBE.array
+        : skFromLE(this.data.array)
+      return blsProofOfPossession(skBE)
     }
     throw new Error("Proof of possession is only available for BLS keys")
   }
