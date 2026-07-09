@@ -1,16 +1,7 @@
-import {
-  Bytes,
-  BytesType
-} from "./Bytes.js"
-import {
-  Checksum256,
-  Checksum256Type
-} from "./Checksum.js"
+import { Bytes, BytesType } from "./Bytes.js"
+import { Checksum256, Checksum256Type } from "./Checksum.js"
 import { isInstanceOf } from "../Utils.js"
-import {
-  UInt32,
-  UInt32Type
-} from "./Integer.js"
+import { UInt32, UInt32Type } from "./Integer.js"
 import { ABIDecoder } from "../serializer/Decoder.js"
 import { ABIEncoder } from "../serializer/Encoder.js"
 import { ABISerializableObject } from "../serializer/Serializable.js"
@@ -45,11 +36,12 @@ export class BlockId implements ABISerializableObject {
     blockNum: UInt32Type
   ): BlockId {
     const id = new BlockId(Checksum256.from(checksum).array)
+    const num = UInt32.from(blockNum).toNumber()
     const numBuffer = new Uint8Array(4)
-    numBuffer[0] = (Number(blockNum) >> 24) & 0xff
-    numBuffer[1] = (Number(blockNum) >> 16) & 0xff
-    numBuffer[2] = (Number(blockNum) >> 8) & 0xff
-    numBuffer[3] = Number(blockNum) & 0xff
+    numBuffer[0] = (num >> 24) & 0xff
+    numBuffer[1] = (num >> 16) & 0xff
+    numBuffer[2] = (num >> 8) & 0xff
+    numBuffer[3] = num & 0xff
     id.array.set(numBuffer, 0)
     return id
   }

@@ -6,6 +6,13 @@ import { isInstanceOf } from "../Utils.js"
 import { Int64, Int64Type, UInt64 } from "./Integer.js"
 import { Name, NameType } from "./Name.js"
 
+const SYMBOL_STRING_PATTERN = /^[0-9]+,[A-Z]{0,7}$/
+
+/** Return true when a string is a strict ABI symbol literal. */
+function isSymbolString(value: string) {
+  return SYMBOL_STRING_PATTERN.test(value)
+}
+
 export type AssetType = Asset | string
 
 export class Asset implements ABISerializableObject {
@@ -145,18 +152,13 @@ export namespace Asset {
         return new Symbol(value)
       }
 
-      const parts = value.split(",")
-
-      if (parts.length !== 2 && value !== "0,") {
+      if (!isSymbolString(value)) {
         throw new Error("Invalid symbol string")
       }
 
-      if (value === "0,") {
-        parts.push("")
-      }
-
-      const precision = Number.parseInt(parts[0])
-      return Symbol.fromParts(parts[1], precision)
+      const [precisionValue, name] = value.split(",")
+      const precision = Number.parseInt(precisionValue, 10)
+      return Symbol.fromParts(name, precision)
     }
 
     static fromParts(name: string, precision: number) {
