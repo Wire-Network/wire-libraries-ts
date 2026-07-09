@@ -1,5 +1,5 @@
 import { Fetch } from "../common/Types.js"
-import { APIMethods, APIResponse } from "./Client.js"
+import type { APIMethods, APIResponse } from "./Client.js"
 
 export interface APIProvider {
   /**
@@ -25,18 +25,56 @@ export interface FetchProviderOptions {
    * Headers that will be applied to every request
    * */
   headers?: Record<string, string>
+  /** Maximum time to wait for the request and response body, in milliseconds. */
+  timeoutMs?: number
+  /** Maximum response body size to read before JSON parsing. */
+  maxResponseBytes?: number
 }
+
+/** Defaults used by FetchProvider for bounded HTTP requests. */
+export namespace FetchProviderDefaults {
+  /** Default request and response body timeout. */
+  export const TimeoutMs = 60_000
+
+  /** Default maximum response body size, matching the 10 MiB SDK decompression cap. */
+  export const MaxResponseBytes = 10_485_760
+}
+
+const FetchProviderOptionName = {
+  timeoutMs: "timeoutMs",
+  maxResponseBytes: "maxResponseBytes"
+} as const
+
+const ResponseHeaderName = {
+  contentLength: "content-length"
+} as const
+
+const ResponseBodyContext = "FetchProvider response body"
+
+const ResponseBodyBufferInitialBytes = 16_384
 
 /** Default provider that uses the Fetch API to call a single node. */
 export class FetchProvider implements APIProvider {
   readonly url: string
   readonly fetch: Fetch
   readonly headers: Record<string, string> = {}
+  readonly timeoutMs: number
+  readonly maxResponseBytes: number
 
   constructor(url: string, options: FetchProviderOptions = {}) {
     url = url.trim()
     if (url.endsWith("/")) url = url.slice(0, -1)
     this.url = url
+    this.timeoutMs = getPositiveSafeIntegerOption(
+      options.timeoutMs,
+      FetchProviderDefaults.TimeoutMs,
+      FetchProviderOptionName.timeoutMs
+    )
+    this.maxResponseBytes = getPositiveSafeIntegerOption(
+      options.maxResponseBytes,
+      FetchProviderDefaults.MaxResponseBytes,
+      FetchProviderOptionName.maxResponseBytes
+    )
 
     if (options.headers) {
       this.headers = options.headers
@@ -82,13 +120,26 @@ export class FetchProvider implements APIProvider {
       body = JSON.stringify(params)
     }
 
-    const response = await this.fetch(url, {
-      method,
-      body: method === "GET" ? undefined : body,
-      headers
-    })
+    const { response, text } = await this.callWithTimeout(
+      async abortController => {
+        const response = await this.fetch(url, {
+          method,
+          body: method === "GET" ? undefined : body,
+          headers,
+          ...(abortController
+            ? {
+                signal: abortController.signal
+              }
+            : {})
+        })
+        const text = await readBoundedResponseText(
+          response,
+          this.maxResponseBytes
+        )
 
-    const text = await response.text()
+        return { response, text }
+      }
+    )
     let json: any
 
     try {
@@ -98,10 +149,281 @@ export class FetchProvider implements APIProvider {
     }
 
     return {
-      headers: Object.fromEntries(response.headers.entries()),
+      headers: createResponseHeaders(response.headers),
       status: response.status,
       json,
       text
     }
+  }
+
+  /** Run a request phase with the provider timeout and abort when supported. */
+  private async callWithTimeout<T>(
+    fn: (abortController?: AbortController) => Promise<T>
+  ): Promise<T> {
+    const abortController =
+      typeof AbortController !== "undefined" ? new AbortController() : undefined
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+    const timeout = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => {
+        abortController?.abort()
+        reject(
+          new Error(
+            `FetchProvider request timed out after ${this.timeoutMs} ms`
+          )
+        )
+      }, this.timeoutMs)
+      const timeoutHandle = timeoutId as ReturnType<typeof setTimeout> & {
+        unref?: () => void
+      }
+      timeoutHandle.unref?.()
+    })
+
+    const operation = Promise.resolve().then(() => fn(abortController))
+
+    return Promise.race([operation, timeout]).finally(() => {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    })
+  }
+}
+
+/** Read a fetch response body while enforcing the configured byte limit. */
+async function readBoundedResponseText(
+  response: any,
+  maxResponseBytes: number
+): Promise<string> {
+  assertContentLengthWithinLimit(response.headers, maxResponseBytes)
+
+  if (response.body && typeof response.body.getReader === "function") {
+    return readWebReadableStream(response.body, maxResponseBytes)
+  }
+
+  if (
+    response.body &&
+    typeof response.body[Symbol.asyncIterator] === "function"
+  ) {
+    return readAsyncIterableBody(response.body, maxResponseBytes)
+  }
+
+  if (typeof response.arrayBuffer === "function") {
+    const body = new Uint8Array(await response.arrayBuffer())
+    assertMaxResponseBytes(body.byteLength, maxResponseBytes)
+    return decodeResponseBytes(body)
+  }
+
+  throw new Error(`${ResponseBodyContext} is not readable`)
+}
+
+/** Read a web ReadableStream while enforcing the configured byte limit. */
+async function readWebReadableStream(
+  body: { getReader: () => any },
+  maxResponseBytes: number
+): Promise<string> {
+  const reader = body.getReader()
+  const buffer = new ResponseBodyBuffer(maxResponseBytes)
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+
+      if (done) {
+        return decodeResponseBytes(buffer.bytes)
+      }
+
+      const chunk = createResponseChunkBytes(value)
+      if (!buffer.append(chunk)) {
+        const cancelResult = reader.cancel?.()
+        if (cancelResult && typeof cancelResult.catch === "function") {
+          cancelResult.catch(() => undefined)
+        }
+        throw new Error(
+          `${ResponseBodyContext} exceeds ${maxResponseBytes} byte limit`
+        )
+      }
+    }
+  } finally {
+    reader.releaseLock?.()
+  }
+}
+
+/** Read an async-iterable response body while enforcing the configured byte limit. */
+async function readAsyncIterableBody(
+  body: AsyncIterable<any>,
+  maxResponseBytes: number
+): Promise<string> {
+  const buffer = new ResponseBodyBuffer(maxResponseBytes)
+
+  for await (const value of body) {
+    const chunk = createResponseChunkBytes(value)
+
+    if (!buffer.append(chunk)) {
+      throw new Error(
+        `${ResponseBodyContext} exceeds ${maxResponseBytes} byte limit`
+      )
+    }
+  }
+
+  return decodeResponseBytes(buffer.bytes)
+}
+
+/** Convert a response body chunk into bytes for counting and decoding. */
+function createResponseChunkBytes(value: any): Uint8Array {
+  if (value instanceof Uint8Array) {
+    return value
+  }
+
+  if (value instanceof ArrayBuffer) {
+    return new Uint8Array(value)
+  }
+
+  if (ArrayBuffer.isView(value)) {
+    return new Uint8Array(value.buffer, value.byteOffset, value.byteLength)
+  }
+
+  if (typeof value === "string") {
+    return new TextEncoder().encode(value)
+  }
+
+  throw new Error(`${ResponseBodyContext} contains an unsupported chunk type`)
+}
+
+/** Decode response bytes using fetch-compatible UTF-8 replacement behavior. */
+function decodeResponseBytes(bytes: Uint8Array): string {
+  return new TextDecoder().decode(bytes)
+}
+
+/** Convert fetch Headers or a header-like object into an API response map. */
+function createResponseHeaders(headers: any): Record<string, string> {
+  if (!headers) {
+    return {}
+  }
+
+  if (typeof headers.entries === "function") {
+    return Object.fromEntries(headers.entries())
+  }
+
+  return Object.fromEntries(
+    Object.entries(headers).map(([key, value]) => [key, String(value)])
+  )
+}
+
+/** Check Content-Length before reading a body when the server provides it. */
+function assertContentLengthWithinLimit(
+  headers: any,
+  maxResponseBytes: number
+) {
+  const contentLength = getHeaderValue(
+    headers,
+    ResponseHeaderName.contentLength
+  )
+
+  if (!contentLength) {
+    return
+  }
+
+  const contentLengthBytes = Number(contentLength)
+
+  if (
+    Number.isSafeInteger(contentLengthBytes) &&
+    contentLengthBytes > maxResponseBytes
+  ) {
+    throw new Error(
+      `${ResponseBodyContext} exceeds ${maxResponseBytes} byte limit`
+    )
+  }
+}
+
+/** Read a header from fetch Headers or a plain header object. */
+function getHeaderValue(headers: any, name: string): string | undefined {
+  if (!headers) {
+    return undefined
+  }
+
+  if (typeof headers.get === "function") {
+    return headers.get(name) || undefined
+  }
+
+  const normalizedName = name.toLowerCase()
+  const value = Object.entries(headers).find(
+    ([key]) => key.toLowerCase() === normalizedName
+  )?.[1]
+
+  return value === undefined ? undefined : String(value)
+}
+
+/** Assert that an already-buffered fallback body stayed within the limit. */
+function assertMaxResponseBytes(
+  responseBytes: number,
+  maxResponseBytes: number
+) {
+  if (responseBytes > maxResponseBytes) {
+    throw new Error(
+      `${ResponseBodyContext} exceeds ${maxResponseBytes} byte limit`
+    )
+  }
+}
+
+/** Resolve and validate a positive integer FetchProvider option. */
+function getPositiveSafeIntegerOption(
+  value: number | undefined,
+  defaultValue: number,
+  optionName: string
+) {
+  const resolved = value ?? defaultValue
+
+  if (!Number.isSafeInteger(resolved) || resolved <= 0) {
+    throw new Error(
+      `FetchProvider ${optionName} must be a positive safe integer`
+    )
+  }
+
+  return resolved
+}
+
+/** Grow a single bounded response buffer instead of retaining one object per chunk. */
+class ResponseBodyBuffer {
+  private buffer: Uint8Array
+  private length = 0
+
+  constructor(private readonly maxBytes: number) {
+    this.buffer = new Uint8Array(
+      Math.min(ResponseBodyBufferInitialBytes, maxBytes)
+    )
+  }
+
+  /** The appended response bytes. */
+  get bytes(): Uint8Array {
+    return this.buffer.subarray(0, this.length)
+  }
+
+  /** Append bytes and return false when the configured maximum would be exceeded. */
+  append(chunk: Uint8Array): boolean {
+    const nextLength = this.length + chunk.byteLength
+
+    if (nextLength > this.maxBytes) {
+      return false
+    }
+
+    this.ensureCapacity(nextLength)
+    this.buffer.set(chunk, this.length)
+    this.length = nextLength
+    return true
+  }
+
+  /** Ensure the backing buffer can hold the requested length. */
+  private ensureCapacity(nextLength: number) {
+    if (nextLength <= this.buffer.byteLength) {
+      return
+    }
+
+    const nextCapacity = Math.min(
+      this.maxBytes,
+      Math.max(nextLength, this.buffer.byteLength * 2)
+    )
+    const nextBuffer = new Uint8Array(nextCapacity)
+    nextBuffer.set(this.bytes)
+    this.buffer = nextBuffer
   }
 }
