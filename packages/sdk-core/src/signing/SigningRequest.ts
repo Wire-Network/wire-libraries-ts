@@ -32,6 +32,7 @@ import { Struct } from "../chain/Struct.js"
 import { TimePointSec, TimePointType } from "../chain/Time.js"
 import { UInt16, UInt32, UInt8, VarUInt } from "../chain/Integer.js"
 import { UInt16Type, UInt32Type } from "../chain/Integer.js"
+import { inflateZlibBytes } from "../common/ZlibCompression.js"
 
 import * as base64u from "./Base64u.js"
 import {
@@ -74,6 +75,12 @@ export interface ZlibProvider {
   deflateRaw: (data: Uint8Array) => Uint8Array
   /** Inflate data w/o requiring zlib header. */
   inflateRaw: (data: Uint8Array) => Uint8Array
+}
+
+/** Constants used while inflating compressed signing request payloads. */
+export namespace SigningRequestCompression {
+  /** Default maximum decompressed byte length for compressed signing request payloads. */
+  export const DefaultMaxInflatedBytes = 1_048_576
 }
 
 /** Interface that should be implemented by signature providers. */
@@ -289,6 +296,8 @@ export interface SigningRequestCreateIdentityArguments extends SigningRequestCom
 export interface SigningRequestEncodingOptions {
   /** Optional zlib, if provided the request will be compressed when encoding. */
   zlib?: ZlibProvider
+  /** Maximum allowed decompressed byte length for compressed request payloads. */
+  maxInflatedBytes?: number
   /** Abi provider, required if the arguments contain un-encoded actions. */
   abiProvider?: AbiProvider
   /** Optional signature provider, will be used to create a request signature if provided. */
@@ -296,6 +305,9 @@ export interface SigningRequestEncodingOptions {
 }
 
 export type AbiMap = Map<string, ABI>
+
+const SigningRequestCompressionFlag = 1 << 7
+const SigningRequestInflateContext = "signing request"
 
 export class SigningRequest {
   /** Return the identity ABI for given version. */
@@ -596,7 +608,7 @@ export class SigningRequest {
   ) {
     data = Bytes.from(data)
     const header = data.array[0]
-    const version = header & ~(1 << 7)
+    const version = header & ~SigningRequestCompressionFlag
 
     if (version !== 2 && version !== 3) {
       throw new Error("Unsupported protocol version")
@@ -604,12 +616,14 @@ export class SigningRequest {
 
     let payload = data.droppingFirst(1)
 
-    if ((header & (1 << 7)) !== 0) {
-      if (!options.zlib) {
-        throw new Error("Compressed URI needs zlib")
-      }
-
-      payload = Bytes.from(options.zlib.inflateRaw(payload.array))
+    if ((header & SigningRequestCompressionFlag) !== 0) {
+      payload = inflateZlibBytes(payload, {
+        raw: true,
+        context: SigningRequestInflateContext,
+        maxInflatedBytes:
+          options.maxInflatedBytes ??
+          SigningRequestCompression.DefaultMaxInflatedBytes
+      })
     }
 
     const decoder = new ABIDecoder(payload.array)
@@ -746,7 +760,7 @@ export class SigningRequest {
       const deflated = this.zlib!.deflateRaw(array)
 
       if (array.byteLength > deflated.byteLength) {
-        header |= 1 << 7
+        header |= SigningRequestCompressionFlag
         array = deflated as any
       }
     }
