@@ -6,6 +6,11 @@ import { getCurve } from "./Curves.js"
 
 /**
  * Recover compressed public key from signature and recovery id.
+ *
+ * `signature` must be SDK wire bytes `[vWire||r||s]` for EM/K1/R1. EM
+ * recovery converts those bytes to Ethereum compact `[r||s||v]` internally
+ * before applying EIP-191 recovery.
+ *
  * @internal
  */
 export function recover(

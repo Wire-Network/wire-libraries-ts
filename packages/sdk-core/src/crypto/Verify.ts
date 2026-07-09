@@ -6,6 +6,11 @@ import { blsVerify } from "./BLS.js"
 
 /**
  * Verify signature using message and public key.
+ *
+ * For `KeyType.EM`, `signature` must be Ethereum compact bytes
+ * `[r(32)||s(32)||v(1)]`; callers holding SDK wire bytes should convert
+ * `[vWire||r||s]` before calling.
+ *
  * @internal
  */
 export function verify(

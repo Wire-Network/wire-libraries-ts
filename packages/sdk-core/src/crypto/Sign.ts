@@ -41,7 +41,7 @@ export function sign<C extends ChainKind = ChainKind.UNKNOWN>(
     }
 
     case KeyType.EM: {
-      // Ethereum signature using EIP-191 prefix
+      // Ethereum signature using EIP-191 prefix by default.
       const ethOptions = sign.getOptions(options, ChainKind.EVM)
       const hash = ethOptions.personalMessage
         ? ethers.utils.hashMessage(message)
@@ -50,7 +50,9 @@ export function sign<C extends ChainKind = ChainKind.UNKNOWN>(
       const sig = signer.signDigest(hash)
       const r = ethers.utils.arrayify(sig.r)
       const s = ethers.utils.arrayify(sig.s)
-      const recid = sig.recoveryParam! + 27
+      // Signature.from applies the +31 wire offset, preserving
+      // vWire = recoveryParam + 31 = ethV + 4 for EM signatures.
+      const recid = sig.recoveryParam!
       return { type, r, s, recid }
     }
 
@@ -95,12 +97,13 @@ export namespace sign {
   export const DefaultBaseOptions: BaseOptions = { chain: ChainKind.UNKNOWN }
 
   export interface EthereumOptions extends BaseOptions<ChainKind.EVM> {
+    /** When true, sign using Ethereum EIP-191 personal-message hashing. */
     personalMessage: boolean
   }
 
   export const DefaultEthereumOptions: EthereumOptions = {
     chain: ChainKind.EVM,
-    personalMessage: false
+    personalMessage: true
   }
 
   export type Options<C extends ChainKind = ChainKind.UNKNOWN> =

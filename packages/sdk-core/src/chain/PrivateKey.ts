@@ -188,9 +188,9 @@ export class PrivateKey {
   }
 
   /**
-   * Sign a raw message or its digest.
-   * ED25519: signs the raw message.
-   * ECDSA (K1/R1/EM): signs the SHA256 digest.
+   * Sign a raw message with this key's native message-signing domain.
+   * ED25519/BLS sign the raw bytes, EM signs an EIP-191 personal message,
+   * and K1/R1 sign the SHA-256 digest.
    */
   signMessage(message: BytesType) {
     const raw = Bytes.from(message).array
@@ -199,11 +199,15 @@ export class PrivateKey {
       return Signature.from(sign(this.data.array, raw, this.type))
     }
 
-    // K1/R1/EM: hash first
+    if (this.type === KeyType.EM) {
+      return Signature.from(sign(this.data.array, raw, this.type))
+    }
+
+    // K1/R1: hash first
     return this.signDigest(Checksum256.hash(message))
   }
 
-  /** @internal */
+  /** Sign a 32-byte digest with this key's native digest-signing domain. */
   signDigest(digest: Checksum256Type) {
     digest = Checksum256.from(digest)
     return Signature.from(sign(this.data.array, digest.array, this.type))
