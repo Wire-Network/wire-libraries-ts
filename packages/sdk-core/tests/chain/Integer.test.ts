@@ -13,6 +13,7 @@ import {
 import { Serializer } from "@wireio/sdk-core/serializer"
 
 const ABI_INTEGER_TYPES = ["uint64", "int64", "varuint32"] as const
+const MAX_PRECISION_UINT256_STRING = "1.123456789012345678"
 const MALFORMED_INTEGER_STRINGS = [
   "1.23",
   "0x10",
@@ -35,6 +36,11 @@ const MALFORMED_UINT256_STRINGS = [
   "",
   ".",
   " 1"
+]
+const OVERPRECISION_UINT256_STRINGS = [
+  "1.1234567890123456789",
+  ".1234567890123456789",
+  "1.0000000000000000000"
 ]
 
 type AbiIntegerType = (typeof ABI_INTEGER_TYPES)[number]
@@ -169,10 +175,19 @@ describe("Integer", () => {
       expect(UInt256.from("1.5").toString()).toBe("1.5")
       expect(UInt256.from(".5").toString()).toBe("0.5")
       expect(UInt256.from("1.").toString()).toBe("1")
+      expect(UInt256.from(MAX_PRECISION_UINT256_STRING).toString()).toBe(
+        MAX_PRECISION_UINT256_STRING
+      )
     })
 
     test("rejects malformed fixed-point strings", () => {
       MALFORMED_UINT256_STRINGS.forEach(value => {
+        expect(() => UInt256.from(value)).toThrow("Invalid number")
+      })
+    })
+
+    test("rejects over-precision fixed-point strings", () => {
+      OVERPRECISION_UINT256_STRINGS.forEach(value => {
         expect(() => UInt256.from(value)).toThrow("Invalid number")
       })
     })
