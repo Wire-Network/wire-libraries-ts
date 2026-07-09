@@ -9,8 +9,26 @@ const ApiPath = {
 
 const TimeoutMessage = /timed out after 5 ms/
 const ResponseSizeMessage = /FetchProvider response body exceeds 3 byte limit/
+const UntrustedFallbackMessage =
+  /fallback requires a valid Content-Length header/
+const UnsupportedFallbackEncodingMessage =
+  /fallback does not support Content-Encoding/
 const InvalidOptionMessage = /positive safe integer/
 const TinyChunkCount = 150_000
+const ResponseHeaderName = {
+  contentEncoding: "content-encoding",
+  contentLength: "content-length"
+} as const
+const FallbackBodyText = '{"ok":true}'
+const EncodedFallbackContentEncodingValues = ["gzip", "br", "deflate"]
+const InvalidFallbackContentLengthValues = [
+  undefined,
+  "",
+  "abc",
+  "-1",
+  "1.5",
+  String(Number.MAX_SAFE_INTEGER + 1)
+]
 
 function createJsonResponse(body: Record<string, unknown>): Response {
   return new Response(JSON.stringify(body), {
@@ -48,6 +66,21 @@ function createTinyChunkAsyncIterableResponse(count: number) {
         }
       }
     }
+  }
+}
+
+function createArrayBufferFallbackResponse(args: {
+  bodyText?: string
+  headers?: Record<string, string> | Headers
+}) {
+  const bytes = new TextEncoder().encode(args.bodyText ?? FallbackBodyText)
+
+  return {
+    status: 200,
+    headers: args.headers ?? {},
+    arrayBuffer: jest.fn(async () =>
+      bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+    )
   }
 }
 
@@ -157,14 +190,48 @@ describe("FetchProvider", () => {
     expect(response.text.length).toBe(TinyChunkCount)
   })
 
-  test("rejects oversized content length before reading fallback bodies", async () => {
-    const arrayBuffer = jest.fn(async () => new ArrayBuffer(4))
-    const fetch = jest.fn(async () => ({
+  test("reads fallback bodies with trusted content length", async () => {
+    const fallbackResponse = createArrayBufferFallbackResponse({
+      headers: {
+        [ResponseHeaderName.contentLength]: String(FallbackBodyText.length)
+      }
+    })
+    const fetch = jest.fn(async () => fallbackResponse)
+    const provider = new FetchProvider("https://node.example", {
+      fetch,
+      maxResponseBytes: FallbackBodyText.length
+    })
+
+    const response = await provider.call({
+      path: ApiPath.getInfo,
+      method: "GET"
+    })
+
+    expect(response).toEqual({
+      headers: {
+        [ResponseHeaderName.contentLength]: String(FallbackBodyText.length)
+      },
       status: 200,
+      json: {
+        ok: true
+      },
+      text: FallbackBodyText
+    })
+    expect(fallbackResponse.arrayBuffer).toHaveBeenCalledTimes(1)
+  })
+
+  test("rejects oversized content length before reading fallback bodies", async () => {
+    const fallbackResponse = createArrayBufferFallbackResponse({
+      bodyText: "body",
       headers: new Headers({
-        "content-length": "4"
-      }),
-      arrayBuffer
+        [ResponseHeaderName.contentLength]: "4"
+      })
+    })
+    const fetch = jest.fn(async () => ({
+      ...fallbackResponse,
+      headers: new Headers({
+        [ResponseHeaderName.contentLength]: "4"
+      })
     }))
     const provider = new FetchProvider("https://node.example", {
       fetch,
@@ -177,17 +244,21 @@ describe("FetchProvider", () => {
         method: "GET"
       })
     ).rejects.toThrow(ResponseSizeMessage)
-    expect(arrayBuffer).not.toHaveBeenCalled()
+    expect(fallbackResponse.arrayBuffer).not.toHaveBeenCalled()
   })
 
   test("matches plain-object content length headers case-insensitively", async () => {
-    const arrayBuffer = jest.fn(async () => new ArrayBuffer(4))
-    const fetch = jest.fn(async () => ({
-      status: 200,
+    const fallbackResponse = createArrayBufferFallbackResponse({
+      bodyText: "body",
       headers: {
         "Content-Length": "4"
-      },
-      arrayBuffer
+      }
+    })
+    const fetch = jest.fn(async () => ({
+      ...fallbackResponse,
+      headers: {
+        "Content-Length": "4"
+      }
     }))
     const provider = new FetchProvider("https://node.example", {
       fetch,
@@ -200,7 +271,84 @@ describe("FetchProvider", () => {
         method: "GET"
       })
     ).rejects.toThrow(ResponseSizeMessage)
-    expect(arrayBuffer).not.toHaveBeenCalled()
+    expect(fallbackResponse.arrayBuffer).not.toHaveBeenCalled()
+  })
+
+  test.each(EncodedFallbackContentEncodingValues)(
+    "rejects fallback content encoding %s before reading bodies",
+    async contentEncoding => {
+      const fallbackResponse = createArrayBufferFallbackResponse({
+        bodyText: "body",
+        headers: {
+          [ResponseHeaderName.contentEncoding]: contentEncoding,
+          [ResponseHeaderName.contentLength]: "4"
+        }
+      })
+      const fetch = jest.fn(async () => fallbackResponse)
+      const provider = new FetchProvider("https://node.example", {
+        fetch,
+        maxResponseBytes: 10
+      })
+
+      await expect(
+        provider.call({
+          path: ApiPath.getInfo,
+          method: "GET"
+        })
+      ).rejects.toThrow(UnsupportedFallbackEncodingMessage)
+      expect(fallbackResponse.arrayBuffer).not.toHaveBeenCalled()
+    }
+  )
+
+  test.each(InvalidFallbackContentLengthValues)(
+    "rejects fallback content length %s before reading bodies",
+    async contentLength => {
+      const headers =
+        contentLength === undefined
+          ? {}
+          : {
+              [ResponseHeaderName.contentLength]: contentLength
+            }
+      const fallbackResponse = createArrayBufferFallbackResponse({
+        bodyText: "body",
+        headers
+      })
+      const fetch = jest.fn(async () => fallbackResponse)
+      const provider = new FetchProvider("https://node.example", {
+        fetch,
+        maxResponseBytes: 10
+      })
+
+      await expect(
+        provider.call({
+          path: ApiPath.getInfo,
+          method: "GET"
+        })
+      ).rejects.toThrow(UntrustedFallbackMessage)
+      expect(fallbackResponse.arrayBuffer).not.toHaveBeenCalled()
+    }
+  )
+
+  test("rejects fallback bodies that exceed their trusted content length", async () => {
+    const fallbackResponse = createArrayBufferFallbackResponse({
+      bodyText: "body",
+      headers: {
+        [ResponseHeaderName.contentLength]: "3"
+      }
+    })
+    const fetch = jest.fn(async () => fallbackResponse)
+    const provider = new FetchProvider("https://node.example", {
+      fetch,
+      maxResponseBytes: 3
+    })
+
+    await expect(
+      provider.call({
+        path: ApiPath.getInfo,
+        method: "GET"
+      })
+    ).rejects.toThrow(ResponseSizeMessage)
+    expect(fallbackResponse.arrayBuffer).toHaveBeenCalledTimes(1)
   })
 
   test.each([Number.NaN, 0, -1, 1.5])(
