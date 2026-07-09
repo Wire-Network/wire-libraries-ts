@@ -106,13 +106,15 @@ export class PushLogRecordsCredentialManager extends EventEmitter3<PushLogRecord
         mode: "cors",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify({})
       })
 
       if (!response.ok) {
-        throw new Error(`Credential request failed with status ${response.status}`)
+        throw new Error(
+          `Credential request failed with status ${response.status}`
+        )
       }
 
       // Cookie is set by Set-Cookie header, we just need to track expiration
@@ -173,7 +175,9 @@ export class PushLogRecordsCredentialManager extends EventEmitter3<PushLogRecord
  * Appender that pushes log records to a remote endpoint via HTTP PUT.
  * Batches records and sends when queue reaches FLUSH_QUEUE_DEPTH or FLUSH_INTERVAL_MS has elapsed.
  */
-export class PushLogRecordsAppender<Record extends LogRecord = LogRecord> implements Appender<Record> {
+export class PushLogRecordsAppender<
+  Record extends LogRecord = LogRecord
+> implements Appender<Record> {
   private pendingRecords: LogRecord[] = []
   private flushDeferred: Deferred<void> | null = null
   private flushTimer: ReturnType<typeof setTimeout> | null = null
@@ -197,22 +201,15 @@ export class PushLogRecordsAppender<Record extends LogRecord = LogRecord> implem
    * Append a log record to the queue
    */
   append(record: Record): void {
-    // Enforce max queue size by removing oldest records
-    const pendingCount = this.pendingRecords.length + 1
-    const removeCount = pendingCount - LOG_QUEUE_MAX_RECORDS
-
-    if (removeCount > 0) {
-      this.pendingRecords.splice(0, removeCount)
-    }
-
     // Add the record with enriched metadata
     this.pendingRecords.push({
       timestamp: Date.now(),
       ...record,
       app: record.app && record.app.length > 0 ? record.app : "UNKNOWN",
       env: record.env && record.env.length > 0 ? record.env : "UNKNOWN",
-      url: typeof window === "undefined" ? "local://" : window.location.href,
+      url: typeof window === "undefined" ? "local://" : window.location.href
     })
+    this.trimPendingRecordsToQueueCap()
 
     // Check if we should flush immediately due to queue depth
     if (this.pendingRecords.length >= FLUSH_QUEUE_DEPTH) {
@@ -276,12 +273,13 @@ export class PushLogRecordsAppender<Record extends LogRecord = LogRecord> implem
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       })
 
       if (!response.ok) {
         // Re-queue records on failure
         this.pendingRecords.unshift(...records)
+        this.trimPendingRecordsToQueueCap()
         throw new Error(`Push failed with status ${response.status}`)
       }
 
@@ -311,6 +309,17 @@ export class PushLogRecordsAppender<Record extends LogRecord = LogRecord> implem
     }
 
     return this.flush()
+  }
+
+  /**
+   * Enforce the pending queue cap by dropping the oldest records.
+   */
+  private trimPendingRecordsToQueueCap(): void {
+    const removeCount = this.pendingRecords.length - LOG_QUEUE_MAX_RECORDS
+
+    if (removeCount > 0) {
+      this.pendingRecords.splice(0, removeCount)
+    }
   }
 
   /**
