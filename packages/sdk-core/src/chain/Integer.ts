@@ -631,8 +631,12 @@ export class UInt256 {
 
     const [whole, frac = ""] = valueStr.split(".")
 
+    if (frac.length > this.DECIMALS) {
+      throw new Error("Invalid number")
+    }
+
     const wholeBN = new BN(whole || "0", 10).mul(this.SCALE)
-    const fracStr = frac.padEnd(this.DECIMALS, "0").slice(0, this.DECIMALS)
+    const fracStr = frac.padEnd(this.DECIMALS, "0")
     const fracBN = new BN(fracStr, 10)
     const scaled = wholeBN.add(fracBN)
 
