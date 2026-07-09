@@ -30,6 +30,10 @@ import { Struct } from "./Struct.js"
 import { TimePointSec, TimePointType } from "./Time.js"
 import { ethers } from "../EthersCompat.js"
 import { concatBytes } from "../Utils.js"
+import {
+  inflatePackedTransaction,
+  type InflatePackedTransactionOptions
+} from "./PackedTransactionCompression.js"
 
 @Struct.type("transaction_extension")
 export class TransactionExtension extends Struct {
@@ -326,7 +330,8 @@ export class PackedTransaction extends Struct {
     }) as PackedTransaction
   }
 
-  getTransaction(): Transaction {
+  /** Decode and return the packed transaction. */
+  getTransaction(options: InflatePackedTransactionOptions = {}): Transaction {
     switch (Number(this.compression)) {
       // none
       case CompressionType.none: {
@@ -335,7 +340,7 @@ export class PackedTransaction extends Struct {
 
       // zlib compressed
       case CompressionType.zlib: {
-        const inflated = pako.inflate(this.packed_trx.array)
+        const inflated = inflatePackedTransaction(this.packed_trx, options)
         return abiDecode({ data: inflated, type: Transaction })
       }
 
@@ -345,8 +350,11 @@ export class PackedTransaction extends Struct {
     }
   }
 
-  getSignedTransaction(): SignedTransaction {
-    const transaction = this.getTransaction()
+  /** Decode and return the signed transaction. */
+  getSignedTransaction(
+    options: InflatePackedTransactionOptions = {}
+  ): SignedTransaction {
+    const transaction = this.getTransaction(options)
     // TODO: decode context free data
     return SignedTransaction.from({
       ...transaction,

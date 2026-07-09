@@ -5,6 +5,7 @@ export * from "./KeyType.js"
 
 export * from "./Blob.js"
 export * from "./Bytes.js"
+export * from "./PackedTransactionCompression.js"
 export * from "./Checksum.js"
 
 export * from "./Integer.js"

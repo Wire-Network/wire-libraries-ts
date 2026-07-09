@@ -1,4 +1,3 @@
-import pako from "pako"
 import {
   ABI,
   Action,
@@ -33,7 +32,9 @@ import {
   UInt32,
   UInt32Type,
   UInt64,
-  Weight
+  Weight,
+  inflatePackedTransaction,
+  type InflatePackedTransactionOptions
 } from "../../chain/index.js"
 
 import {
@@ -257,11 +258,19 @@ export class TrxVariant implements ABISerializableObject {
   ) {}
 
   get transaction(): Transaction | undefined {
+    return this.getTransaction()
+  }
+
+  /** Decode and return this variant's packed transaction, when present. */
+  getTransaction(
+    options: InflatePackedTransactionOptions = {}
+  ): Transaction | undefined {
     if (this.extra.packed_trx) {
       switch (this.extra.compression) {
         case "zlib": {
-          const inflated = pako.inflate(
-            Bytes.from(this.extra.packed_trx, "hex").array
+          const inflated = inflatePackedTransaction(
+            Bytes.from(this.extra.packed_trx, "hex").array,
+            options
           )
           return Serializer.decode({ data: inflated, type: Transaction })
         }
