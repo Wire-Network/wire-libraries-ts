@@ -6,11 +6,7 @@ import { Asset, ExtendedAsset } from "../chain/Asset.js"
 import { BlockTimestamp, TimePoint, TimePointSec } from "../chain/Time.js"
 import { Bytes } from "../chain/Bytes.js"
 import { Checksum160, Checksum256, Checksum512 } from "../chain/Checksum.js"
-import {
-  Float128,
-  Float32,
-  Float64
-} from "../chain/Float.js"
+import { Float128, Float32, Float64 } from "../chain/Float.js"
 import {
   Int128,
   Int16,
@@ -30,6 +26,9 @@ import { PublicKey } from "../chain/PublicKey.js"
 import { Signature } from "../chain/Signature.js"
 import { Struct } from "../chain/Struct.js"
 
+const BOOL_FALSE_BYTE = 0
+const BOOL_TRUE_BYTE = 1
+
 const StringType = {
   abiName: "string",
   abiDefault: () => "",
@@ -46,11 +45,11 @@ const BoolType = {
   abiName: "bool",
   abiDefault: () => false,
   fromABI: (decoder: ABIDecoder) => {
-    return decoder.readByte() === 1
+    return decoder.readByte() !== BOOL_FALSE_BYTE
   },
   from: (value: boolean): boolean => value,
   toABI: (value: boolean, encoder: ABIEncoder) => {
-    encoder.writeByte(value === true ? 1 : 0)
+    encoder.writeByte(value === true ? BOOL_TRUE_BYTE : BOOL_FALSE_BYTE)
   }
 }
 
