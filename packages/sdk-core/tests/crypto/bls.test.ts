@@ -146,6 +146,17 @@ describe("BLS integration with high-level classes", () => {
       expect(sig.toString()).toBe(expectedPOP)
    })
 
+   test("Imported BLS private key produces the expected proof of possession", () => {
+      const pvt = PrivateKey.from(expectedPrivKey)
+      expect(pvt.proofOfPossessionString).toBe(expectedPOP)
+      expect(pvt.proofOfPossessionSignature.toString()).toBe(expectedPOP)
+   })
+
+   test("Regenerated BLS private key produces the expected proof of possession", () => {
+      const pvt = PrivateKey.regenerate(KeyType.BLS, seed)
+      expect(pvt.proofOfPossessionString).toBe(expectedPOP)
+   })
+
    test("BLS sign/verify roundtrip through high-level classes", () => {
       const pvt = PrivateKey.from(expectedPrivKey)
       const pub = pvt.toPublic()
@@ -160,6 +171,13 @@ describe("BLS integration with high-level classes", () => {
       const a = PrivateKey.generate(KeyType.BLS)
       const b = PrivateKey.generate(KeyType.BLS)
       expect(a.toString()).not.toBe(b.toString())
+   })
+
+   test("Generated BLS private key produces a proof of possession", () => {
+      const pvt = PrivateKey.generate(KeyType.BLS)
+      const pop = pvt.proofOfPossessionSignature
+      expect(pop.type).toBe(KeyType.BLS)
+      expect(pop.toString()).toMatch(/^SIG_BLS_/)
    })
 
    test("BLS recovery throws", () => {
