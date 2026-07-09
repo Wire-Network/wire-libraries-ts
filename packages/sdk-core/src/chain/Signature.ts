@@ -23,6 +23,12 @@ export type SignatureParts = {
   recid: number
 }
 
+const EM_RECOVERY_ID_OFFSET = 4
+const COMPACT_SIGNATURE_LENGTH = 65
+const SIGNATURE_COMPONENT_LENGTH = 32
+const SIGNATURE_S_OFFSET = 33
+const SIGNATURE_V_OFFSET = 64
+
 export class Signature implements ABISerializableObject {
   static abiName = "signature"
 
@@ -46,7 +52,7 @@ export class Signature implements ABISerializableObject {
         return new Signature(KeyType.BLS, new Bytes(value.r))
       }
 
-      // everything else stays 65-byte with recid in [0]
+      // ECDSA signatures carry recoveryParam 0/1 and store recid + 31.
       const data = new Uint8Array(1 + 32 + 32)
       let recid = value.recid
       const type = KeyType.from(value.type)
@@ -105,7 +111,8 @@ export class Signature implements ABISerializableObject {
         // ED uses plain base58 (no ripemd160 checksum) to match fc
         data = Base58.decode(payload)
       } else {
-        const length = type === KeyType.K1 || type === KeyType.R1 ? 65 : undefined
+        const length =
+          type === KeyType.K1 || type === KeyType.R1 ? 65 : undefined
         data = Base58.decodeRipemd160Check(payload, length, type)
       }
     } catch (e) {
@@ -215,7 +222,7 @@ export class Signature implements ABISerializableObject {
    * @internal
    * @param type   Which curve (K1/R1/EM/ED)
    * @param data   **Wire‐format** signature bytes:
-   *               - EM/K1/R1: 65 bytes `[vWire (31–34)‖r(32)‖s(32)]`
+   *               - EM/K1/R1: 65 bytes `[vWire (31/32)‖r(32)‖s(32)]`
    *               - ED:       64 bytes `[r(32)‖s(32)]`
    */
   constructor(type: KeyType, data: Bytes | Uint8Array) {
@@ -234,14 +241,28 @@ export class Signature implements ABISerializableObject {
     return recover(this.data.array, digest.array, this.type)
   }
 
-  /** Recover public key from given message. */
+  /** Recover public key from given message using this signature's message domain. */
   recoverMessage(message: BytesType): PublicKey {
+    if (this.type === KeyType.EM) {
+      return recover(this.data.array, Bytes.from(message).array, this.type)
+    }
+
     return this.recoverDigest(Checksum256.hash(message))
   }
 
   /** Verify this signature with given message digest and public key. */
   verifyDigest(digest: Checksum256Type, publicKey: PublicKey): boolean {
     digest = Checksum256.from(digest)
+
+    if (this.type === KeyType.EM) {
+      return verify(
+        this.toEthereumSignatureBytes(),
+        digest.array,
+        publicKey.data.array,
+        this.type
+      )
+    }
+
     return verify(
       this.data.array,
       digest.array,
@@ -276,26 +297,32 @@ export class Signature implements ABISerializableObject {
         return verify(this.data.array, rawMsg, publicKey.data.array, this.type)
 
       case KeyType.EM: {
-        // 1) unwrap wire [vWire‖r‖s]
-        const wire = this.data.array
-        const vRaw = wire[0] - 4 // 27 or 28
-        const r = wire.subarray(1, 33)
-        const s = wire.subarray(33, 65)
-
-        // 2) rebuild raw sig [r‖s‖vRaw]
-        const sig = new Uint8Array(65)
-        sig.set(r, 0)
-        sig.set(s, 32)
-        sig[64] = vRaw
-
-        // 3) verify with EIP-191 prefix + keccak256
-        return verify(sig, rawMsg, publicKey.data.array, KeyType.EM)
+        return verify(
+          this.toEthereumSignatureBytes(),
+          rawMsg,
+          publicKey.data.array,
+          KeyType.EM
+        )
       }
 
       default:
         // K1/R1 use SHA-256 digest path
         return this.verifyDigest(Checksum256.hash(message), publicKey)
     }
+  }
+
+  /** Convert internal EM wire bytes `[vWire||r||s]` to Ethereum `[r||s||v]`. */
+  private toEthereumSignatureBytes(): Uint8Array {
+    const wire = this.data.array
+    const vRaw = wire[0] - EM_RECOVERY_ID_OFFSET
+    const out = new Uint8Array(COMPACT_SIGNATURE_LENGTH)
+    out.set(wire.subarray(1, SIGNATURE_S_OFFSET), 0)
+    out.set(
+      wire.subarray(SIGNATURE_S_OFFSET, COMPACT_SIGNATURE_LENGTH),
+      SIGNATURE_COMPONENT_LENGTH
+    )
+    out[SIGNATURE_V_OFFSET] = vRaw
+    return out
   }
 
   /** Base58check encoded string representation of this signature (`SIG_<type>_<data>`). */
@@ -307,13 +334,7 @@ export class Signature implements ABISerializableObject {
     if (this.type === KeyType.EM) {
       // Internal wire format is [vWire|r|s], but SIG_EM_ hex uses
       // libfc's [r|s|v] format where v = vWire - 4 (Ethereum v: 27/28)
-      const wire = this.data.array
-      const v = wire[0] - 4
-      const out = new Uint8Array(65)
-      out.set(wire.subarray(1, 33), 0) // r
-      out.set(wire.subarray(33, 65), 32) // s
-      out[64] = v
-      return `SIG_${this.type}_${arrayToHex(out)}`
+      return `SIG_${this.type}_${arrayToHex(this.toEthereumSignatureBytes())}`
     }
 
     // ED uses plain base58 (no ripemd160 checksum) to match fc's approach.
@@ -336,12 +357,7 @@ export class Signature implements ABISerializableObject {
 
     switch (this.type) {
       case KeyType.EM: {
-        // wire[0] = ethV + 4
-        const ethV = wire[0] - 4 // 27 or 28
-        raw = new Uint8Array(65)
-        raw.set(wire.subarray(1, 33), 0)
-        raw.set(wire.subarray(33, 65), 32)
-        raw[64] = ethV
+        raw = this.toEthereumSignatureBytes()
         break
       }
 
@@ -386,13 +402,7 @@ export class Signature implements ABISerializableObject {
     if (this.type === KeyType.EM) {
       // Internal wire format is [vWire|r|s], but libfc's
       // em::compact_signature expects [r|s|v] where v = vWire - 4
-      const wire = this.data.array
-      const v = wire[0] - 4 // Ethereum v (27/28)
-      const out = new Uint8Array(65)
-      out.set(wire.subarray(1, 33), 0) // r
-      out.set(wire.subarray(33, 65), 32) // s
-      out[64] = v
-      encoder.writeArray(out)
+      encoder.writeArray(this.toEthereumSignatureBytes())
     } else {
       encoder.writeArray(this.data.array)
     }

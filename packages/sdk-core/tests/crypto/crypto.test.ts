@@ -6,6 +6,8 @@ import { Signature } from "@wireio/sdk-core/chain/Signature"
 import { KeyType } from "@wireio/sdk-core/chain/KeyType"
 import { Bytes } from "@wireio/sdk-core/chain/Bytes"
 import { Checksum256 } from "@wireio/sdk-core/chain/Checksum"
+import { ABIDecoder } from "@wireio/sdk-core/serializer/Decoder"
+import { ABIEncoder } from "@wireio/sdk-core/serializer/Encoder"
 import { generate } from "@wireio/sdk-core/crypto/Generate"
 import { getPublic } from "@wireio/sdk-core/crypto/GetPublic"
 import { sign } from "@wireio/sdk-core/crypto/Sign"
@@ -13,6 +15,7 @@ import { verify } from "@wireio/sdk-core/crypto/Verify"
 import { recover } from "@wireio/sdk-core/crypto/Recover"
 import { sharedSecret } from "@wireio/sdk-core/crypto/SharedSecret"
 import { getCurve } from "@wireio/sdk-core/crypto/Curves"
+import { hexToArray } from "@wireio/sdk-core/Utils"
 
 function sha256(data: string): Uint8Array {
   return new Uint8Array(createHash("sha256").update(data).digest())
@@ -113,11 +116,67 @@ describe("PrivateKey sign and verify", () => {
     expect(sig.verifyMessage(message, pub)).toBe(true)
   })
 
-  test("EM key signs a message and produces a signature", () => {
+  test("EM sign/verify message roundtrip", () => {
     const pvt = PrivateKey.generate(KeyType.EM)
+    const pub = pvt.toPublic()
     const sig = pvt.signMessage(message)
     expect(sig.type).toBe(KeyType.EM)
     expect(sig.toString()).toMatch(/^SIG_EM_/)
+    expect(sig.verifyMessage(message, pub)).toBe(true)
+  })
+
+  test("EM signature recovers correct public key from message", () => {
+    const pvt = PrivateKey.generate(KeyType.EM)
+    const pub = pvt.toPublic()
+    const sig = pvt.signMessage(message)
+    const recovered = sig.recoverMessage(message)
+    expect(recovered.data.array).toEqual(pub.data.array)
+  })
+
+  test("EM signDigest verifies and recovers with digest APIs", () => {
+    const pvt = PrivateKey.generate(KeyType.EM)
+    const pub = pvt.toPublic()
+    const digest = Checksum256.hash(message)
+    const sig = pvt.signDigest(digest)
+    const recovered = sig.recoverDigest(digest)
+
+    expect(sig.verifyDigest(digest, pub)).toBe(true)
+    expect(recovered.data.array).toEqual(pub.data.array)
+  })
+
+  test("EM signature roundtrips through string raw and ABI representations", () => {
+    const pvt = PrivateKey.generate(KeyType.EM)
+    const pub = pvt.toPublic()
+    const sig = pvt.signMessage(message)
+    const raw = hexToArray(sig.toHex().slice(2))
+    const encoder = new ABIEncoder()
+    sig.toABI(encoder)
+
+    const roundtripped = [
+      Signature.from(sig.toString()),
+      Signature.fromRaw(raw, KeyType.EM),
+      Signature.fromABI(new ABIDecoder(encoder.getData()))
+    ]
+
+    roundtripped.forEach(signature => {
+      expect(signature.equals(sig)).toBe(true)
+      expect(signature.verifyMessage(message, pub)).toBe(true)
+    })
+  })
+
+  test("EM verification fails with wrong public key", () => {
+    const pvt1 = PrivateKey.generate(KeyType.EM)
+    const pvt2 = PrivateKey.generate(KeyType.EM)
+    const sig = pvt1.signMessage(message)
+    expect(sig.verifyMessage(message, pvt2.toPublic())).toBe(false)
+  })
+
+  test("EM verification fails with wrong message", () => {
+    const pvt = PrivateKey.generate(KeyType.EM)
+    const pub = pvt.toPublic()
+    const sig = pvt.signMessage(message)
+    const wrong = new Uint8Array([0xca, 0xfe, 0xba, 0xbe])
+    expect(sig.verifyMessage(wrong, pub)).toBe(false)
   })
 
   test("ED sign/verify roundtrip", () => {
