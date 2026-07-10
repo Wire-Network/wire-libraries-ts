@@ -52,6 +52,8 @@ const authex = new contracts.sysio.authex.AuthexClient({ client: api })
 const links = await authex.getLinks("alice")
 ```
 
+Current wire-sysio nodes expose `links` as a KV table. `AuthexClient` uses the deployed named indexes and JSON bounds, unwraps KV rows through `ChainAPI`, normalizes generated enum-name responses, and treats compressed/uncompressed EM public-key renderings as the same external key.
+
 The system contract descriptor registry includes `authex` and `msig`.
 
 ## Install

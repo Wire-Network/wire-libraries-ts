@@ -18,13 +18,13 @@ import type {
   BuildCreateLinkActionOptions,
   BuildRecordLinkActionOptions
 } from "./Types.js"
-import { requireSupportedCreateLinkChainKind } from "./Signing.js"
+import { assertSupportedCreateLinkChainKind } from "./Signing.js"
 
 /** Builds generated action data for `sysio.authex::createlink`. */
 export function createLinkActionData(
   options: BuildCreateLinkActionOptions
 ): SysioContracts.SysioAuthexCreatelinkAction {
-  const chainKind = requireSupportedCreateLinkChainKind(options.chainKind)
+  const chainKind = assertSupportedCreateLinkChainKind(options.chainKind)
 
   return {
     chain_kind: chainKind,
@@ -36,7 +36,9 @@ export function createLinkActionData(
 }
 
 /** Builds an unsigned `sysio.authex::createlink` action. */
-export function buildCreateLinkAction(options: BuildCreateLinkActionOptions): Action {
+export function buildCreateLinkAction(
+  options: BuildCreateLinkActionOptions
+): Action {
   const account = Name.from(options.account)
 
   return buildContractAction({
@@ -58,13 +60,15 @@ export function recordLinkActionData(
 ): SysioContracts.SysioAuthexRecordlinkAction {
   return {
     account: Name.from(options.account).toString(),
-    chain_kind: requireSupportedCreateLinkChainKind(options.chainKind),
+    chain_kind: assertSupportedCreateLinkChainKind(options.chainKind),
     pub_key: PublicKey.from(options.publicKey).toString()
   }
 }
 
 /** Builds an unsigned trusted `sysio.authex::recordlink` action. */
-export function buildRecordLinkAction(options: BuildRecordLinkActionOptions): Action {
+export function buildRecordLinkAction(
+  options: BuildRecordLinkActionOptions
+): Action {
   return buildContractAction({
     contract: options.contract || DEFAULT_AUTHEX_CONTRACT,
     descriptor: authexDescriptor.actions.recordlink,
@@ -79,7 +83,9 @@ export function buildRecordLinkAction(options: BuildRecordLinkActionOptions): Ac
 }
 
 /** Builds an unsigned testing-only `sysio.authex::clearlinks` action. */
-export function buildClearLinksAction(options: BuildClearLinksActionOptions = {}): Action {
+export function buildClearLinksAction(
+  options: BuildClearLinksActionOptions = {}
+): Action {
   const contract = options.contract || DEFAULT_AUTHEX_CONTRACT
 
   return buildContractAction({

@@ -7,6 +7,7 @@ import { PublicKey, type PublicKeyType } from "../../../chain/PublicKey.js"
 import { Signature } from "../../../chain/Signature.js"
 import type { SignerProvider } from "../../../signing/SignerProvider.js"
 import type * as SysioContracts from "../../../types/SysioContractTypes.js"
+import { SysioAuthexChainkind } from "../../../types/SysioContractTypes.js"
 
 import {
   AUTHEX_CREATE_LINK_AUTH_SUFFIX,
@@ -25,13 +26,13 @@ export function isSupportedCreateLinkChainKind(
   chainKind: SysioContracts.SysioAuthexChainkind
 ): chainKind is AuthexSupportedLinkChainKind {
   return (
-    chainKind === 2 ||
-    chainKind === 3
+    chainKind === SysioAuthexChainkind.CHAIN_KIND_EVM ||
+    chainKind === SysioAuthexChainkind.CHAIN_KIND_SVM
   )
 }
 
 /** Normalizes and validates a user-facing create-link chain kind. */
-export function requireSupportedCreateLinkChainKind(
+export function assertSupportedCreateLinkChainKind(
   chainKind: SysioContracts.SysioAuthexChainkind
 ): AuthexSupportedLinkChainKind {
   if (!isSupportedCreateLinkChainKind(chainKind)) {
@@ -51,7 +52,7 @@ export function buildCreateLinkMessage(
   return [
     PublicKey.from(publicKey).toString(),
     Name.from(account).toString(),
-    requireSupportedCreateLinkChainKind(chainKind),
+    assertSupportedCreateLinkChainKind(chainKind),
     nonce,
     AUTHEX_CREATE_LINK_AUTH_SUFFIX
   ].join("|")
@@ -62,11 +63,17 @@ export function assertCreateLinkPublicKeyMatchesChain(
   publicKey: PublicKey,
   chainKind: AuthexSupportedLinkChainKind
 ): void {
-  if (chainKind === 2 && publicKey.type !== KeyType.EM) {
+  if (
+    chainKind === SysioAuthexChainkind.CHAIN_KIND_EVM &&
+    publicKey.type !== KeyType.EM
+  ) {
     throw new Error("EVM AuthEx links require a PUB_EM public key.")
   }
 
-  if (chainKind === 3 && publicKey.type !== KeyType.ED) {
+  if (
+    chainKind === SysioAuthexChainkind.CHAIN_KIND_SVM &&
+    publicKey.type !== KeyType.ED
+  ) {
     throw new Error("SVM AuthEx links require a PUB_ED public key.")
   }
 }
@@ -76,7 +83,7 @@ export function createLinkSigningPayload(
   message: string,
   chainKind: AuthexSupportedLinkChainKind
 ): Uint8Array {
-  if (chainKind === 2) {
+  if (chainKind === SysioAuthexChainkind.CHAIN_KIND_EVM) {
     return ethers.utils.arrayify(
       ethers.utils.keccak256(ethers.utils.toUtf8Bytes(message))
     )
@@ -88,15 +95,18 @@ export function createLinkSigningPayload(
     mapped = new Uint8Array(hashBytes.length)
 
   hashBytes.forEach((byte, index) => {
-    mapped[index] = SOLANA_DIGEST_PRINTABLE_MIN + (byte % SOLANA_DIGEST_PRINTABLE_RANGE)
+    mapped[index] =
+      SOLANA_DIGEST_PRINTABLE_MIN + (byte % SOLANA_DIGEST_PRINTABLE_RANGE)
   })
 
   return ethers.utils.toUtf8Bytes(ethers.utils.hexlify(mapped).slice(2))
 }
 
 /** Prepares create-link message and wallet-signing payload without signing it. */
-export function prepareCreateLink(options: PrepareCreateLinkOptions): PreparedCreateLink {
-  const chainKind = requireSupportedCreateLinkChainKind(options.chainKind),
+export function prepareCreateLink(
+  options: PrepareCreateLinkOptions
+): PreparedCreateLink {
+  const chainKind = assertSupportedCreateLinkChainKind(options.chainKind),
     publicKey = PublicKey.from(options.publicKey),
     account = Name.from(options.account).toString(),
     nonce = options.nonce || Date.now()
@@ -126,7 +136,7 @@ export function createLinkSignatureFromRaw(
 
   assertCreateLinkPublicKeyMatchesChain(key, chainKind)
 
-  if (chainKind === 2) {
+  if (chainKind === SysioAuthexChainkind.CHAIN_KIND_EVM) {
     return Signature.fromRaw(rawSignature, KeyType.EM)
   }
 
@@ -135,7 +145,9 @@ export function createLinkSignatureFromRaw(
   }
 
   if (rawSignature.length !== 64) {
-    throw new Error(`SVM AuthEx signatures must be 64 or 96 bytes, got ${rawSignature.length}.`)
+    throw new Error(
+      `SVM AuthEx signatures must be 64 or 96 bytes, got ${rawSignature.length}.`
+    )
   }
 
   const signature96 = new Uint8Array(96)

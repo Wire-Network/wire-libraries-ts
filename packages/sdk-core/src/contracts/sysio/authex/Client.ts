@@ -1,10 +1,13 @@
 import { APIClient } from "../../../api/Client.js"
+import { ethers } from "../../../EthersCompat.js"
 import type { TransactionExtraOptions } from "../../../api/Types.js"
 import type { Action } from "../../../chain/Action.js"
 import { Bytes } from "../../../chain/Bytes.js"
 import { Checksum256 } from "../../../chain/Checksum.js"
+import { KeyType } from "../../../chain/KeyType.js"
 import { Name, type NameType } from "../../../chain/Name.js"
 import { PublicKey, type PublicKeyType } from "../../../chain/PublicKey.js"
+import { SysioAuthexChainkind } from "../../../types/SysioContractTypes.js"
 import {
   ContractClient,
   createContractClient,
@@ -16,7 +19,11 @@ import {
   buildCreateLinkAction,
   buildRecordLinkAction
 } from "./Actions.js"
-import { DEFAULT_AUTHEX_CONTRACT } from "./Constants.js"
+import {
+  AUTHEX_LINKS_BY_NAME_INDEX,
+  AUTHEX_LINKS_BY_PUBLIC_KEY_INDEX,
+  DEFAULT_AUTHEX_CONTRACT
+} from "./Constants.js"
 import {
   descriptor,
   type SysioAuthexActionData,
@@ -39,8 +46,45 @@ function accountString(value: NameType): string {
   return Name.from(value).toString()
 }
 
+/** Canonicalizes EM keys to the compressed form used by the live bypubkey index. */
+function canonicalExternalPublicKey(value: PublicKeyType): PublicKey {
+  const key = PublicKey.from(value)
+  if (key.type !== KeyType.EM) return key
+
+  return new PublicKey(
+    KeyType.EM,
+    ethers.utils.arrayify(
+      ethers.utils.computePublicKey(ethers.utils.hexlify(key.data.array), true)
+    )
+  )
+}
+
+/** Creates the deployed AuthEx bypubkey checksum for an external key. */
 function publicKeyHash(value: PublicKeyType): Checksum256 {
-  return Checksum256.hash(Bytes.from(PublicKey.from(value).toString(), "utf8"))
+  const key = canonicalExternalPublicKey(value)
+  return Checksum256.hash(Bytes.from(key.toString(), "utf8"))
+}
+
+/** Encodes a wire-sysio KV secondary-index bound. */
+function jsonIndexBound(indexName: string, value: string): string {
+  return JSON.stringify({ [indexName]: value })
+}
+
+/** Compares external keys while tolerating compressed/uncompressed EM rendering. */
+function externalPublicKeysEqual(
+  left: PublicKeyType,
+  right: PublicKeyType
+): boolean {
+  return canonicalExternalPublicKey(left).equals(
+    canonicalExternalPublicKey(right)
+  )
+}
+
+/** Normalizes a generated AuthEx enum name or number to its numeric value. */
+function authExChainKindValue(
+  value: SysioContracts.SysioAuthexLinksSType["chain_kind"]
+): SysioContracts.SysioAuthexChainkind {
+  return typeof value === "number" ? value : SysioAuthexChainkind[value]
 }
 
 /** UI-neutral client for reading and building `sysio.authex` link actions. */
@@ -77,7 +121,9 @@ export class AuthexClient {
   }
 
   /** Signs the external-wallet proof and builds an unsigned Wire create-link action. */
-  async createLink(options: CreateLinkWithSignerOptions): Promise<CreateLinkActionResult> {
+  async createLink(
+    options: CreateLinkWithSignerOptions
+  ): Promise<CreateLinkActionResult> {
     const proof = await signCreateLink(options),
       action = this.buildCreateLinkAction({
         account: proof.account,
@@ -93,7 +139,9 @@ export class AuthexClient {
   }
 
   /** Lowercase alias matching the contract action spelling. */
-  async createlink(options: CreateLinkWithSignerOptions): Promise<CreateLinkActionResult> {
+  async createlink(
+    options: CreateLinkWithSignerOptions
+  ): Promise<CreateLinkActionResult> {
     return this.createLink(options)
   }
 
@@ -148,12 +196,12 @@ export class AuthexClient {
     options: ListLinksOptions = {}
   ): Promise<SysioContracts.SysioAuthexLinksSType[]> {
     const name = accountString(account),
+      nameValue = Name.from(account).value.toString(),
       result = await this.contractClient.tables.links.rows<string>({
-        index_position: "tertiary",
-        key_type: "name",
-        lower_bound: name,
-        limit: options.limit || 20
-      } as any)
+        index_name: AUTHEX_LINKS_BY_NAME_INDEX,
+        lower_bound: jsonIndexBound(AUTHEX_LINKS_BY_NAME_INDEX, nameValue),
+        limit: options.limit || 100
+      })
 
     return result.rows.filter(row => accountString(row.username) === name)
   }
@@ -164,7 +212,10 @@ export class AuthexClient {
     chainKind: SysioContracts.SysioAuthexChainkind
   ): Promise<SysioContracts.SysioAuthexLinksSType | null> {
     const links = await this.getLinks(account)
-    return links.find(row => row.chain_kind === chainKind) || null
+    return (
+      links.find(row => authExChainKindValue(row.chain_kind) === chainKind) ||
+      null
+    )
   }
 
   /** Reads the first link matching an external public key using the `bypubkey` index. */
@@ -173,13 +224,17 @@ export class AuthexClient {
   ): Promise<SysioContracts.SysioAuthexLinksSType | null> {
     const key = PublicKey.from(publicKey),
       hash = publicKeyHash(key),
-      result = await this.contractClient.tables.links.rows<Checksum256>({
-        index_position: "fourth",
-        key_type: "sha256",
-        lower_bound: hash,
+      result = await this.contractClient.tables.links.rows<string>({
+        index_name: AUTHEX_LINKS_BY_PUBLIC_KEY_INDEX,
+        lower_bound: jsonIndexBound(
+          AUTHEX_LINKS_BY_PUBLIC_KEY_INDEX,
+          hash.toString()
+        ),
         limit: 5
-      } as any)
+      })
 
-    return result.rows.find(row => PublicKey.from(row.pub_key).equals(key)) || null
+    return (
+      result.rows.find(row => externalPublicKeysEqual(row.pub_key, key)) || null
+    )
   }
 }

@@ -256,7 +256,7 @@ export class ChainAPI {
     })
   }
 
-  async get_table_rows<Index extends TableIndexType = Name>(
+  async get_table_rows<Index extends TableIndexType | string = Name>(
     params: GetTableRowsParams<Index>
   ): Promise<GetTableRowsResponse<Index>>
   async get_table_rows<Key extends keyof TableIndexTypes>(

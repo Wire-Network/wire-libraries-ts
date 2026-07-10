@@ -32,6 +32,21 @@ class MockProvider implements APIProvider {
   }
 }
 
+/** Captures serialized request parameters while returning one fixed response. */
+class CapturingProvider implements APIProvider {
+  params: unknown
+
+  async call(args: { path: string; params?: unknown }): Promise<APIResponse> {
+    this.params = args.params
+    return {
+      status: 200,
+      headers: {},
+      json: { rows: [], more: false },
+      text: ""
+    }
+  }
+}
+
 function makeClient(responses: Record<string, any>): APIClient {
   return new APIClient({
     provider: new MockProvider(responses)
@@ -98,6 +113,25 @@ describe("ChainAPI.get_block", () => {
 })
 
 describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
+  test("forwards named KV secondary-index bounds", async () => {
+    const provider = new CapturingProvider(),
+      client = new APIClient({ provider })
+
+    await client.v1.chain.get_table_rows({
+      code: "sysio.authex",
+      table: "links",
+      index_name: "byname",
+      lower_bound: '{"byname":"16406237203375587328"}'
+    })
+
+    expect(provider.params).toEqual(
+      expect.objectContaining({
+        index_name: "byname",
+        lower_bound: '{"byname":"16406237203375587328"}'
+      })
+    )
+  })
+
   test("unwraps the new {key, value, payer?} shape into plain rows", async () => {
     const client = makeClient({
       "/v1/chain/get_table_rows": {
