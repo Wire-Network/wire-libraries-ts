@@ -141,7 +141,7 @@ export class PrivateKey {
 
       const skBE = blsKeyGen(seedData)
       const skLE = skToLE(skBE)
-      return new PrivateKey(KeyType.BLS, new Bytes(skLE), new Bytes(skBE))
+      return new PrivateKey(KeyType.BLS, new Bytes(skLE))
     }
     const data = Bytes.from(seed)
 
@@ -149,11 +149,7 @@ export class PrivateKey {
   }
 
   /** @internal */
-  constructor(
-    type: KeyType,
-    data: Bytes,
-    readonly blsDataBE: Bytes | null = null
-  ) {
+  constructor(type: KeyType, data: Bytes) {
     if (
       (type === KeyType.K1 ||
         type === KeyType.R1 ||
@@ -174,9 +170,7 @@ export class PrivateKey {
 
   get proofOfPossessionData(): Uint8Array {
     if (this.type === KeyType.BLS) {
-      const skBE = this.blsDataBE
-        ? this.blsDataBE.array
-        : skFromLE(this.data.array)
+      const skBE = skFromLE(this.data.array)
       return blsProofOfPossession(skBE)
     }
     throw new Error("Proof of possession is only available for BLS keys")
