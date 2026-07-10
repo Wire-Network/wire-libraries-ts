@@ -2,7 +2,8 @@ import { ethers } from "../EthersCompat.js"
 import { Bytes } from "../chain/Bytes.js"
 import { KeyType } from "../chain/KeyType.js"
 import { PublicKey } from "../chain/PublicKey.js"
-import { getCurve } from "./Curves.js"
+import { getNobleCurve } from "./Curves.js"
+import { bytesToNumberBE } from "@noble/curves/utils.js"
 
 /**
  * Recover compressed public key from signature and recovery id.
@@ -42,15 +43,17 @@ export function recover(
     }
 
     default: {
-      // K1 / R1
-      const curve = getCurve(type)
       // wire: [vWire(31/32)‖r‖s]
       const recid = signature[0] - 31
-      const r = signature.subarray(1, 33)
-      const s = signature.subarray(33, 65)
-
-      const point = curve.recoverPubKey(message, { r, s }, recid)
-      const compressed = Uint8Array.from(point.encode("array", true)) // 33 bytes
+      const curve = getNobleCurve(type)
+      const recoveredSignature = new curve.Signature(
+        bytesToNumberBE(signature.subarray(1, 33)),
+        bytesToNumberBE(signature.subarray(33, 65)),
+        recid
+      )
+      const compressed = recoveredSignature
+        .recoverPublicKey(message)
+        .toBytes(true)
       return new PublicKey(type, new Bytes(compressed))
     }
   }

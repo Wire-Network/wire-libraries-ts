@@ -6,10 +6,24 @@ import {
   isInstanceOf,
   ensure0x,
   dateToBlockTimestamp,
-  checkDateParse
+  checkDateParse,
+  directSignHash,
+  getCompressedPublicKey
 } from "@wireio/sdk-core/Utils"
 import { TimePoint } from "@wireio/sdk-core/chain/Time"
 import { BLOCK_TIMESTAMP_EPOCH_MS, BLOCK_TIMESTAMP_INTERVAL_MS } from "@wireio/sdk-core/chain/constants"
+import { KeyType } from "@wireio/sdk-core/chain/KeyType"
+
+const COMPATIBILITY_PRIVATE_KEY =
+  "0000000000000000000000000000000000000000000000000000000000000001"
+const COMPATIBILITY_DIGEST =
+  "5f78c33274e43fa9de5659265c1d917e25c03722dcb0b8d27db8d5feaa813953"
+const COMPATIBILITY_COMPRESSED_PUBLIC_KEY =
+  "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+const COMPATIBILITY_ETHEREUM_ADDRESS =
+  "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
+const COMPATIBILITY_ETHEREUM_SIGNATURE =
+  "0x4070df19dc43aa4eff59a9e7669e03260682bc99b92eb570306ab5fe1f1946dd36128a31acf71f0df1441a3961f0b456189baf55b59baa6654d178a0954383ee1b"
 
 describe("Utils", () => {
   describe("arrayEquals", () => {
@@ -126,6 +140,29 @@ describe("Utils", () => {
 
     it("handles empty string", () => {
       expect(ensure0x("")).toBe("0x")
+    })
+  })
+
+  describe("Noble curve utilities", () => {
+    it("compresses private and public keys compatibly", () => {
+      const fromPrivate = getCompressedPublicKey(
+        COMPATIBILITY_PRIVATE_KEY,
+        KeyType.K1,
+        true
+      )
+      const fromPublic = getCompressedPublicKey(fromPrivate, KeyType.K1)
+
+      expect(fromPrivate).toBe(COMPATIBILITY_COMPRESSED_PUBLIC_KEY)
+      expect(fromPublic).toBe(COMPATIBILITY_COMPRESSED_PUBLIC_KEY)
+    })
+
+    it("preserves direct Ethereum signing output", () => {
+      expect(
+        directSignHash(COMPATIBILITY_PRIVATE_KEY, COMPATIBILITY_DIGEST)
+      ).toEqual({
+        address: COMPATIBILITY_ETHEREUM_ADDRESS,
+        signature: COMPATIBILITY_ETHEREUM_SIGNATURE
+      })
     })
   })
 

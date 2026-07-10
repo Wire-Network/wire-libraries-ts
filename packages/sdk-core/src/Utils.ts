@@ -1,7 +1,7 @@
 import { ABISerializableObject } from "./serializer/Serializable.js"
 import rand from "brorand"
 import { Base58 } from "./Base58.js"
-import { getCurve } from "./crypto/Curves.js"
+import { getNobleCurve } from "./crypto/Curves.js"
 import { KeyType } from "./chain/KeyType.js"
 import { Name, NameType } from "./chain/Name.js"
 import { TimePoint } from "./chain/Time.js"
@@ -213,12 +213,13 @@ export const getCompressedPublicKey = (
   type: KeyType = KeyType.K1,
   isPrivate = false
 ): string => {
-  const ec = getCurve(type)
+  const curve = getNobleCurve(type)
   if (key.startsWith("0x")) key = key.slice(2)
-  const keyPair = isPrivate
-    ? ec.keyFromPrivate(key)
-    : ec.keyFromPublic(key, "hex")
-  return keyPair.getPublic(true, "hex")
+  const keyBytes = hexToArray(key)
+  const compressed = isPrivate
+    ? curve.getPublicKey(keyBytes, true)
+    : curve.Point.fromHex(keyBytes).toBytes(true)
+  return arrayToHex(compressed)
 }
 
 /**
@@ -232,21 +233,21 @@ export const getCompressedPublicKey = (
  * @returns {SignHash} An object containing the Ethereum signature and address.
  */
 export const directSignHash = (privateKey: string, hash: string): SignHash => {
-  const ec = getCurve(KeyType.EM)
+  const curve = getNobleCurve(KeyType.EM)
   if (privateKey.startsWith("0x")) privateKey = privateKey.slice(2)
   if (hash.startsWith("0x")) hash = hash.slice(2)
-  const keyPair = ec.keyFromPrivate(privateKey)
-  const sig = keyPair.sign(hash, "hex")
+  const privateKeyBytes = hexToArray(privateKey)
+  const signature = curve.sign(hexToArray(hash), privateKeyBytes, {
+    lowS: true
+  })
 
-  // Extract Ethereum address from the keyPair
-  const publicKey = keyPair.getPublic("hex").slice(2) // Remove the '04' prefix (uncompressed format)
-  const pubKeyHash = ethers.utils.keccak256(hexToArray(publicKey))
+  const publicKey = curve.getPublicKey(privateKeyBytes, false).subarray(1)
+  const pubKeyHash = ethers.utils.keccak256(publicKey)
   const address = "0x" + pubKeyHash.slice(-40) // Last 20 bytes as Ethereum address
 
-  // Convert r, s, and recovery param into the Ethereum Signature format
-  const r = sig.r.toString(16).padStart(64, "0")
-  const s = sig.s.toString(16).padStart(64, "0")
-  const v = (sig.recoveryParam || 0) + 27 // 27 or 28
+  const r = signature.r.toString(16).padStart(64, "0")
+  const s = signature.s.toString(16).padStart(64, "0")
+  const v = signature.recovery + 27 // 27 or 28
 
   return { signature: "0x" + r + s + v.toString(16), address }
 }

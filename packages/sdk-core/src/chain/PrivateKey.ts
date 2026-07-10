@@ -104,16 +104,17 @@ export class PrivateKey {
    * @returns PrivateKey object.
    */
   static fromMnemonic(phrase: Array<string> | string) {
-    const ec = new EC("secp256k1")
     const p = Array.isArray(phrase) ? phrase.join(" ") : phrase
     const wallet = ethers.Wallet.fromMnemonic(p)
-    const KP = ec.keyFromPrivate(hexToArray(wallet.privateKey.slice(2)))
-    const PK = PrivateKey.fromElliptic(KP, KeyType.K1)
+    const privateKey = new PrivateKey(
+      KeyType.K1,
+      new Bytes(hexToArray(wallet.privateKey.slice(2)))
+    )
 
     return {
       username: "",
       address: wallet.address,
-      private_key: PK
+      private_key: privateKey
     }
   }
 

@@ -1,6 +1,9 @@
 packages:
   - "packages/*"
   - "examples/*"
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - "@wireio/*"
 overrides:
   '@3fv/prelude-ts': ^0.8.41
   '@aws-sdk/client-firehose': 3.1080.0

@@ -1,7 +1,7 @@
 // src/crypto/generate.ts
 
 import { KeyType } from "../chain/KeyType.js"
-import { getCurve } from "./Curves.js"
+import { getNobleCurve } from "./Curves.js"
 import nacl from "tweetnacl"
 import { blsGenerate, skToLE } from "./BLS.js"
 
@@ -15,23 +15,14 @@ export function generate(type: KeyType): Uint8Array {
       return nacl.sign.keyPair().secretKey // 64-byte secretKey = 32b seed + 32b pubkey
 
     case KeyType.EM: {
-      // Ethereum-style secp256k1: generate 32 random bytes and validate on curve
-      const curve = getCurve(type)
-      let key: Uint8Array
-      do {
-        key = nacl.randomBytes(32)
-      } while (!curve.keyFromPrivate(key).validate().result)
-      return key
+      return getNobleCurve(type).utils.randomSecretKey()
     }
 
     case KeyType.BLS:
       return skToLE(blsGenerate())
 
     default: {
-      // ECDSA curves (K1, R1)
-      const curve = getCurve(type)
-      const privkey = curve.genKeyPair().getPrivate()
-      return privkey.toArrayLike(Uint8Array as any, "be", 32)
+      return getNobleCurve(type).utils.randomSecretKey()
     }
   }
 }

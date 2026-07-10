@@ -1,5 +1,4 @@
-import { ec } from "elliptic"
-import { getCurve } from "./Curves.js"
+import { getCurve, getNobleCurve } from "./Curves.js"
 import { KeyType } from "../chain/KeyType.js"
 import { SignatureParts } from "../chain/Signature.js"
 import nacl from "tweetnacl"
@@ -10,6 +9,10 @@ import { asOption, Option } from "@3fv/prelude-ts"
 import { match } from "ts-pattern"
 import { defaults } from "lodash"
 import { ChainKind } from "@wireio/opp-typescript-models"
+import { numberToBytesBE } from "@noble/curves/utils.js"
+
+/** Number of bytes in each ECDSA signature component. */
+const SIGNATURE_COMPONENT_BYTES = 32
 
 /**
  * Signs a message with a private key using various cryptographic algorithms.
@@ -62,29 +65,41 @@ export function sign<C extends ChainKind = ChainKind.UNKNOWN>(
       return { type, r: sigLE, s: new Uint8Array(0), recid: 0 }
     }
 
-    default: {
-      // ECDSA curves (K1, R1)
+    case KeyType.K1: {
       const curve = getCurve(type)
       const key = curve.keyFromPrivate(secret)
-      let sig: ec.Signature
+      let sig: ReturnType<typeof key.sign>
       let r: Uint8Array
       let s: Uint8Array
+      let attempt = 1
 
-      if (type === KeyType.K1) {
-        let attempt = 1
-
-        do {
-          sig = key.sign(message, { canonical: true, pers: [attempt++] })
-          r = sig.r.toArrayLike(Uint8Array as any, "be", 32)
-          s = sig.s.toArrayLike(Uint8Array as any, "be", 32)
-        } while (!isCanonical(r, s))
-      } else {
-        sig = key.sign(message, { canonical: true })
-        r = sig.r.toArrayLike(Uint8Array as any, "be", 32)
-        s = sig.s.toArrayLike(Uint8Array as any, "be", 32)
-      }
+      do {
+        sig = key.sign(message, { canonical: true, pers: [attempt++] })
+        r = sig.r.toArrayLike(
+          Uint8Array as any,
+          "be",
+          SIGNATURE_COMPONENT_BYTES
+        )
+        s = sig.s.toArrayLike(
+          Uint8Array as any,
+          "be",
+          SIGNATURE_COMPONENT_BYTES
+        )
+      } while (!isCanonical(r, s))
 
       return { type, r, s, recid: sig.recoveryParam || 0 }
+    }
+
+    default: {
+      const signature = getNobleCurve(type).sign(message, secret, {
+        lowS: true
+      })
+      return {
+        type,
+        r: numberToBytesBE(signature.r, SIGNATURE_COMPONENT_BYTES),
+        s: numberToBytesBE(signature.s, SIGNATURE_COMPONENT_BYTES),
+        recid: signature.recovery
+      }
     }
   }
 }
