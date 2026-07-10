@@ -35,6 +35,7 @@
   "scripts": {
     "compile": "tsc -b tsconfig.json",
     "compile:watch": "tsc -b tsconfig.json -w",
+    "typecheck:strict-null": "tsc -p tsconfig.strict-null.json",
     "test": "jest",
     "fix:hybrid:exports": "node ../../scripts/fix-hybrid-output.mjs ."
   },

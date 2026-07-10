@@ -5,9 +5,10 @@
     "compile": "tsc -b tsconfig.json",
     "compile:watch": "tsc -b tsconfig.json -w --preserveWatchOutput",
     "build": "pnpm run compile",
+    "typecheck:strict-null:sdk-core": "pnpm --dir packages/sdk-core run typecheck:strict-null",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "test": "pnpm run build && jest",
-    "test:ci": "pnpm run build && jest --reporters=default --reporters=jest-junit",
+    "test:ci": "pnpm run build && pnpm run typecheck:strict-null:sdk-core && jest --reporters=default --reporters=jest-junit",
     "clean": "./scripts/clean.sh && pnpm -r run clean"
   },
   "devDependencies": {

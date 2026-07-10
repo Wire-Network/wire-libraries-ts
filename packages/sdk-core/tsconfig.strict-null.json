@@ -1,0 +1,26 @@
+{
+  "extends": "../../etc/tsconfig/tsconfig.base.json",
+  "compilerOptions": {
+    "strictNullChecks": true,
+    "noEmit": true,
+    "composite": false,
+    "incremental": false,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "files": [
+    "src/chain/KeyType.ts",
+    "src/chain/PrivateKey.ts",
+    "src/chain/PublicKey.ts",
+    "src/chain/Signature.ts",
+    "src/crypto/BLS.ts",
+    "src/crypto/BLSSerdes.ts",
+    "src/crypto/Curves.ts",
+    "src/crypto/Generate.ts",
+    "src/crypto/GetPublic.ts",
+    "src/crypto/Recover.ts",
+    "src/crypto/SharedSecret.ts",
+    "src/crypto/Sign.ts",
+    "src/crypto/Verify.ts"
+  ]
+}
