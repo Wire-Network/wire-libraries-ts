@@ -274,7 +274,6 @@ describe("Background auto-lock", () => {
 
     const messages: BackgroundMessage[] = [
       { type: "GET_STATE" },
-      { type: "GET_ACCOUNTS" },
       { type: "SAVE_STATE", state: SAMPLE_STATE },
       {
         type: "SIGN_REQUEST",
@@ -293,6 +292,28 @@ describe("Background auto-lock", () => {
       })
     }, Promise.resolve())
     expect(createAlarm).toHaveBeenCalledTimes(messages.length)
+  })
+
+  it("does not refresh the deadline after a passive account read", async () => {
+    await sendMessage({
+      type: "SETUP",
+      password: "password",
+      initialState: SAMPLE_STATE
+    })
+    createAlarm.mockClear()
+    jest.setSystemTime(SESSION_START_MS + NEXT_OPERATION_OFFSET_MS)
+
+    await expect(sendMessage({ type: "GET_ACCOUNTS" })).resolves.toEqual({
+      success: true,
+      data: [{ id: SIGNING_ACCOUNT_ID, name: "account" }]
+    })
+    expect(createAlarm).not.toHaveBeenCalled()
+
+    jest.setSystemTime(SESSION_START_MS + EXPECTED_AUTO_LOCK_DURATION_MS)
+    await expect(sendMessage({ type: "IS_UNLOCKED" })).resolves.toEqual({
+      success: true,
+      data: false
+    })
   })
 
   it("does not refresh the deadline after a rejected signing request", async () => {

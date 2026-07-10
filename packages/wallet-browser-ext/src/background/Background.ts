@@ -119,7 +119,6 @@ async function handleMessage(
       if (!currentState) {
         return { success: false, error: "Wallet is locked" }
       }
-      resetLockTimer()
       const accounts = currentState.accounts.map(a => ({
         id: a.id,
         name: a.name

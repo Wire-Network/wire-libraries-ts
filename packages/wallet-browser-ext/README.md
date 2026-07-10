@@ -83,7 +83,7 @@ The background service worker is the single source of truth for wallet state. It
 - Persists state to `chrome.storage.local` as AES-GCM encrypted ciphertext.
 - Handles all sensitive operations: unlock, lock, save state, and transaction signing.
 - Signs transactions using `PrivateKey` from `@wireio/sdk-core`.
-- Enforces a 15-minute auto-lock timer that resets on every successful operation.
+- Enforces a sliding 15-minute inactivity timer without treating passive DApp account reads as activity.
 
 ### Content script (`src/content/`)
 
