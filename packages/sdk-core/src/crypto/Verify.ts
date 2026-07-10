@@ -1,4 +1,4 @@
-import { getCurve } from "./Curves.js"
+import { getNobleCurve } from "./Curves.js"
 import { KeyType } from "../chain/KeyType.js"
 import nacl from "tweetnacl"
 import { ethers } from "../EthersCompat.js"
@@ -35,11 +35,10 @@ export function verify(
       return blsVerify(signature, message, pubkey)
 
     default: {
-      // ECDSA verification using elliptic
-      const curve = getCurve(type)
-      const r = signature.subarray(1, 33)
-      const s = signature.subarray(33, 65)
-      return curve.verify(message, { r, s }, pubkey as any)
+      const compactSignature = signature.subarray(1)
+      return getNobleCurve(type).verify(compactSignature, message, pubkey, {
+        lowS: false
+      })
     }
   }
 }

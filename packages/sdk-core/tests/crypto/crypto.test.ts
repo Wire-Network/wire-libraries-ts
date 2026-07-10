@@ -14,8 +14,8 @@ import { sign } from "@wireio/sdk-core/crypto/Sign"
 import { verify } from "@wireio/sdk-core/crypto/Verify"
 import { recover } from "@wireio/sdk-core/crypto/Recover"
 import { sharedSecret } from "@wireio/sdk-core/crypto/SharedSecret"
-import { getCurve } from "@wireio/sdk-core/crypto/Curves"
-import { hexToArray } from "@wireio/sdk-core/Utils"
+import { getCurve, getNobleCurve } from "@wireio/sdk-core/crypto/Curves"
+import { arrayToHex, hexToArray } from "@wireio/sdk-core/Utils"
 
 function sha256(data: string): Uint8Array {
   return new Uint8Array(createHash("sha256").update(data).digest())
@@ -33,6 +33,30 @@ const EXTERNAL_EM_DIGEST_HEX =
   "5f78c33274e43fa9de5659265c1d917e25c03722dcb0b8d27db8d5feaa813953"
 const EXTERNAL_EM_DIGEST_SIGNATURE =
   "SIG_EM_04aa0eac2aceafd510b9f3c04c4afbecc499d127062d68e4c93d7ebfe44293e70c8b9c9b61b8a2c2b674313542916d191d9c444918820bfce0af0594c87165fb1c"
+const COMPATIBILITY_DIGEST = Checksum256.from(EXTERNAL_EM_DIGEST_HEX)
+const COMPATIBILITY_K1_SECRET = hexToArray(
+  "0000000000000000000000000000000000000000000000000000000000000001"
+)
+const COMPATIBILITY_K1_PEER_SECRET = hexToArray(
+  "0000000000000000000000000000000000000000000000000000000000000002"
+)
+const COMPATIBILITY_K1_SIGNATURE =
+  "SIG_K1_KVEsnUXKnwNxrw3z9ZSPrzaprNPrJfBYtWoNVf34kzoijiB2ffLeTqGx4RGyUwWKBZCDjAY17kh1bx8cAtZeUWNXsswb96"
+const COMPATIBILITY_K1_SHARED_SECRET =
+  "11a1adf935ed585ec673a7669031008168890c01adb0a7e4bdc5415f76186e027162dc961d2dc676a31caa14e07120ff4f7b44da25e64a934fc8cd815adc9ae5"
+const COMPATIBILITY_R1_SECRET = hexToArray(
+  "0000000000000000000000000000000000000000000000000000000000000003"
+)
+const COMPATIBILITY_R1_SIGNATURE =
+  "SIG_R1_Jwke3hu8GZprqPz2Dv97ENZ2aY3pEVpuNcxeJkfuvv3XUbp8nWFaZmgbF97Yx32brNEULsuco1RHtP97PqdPoC7WHqnueC"
+const COMPATIBILITY_MNEMONIC =
+  "test test test test test test test test test test test junk"
+const COMPATIBILITY_MNEMONIC_ADDRESS =
+  "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+const COMPATIBILITY_MNEMONIC_PRIVATE_KEY =
+  "PVT_K1_2JmTFo8knhffGK32o8vv4oRd8sA7MYo2xx1j4yhAPxN3JsLzv1"
+const COMPATIBILITY_MNEMONIC_PUBLIC_KEY =
+  "PUB_K1_7pyBBnwHmDD6tKMunrobP5mgbqWgei4GAx42c9Bof3kjSUdPTx"
 
 /** Convert SignatureParts to wire-format Uint8Array for low-level verify/recover. */
 function sigPartsToBytes(parts: {
@@ -102,6 +126,18 @@ describe("PrivateKey deterministic derivation", () => {
     const restored = PublicKey.from(pubKeyWifStr)
     expect(restored.data.array).toEqual(pubKey.data.array)
   })
+
+  test("mnemonic derivation preserves the default Ethereum path", () => {
+    const derived = PrivateKey.fromMnemonic(COMPATIBILITY_MNEMONIC)
+
+    expect(derived.address).toBe(COMPATIBILITY_MNEMONIC_ADDRESS)
+    expect(derived.private_key.toString()).toBe(
+      COMPATIBILITY_MNEMONIC_PRIVATE_KEY
+    )
+    expect(derived.private_key.toPublic().toString()).toBe(
+      COMPATIBILITY_MNEMONIC_PUBLIC_KEY
+    )
+  })
 })
 
 describe("PrivateKey sign and verify", () => {
@@ -127,6 +163,14 @@ describe("PrivateKey sign and verify", () => {
     const pub = pvt.toPublic()
     const sig = pvt.signMessage(message)
     expect(sig.verifyMessage(message, pub)).toBe(true)
+  })
+
+  test("R1 signature recovers correct public key", () => {
+    const pvt = PrivateKey.generate(KeyType.R1)
+    const pub = pvt.toPublic()
+    const sig = pvt.signMessage(message)
+    const recovered = sig.recoverMessage(message)
+    expect(recovered.data.array).toEqual(pub.data.array)
   })
 
   test("EM sign/verify message roundtrip", () => {
@@ -242,6 +286,28 @@ describe("PrivateKey sign and verify", () => {
     const wrong = new Uint8Array([0xca, 0xfe, 0xba, 0xbe])
     expect(sig.verifyMessage(wrong, pub)).toBe(false)
   })
+
+  test("K1 signatures preserve the elliptic compatibility vector", () => {
+    const privateKey = PrivateKey.regenerate(
+      KeyType.K1,
+      COMPATIBILITY_K1_SECRET
+    )
+
+    expect(privateKey.signDigest(COMPATIBILITY_DIGEST).toString()).toBe(
+      COMPATIBILITY_K1_SIGNATURE
+    )
+  })
+
+  test("R1 signatures preserve the Noble compatibility vector", () => {
+    const privateKey = PrivateKey.regenerate(
+      KeyType.R1,
+      COMPATIBILITY_R1_SECRET
+    )
+
+    expect(privateKey.signDigest(COMPATIBILITY_DIGEST).toString()).toBe(
+      COMPATIBILITY_R1_SIGNATURE
+    )
+  })
 })
 
 describe("PrivateKey shared secret", () => {
@@ -259,6 +325,18 @@ describe("PrivateKey shared secret", () => {
     const secretAB = a.sharedSecret(b.toPublic())
     const secretBA = b.sharedSecret(a.toPublic())
     expect(secretAB.array).toEqual(secretBA.array)
+  })
+
+  test("K1 ECDH preserves the hashed compatibility vector", () => {
+    const privateKey = PrivateKey.regenerate(
+      KeyType.K1,
+      COMPATIBILITY_K1_SECRET
+    )
+    const peer = PrivateKey.regenerate(KeyType.K1, COMPATIBILITY_K1_PEER_SECRET)
+
+    expect(arrayToHex(privateKey.sharedSecret(peer.toPublic()).array)).toBe(
+      COMPATIBILITY_K1_SHARED_SECRET
+    )
   })
 })
 
@@ -380,6 +458,20 @@ describe("crypto low-level functions", () => {
       const a = getCurve(KeyType.K1)
       const b = getCurve(KeyType.K1)
       expect(a).toBe(b)
+    })
+
+    test("returns cached Noble implementations", () => {
+      const k1 = getNobleCurve(KeyType.K1)
+      const em = getNobleCurve(KeyType.EM)
+      const r1 = getNobleCurve(KeyType.R1)
+
+      expect(k1).toBe(em)
+      expect(k1).toBe(getNobleCurve(KeyType.K1))
+      expect(r1).toBe(getNobleCurve(KeyType.R1))
+    })
+
+    test("rejects ED keys for Noble Weierstrass operations", () => {
+      expect(() => getNobleCurve(KeyType.ED)).toThrow()
     })
   })
 })

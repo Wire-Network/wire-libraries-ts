@@ -1,6 +1,7 @@
 import { BigNumber as EthersBigNumber } from "@ethersproject/bignumber"
 import { arrayify, hexlify } from "@ethersproject/bytes"
 import { hashMessage } from "@ethersproject/hash"
+import { defaultPath, HDNode } from "@ethersproject/hdnode"
 import { keccak256 } from "@ethersproject/keccak256"
 import { sha256 } from "@ethersproject/sha2"
 import {
@@ -9,8 +10,18 @@ import {
   recoverPublicKey
 } from "@ethersproject/signing-key"
 import { toUtf8Bytes } from "@ethersproject/strings"
-import { computeAddress } from "@ethersproject/transactions"
-import { Wallet, verifyMessage } from "@ethersproject/wallet"
+import { computeAddress, recoverAddress } from "@ethersproject/transactions"
+
+/** Derive the default Ethereum account from a mnemonic phrase. */
+const walletFromMnemonic = (
+  mnemonic: Parameters<typeof HDNode.fromMnemonic>[0]
+) => HDNode.fromMnemonic(mnemonic).derivePath(defaultPath)
+
+/** Recover the Ethereum address that signed a personal message. */
+const verifyMessage = (
+  message: Parameters<typeof hashMessage>[0],
+  signature: Parameters<typeof recoverAddress>[1]
+) => recoverAddress(hashMessage(message), signature)
 
 /**
  * Minimal ethers v5-compatible facade used by sdk-core without importing the
@@ -18,7 +29,9 @@ import { Wallet, verifyMessage } from "@ethersproject/wallet"
  */
 export const ethers = {
   BigNumber: EthersBigNumber,
-  Wallet,
+  Wallet: {
+    fromMnemonic: walletFromMnemonic
+  },
   utils: {
     SigningKey,
     arrayify,

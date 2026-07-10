@@ -1,7 +1,16 @@
 // src/crypto/shared-secret.ts
 
 import { KeyType } from "../chain/KeyType.js"
-import { getCurve } from "./Curves.js"
+import { getNobleCurve } from "./Curves.js"
+
+/** Number of prefix bytes in a compressed Weierstrass public key. */
+const COMPRESSED_PUBLIC_KEY_PREFIX_BYTES = 1
+
+/** Preserve elliptic's minimal big-endian shared-secret encoding. */
+function trimLeadingZeroBytes(value: Uint8Array): Uint8Array {
+  const firstNonzeroIndex = value.findIndex(byte => byte !== 0)
+  return firstNonzeroIndex > 0 ? value.subarray(firstNonzeroIndex) : value
+}
 
 /**
  * Derive shared secret for key pair.
@@ -23,11 +32,14 @@ export function sharedSecret(
       throw new Error("BLS does not support shared secret")
 
     default: {
-      // ECDSA curves (K1, R1, EM)
-      const curve = getCurve(type)
-      const priv = curve.keyFromPrivate(privkey)
-      const pub = curve.keyFromPublic(pubkey).getPublic()
-      return priv.derive(pub).toArrayLike(Uint8Array as any, "be")
+      const sharedPoint = getNobleCurve(type).getSharedSecret(
+        privkey,
+        pubkey,
+        true
+      )
+      return trimLeadingZeroBytes(
+        sharedPoint.subarray(COMPRESSED_PUBLIC_KEY_PREFIX_BYTES)
+      )
     }
   }
 }

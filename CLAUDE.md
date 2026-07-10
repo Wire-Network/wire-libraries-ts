@@ -5,7 +5,7 @@
 ## Build & Development
 
 ```bash
-pnpm install                # Install registry deps (pnpm 10.32.1, Node >=22)
+pnpm install                # Install registry deps (pnpm 10.34.5, Node >=22)
 # Link local OPP models from wire-sysio:
 WIRE_LINK_LOCAL_OPP_MODELS=1 pnpm install --lockfile=false
 pnpm build                  # Build all packages via tsc -b

@@ -1,5 +1,5 @@
 import { KeyType } from "../chain/KeyType.js"
-import { getCurve } from "./Curves.js"
+import { getNobleCurve } from "./Curves.js"
 import nacl from "tweetnacl"
 import { blsGetPublicKey, skFromLE } from "./BLS.js"
 
@@ -16,11 +16,7 @@ export function getPublic(privkey: Uint8Array, type: KeyType) {
       return blsGetPublicKey(skFromLE(privkey))
 
     default: {
-      // ECDSA public key via elliptic
-      const curve = getCurve(type)
-      const key = curve.keyFromPrivate(privkey)
-      const point = key.getPublic()
-      return new Uint8Array(point.encodeCompressed())
+      return getNobleCurve(type).getPublicKey(privkey, true)
     }
   }
 }
