@@ -157,6 +157,21 @@ describe("BLS integration with high-level classes", () => {
       expect(pvt.proofOfPossessionString).toBe(expectedPOP)
    })
 
+   test("Regenerated BLS private key derives proof from its stored data", () => {
+      const privateKey = PrivateKey.regenerate(KeyType.BLS, seed)
+      const replacementKey = PrivateKey.regenerate(
+         KeyType.BLS,
+         sha256("wire-replacement")
+      )
+
+      privateKey.data = replacementKey.data.copy()
+
+      expect(privateKey.toString()).toBe(replacementKey.toString())
+      expect(privateKey.proofOfPossessionString).toBe(
+         replacementKey.proofOfPossessionString
+      )
+   })
+
    test("BLS sign/verify roundtrip through high-level classes", () => {
       const pvt = PrivateKey.from(expectedPrivKey)
       const pub = pvt.toPublic()
