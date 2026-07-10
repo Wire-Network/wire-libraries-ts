@@ -3,7 +3,7 @@
   "name": "Wire Wallet",
   "version": "0.1.0",
   "description": "Developer wallet for the Wire blockchain network",
-  "permissions": ["storage", "activeTab"],
+  "permissions": ["storage", "activeTab", "alarms"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {

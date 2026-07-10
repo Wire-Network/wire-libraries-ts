@@ -23,6 +23,9 @@ export default (_, argv) => ({
   devtool: argv.mode === "development" ? "cheap-module-source-map" : false,
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
+    extensionAlias: {
+      ".js": [".ts", ".js"]
+    },
     alias: {
       // hash.js/elliptic use a `global` polyfill that calls
       // new Function("return this") — forbidden in MV3 extensions
