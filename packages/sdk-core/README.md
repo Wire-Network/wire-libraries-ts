@@ -54,7 +54,33 @@ const links = await authex.getLinks("alice")
 
 Current wire-sysio nodes expose `links` as a KV table. `AuthexClient` uses the deployed named indexes and JSON bounds, unwraps KV rows through `ChainAPI`, normalizes generated enum-name responses, and treats compressed/uncompressed EM public-key renderings as the same external key.
 
-The system contract descriptor registry includes `authex` and `msig`.
+The system contract descriptor registry includes `authex`, `msig`, and `reserv`.
+
+## Reserves
+
+`contracts.sysio.reserv` provides normalized reserve registry reads,
+chain/token and status filters, exact reserve lookup, WIRE-side activation, and
+read-only swap quotes. External-chain reserve creation and cancellation remain
+in the chain SDK that owns the deployed ABI or IDL.
+
+```ts
+const reserves = new contracts.sysio.reserv.ReserveClient({ client: api })
+const pending = await reserves.listReserves({
+  status: SysioReservReservestatus.RESERVE_STATUS_PENDING
+})
+
+const action = reserves.buildMatchReserveAction({
+  chainCode: "ETHEREUM",
+  tokenCode: "ETH",
+  reserveCode: "PRIMARY",
+  matcher: "alice",
+  wireAmount: pending[0].requestedWireAmount
+})
+```
+
+The generic descriptor registry also accepts
+`contracts.sysio.createClient({ client: api, name: "reserv" })` for typed public
+action and table access.
 
 ## Install
 

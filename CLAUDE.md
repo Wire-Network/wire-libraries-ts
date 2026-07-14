@@ -208,6 +208,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - The `fix-hybrid-output.mjs` script must run after every build of hybrid packages or ESM imports will break in Node
 - `packages/sdk-core/src/contracts/sysio/authex` owns `sysio.authex` action builders, link table reads, and create-link proof helpers. Consumers should not duplicate the `createlink` message/signature rules locally.
 - AuthEx `links` reads use wire-sysio KV `index_name` queries with JSON-encoded bounds. Preserve KV row unwrapping, generated enum-name normalization, and compressed/uncompressed EM key equivalence.
+- `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
 - Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch
 - Node >=22 required (package.json says >=22, README says >=24 — actual CI uses v24)
