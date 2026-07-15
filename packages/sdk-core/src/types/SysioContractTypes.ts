@@ -103,7 +103,6 @@ export interface SysioBiosBlockchainParametersType {
   max_block_net_usage: number | string
   target_block_net_usage_pct: number
   max_transaction_net_usage: number
-  base_per_transaction_net_usage: number
   net_usage_leeway: number
   context_free_discount_net_usage_num: number
   context_free_discount_net_usage_den: number
@@ -840,6 +839,7 @@ export interface SysioMsgchOutpostConsensusEntryType {
   epoch_index: number
   consensus_reached: boolean
   winning_checksum: string
+  envelope_digest: string
 }
 
 /** sysio.msgch::outpost_consensus_key (type) */
@@ -1894,7 +1894,6 @@ export interface SysioSystemBlockchainParametersType {
   max_block_net_usage: number | string
   target_block_net_usage_pct: number
   max_transaction_net_usage: number
-  base_per_transaction_net_usage: number
   net_usage_leeway: number
   context_free_discount_net_usage_num: number
   context_free_discount_net_usage_den: number
