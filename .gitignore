@@ -44,3 +44,6 @@ yarn-error.log*
 
 # JUnit test-result output (CI artifact)
 /reports/
+
+# oh-my-claudecode runtime state (operational artifacts, never committed)
+.omc/
