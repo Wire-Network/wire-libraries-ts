@@ -7,24 +7,29 @@
     "build": "pnpm run compile",
     "typecheck:strict-null:sdk-core": "pnpm --dir packages/sdk-core run typecheck:strict-null",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "lint": "eslint .",
     "test": "pnpm run build && jest",
     "test:ci": "pnpm run build && pnpm run typecheck:strict-null:sdk-core && jest --reporters=default --reporters=jest-junit",
     "clean": "./scripts/clean.sh && pnpm -r run clean"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/bluebird": "3.5.42",
-    "jest-junit": "^17.0.0",
     "@types/debug": "4.1.13",
     "@types/jest": "^30.0.0",
     "@types/lodash": "4.17.24",
     "@types/node": "25.5.0",
     "concurrently": "^9.2.1",
+    "eslint": "^10.7.0",
+    "eslint-config-prettier": "^10.1.8",
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
+    "jest-junit": "^17.0.0",
     "prettier": "^3.8.1",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.64.0"
   },
   "packageManager": "pnpm@10.34.5",
   "engines": {
