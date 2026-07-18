@@ -1,4 +1,4 @@
-/* eslint-disable typescript/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   FirehoseClient,
   PutRecordBatchInput

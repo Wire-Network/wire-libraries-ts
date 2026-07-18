@@ -580,6 +580,48 @@ export namespace KeyGenerator {
 
 ---
 
+## 16. Mechanical Style Laws (lint-enforced)
+
+`eslint.config.mjs` mechanically enforces the recurring violation classes —
+the SAME ban set as `wire-tools-ts` (the two repos share the law; a ban added
+there lands here in the same change). Pre-existing debt is grandfathered
+per-file in the config's RATCHET lists: touch a listed file → pay its debt →
+delete its entry; entries are never added.
+
+- **`match()` over `switch`** — always (`BanSwitch`; §1).
+- **No inline IIFEs** — extract a named local helper (`BanInlineIife`).
+- **No `| null` return-type ceremony** — `strictNullChecks` is off; the union
+  is unenforced clutter (`BanNullUnionReturn`; §12,
+  `prefer-null-over-undefined.md`).
+- **No inline (anonymous) object types** — every object shape gets a NAMED
+  interface/type (`BanInlineTypeLiteral`).
+- **No `Pick<T,K>` parameter contracts** — one field → the indexed-access type
+  (`T["field"]`), several optional fields → `Partial<T>`, otherwise `T`
+  (`BanPickParameter`; `no-pick-in-parameter-types.md`).
+- **String unions derive from enums** — a hand-written union of string
+  literals is a closed set without its enum. Declare the identity enum and use
+  its members; derive any needed union (`` `${Enum}` `` template — this repo's
+  own `LevelName` is the exemplar — `keyof typeof Enum`, or a union of
+  `Enum.member` types) (`BanStringLiteralUnion`;
+  `string-unions-derive-from-enums.md`).
+- **Never `asOption(await …).tap(…).get()`** — bind the awaited value and use
+  plain statements, or compose a genuine `Future` pipeline
+  (`BanAsOptionAwait`; §2).
+- **Destructuring over member-coalesce** — `const { member: local = Default }
+  = obj`, never `const local = obj.member ?? Default`
+  (`BanMemberCoalesceDeclarator`; §6).
+- **`assert*` never `require*`** for get-or-throw helpers (`id-match`;
+  `standard-names-not-invented.md`).
+- **No `src/` in import specifiers** (`no-restricted-imports`; §8).
+- **`console.*` is banned** outside the browser-context carve-outs and the
+  `ConsoleAppender` sink (`no-console`; §10, `use-logging-framework.md`).
+- **Never re-declare an existing shared symbol** — grep `@wireio/shared`,
+  the generated packages, and the local `utils/` before declaring any type,
+  enum, or constant; alias (`export import X = Y`) or derive instead
+  (`reuse-shared-symbols-never-redeclare.md`).
+
+---
+
 # Part 2 — Web (React + Redux Toolkit)
 
 Standard stack: **React** (function components + hooks), **Redux Toolkit** (RTK) for state, **RTK Query** for data fetching. No class components. No raw Redux.
