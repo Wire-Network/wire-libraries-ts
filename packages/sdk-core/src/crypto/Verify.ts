@@ -3,6 +3,7 @@ import { KeyType } from "../chain/KeyType.js"
 import nacl from "tweetnacl"
 import { ethers } from "../EthersCompat.js"
 import { blsVerify } from "./BLS.js"
+import { match } from "ts-pattern"
 
 /**
  * Verify signature using message and public key.
@@ -19,26 +20,22 @@ export function verify(
   pubkey: Uint8Array,
   type: KeyType
 ): boolean {
-  switch (type) {
-    case KeyType.ED: // ED25519 detached verification via tweetnacl
-      return nacl.sign.detached.verify(message, signature, pubkey)
-
-    case KeyType.EM: {
+  return match(type)
+    .with(KeyType.ED, () =>
+      nacl.sign.detached.verify(message, signature, pubkey)
+    )
+    .with(KeyType.EM, () => {
       const sigBytes = ethers.utils.arrayify(signature)
       const msgBytes = ethers.utils.arrayify(message)
       const recovered = ethers.utils.verifyMessage(msgBytes, sigBytes)
       const expected = ethers.utils.computeAddress(pubkey)
       return recovered.toLowerCase() === expected.toLowerCase()
-    }
-
-    case KeyType.BLS:
-      return blsVerify(signature, message, pubkey)
-
-    default: {
+    })
+    .with(KeyType.BLS, () => blsVerify(signature, message, pubkey))
+    .otherwise(() => {
       const compactSignature = signature.subarray(1)
       return getNobleCurve(type).verify(compactSignature, message, pubkey, {
         lowS: false
       })
-    }
-  }
+    })
 }

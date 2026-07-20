@@ -1,3 +1,4 @@
+import { match } from "ts-pattern"
 import { KeyType } from "../chain/KeyType.js"
 import { getNobleCurve } from "./Curves.js"
 import nacl from "tweetnacl"
@@ -8,15 +9,8 @@ import { blsGetPublicKey, skFromLE } from "./BLS.js"
  * @internal
  */
 export function getPublic(privkey: Uint8Array, type: KeyType) {
-  switch (type) {
-    case KeyType.ED: // Derive ED25519 public key via tweetnacl
-      return nacl.sign.keyPair.fromSecretKey(privkey).publicKey
-
-    case KeyType.BLS:
-      return blsGetPublicKey(skFromLE(privkey))
-
-    default: {
-      return getNobleCurve(type).getPublicKey(privkey, true)
-    }
-  }
+  return match(type)
+    .with(KeyType.ED, () => nacl.sign.keyPair.fromSecretKey(privkey).publicKey)
+    .with(KeyType.BLS, () => blsGetPublicKey(skFromLE(privkey)))
+    .otherwise(() => getNobleCurve(type).getPublicKey(privkey, true))
 }

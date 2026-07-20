@@ -112,13 +112,6 @@ const SwitchDebtFiles = [
   "packages/sdk-core/src/chain/PublicKey.ts",
   "packages/sdk-core/src/chain/Signature.ts",
   "packages/sdk-core/src/chain/Transaction.ts",
-  "packages/sdk-core/src/crypto/Curves.ts",
-  "packages/sdk-core/src/crypto/Generate.ts",
-  "packages/sdk-core/src/crypto/GetPublic.ts",
-  "packages/sdk-core/src/crypto/Recover.ts",
-  "packages/sdk-core/src/crypto/SharedSecret.ts",
-  "packages/sdk-core/src/crypto/Sign.ts",
-  "packages/sdk-core/src/crypto/Verify.ts",
   "packages/sdk-core/src/serializer/Builtins.ts",
   "packages/sdk-core/src/serializer/Decoder.ts",
   "packages/sdk-core/src/serializer/Encoder.ts",
@@ -166,7 +159,6 @@ const InlineTypeLiteralDebtFiles = [
   "packages/sdk-core/src/contracts/sysio/msig/Status.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Transaction.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Types.ts",
-  "packages/sdk-core/src/crypto/Curves.ts",
   "packages/sdk-core/src/p2p/Client.ts",
   "packages/sdk-core/src/p2p/Provider.ts",
   "packages/sdk-core/src/serializer/Builtins.ts",
@@ -223,7 +215,6 @@ const RuleDebt = [
       "examples/web-logging-example/src/web-logging-example.ts",
       "packages/sdk-core/src/Utils.ts",
       "packages/sdk-core/src/chain/PrivateKey.ts",
-      "packages/sdk-core/src/crypto/Sign.ts",
       "packages/sdk-core/tests/chain/Abi.test.ts",
       "packages/sdk-core/tests/chain/Asset.test.ts",
       "packages/sdk-core/tests/crypto/crypto.test.ts",
@@ -246,8 +237,7 @@ const RuleDebt = [
       "packages/sdk-core/src/api/Client.ts",
       "packages/sdk-core/src/chain/Abi.ts",
       "packages/sdk-core/src/chain/Bytes.ts",
-      "packages/sdk-core/src/chain/PublicKey.ts",
-      "packages/sdk-core/src/crypto/Sign.ts"
+      "packages/sdk-core/src/chain/PublicKey.ts"
     ]
   },
   {
