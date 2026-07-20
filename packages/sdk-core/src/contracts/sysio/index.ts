@@ -7,14 +7,17 @@ import {
 } from "../Contract.js"
 import { descriptor as authexDescriptor } from "./authex/Descriptor.js"
 import { descriptor as msigDescriptor } from "./msig/Descriptor.js"
+import { descriptor as reservDescriptor } from "./reserv/Descriptor.js"
 
 export * as authex from "./authex/index.js"
 export * as msig from "./msig/index.js"
+export * as reserv from "./reserv/index.js"
 
 /** System contract descriptors available to the generic client factory. */
 export const descriptors = {
   authex: authexDescriptor,
-  msig: msigDescriptor
+  msig: msigDescriptor,
+  reserv: reservDescriptor
 } as const
 
 /** Friendly system contract names registered with this package. */
@@ -26,7 +29,10 @@ export type SystemContractDescriptor<TName extends SystemContractName> =
 
 /** Typed client derived from a registered system contract descriptor. */
 export type SystemContractClient<TName extends SystemContractName> =
-  SystemContractDescriptor<TName> extends ContractDescriptor<infer TActions, infer TTables>
+  SystemContractDescriptor<TName> extends ContractDescriptor<
+    infer TActions,
+    infer TTables
+  >
     ? ContractClient<TActions, TTables>
     : never
 
