@@ -5,12 +5,15 @@ import {
   createContractClient,
   type ContractDescriptor
 } from "../Contract.js"
+import { descriptor as authexDescriptor } from "./authex/Descriptor.js"
 import { descriptor as msigDescriptor } from "./msig/Descriptor.js"
 
+export * as authex from "./authex/index.js"
 export * as msig from "./msig/index.js"
 
 /** System contract descriptors available to the generic client factory. */
 export const descriptors = {
+  authex: authexDescriptor,
   msig: msigDescriptor
 } as const
 

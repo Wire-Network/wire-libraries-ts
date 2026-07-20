@@ -603,6 +603,8 @@ export interface GetTableRowsParams<Index = TableIndexType | string> {
     | "eighth"
     | "ninth"
     | "tenth"
+  /** Named KV secondary index used by current wire-sysio nodes. */
+  index_name?: string
   /**
    * Whether node should try to decode row data using code abi.
    * Determined automatically based the `type` param if omitted.

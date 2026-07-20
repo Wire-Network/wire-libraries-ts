@@ -43,6 +43,19 @@ The multisig module supports:
 
 Native account authority multisig is separate from `sysio.msig` proposal workflows and remains modeled by the core authority types.
 
+## AuthEx
+
+`contracts.sysio.authex` provides UI-neutral helpers for `sysio.authex` external-wallet links. It includes typed action builders, `links` table reads, create-link message/signature preparation for EVM and Solana, and an `AuthexClient` that can build or push `createlink` actions when supplied a signed `APIClient`.
+
+```ts
+const authex = new contracts.sysio.authex.AuthexClient({ client: api })
+const links = await authex.getLinks("alice")
+```
+
+Current wire-sysio nodes expose `links` as a KV table. `AuthexClient` uses the deployed named indexes and JSON bounds, unwraps KV rows through `ChainAPI`, normalizes generated enum-name responses, and treats compressed/uncompressed EM public-key renderings as the same external key.
+
+The system contract descriptor registry includes `authex` and `msig`.
+
 ## Install
 
 ```sh
