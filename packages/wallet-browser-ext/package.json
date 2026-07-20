@@ -1,6 +1,6 @@
 {
   "name": "@wireio/wallet-browser-ext",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "private": true,
   "types": "lib/esm/Types.d.ts",
   "main": "lib/cjs/Types.js",
