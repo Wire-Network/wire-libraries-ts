@@ -1,13 +1,13 @@
-import { buildContractAction } from "../../Contract.js"
 import type { Action } from "../../../chain/Action.js"
 import { Name } from "../../../chain/Name.js"
 import { PermissionLevel } from "../../../chain/PermissionLevel.js"
 import { PublicKey } from "../../../chain/PublicKey.js"
 import { Signature } from "../../../chain/Signature.js"
 import type * as SysioContracts from "../../../types/SysioContractTypes.js"
+import { SysioContractName } from "../../../types/SysioContractTypes.js"
+import { assertEncodedAction, getSysioContract } from "../Client.js"
 
 import { DEFAULT_AUTHEX_CONTRACT } from "./Constants.js"
-import { descriptor as authexDescriptor } from "./Descriptor.js"
 import {
   AuthexClearLinks,
   AuthexCreateLink,
@@ -41,17 +41,18 @@ export function buildCreateLinkAction(
 ): Action {
   const account = Name.from(options.account)
 
-  return buildContractAction({
-    contract: options.contract || DEFAULT_AUTHEX_CONTRACT,
-    descriptor: authexDescriptor.actions.createlink,
-    authorization: [
-      PermissionLevel.from({
-        actor: account,
-        permission: options.permission || "active"
-      })
-    ],
-    data: createLinkActionData(options)
-  })
+  return assertEncodedAction(
+    getSysioContract(SysioContractName.authex, {
+      contract: options.contract || DEFAULT_AUTHEX_CONTRACT
+    }).actions.createlink.prepare(createLinkActionData(options), {
+      authorization: [
+        PermissionLevel.from({
+          actor: account,
+          permission: options.permission || "active"
+        })
+      ]
+    })
+  )
 }
 
 /** Builds generated action data for `sysio.authex::recordlink`. */
@@ -69,17 +70,19 @@ export function recordLinkActionData(
 export function buildRecordLinkAction(
   options: BuildRecordLinkActionOptions
 ): Action {
-  return buildContractAction({
-    contract: options.contract || DEFAULT_AUTHEX_CONTRACT,
-    descriptor: authexDescriptor.actions.recordlink,
-    authorization: [
-      PermissionLevel.from({
-        actor: options.contract || DEFAULT_AUTHEX_CONTRACT,
-        permission: "active"
-      })
-    ],
-    data: recordLinkActionData(options)
-  })
+  const contract = options.contract || DEFAULT_AUTHEX_CONTRACT
+  return assertEncodedAction(
+    getSysioContract(SysioContractName.authex, {
+      contract
+    }).actions.recordlink.prepare(recordLinkActionData(options), {
+      authorization: [
+        PermissionLevel.from({
+          actor: contract,
+          permission: "active"
+        })
+      ]
+    })
+  )
 }
 
 /** Builds an unsigned testing-only `sysio.authex::clearlinks` action. */
@@ -88,17 +91,21 @@ export function buildClearLinksAction(
 ): Action {
   const contract = options.contract || DEFAULT_AUTHEX_CONTRACT
 
-  return buildContractAction({
-    contract,
-    descriptor: authexDescriptor.actions.clearlinks,
-    authorization: [
-      PermissionLevel.from({
-        actor: contract,
-        permission: "active"
-      })
-    ],
-    data: {}
-  })
+  return assertEncodedAction(
+    getSysioContract(SysioContractName.authex, {
+      contract
+    }).actions.clearlinks.prepare(
+      {},
+      {
+        authorization: [
+          PermissionLevel.from({
+            actor: contract,
+            permission: "active"
+          })
+        ]
+      }
+    )
+  )
 }
 
 /** Runtime action data serializers keyed by `sysio.authex` action name. */

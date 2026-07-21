@@ -1,11 +1,11 @@
-import { buildContractAction } from "../../Contract.js"
 import type { Action } from "../../../chain/Action.js"
 import { Name } from "../../../chain/Name.js"
 import { PermissionLevel } from "../../../chain/PermissionLevel.js"
 import type * as SysioContracts from "../../../types/SysioContractTypes.js"
+import { SysioContractName } from "../../../types/SysioContractTypes.js"
+import { assertEncodedAction, getSysioContract } from "../Client.js"
 
 import { DEFAULT_RESERV_CONTRACT } from "./Constants.js"
-import { descriptor as reservDescriptor } from "./Descriptor.js"
 import { reserveSlugData } from "./Slug.js"
 import type { MatchReserveOptions, ReserveQuoteOptions } from "./Types.js"
 
@@ -14,9 +14,7 @@ interface Stringifiable {
   toString(): string
 }
 
-function amountString(
-  value: number | string | bigint | Stringifiable
-): string {
+function amountString(value: number | string | bigint | Stringifiable): string {
   return value.toString()
 }
 
@@ -37,17 +35,18 @@ export function matchReserveActionData(
 export function buildMatchReserveAction(options: MatchReserveOptions): Action {
   const matcher = Name.from(options.matcher)
 
-  return buildContractAction({
-    contract: options.contract || DEFAULT_RESERV_CONTRACT,
-    descriptor: reservDescriptor.actions.matchreserve,
-    authorization: [
-      PermissionLevel.from({
-        actor: matcher,
-        permission: options.permission || "active"
-      })
-    ],
-    data: matchReserveActionData(options)
-  })
+  return assertEncodedAction(
+    getSysioContract(SysioContractName.reserv, {
+      contract: options.contract || DEFAULT_RESERV_CONTRACT
+    }).actions.matchreserve.prepare(matchReserveActionData(options), {
+      authorization: [
+        PermissionLevel.from({
+          actor: matcher,
+          permission: options.permission || "active"
+        })
+      ]
+    })
+  )
 }
 
 /** Builds generated action data for read-only `sysio.reserv::swapquote`. */
@@ -67,10 +66,9 @@ export function swapQuoteActionData(
 
 /** Builds an unsigned read-only `sysio.reserv::swapquote` action. */
 export function buildSwapQuoteAction(options: ReserveQuoteOptions): Action {
-  return buildContractAction({
-    contract: options.contract || DEFAULT_RESERV_CONTRACT,
-    descriptor: reservDescriptor.actions.swapquote,
-    authorization: [],
-    data: swapQuoteActionData(options)
-  })
+  return assertEncodedAction(
+    getSysioContract(SysioContractName.reserv, {
+      contract: options.contract || DEFAULT_RESERV_CONTRACT
+    }).actions.swapquote.prepare(swapQuoteActionData(options))
+  )
 }
