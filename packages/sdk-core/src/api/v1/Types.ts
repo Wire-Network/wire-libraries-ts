@@ -152,8 +152,8 @@ export class AccountObject extends Struct {
   @Struct.field("bool") declare privileged: boolean
   /** Last update to accounts contract as unix timestamp. */
   @Struct.field("time_point") declare last_code_update: TimePoint
-  /** Account created as unix timestamp. */
-  @Struct.field("time_point") declare created: TimePoint
+  /** Account creation timestamp, omitted by some valid system-account responses. */
+  @Struct.field("time_point", { optional: true }) declare created: TimePoint | null
   /** Account core token balance */
   @Struct.field("asset?") core_liquid_balance?: Asset
   @Struct.field("int64") declare ram_quota: Int64
