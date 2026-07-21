@@ -1,3 +1,5 @@
+import { identity } from "lodash"
+
 import { ABIDecoder } from "./Decoder.js"
 import { ABIEncoder } from "./Encoder.js"
 import { ABIField, ABISerializableConstructor } from "./Serializable.js"
@@ -35,7 +37,7 @@ const StringType = {
   fromABI: (decoder: ABIDecoder) => {
     return decoder.readString()
   },
-  from: (string: string): string => string,
+  from: identity<string>,
   toABI: (string: string, encoder: ABIEncoder) => {
     encoder.writeString(string)
   }
@@ -47,7 +49,7 @@ const BoolType = {
   fromABI: (decoder: ABIDecoder) => {
     return decoder.readByte() !== BOOL_FALSE_BYTE
   },
-  from: (value: boolean): boolean => value,
+  from: identity<boolean>,
   toABI: (value: boolean, encoder: ABIEncoder) => {
     encoder.writeByte(value === true ? BOOL_TRUE_BYTE : BOOL_FALSE_BYTE)
   }

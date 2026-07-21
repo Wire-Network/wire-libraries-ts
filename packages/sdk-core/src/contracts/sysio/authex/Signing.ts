@@ -157,12 +157,16 @@ export function createLinkSignatureFromRaw(
   return new Signature(KeyType.ED, Bytes.from(signature96))
 }
 
+/** Options for {@link signCreateLink} — the create-link inputs plus the external signer. */
+export interface SignCreateLinkOptions
+  extends Omit<PrepareCreateLinkOptions, "publicKey"> {
+  signer: SignerProvider
+  publicKey?: PublicKeyType
+}
+
 /** Signs the create-link proof with the supplied external-wallet signer. */
 export async function signCreateLink(
-  options: Omit<PrepareCreateLinkOptions, "publicKey"> & {
-    signer: SignerProvider
-    publicKey?: PublicKeyType
-  }
+  options: SignCreateLinkOptions
 ): Promise<SignedCreateLinkProof> {
   const prepared = prepareCreateLink({
       account: options.account,

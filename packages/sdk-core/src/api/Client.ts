@@ -1,3 +1,5 @@
+import { NestedError } from "@wireio/shared"
+
 import { APIProvider, FetchProvider, FetchProviderOptions } from "./Provider.js"
 import {
   ABISerializableConstructor,
@@ -258,7 +260,7 @@ export class APIClient {
         const msg = details
           .map((d: any) => d.message.replace(/Error:/g, "").trim())
           .join(", ")
-        throw new Error(msg)
+        throw new NestedError(msg, { cause: e })
       } else throw e
     }
   }
@@ -294,10 +296,9 @@ export class APIClient {
               .trim()
           )
           .join(", ")
-        throw new Error(msg)
+        throw new NestedError(msg, { cause: e })
       } else {
-        const msg = e.message.replace(/Error:/g, "") || e
-        throw new Error(msg)
+        throw new NestedError("pushTransaction failed", { cause: e })
       }
     }
   }
@@ -325,7 +326,7 @@ export class APIClient {
 
     const { msgBytes } = transaction.signingDigest(info.chain_id, keyType)
     const sigBytes = await this.signer.sign(msgBytes).catch(err => {
-      throw new Error(err)
+      throw new NestedError("transaction signing failed", { cause: err })
     })
     const signature = Signature.fromRaw(sigBytes, keyType)
     return SignedTransaction.from({ ...transaction, signatures: [signature] })

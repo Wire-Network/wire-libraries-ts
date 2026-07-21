@@ -210,7 +210,7 @@ export class AuthexClient {
   async getLink(
     account: NameType,
     chainKind: SysioContracts.SysioAuthexChainkind
-  ): Promise<SysioContracts.SysioAuthexLinksSType | null> {
+  ): Promise<SysioContracts.SysioAuthexLinksSType> {
     const links = await this.getLinks(account)
     return (
       links.find(row => authExChainKindValue(row.chain_kind) === chainKind) ||
@@ -221,7 +221,7 @@ export class AuthexClient {
   /** Reads the first link matching an external public key using the `bypubkey` index. */
   async getLinkByPublicKey(
     publicKey: PublicKeyType
-  ): Promise<SysioContracts.SysioAuthexLinksSType | null> {
+  ): Promise<SysioContracts.SysioAuthexLinksSType> {
     const key = PublicKey.from(publicKey),
       hash = publicKeyHash(key),
       result = await this.contractClient.tables.links.rows<string>({

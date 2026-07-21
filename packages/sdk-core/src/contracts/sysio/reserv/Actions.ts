@@ -9,8 +9,13 @@ import { descriptor as reservDescriptor } from "./Descriptor.js"
 import { reserveSlugData } from "./Slug.js"
 import type { MatchReserveOptions, ReserveQuoteOptions } from "./Types.js"
 
+/** Any value with a string form — an amount as a number, string, bigint, or a BN/Decimal-like object. */
+interface Stringifiable {
+  toString(): string
+}
+
 function amountString(
-  value: number | string | bigint | { toString(): string }
+  value: number | string | bigint | Stringifiable
 ): string {
   return value.toString()
 }

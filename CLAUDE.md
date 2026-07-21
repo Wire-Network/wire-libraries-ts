@@ -12,6 +12,7 @@ pnpm build                  # Build all packages via tsc -b
 pnpm build:dev              # Watch mode (incremental)
 pnpm test                   # Build + jest (all packages)
 pnpm format                 # Prettier on **/*.{ts,tsx,md}
+pnpm lint                    # ESLint (eslint.config.mjs) — no-restricted-syntax bans + typescript-eslint
 ```
 
 Per-package commands (run from package directory):
@@ -92,7 +93,7 @@ Assets (Rust runtime, Solidity templates, Handlebars templates) are embedded via
 
 ## Code Style & Approach
 
-Enforced by Prettier (`.prettierrc.js`):
+Enforced by Prettier (`.prettierrc.js`) + ESLint (`eslint.config.mjs`):
 - **modern code** Use forEach, ... (spreads), map, filter, and reduce modern paradigms instead of for loops and other legacy style code
 - **OPP & FP (functional programming)** is preferred over old-school if/else/switch and generally branching code.
     - Use `Future` from `@3fv/prelude-ts` for async flows.
@@ -104,7 +105,7 @@ Enforced by Prettier (`.prettierrc.js`):
 - No trailing commas
 - 2-space indent, no tabs
 - Arrow parens: avoid when possible
-- No ESLint configured
+- **ESLint is configured** (`eslint.config.mjs`, run via `pnpm lint` = `eslint .`) — a flat config **copied from `wire-tools-ts`** that encodes the same `no-restricted-syntax` bans (`BanSwitch`, `BanInlineIife`, `BanNullUnionReturn`, `BanInlineTypeLiteral`, `BanPickParameter`, `BanStringLiteralUnion`, `BanAsOptionAwait`, `BanMemberCoalesceDeclarator`) on top of `typescript-eslint`'s recommended set. The per-selector grandfather debt-file lists are **ratchets**: touching a listed file pays down its debt and deletes its entry — never add one.
 
 ## Code Quality Invariants
 

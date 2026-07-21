@@ -236,7 +236,7 @@ export class ReserveClient {
   }
 
   /** Reads one reserve by its three-part identity, or null when absent. */
-  async getReserve(identity: ReserveIdentity): Promise<ReserveRecord | null> {
+  async getReserve(identity: ReserveIdentity): Promise<ReserveRecord> {
     const reserveCode = reserveSlugValue(identity.reserveCode),
       rows = await this.listReserveRows({
         chainCode: identity.chainCode,
