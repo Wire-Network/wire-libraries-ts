@@ -50,9 +50,7 @@ ABI can encode the action. If synchronous encoding is unavailable or fails, it
 returns the same generated data as a typed `AnyAction`; `APIClient` resolves the
 deployed ABI when that payload is invoked or pushed. Authorization is empty by
 default and must be supplied explicitly for writes. The legacy named factory and
-callable action shorthand remain available for encoded descriptor-backed
-contracts; the old `descriptors` export is retained as a deprecated migration
-surface.
+callable action shorthand remain available for locally encoded actions.
 
 The `AuthexClient`, `MsigClient`, and `ReserveClient` classes remain the public
 domain facades for proof creation, proposal compatibility, reserve
@@ -95,7 +93,7 @@ const pending = await reserves.listReserves({
   status: SysioReservReservestatus.RESERVE_STATUS_PENDING
 })
 
-const action = reserves.buildMatchReserveAction({
+await reserves.pushMatchReserve({
   chainCode: "ETHEREUM",
   tokenCode: "ETH",
   reserveCode: "PRIMARY",

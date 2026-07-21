@@ -41,24 +41,6 @@ export interface BuildCreateLinkActionOptions {
   contract?: NameType
 }
 
-/** Options for building `sysio.authex::recordlink`. */
-export interface BuildRecordLinkActionOptions {
-  /** Wire account being linked. */
-  account: NameType
-  /** External chain kind, currently EVM or SVM. */
-  chainKind: AuthexChainKind
-  /** External-chain public key in Wire public-key format. */
-  publicKey: PublicKeyType
-  /** AuthEx contract account override. Defaults to `sysio.authex`. */
-  contract?: NameType
-}
-
-/** Options for building `sysio.authex::clearlinks`. */
-export interface BuildClearLinksActionOptions {
-  /** AuthEx contract account override. Defaults to `sysio.authex`. */
-  contract?: NameType
-}
-
 /** Data needed before asking an external wallet for its create-link proof. */
 export interface PreparedCreateLink {
   /** Wire account being linked. */
@@ -94,8 +76,10 @@ export interface SignedCreateLinkProof extends PreparedCreateLink {
 }
 
 /** Options for signing and building `sysio.authex::createlink`. */
-export interface CreateLinkWithSignerOptions
-  extends Omit<PrepareCreateLinkOptions, "publicKey"> {
+export interface CreateLinkWithSignerOptions extends Omit<
+  PrepareCreateLinkOptions,
+  "publicKey"
+> {
   /** Signer for the external wallet being linked. */
   signer: SignerProvider
   /** External-chain public key. Defaults to `signer.pubKey`. */

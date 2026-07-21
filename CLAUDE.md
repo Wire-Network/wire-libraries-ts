@@ -210,6 +210,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - `packages/sdk-core/src/contracts/sysio/authex` owns `sysio.authex` action builders, link table reads, and create-link proof helpers. Consumers should not duplicate the `createlink` message/signature rules locally.
 - AuthEx `links` reads use wire-sysio KV `index_name` queries with JSON-encoded bounds. Preserve KV row unwrapping, generated enum-name normalization, and compressed/uncompressed EM key equivalence.
 - `packages/sdk-core/src/contracts/sysio/Client.ts` is the generic transport facade for every generated system contract. Keep action/table names sourced from `SysioContractDefinitions`; keep workflow behavior in the `authex`, `msig`, and `reserv` domain clients.
+- `packages/sdk-core/src/contracts/sysio/Codecs.ts` is the only hand-written system-action codec registry. Add entries only when synchronous action construction is required; generated actions without a codec must retain the `AnyAction` fallback.
 - System-contract `prepare` prefers synchronous ABI encoding but must retain a typed `AnyAction` fallback so `APIClient` can resolve the deployed ABI. Never invent a default write authorization in the public SDK.
 - `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3

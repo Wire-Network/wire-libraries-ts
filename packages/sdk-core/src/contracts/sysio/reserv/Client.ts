@@ -14,7 +14,7 @@ import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 import type { ContractTableRowsOptions } from "../../Contract.js"
 import { getSysioContract, type SysioContractClient } from "../Client.js"
 
-import { buildMatchReserveAction, buildSwapQuoteAction } from "./Actions.js"
+import { buildSwapQuoteAction, matchReserveActionData } from "./Actions.js"
 import {
   DEFAULT_RESERV_CONTRACT,
   DEFAULT_RESERVE_QUERY_LIMIT
@@ -22,7 +22,6 @@ import {
 import { reserveSlugString, reserveSlugValue } from "./Slug.js"
 import type {
   ListReservesOptions,
-  MatchReserveOptions,
   PushMatchReserveOptions,
   ReserveClientOptions,
   ReserveIdentity,
@@ -255,31 +254,29 @@ export class ReserveClient {
     }
   }
 
-  /** Builds an unsigned Wire action that funds and activates a pending reserve. */
-  buildMatchReserveAction(options: MatchReserveOptions): Action {
-    return buildMatchReserveAction({ contract: this.contract, ...options })
-  }
-
   /** Builds and pushes a signed Wire transaction that activates a pending reserve. */
   async pushMatchReserve(
     options: PushMatchReserveOptions,
     pushOptions: TransactionExtraOptions = options.pushOptions || {}
   ): Promise<Awaited<ReturnType<APIClient["pushTransaction"]>>> {
-    return this.client.pushTransaction(
-      this.buildMatchReserveAction(options),
-      pushOptions
+    return this.contractClient.actions.matchreserve.invoke(
+      matchReserveActionData(options),
+      {
+        authorization: [
+          {
+            actor: options.matcher,
+            permission: options.permission || "active"
+          }
+        ],
+        pushOptions
+      }
     )
-  }
-
-  /** Builds an unsigned read-only quote action using the deployed reserve curve. */
-  buildSwapQuoteAction(options: ReserveQuoteOptions): Action {
-    return buildSwapQuoteAction({ contract: this.contract, ...options })
   }
 
   /** Reads the current on-chain quote for one reserve route. */
   async getSwapQuote(options: ReserveQuoteOptions): Promise<bigint> {
     const response = await this.sendReadOnlyAction(
-      this.buildSwapQuoteAction(options)
+      buildSwapQuoteAction({ contract: this.contract, ...options })
     )
     return decodeReserveUInt64Return(response)
   }
