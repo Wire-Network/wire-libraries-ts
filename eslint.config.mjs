@@ -189,7 +189,6 @@ const InlineIifeDebtFiles = ["packages/wallet-browser-ext/src/inject/Provider.ts
 const NullUnionReturnDebtFiles = [
   "packages/sdk-core/src/contracts/Contract.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Capabilities.ts",
-  "packages/sdk-core/src/contracts/sysio/msig/Client.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Hash.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Proposal.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Status.ts",
@@ -219,7 +218,6 @@ const InlineTypeLiteralDebtFiles = [
   "packages/sdk-core/src/common/Connect.ts",
   "packages/sdk-core/src/common/Types.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Capabilities.ts",
-  "packages/sdk-core/src/contracts/sysio/msig/Client.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Proposal.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Status.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Transaction.ts",
@@ -261,7 +259,6 @@ const StringLiteralUnionDebtFiles = [
   "packages/sdk-core/src/common/Logo.ts",
   "packages/sdk-core/src/contracts/Contract.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Capabilities.ts",
-  "packages/sdk-core/src/contracts/sysio/msig/Client.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Types.ts",
   "packages/shared/src/logging/context/LogContext.ts",
   "packages/wallet-browser-ext/src/popup/slices/WalletSlice.ts",
@@ -332,7 +329,6 @@ const RuleDebt = [
     files: [
       "packages/sdk-core/src/api/Client.ts",
       "packages/sdk-core/src/chain/PrivateKey.ts",
-      "packages/sdk-core/src/contracts/sysio/msig/Client.ts",
       "packages/shared/src/node/logging/appenders/FileAppender.ts"
     ]
   },

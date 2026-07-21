@@ -7,12 +7,12 @@ import { Checksum256 } from "../../../chain/Checksum.js"
 import { KeyType } from "../../../chain/KeyType.js"
 import { Name, type NameType } from "../../../chain/Name.js"
 import { PublicKey, type PublicKeyType } from "../../../chain/PublicKey.js"
-import { SysioAuthexChainkind } from "../../../types/SysioContractTypes.js"
 import {
-  ContractClient,
-  createContractClient,
-  type ContractTableRowsOptions
-} from "../../Contract.js"
+  SysioAuthexChainkind,
+  SysioContractName
+} from "../../../types/SysioContractTypes.js"
+import type { ContractTableRowsOptions } from "../../Contract.js"
+import { getSysioContract, type SysioContractClient } from "../Client.js"
 
 import {
   buildClearLinksAction,
@@ -24,11 +24,6 @@ import {
   AUTHEX_LINKS_BY_PUBLIC_KEY_INDEX,
   DEFAULT_AUTHEX_CONTRACT
 } from "./Constants.js"
-import {
-  descriptor,
-  type SysioAuthexActionData,
-  type SysioAuthexTableRows
-} from "./Descriptor.js"
 import { signCreateLink } from "./Signing.js"
 import type {
   AuthexClientOptions,
@@ -96,19 +91,15 @@ export class AuthexClient {
   readonly contract: NameType
 
   /** Generic typed contract client for direct action/table access. */
-  readonly contractClient: ContractClient<
-    SysioAuthexActionData,
-    SysioAuthexTableRows
-  >
+  readonly contractClient: SysioContractClient<SysioContractName.authex>
 
   /** Creates an AuthEx client. */
   constructor(config: AuthexClientOptions) {
     this.client = config.client
     this.contract = config.contract || DEFAULT_AUTHEX_CONTRACT
-    this.contractClient = createContractClient({
+    this.contractClient = getSysioContract(SysioContractName.authex, {
       client: config.client,
-      contract: this.contract,
-      descriptor
+      contract: this.contract
     })
   }
 
@@ -182,7 +173,7 @@ export class AuthexClient {
   async listLinks(
     options: ContractTableRowsOptions = {}
   ): Promise<SysioContracts.SysioAuthexLinksSType[]> {
-    const result = await this.contractClient.tables.links.rows({
+    const result = await this.contractClient.tables.links.query({
       limit: 100,
       ...options
     })
@@ -197,7 +188,7 @@ export class AuthexClient {
   ): Promise<SysioContracts.SysioAuthexLinksSType[]> {
     const name = accountString(account),
       nameValue = Name.from(account).value.toString(),
-      result = await this.contractClient.tables.links.rows<string>({
+      result = await this.contractClient.tables.links.query<string>({
         index_name: AUTHEX_LINKS_BY_NAME_INDEX,
         lower_bound: jsonIndexBound(AUTHEX_LINKS_BY_NAME_INDEX, nameValue),
         limit: options.limit || 100
@@ -224,7 +215,7 @@ export class AuthexClient {
   ): Promise<SysioContracts.SysioAuthexLinksSType> {
     const key = PublicKey.from(publicKey),
       hash = publicKeyHash(key),
-      result = await this.contractClient.tables.links.rows<string>({
+      result = await this.contractClient.tables.links.query<string>({
         index_name: AUTHEX_LINKS_BY_PUBLIC_KEY_INDEX,
         lower_bound: jsonIndexBound(
           AUTHEX_LINKS_BY_PUBLIC_KEY_INDEX,

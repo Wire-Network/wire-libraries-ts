@@ -19,21 +19,49 @@ const client = new contracts.sysio.msig.MsigClient({ client: api })
 const detail = await client.getProposalDetail("alice", "upgrade1")
 ```
 
-System contract descriptors also feed a generic typed client factory. The current registry includes `sysio.msig`; future generated metadata can add the rest of the system contracts without changing the factory shape.
+## Generated system-contract proxy
+
+`contracts.sysio.createClient({ client })` exposes every contract in the
+generated `SysioContractDefinitions` registry. Contract, action, and table
+members are typed from `SysioContractMapping`, validated at runtime, and cached
+after their first access. Use either the concise root syntax or
+`getSysioContract` when the contract name is dynamic.
 
 ```ts
-const msig = contracts.sysio.createClient({ client: api, name: "msig" })
-const approve = msig.actions.approve(
+import { SysioContracts } from "@wireio/sdk-core"
+
+const sysio = contracts.sysio.createClient({ client: api })
+const msig = sysio.msig
+const epoch = sysio.getSysioContract(SysioContracts.SysioContractName.epoch)
+
+const approve = msig.actions.approve.prepare(
   {
     proposer: "alice",
     proposal_name: "upgrade1",
     level: { actor: "bob", permission: "active" },
     proposal_hash: null
   },
-  ["bob@active"]
+  { authorization: ["bob@active"] }
 )
-const proposals = await msig.tables.proposal.rows({ scope: "alice" })
+const proposals = await msig.tables.proposal.query({ scope: "alice" })
+
+await epoch.actions.advance.invoke({}, { authorization: ["operator@active"] })
 ```
+
+`prepare` returns an ABI-encoded `Action` when a local runtime codec or caller
+ABI can encode the action. If synchronous encoding is unavailable or fails, it
+returns the same generated data as a typed `AnyAction`; `APIClient` resolves the
+deployed ABI when that payload is invoked or pushed. Authorization is empty by
+default and must be supplied explicitly for writes. The legacy named factory and
+callable action shorthand remain available for encoded descriptor-backed
+contracts; the old `descriptors` export is retained as a deprecated migration
+surface.
+
+The `AuthexClient`, `MsigClient`, and `ReserveClient` classes remain the public
+domain facades for proof creation, proposal compatibility, reserve
+normalization, and other workflow behavior. Each exposes `contractClient` for
+lower-level generated action and table access without duplicating transport
+logic.
 
 The multisig module supports:
 
@@ -102,10 +130,6 @@ const action = reserves.buildMatchReserveAction({
   wireAmount: pending[0].requestedWireAmount
 })
 ```
-
-The generic descriptor registry also accepts
-`contracts.sysio.createClient({ client: api, name: "reserv" })` for typed public
-action and table access.
 
 ## Install
 
