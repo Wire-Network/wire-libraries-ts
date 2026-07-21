@@ -1,5 +1,6 @@
 // src/crypto/shared-secret.ts
 
+import { match } from "ts-pattern"
 import { KeyType } from "../chain/KeyType.js"
 import { getNobleCurve } from "./Curves.js"
 
@@ -21,17 +22,17 @@ export function sharedSecret(
   pubkey: Uint8Array,
   type: KeyType
 ): Uint8Array {
-  switch (type) {
-    case KeyType.ED:
+  return match(type)
+    .with(KeyType.ED, () => {
       // ED25519 does not support ECDH-derived shared secrets
       throw new Error(
         "Shared secret (ECDH) not supported for ED25519; convert to X25519 first"
       )
-
-    case KeyType.BLS:
+    })
+    .with(KeyType.BLS, () => {
       throw new Error("BLS does not support shared secret")
-
-    default: {
+    })
+    .otherwise(() => {
       const sharedPoint = getNobleCurve(type).getSharedSecret(
         privkey,
         pubkey,
@@ -40,6 +41,5 @@ export function sharedSecret(
       return trimLeadingZeroBytes(
         sharedPoint.subarray(COMPRESSED_PUBLIC_KEY_PREFIX_BYTES)
       )
-    }
-  }
+    })
 }

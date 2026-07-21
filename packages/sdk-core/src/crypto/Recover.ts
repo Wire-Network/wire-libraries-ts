@@ -1,3 +1,4 @@
+import { match } from "ts-pattern"
 import { ethers } from "../EthersCompat.js"
 import { Bytes } from "../chain/Bytes.js"
 import { KeyType } from "../chain/KeyType.js"
@@ -19,14 +20,14 @@ export function recover(
   message: Uint8Array,
   type: KeyType
 ): PublicKey {
-  switch (type) {
-    case KeyType.ED:
+  return match(type)
+    .with(KeyType.ED, () => {
       throw new Error("ED25519 does not support public key recovery")
-
-    case KeyType.BLS:
+    })
+    .with(KeyType.BLS, () => {
       throw new Error("BLS does not support public key recovery")
-
-    case KeyType.EM: {
+    })
+    .with(KeyType.EM, () => {
       // wire: [vWire(31/32)‖r(32)‖s(32)]
       const vRaw = signature[0] - 4 // 27/28
       const r = signature.subarray(1, 33)
@@ -40,9 +41,8 @@ export function recover(
         KeyType.EM,
         new Bytes(ethers.utils.arrayify(compressed))
       )
-    }
-
-    default: {
+    })
+    .otherwise(() => {
       // wire: [vWire(31/32)‖r‖s]
       const recid = signature[0] - 31
       const curve = getNobleCurve(type)
@@ -55,6 +55,5 @@ export function recover(
         .recoverPublicKey(message)
         .toBytes(true)
       return new PublicKey(type, new Bytes(compressed))
-    }
-  }
+    })
 }
