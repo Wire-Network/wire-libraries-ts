@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import EventEmitter3 from "eventemitter3"
 import { Deferred } from "../../../helpers/index.js"
 import { LogRecord } from "../../LogRecord.js"

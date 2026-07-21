@@ -362,7 +362,7 @@ export class Signature implements ABISerializableObject {
       }
 
       case KeyType.K1:
-      // eslint-disable-next-line padding-line-between-statements, no-fallthrough
+      // eslint-disable-next-line no-fallthrough
       case KeyType.R1: {
         // wire[0] = k1V + 31
         const k1V = wire[0] - 31 // 0 or 1
