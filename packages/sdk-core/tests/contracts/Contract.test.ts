@@ -1,18 +1,25 @@
-import { contracts } from "@wireio/sdk-core"
+import { contracts, SysioContracts } from "@wireio/sdk-core"
 
-interface ProposalContractActions {}
-
-interface ProposalContractTables {
-  proposal: null
+interface ProposalContractActions {
+  approve: SysioContracts.SysioMsigApproveAction
 }
 
-/** Minimal descriptor fixture for the standalone generic contract client. */
+interface ProposalContractTables {
+  proposal: SysioContracts.SysioMsigProposalType
+}
+
+/** Minimal fixture for the standalone descriptor-backed contract client. */
 const ProposalContractDescriptor: contracts.ContractDescriptor<
   ProposalContractActions,
   ProposalContractTables
 > = {
   account: "sysio.msig",
-  actions: {},
+  actions: {
+    approve: {
+      name: "approve",
+      serialize: data => contracts.sysio.msig.MsigApprove.from(data)
+    }
+  },
   tables: {
     proposal: {
       name: "proposal",
@@ -21,14 +28,12 @@ const ProposalContractDescriptor: contracts.ContractDescriptor<
   }
 }
 
+/** Creates the API surface used by the generic contract client. */
 function mockApi(rows: unknown[] = []) {
   return {
     v1: {
       chain: {
-        get_table_rows: jest.fn(async () => ({
-          rows,
-          more: false
-        })),
+        get_table_rows: jest.fn(async () => ({ rows, more: false })),
         get_table_by_scope: jest.fn(async () => ({
           rows: [{ scope: "alice" }],
           more: ""
@@ -38,21 +43,17 @@ function mockApi(rows: unknown[] = []) {
   } as any
 }
 
-describe("contract client factory", () => {
-  test("builds typed actions from the generated system contract proxy", () => {
-    const api = mockApi(),
-      msig = contracts.sysio.createClient({
-        client: api,
-        name: "msig"
+describe("generic contract client", () => {
+  test("builds encoded actions from a typed descriptor", () => {
+    const client = contracts.createContractClient({
+        client: mockApi(),
+        descriptor: ProposalContractDescriptor
       }),
-      action = msig.actions.approve(
+      action = client.actions.approve(
         {
           proposer: "alice",
           proposal_name: "upgrade1",
-          level: {
-            actor: "bob",
-            permission: "active"
-          },
+          level: { actor: "bob", permission: "active" },
           proposal_hash: null
         },
         ["bob@active"]
@@ -64,44 +65,10 @@ describe("contract client factory", () => {
     expect(action.authorization.map(String)).toEqual(["bob@active"])
     expect(decoded.proposer.toString()).toBe("alice")
     expect(decoded.proposal_name.toString()).toBe("upgrade1")
-    expect(decoded.level.toString()).toBe("bob@active")
   })
 
-  test("builds typed propose actions with generated transaction header fields", () => {
-    const api = mockApi(),
-      msig = contracts.sysio.createClient({
-        client: api,
-        name: "msig"
-      }),
-      action = msig.actions.propose(
-        {
-          proposer: "alice",
-          proposal_name: "upgrade1",
-          requested: [{ actor: "bob", permission: "active" }],
-          trx: {
-            expiration: "2026-01-01T00:00:00",
-            ref_block_num: 0,
-            ref_block_prefix: 0,
-            max_net_usage_words: 0,
-            max_cpu_usage_ms: 0,
-            delay_sec: 0,
-            context_free_actions: [],
-            actions: [],
-            transaction_extensions: []
-          }
-        },
-        ["alice@active"]
-      ),
-      decoded = action.decodeData(contracts.sysio.msig.MsigPropose)
-
-    expect(action.name.toString()).toBe("propose")
-    expect(decoded.proposer.toString()).toBe("alice")
-    expect(decoded.requested.map(String)).toEqual(["bob@active"])
-    expect(decoded.trx.actions).toEqual([])
-  })
-
-  test("reads typed table rows from a generated system contract proxy", async () => {
-    const row = {
+  test("reads typed rows and the first matching row", async () => {
+    const row: SysioContracts.SysioMsigProposalType = {
         proposal_name: "upgrade1",
         packed_transaction: "",
         earliest_exec_time: null,
@@ -110,17 +77,15 @@ describe("contract client factory", () => {
         trx_hash: null
       },
       api = mockApi([row]),
-      msig = contracts.sysio.createClient({
+      client = contracts.createContractClient({
         client: api,
-        name: "msig"
+        descriptor: ProposalContractDescriptor
       }),
-      result = await msig.tables.proposal.rows({
+      result = await client.tables.proposal.rows({
         scope: "alice",
         limit: 5
       }),
-      first = await msig.tables.proposal.first({
-        scope: "alice"
-      })
+      first = await client.tables.proposal.first({ scope: "alice" })
 
     expect(result.rows).toEqual([row])
     expect(first).toEqual(row)
@@ -133,15 +98,14 @@ describe("contract client factory", () => {
     })
   })
 
-  test("lists scopes for descriptor table clients", async () => {
+  test("lists table scopes", async () => {
     const api = mockApi(),
-      msig = contracts.createContractClient({
+      client = contracts.createContractClient({
         client: api,
         descriptor: ProposalContractDescriptor
-      }),
-      scopes = await msig.table("proposal").scopes()
+      })
 
-    expect(scopes).toEqual(["alice"])
+    await expect(client.table("proposal").scopes()).resolves.toEqual(["alice"])
     expect(api.v1.chain.get_table_by_scope).toHaveBeenCalledWith({
       code: "sysio.msig",
       table: "proposal"

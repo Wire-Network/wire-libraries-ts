@@ -105,13 +105,6 @@ export interface SysioActionInvoker<
   Name extends SysioContractName,
   ActionName extends SysioActionName<Name>
 > {
-  /** Backward-compatible shorthand for {@link SysioActionInvoker.prepare}. */
-  (
-    data: SysioActionData<Name, ActionName>,
-    authorization: ContractPermissionLevel[],
-    options?: ContractBuildActionOptions
-  ): Action
-
   /** Prepares an unsigned action, preferring synchronous ABI encoding. */
   prepare(
     data: SysioActionData<Name, ActionName>,
@@ -135,7 +128,7 @@ export interface SysioTableQuery<
     options?: ContractTableRowsOptions<Index>
   ): Promise<GetTableRowsResponse<Index, SysioTableRow<Name, TableName>>>
 
-  /** Backward-compatible alias for {@link SysioTableQuery.query}. */
+  /** Alias matching the generic contract client's `rows` terminology. */
   rows<Index = TableIndexType | string>(
     options?: ContractTableRowsOptions<Index>
   ): Promise<GetTableRowsResponse<Index, SysioTableRow<Name, TableName>>>
@@ -177,13 +170,6 @@ export interface SysioContractClient<Name extends SysioContractName> {
 /** Per-contract account overrides for nonstandard system-contract deployments. */
 export type SysioContractAccounts = Partial<Record<SysioContractName, NameType>>
 
-/** String values accepted by the backward-compatible named client factory. */
-export type SysioContractNameInput = `${SysioContractName}`
-
-/** Generated enum member corresponding to a named factory input. */
-export type SysioContractNameFromInput<Name extends SysioContractNameInput> =
-  Extract<SysioContractName, Name>
-
 /** Options for creating the root system-contract proxy. */
 export interface SysioClientOptions {
   /** Chain API client used for reads and signed action invocation. */
@@ -196,16 +182,6 @@ export interface SysioClientOptions {
 export interface GetSysioContractOptions {
   /** Optional API client; action preparation works without one. */
   client?: APIClient
-  /** Optional on-chain account override. */
-  contract?: NameType
-}
-
-/** Backward-compatible options for creating one named system-contract client. */
-export interface SystemContractClientOptions<
-  Name extends SysioContractNameInput
-> extends SysioClientOptions {
-  /** Generated system-contract name. */
-  name: Name
   /** Optional on-chain account override. */
   contract?: NameType
 }
@@ -282,37 +258,29 @@ function createActionInvoker<
   client?: APIClient
 ): SysioActionInvoker<Name, ActionName> {
   const prepare = (
-      data: SysioActionData<Name, ActionName>,
-      options: SysioActionOptions = {}
-    ) => {
-      const contract = options.contract || account,
-        payload: SysioActionPayload<Name, ActionName> = {
-          contract: name,
-          account: contract,
-          name: actionName,
-          authorization: normalizeAuthorization(options.authorization),
-          data
-        }
-
-      return prepareAction(payload, options.abi)
-    },
-    invoker = (
-      data: SysioActionData<Name, ActionName>,
-      authorization: ContractPermissionLevel[],
-      options: ContractBuildActionOptions = {}
-    ) => assertEncodedAction(prepare(data, { ...options, authorization }))
-
-  invoker.prepare = prepare
-  invoker.invoke = async (
     data: SysioActionData<Name, ActionName>,
-    options: SysioActionInvocationOptions = {}
-  ) =>
-    assertClient(client).pushTransaction(
-      prepare(data, options),
-      options.pushOptions
-    )
+    options: SysioActionOptions = {}
+  ) => {
+    const contract = options.contract || account,
+      payload: SysioActionPayload<Name, ActionName> = {
+        contract: name,
+        account: contract,
+        name: actionName,
+        authorization: normalizeAuthorization(options.authorization),
+        data
+      }
 
-  return invoker
+    return prepareAction(payload, options.abi)
+  }
+
+  return {
+    prepare,
+    invoke: async (data, options = {}) =>
+      assertClient(client).pushTransaction(
+        prepare(data, options),
+        options.pushOptions
+      )
+  }
 }
 
 /** Creates one lazy typed table query. */
@@ -434,7 +402,7 @@ export function getSysioContract<Name extends SysioContractName>(
 }
 
 /** Creates the root proxy exposing all generated system contracts. */
-export function createSysioClient(options: SysioClientOptions): SysioClient {
+export function createClient(options: SysioClientOptions): SysioClient {
   const clients = new Map<
       SysioContractName,
       SysioContractClient<SysioContractName>
@@ -464,24 +432,6 @@ export function createSysioClient(options: SysioClientOptions): SysioClient {
       }
       return getContract(member)
     }
-  })
-}
-
-/** Creates either the root proxy or one named proxy using the legacy factory form. */
-export function createClient(options: SysioClientOptions): SysioClient
-export function createClient<Name extends SysioContractNameInput>(
-  options: SystemContractClientOptions<Name>
-): SysioContractClient<SysioContractNameFromInput<Name>>
-export function createClient(
-  options:
-    | SysioClientOptions
-    | SystemContractClientOptions<SysioContractNameInput>
-): SysioClient | SysioContractClient<SysioContractName> {
-  if (!("name" in options)) return createSysioClient(options)
-
-  return getSysioContract(options.name as SysioContractName, {
-    client: options.client,
-    contract: options.contract
   })
 }
 

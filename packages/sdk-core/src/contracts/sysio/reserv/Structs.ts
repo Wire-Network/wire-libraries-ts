@@ -52,7 +52,3 @@ export class ReservSwapQuote extends Struct {
   /** Destination reserve code. */
   @Struct.field(ReservSlugName) declare to_reserve_code: ReservSlugName
 }
-
-/** Runtime serializer for read-only `sysio.reserv::rewardbal`. */
-@Struct.type("rewardbal")
-export class ReservRewardBalance extends Struct {}

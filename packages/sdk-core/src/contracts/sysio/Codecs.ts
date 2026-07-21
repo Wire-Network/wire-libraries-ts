@@ -11,11 +11,7 @@ import {
   MsigPropose,
   MsigUnapprove
 } from "./msig/Structs.js"
-import {
-  ReservMatchReserve,
-  ReservRewardBalance,
-  ReservSwapQuote
-} from "./reserv/Structs.js"
+import { ReservMatchReserve, ReservSwapQuote } from "./reserv/Structs.js"
 
 /** Generated action names for one system contract. */
 type ActionName<Name extends SysioContractName> = Extract<
@@ -56,7 +52,6 @@ const ActionCodecs: SysioActionCodecMapping = {
   },
   [SysioContractName.reserv]: {
     matchreserve: { serialize: data => ReservMatchReserve.from(data) },
-    rewardbal: { serialize: data => ReservRewardBalance.from(data) },
     swapquote: { serialize: data => ReservSwapQuote.from(data) }
   }
 }
