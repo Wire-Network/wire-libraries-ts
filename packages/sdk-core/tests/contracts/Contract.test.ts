@@ -1,5 +1,26 @@
 import { contracts } from "@wireio/sdk-core"
 
+interface ProposalContractActions {}
+
+interface ProposalContractTables {
+  proposal: null
+}
+
+/** Minimal descriptor fixture for the standalone generic contract client. */
+const ProposalContractDescriptor: contracts.ContractDescriptor<
+  ProposalContractActions,
+  ProposalContractTables
+> = {
+  account: "sysio.msig",
+  actions: {},
+  tables: {
+    proposal: {
+      name: "proposal",
+      rowType: null
+    }
+  }
+}
+
 function mockApi(rows: unknown[] = []) {
   return {
     v1: {
@@ -18,7 +39,7 @@ function mockApi(rows: unknown[] = []) {
 }
 
 describe("contract client factory", () => {
-  test("builds typed actions from a generated system contract descriptor", () => {
+  test("builds typed actions from the generated system contract proxy", () => {
     const api = mockApi(),
       msig = contracts.sysio.createClient({
         client: api,
@@ -79,7 +100,7 @@ describe("contract client factory", () => {
     expect(decoded.trx.actions).toEqual([])
   })
 
-  test("reads typed table rows from a descriptor table client", async () => {
+  test("reads typed table rows from a generated system contract proxy", async () => {
     const row = {
         proposal_name: "upgrade1",
         packed_transaction: "",
@@ -116,7 +137,7 @@ describe("contract client factory", () => {
     const api = mockApi(),
       msig = contracts.createContractClient({
         client: api,
-        descriptor: contracts.sysio.msig.descriptor
+        descriptor: ProposalContractDescriptor
       }),
       scopes = await msig.table("proposal").scopes()
 

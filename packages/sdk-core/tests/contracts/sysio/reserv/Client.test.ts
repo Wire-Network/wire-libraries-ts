@@ -38,7 +38,9 @@ function clientFixture(rows = [reserveRow()]) {
           : rows,
       more: false
     })),
-    pushTransaction = jest.fn(async () => ({ transaction_id: "reserve-trx" })),
+    pushTransaction = jest.fn(async (_action: any, _options?: any) => ({
+      transaction_id: "reserve-trx"
+    })),
     sendReadOnlyTransaction = jest.fn(async () => ({
       processed: {
         action_traces: [
@@ -155,6 +157,10 @@ describe("ReserveClient", () => {
       })
     ).resolves.toEqual({ transaction_id: "reserve-trx" })
     expect(pushTransaction).toHaveBeenCalledTimes(1)
+    const [action] = pushTransaction.mock.calls[0]
+    expect(action.account.toString()).toBe("sysio.reserv")
+    expect(action.name.toString()).toBe("matchreserve")
+    expect(action.authorization.map(String)).toEqual(["alice@active"])
   })
 
   test("decodes read-only swapquote and rewards values", async () => {

@@ -1,7 +1,6 @@
 export * from "./Actions.js"
 export * from "./Capabilities.js"
 export * from "./Constants.js"
-export * from "./Descriptor.js"
 export * from "./Hash.js"
 export * from "./Client.js"
 export * from "./Proposal.js"

@@ -14,11 +14,7 @@ import {
 import type { ContractTableRowsOptions } from "../../Contract.js"
 import { getSysioContract, type SysioContractClient } from "../Client.js"
 
-import {
-  buildClearLinksAction,
-  buildCreateLinkAction,
-  buildRecordLinkAction
-} from "./Actions.js"
+import { buildCreateLinkAction } from "./Actions.js"
 import {
   AUTHEX_LINKS_BY_NAME_INDEX,
   AUTHEX_LINKS_BY_PUBLIC_KEY_INDEX,
@@ -27,9 +23,7 @@ import {
 import { signCreateLink } from "./Signing.js"
 import type {
   AuthexClientOptions,
-  BuildClearLinksActionOptions,
   BuildCreateLinkActionOptions,
-  BuildRecordLinkActionOptions,
   CreateLinkActionResult,
   CreateLinkWithSignerOptions,
   ListLinksOptions,
@@ -129,13 +123,6 @@ export class AuthexClient {
     return { proof, action }
   }
 
-  /** Lowercase alias matching the contract action spelling. */
-  async createlink(
-    options: CreateLinkWithSignerOptions
-  ): Promise<CreateLinkActionResult> {
-    return this.createLink(options)
-  }
-
   /** Signs the external-wallet proof, builds the action, and pushes it with this client's signer. */
   async pushCreateLink(
     options: PushCreateLinkOptions,
@@ -143,30 +130,6 @@ export class AuthexClient {
   ): Promise<Awaited<ReturnType<APIClient["pushTransaction"]>>> {
     const result = await this.createLink(options)
     return this.client.pushTransaction(result.action, pushOptions)
-  }
-
-  /** Lowercase push alias matching the contract action spelling. */
-  async pushCreatelink(
-    options: PushCreateLinkOptions,
-    pushOptions: TransactionExtraOptions = options.pushOptions || {}
-  ): Promise<Awaited<ReturnType<APIClient["pushTransaction"]>>> {
-    return this.pushCreateLink(options, pushOptions)
-  }
-
-  /** Builds an unsigned trusted `sysio.authex::recordlink` action. */
-  buildRecordLinkAction(options: BuildRecordLinkActionOptions): Action {
-    return buildRecordLinkAction({
-      contract: this.contract,
-      ...options
-    })
-  }
-
-  /** Builds an unsigned testing-only `sysio.authex::clearlinks` action. */
-  buildClearLinksAction(options: BuildClearLinksActionOptions = {}): Action {
-    return buildClearLinksAction({
-      contract: this.contract,
-      ...options
-    })
   }
 
   /** Lists AuthEx link rows. */

@@ -8,16 +8,7 @@ import { SysioContractName } from "../../../types/SysioContractTypes.js"
 import { assertEncodedAction, getSysioContract } from "../Client.js"
 
 import { DEFAULT_AUTHEX_CONTRACT } from "./Constants.js"
-import {
-  AuthexClearLinks,
-  AuthexCreateLink,
-  AuthexRecordLink
-} from "./Structs.js"
-import type {
-  BuildClearLinksActionOptions,
-  BuildCreateLinkActionOptions,
-  BuildRecordLinkActionOptions
-} from "./Types.js"
+import type { BuildCreateLinkActionOptions } from "./Types.js"
 import { assertSupportedCreateLinkChainKind } from "./Signing.js"
 
 /** Builds generated action data for `sysio.authex::createlink`. */
@@ -53,64 +44,4 @@ export function buildCreateLinkAction(
       ]
     })
   )
-}
-
-/** Builds generated action data for `sysio.authex::recordlink`. */
-export function recordLinkActionData(
-  options: BuildRecordLinkActionOptions
-): SysioContracts.SysioAuthexRecordlinkAction {
-  return {
-    account: Name.from(options.account).toString(),
-    chain_kind: assertSupportedCreateLinkChainKind(options.chainKind),
-    pub_key: PublicKey.from(options.publicKey).toString()
-  }
-}
-
-/** Builds an unsigned trusted `sysio.authex::recordlink` action. */
-export function buildRecordLinkAction(
-  options: BuildRecordLinkActionOptions
-): Action {
-  const contract = options.contract || DEFAULT_AUTHEX_CONTRACT
-  return assertEncodedAction(
-    getSysioContract(SysioContractName.authex, {
-      contract
-    }).actions.recordlink.prepare(recordLinkActionData(options), {
-      authorization: [
-        PermissionLevel.from({
-          actor: contract,
-          permission: "active"
-        })
-      ]
-    })
-  )
-}
-
-/** Builds an unsigned testing-only `sysio.authex::clearlinks` action. */
-export function buildClearLinksAction(
-  options: BuildClearLinksActionOptions = {}
-): Action {
-  const contract = options.contract || DEFAULT_AUTHEX_CONTRACT
-
-  return assertEncodedAction(
-    getSysioContract(SysioContractName.authex, {
-      contract
-    }).actions.clearlinks.prepare(
-      {},
-      {
-        authorization: [
-          PermissionLevel.from({
-            actor: contract,
-            permission: "active"
-          })
-        ]
-      }
-    )
-  )
-}
-
-/** Runtime action data serializers keyed by `sysio.authex` action name. */
-export const authexActionDataTypes = {
-  createlink: AuthexCreateLink,
-  recordlink: AuthexRecordLink,
-  clearlinks: AuthexClearLinks
 }

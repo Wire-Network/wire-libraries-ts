@@ -18,6 +18,27 @@ import type {
   MsigProposal
 } from "./Structs.js"
 
+/** Generated multisig transaction body plus inherited transaction header. */
+export interface SysioMsigTransactionData
+  extends
+    SysioContracts.SysioMsigTransactionHeaderType,
+    SysioContracts.SysioMsigTransactionType {}
+
+/** Complete `sysio.msig::propose` data until generation inherits header fields. */
+export interface SysioMsigProposeActionData extends Omit<
+  SysioContracts.SysioMsigProposeAction,
+  "trx"
+> {
+  /** Proposed transaction including header and action arrays. */
+  trx: SysioMsigTransactionData
+}
+
+/** Runtime action-data corrections layered over the generated contract map. */
+export interface SysioMsigActionDataOverrides {
+  /** Complete propose data including inherited transaction-header fields. */
+  propose: SysioMsigProposeActionData
+}
+
 /** Permission level input accepted by multisig action builders. */
 export type MsigPermissionLevel =
   | PermissionLevelType

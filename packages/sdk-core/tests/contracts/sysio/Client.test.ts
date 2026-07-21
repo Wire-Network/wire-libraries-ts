@@ -64,6 +64,22 @@ describe("system contract proxy", () => {
     ])
   })
 
+  test("keeps non-workflow actions available through the generated proxy", () => {
+    const authex = contracts.sysio.getSysioContract(SysioContractName.authex),
+      prepared = authex.actions.clearlinks.prepare(
+        {},
+        { authorization: ["sysio.authex@active"] }
+      )
+
+    expect(prepared).not.toBeInstanceOf(Action)
+    expect(prepared).toMatchObject({
+      contract: SysioContractName.authex,
+      account: "sysio.authex",
+      name: "clearlinks",
+      data: {}
+    })
+  })
+
   test("falls back to a typed AnyAction when synchronous encoding fails", () => {
     const msig = contracts.sysio.getSysioContract(SysioContractName.msig),
       data = {},

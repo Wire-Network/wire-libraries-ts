@@ -11,16 +11,7 @@ import { SysioContractName } from "../../../types/SysioContractTypes.js"
 import { assertEncodedAction, getSysioContract } from "../Client.js"
 
 import { DEFAULT_MSIG_CONTRACT } from "./Constants.js"
-import type { SysioMsigProposeActionData } from "./Descriptor.js"
-import {
-  MsigApprove,
-  MsigCancel,
-  MsigExec,
-  MsigGetProposal,
-  MsigInvalidate,
-  MsigPropose,
-  MsigUnapprove
-} from "./Structs.js"
+import { MsigPropose } from "./Structs.js"
 import type {
   BuildApproveActionOptions,
   BuildCancelActionOptions,
@@ -28,7 +19,8 @@ import type {
   BuildInvalidateActionOptions,
   BuildProposeActionOptions,
   BuildUnapproveActionOptions,
-  MsigPermissionLevel
+  MsigPermissionLevel,
+  SysioMsigProposeActionData
 } from "./Types.js"
 
 function permissionLevel(value: MsigPermissionLevel): PermissionLevel {
@@ -188,15 +180,4 @@ export function buildGetProposalAction(
       contract
     }).actions.getproposal.prepare(data)
   )
-}
-
-/** Runtime action data serializers keyed by `sysio.msig` action name. */
-export const msigActionDataTypes = {
-  propose: MsigPropose,
-  approve: MsigApprove,
-  unapprove: MsigUnapprove,
-  cancel: MsigCancel,
-  exec: MsigExec,
-  invalidate: MsigInvalidate,
-  getproposal: MsigGetProposal
 }

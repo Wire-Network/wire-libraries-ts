@@ -17,24 +17,13 @@ import {
   type SysioContractMapping
 } from "../../types/SysioContractTypes.js"
 import type {
-  ContractActionDescriptor,
   ContractBuildActionOptions,
   ContractPermissionLevel,
   ContractTableRowsOptions,
   ContractTableScopesOptions
 } from "../Contract.js"
-import {
-  descriptor as authexDescriptor,
-  type SysioAuthexActionData
-} from "./authex/Descriptor.js"
-import {
-  descriptor as msigDescriptor,
-  type SysioMsigActionData
-} from "./msig/Descriptor.js"
-import {
-  descriptor as reservDescriptor,
-  type SysioReservActionData
-} from "./reserv/Descriptor.js"
+import { getSysioActionCodec, type SysioActionCodec } from "./Codecs.js"
+import type { SysioMsigActionDataOverrides } from "./msig/Types.js"
 
 const GetSysioContractMember = "getSysioContract"
 const PromiseThenMember = "then"
@@ -234,43 +223,9 @@ export type SysioClient = SysioClientMethods & {
   readonly [Name in SysioContractName]: SysioContractClient<Name>
 }
 
-interface RuntimeActionDescriptor {
-  serialize: ContractActionDescriptor<unknown>["serialize"]
-}
-
-interface RuntimeContractDescriptor {
-  actions: Record<string, RuntimeActionDescriptor>
-}
-
 interface RuntimeActionDataMapping {
-  [SysioContractName.authex]: SysioAuthexActionData
-  [SysioContractName.msig]: SysioMsigActionData
-  [SysioContractName.reserv]: SysioReservActionData
+  [SysioContractName.msig]: SysioMsigActionDataOverrides
 }
-
-/** @deprecated Use the generated proxy; retained for descriptor consumers. */
-export const descriptors = {
-  [SysioContractName.authex]: authexDescriptor,
-  [SysioContractName.msig]: msigDescriptor,
-  [SysioContractName.reserv]: reservDescriptor
-} as const
-
-/** @deprecated Use {@link SysioContractNameInput}. */
-export type SystemContractName = `${keyof typeof descriptors}`
-
-/** @deprecated Use generated action and table maps through the proxy. */
-export type SystemContractDescriptor<Name extends SystemContractName> =
-  (typeof descriptors)[Extract<keyof typeof descriptors, Name>]
-
-/** @deprecated Use {@link SysioContractClient}. */
-export type SystemContractClient<Name extends SystemContractName> =
-  SysioContractClient<SysioContractNameFromInput<Name>>
-
-const RuntimeDescriptors: Partial<
-  Record<SysioContractName, RuntimeContractDescriptor>
-> = descriptors as unknown as Partial<
-  Record<SysioContractName, RuntimeContractDescriptor>
->
 
 /** Returns true when a reflected root-proxy member is a generated contract name. */
 function isSysioContractName(value: string): value is SysioContractName {
@@ -278,7 +233,7 @@ function isSysioContractName(value: string): value is SysioContractName {
 }
 
 /** Throws when a read or invocation is attempted without an API client. */
-function assertClient(client: APIClient): APIClient {
+function assertClient(client?: APIClient): APIClient {
   if (!client) {
     throw new Error(
       "An APIClient is required to query or invoke a system contract."
@@ -294,14 +249,6 @@ function normalizeAuthorization(
   return authorization.map(value => PermissionLevel.from(value))
 }
 
-/** Returns the optional runtime action descriptor used for synchronous encoding. */
-function getRuntimeActionDescriptor(
-  name: SysioContractName,
-  actionName: string
-): RuntimeActionDescriptor {
-  return RuntimeDescriptors[name]?.actions[actionName]
-}
-
 /** Prefers an encoded Action and deliberately retains the raw payload on encoding failure. */
 function prepareAction<
   Name extends SysioContractName,
@@ -311,13 +258,10 @@ function prepareAction<
   abi?: ABIDef
 ): SysioPreparedAction<Name, ActionName> {
   try {
-    const descriptor = getRuntimeActionDescriptor(
-        payload.contract,
-        String(payload.name)
-      ),
-      data = descriptor?.serialize
-        ? descriptor.serialize(payload.data)
-        : payload.data
+    const codec = getSysioActionCodec(payload.contract, payload.name) as
+        | SysioActionCodec<SysioActionData<Name, ActionName>>
+        | undefined,
+      data = codec?.serialize ? codec.serialize(payload.data) : payload.data
 
     return Action.from({ ...payload, data }, abi)
   } catch {
