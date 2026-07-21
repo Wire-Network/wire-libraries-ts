@@ -2,6 +2,8 @@
  * Antelope/SYSIO ABI Decoder
  */
 
+import { NestedError } from "@wireio/shared"
+
 import { ABI, ABIDef } from "../chain/Abi.js"
 import { Bytes, BytesType } from "../chain/Bytes.js"
 import { Variant } from "../chain/Variant.js"
@@ -128,9 +130,10 @@ export function abiDecode(
       abi = synthesized.abi
       customTypes.push(...synthesized.types)
     } catch (error: any) {
-      throw Error(
-        `Unable to synthesize ABI for: ${typeName} (${error.message}). ` +
-          "To decode non-class types you need to pass the ABI definition manually."
+      throw new NestedError(
+        `Unable to synthesize ABI for: ${typeName}. ` +
+          "To decode non-class types you need to pass the ABI definition manually.",
+        { cause: error }
       )
     }
   }
