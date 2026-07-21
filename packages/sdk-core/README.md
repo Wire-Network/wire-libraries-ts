@@ -24,8 +24,9 @@ const detail = await client.getProposalDetail("alice", "upgrade1")
 `contracts.sysio.createClient({ client })` exposes every contract in the
 generated `SysioContractDefinitions` registry. Contract, action, and table
 members are typed from `SysioContractMapping`, validated at runtime, and cached
-after their first access. Use either the concise root syntax or
-`getSysioContract` when the contract name is dynamic.
+after their first access. Its `actions.<name>.prepare/invoke` and
+`tables.<name>.query` surface mirrors Wire Tools' `getSysioContract`. Use either
+the concise root syntax or `getSysioContract` when the contract name is dynamic.
 
 ```ts
 import { SysioContracts } from "@wireio/sdk-core"
@@ -52,8 +53,7 @@ await epoch.actions.advance.invoke({}, { authorization: ["operator@active"] })
 ABI can encode the action. If synchronous encoding is unavailable or fails, it
 returns the same generated data as a typed `AnyAction`; `APIClient` resolves the
 deployed ABI when that payload is invoked or pushed. Authorization is empty by
-default and must be supplied explicitly for writes. The legacy named factory and
-callable action shorthand remain available for locally encoded actions.
+default and must be supplied explicitly for writes.
 
 The `AuthexClient`, `MsigClient`, and `ReserveClient` classes remain the public
 domain facades for proof creation, proposal compatibility, reserve
