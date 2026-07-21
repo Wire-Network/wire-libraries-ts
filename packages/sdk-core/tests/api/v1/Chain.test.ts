@@ -112,6 +112,31 @@ describe("ChainAPI.get_block", () => {
   })
 })
 
+describe("ChainAPI.get_account", () => {
+  test("decodes system accounts that omit the creation timestamp", async () => {
+    const client = makeClient({
+        "/v1/chain/get_account": {
+          account_name: "sysio",
+          head_block_num: 729126,
+          head_block_time: "2026-07-21T19:06:21.000",
+          privileged: true,
+          last_code_update: "2026-07-16T21:03:45.500",
+          ram_quota: 464220502,
+          net_weight: -1,
+          cpu_weight: -1,
+          net_limit: { used: -1, available: -1, max: -1 },
+          cpu_limit: { used: -1, available: -1, max: -1 },
+          ram_usage: 1745389,
+          permissions: []
+        }
+      }),
+      account = await client.v1.chain.get_account("sysio")
+
+    expect(account.account_name.toString()).toBe("sysio")
+    expect(account.created).toBeNull()
+  })
+})
+
 describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
   test("forwards named KV secondary-index bounds", async () => {
     const provider = new CapturingProvider(),

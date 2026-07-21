@@ -2,6 +2,9 @@
 
 JavaScript library for working with Wire powered blockchains (formerly EOSIO, still compatible with EOSIO).
 
+The v1 account decoder accepts valid system-account responses that omit the
+optional `created` timestamp.
+
 Available on npm: <https://www.npmjs.com/package/@wireio/sdk-core>
 
 ## Multisig

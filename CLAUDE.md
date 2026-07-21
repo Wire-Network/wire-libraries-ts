@@ -207,6 +207,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - `pnpm test` runs `npm run build` first (not `pnpm build`), then jest — the build must succeed before tests run
 - protoc-gen packages have `postinstall` scripts that trigger `pnpm dist` — this can be slow on first install
 - The `fix-hybrid-output.mjs` script must run after every build of hybrid packages or ESM imports will break in Node
+- Keep `AccountObject.created` optional: valid system-account responses may omit it.
 - `packages/sdk-core/src/contracts/sysio/authex` owns `sysio.authex` action builders, link table reads, and create-link proof helpers. Consumers should not duplicate the `createlink` message/signature rules locally.
 - AuthEx `links` reads use wire-sysio KV `index_name` queries with JSON-encoded bounds. Preserve KV row unwrapping, generated enum-name normalization, and compressed/uncompressed EM key equivalence.
 - `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
