@@ -1,13 +1,13 @@
 import type { APIClient } from "../../../api/Client.js"
 import type { Action } from "../../../chain/Action.js"
 import type { NameType } from "../../../chain/Name.js"
-import { SysioChainsChainkind } from "../../../types/SysioContractTypes.js"
-import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 import {
-  ContractClient,
-  createContractClient,
-  type ContractTableRowsOptions
-} from "../../Contract.js"
+  SysioChainsChainkind,
+  SysioContractName
+} from "../../../types/SysioContractTypes.js"
+import type * as SysioContracts from "../../../types/SysioContractTypes.js"
+import type { ContractTableRowsOptions } from "../../Contract.js"
+import { getSysioContract, type SysioContractClient } from "../Client.js"
 
 import {
   createActivateChainAction,
@@ -17,11 +17,6 @@ import {
   DEFAULT_CHAINS_CONTRACT,
   DEFAULT_CHAIN_QUERY_LIMIT
 } from "./Constants.js"
-import {
-  descriptor,
-  type SysioChainsActionData,
-  type SysioChainsTableRows
-} from "./Descriptor.js"
 import { chainSlugString, chainSlugValue } from "./Slug.js"
 import type {
   ChainRecord,
@@ -84,19 +79,15 @@ export class ChainsClient {
   readonly contract: NameType
 
   /** Generic typed proxy for direct action and table access. */
-  readonly contractClient: ContractClient<
-    SysioChainsActionData,
-    SysioChainsTableRows
-  >
+  readonly contractClient: SysioContractClient<SysioContractName.chains>
 
   /** Creates a chain registry client. */
   constructor(config: ChainsClientOptions) {
     this.client = config.client
     this.contract = config.contract || DEFAULT_CHAINS_CONTRACT
-    this.contractClient = createContractClient({
+    this.contractClient = getSysioContract(SysioContractName.chains, {
       client: config.client,
-      contract: this.contract,
-      descriptor
+      contract: this.contract
     })
   }
 
@@ -156,7 +147,7 @@ export class ChainsClient {
   }
 
   /** Reads one registered chain by exact chain code, or null when absent. */
-  async getChain(code: ChainSlugName): Promise<ChainRecord | null> {
+  async getChain(code: ChainSlugName): Promise<ChainRecord> {
     const codeValue = chainSlugValue(code),
       rows = await this.listChainRows({ limit: Number.MAX_SAFE_INTEGER }),
       row = rows.find(candidate => rowSlugValue(candidate.code) === codeValue)
