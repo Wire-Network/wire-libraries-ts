@@ -121,6 +121,46 @@ await reserves.pushMatchReserve({
 })
 ```
 
+## Reserve swaps
+
+Reserve swap integrations compose three on-chain sources instead of carrying a
+parallel token or route catalog:
+
+- `contracts.sysio.tokens.TokenRegistryClient` reads canonical token metadata
+  and active chain deployments.
+- `contracts.sysio.reserv.ReserveClient` discovers active liquidity and returns
+  live `swapquote` output for external or WIRE endpoints.
+- `contracts.sysio.uwrit.UnderwritingClient` reads swap lifecycle state and
+  submits WIRE-origin swaps into the next-epoch queue.
+
+```ts
+const tokens = new contracts.sysio.tokens.TokenRegistryClient({ client: api })
+const reserves = new contracts.sysio.reserv.ReserveClient({ client: api })
+const underwriting = new contracts.sysio.uwrit.UnderwritingClient({ client: api })
+
+const assets = await tokens.listAssets()
+const quote = await reserves.getSwapQuote({
+  from: contracts.sysio.uwrit.WIRE_SWAP_ENDPOINT,
+  fromAmount: 10_000_000_000n,
+  to: { chainCode: "SOLANA", tokenCode: "SOL", reserveCode: "PRIMARY" }
+})
+
+await underwriting.pushSwapFromWire({
+  user: "alice",
+  wireAmount: 10_000_000_000n,
+  destination: { chainCode: "SOLANA", tokenCode: "SOL", reserveCode: "PRIMARY" },
+  targetAmount: quote,
+  targetToleranceBps: 500,
+  recipientKind: SysioUwritChainkind.CHAIN_KIND_SVM,
+  recipientAddress: "<solana-public-key-bytes>"
+})
+```
+
+External-origin swap submission remains in the chain SDK that owns the deployed
+outpost ABI or IDL. A mined source transaction means the swap was submitted;
+`uwreqs` remains the source of truth for relay, underwriting, settlement, and
+revert status.
+
 ## Install
 
 ```sh
