@@ -208,6 +208,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - protoc-gen packages have `postinstall` scripts that trigger `pnpm dist` — this can be slow on first install
 - The `fix-hybrid-output.mjs` script must run after every build of hybrid packages or ESM imports will break in Node
 - `packages/sdk-core/src/contracts/sysio/authex` owns `sysio.authex` action builders, link table reads, and create-link proof helpers. Consumers should not duplicate the `createlink` message/signature rules locally.
+- `packages/sdk-core/src/contracts/sysio/chains` owns `sysio.chains` registry reads, chain-code normalization, lifecycle filtering, and privileged action construction. Treat registry rows as protocol identity/activation data; RPCs, explorers, icons, wallets, and application capability metadata remain consumer concerns.
 - AuthEx `links` reads use wire-sysio KV `index_name` queries with JSON-encoded bounds. Preserve KV row unwrapping, generated enum-name normalization, and compressed/uncompressed EM key equivalence.
 - `packages/sdk-core/src/contracts/sysio/Client.ts` is the generic transport facade for every generated system contract. Keep action/table names sourced from `SysioContractDefinitions`; keep workflow behavior in the `authex`, `msig`, and `reserv` domain clients.
 - `packages/sdk-core/src/contracts/sysio/Codecs.ts` is the only hand-written system-action codec registry. Add entries only when synchronous action construction is required; generated actions without a codec must retain the `AnyAction` fallback.
