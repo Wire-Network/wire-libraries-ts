@@ -83,8 +83,6 @@ const links = await authex.getLinks("alice")
 
 Current wire-sysio nodes expose `links` as a KV table. `AuthexClient` uses the deployed named indexes and JSON bounds, unwraps KV rows through `ChainAPI`, normalizes generated enum-name responses, and treats compressed/uncompressed EM public-key renderings as the same external key.
 
-The system contract descriptor registry includes `authex`, `chains`, `msig`, and `reserv`.
-
 ## Chain registry
 
 `contracts.sysio.chains` exposes the active Wire chain registry through the
@@ -98,9 +96,6 @@ const activeOutposts = await chains.listChains({
   activeOnly: true,
   includeDepot: false
 })
-
-const proxy = contracts.sysio.createClient({ client: api, name: "chains" })
-const rows = await proxy.tables.chains.rows()
 ```
 
 The on-chain registry is authoritative for protocol identity and activation.
