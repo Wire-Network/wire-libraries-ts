@@ -831,6 +831,7 @@ export interface SysioMsgchOutboundEnvelopeType {
   envelope_hash: string
   status: SysioMsgchEnvelopestatus | keyof typeof SysioMsgchEnvelopestatus
   raw_envelope: string
+  last_message_id: string
 }
 
 /** sysio.msgch::outpost_consensus_entry (type) */
@@ -840,6 +841,7 @@ export interface SysioMsgchOutpostConsensusEntryType {
   consensus_reached: boolean
   winning_checksum: string
   envelope_digest: string
+  message_tip: string
 }
 
 /** sysio.msgch::outpost_consensus_key (type) */
