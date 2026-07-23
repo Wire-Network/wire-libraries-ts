@@ -19,21 +19,47 @@ const client = new contracts.sysio.msig.MsigClient({ client: api })
 const detail = await client.getProposalDetail("alice", "upgrade1")
 ```
 
-System contract descriptors also feed a generic typed client factory. The current registry includes `sysio.msig`; future generated metadata can add the rest of the system contracts without changing the factory shape.
+## Generated system-contract proxy
+
+`contracts.sysio.createClient({ client })` exposes every contract in the
+generated `SysioContractDefinitions` registry. Contract, action, and table
+members are typed from `SysioContractMapping`, validated at runtime, and cached
+after their first access. Its `actions.<name>.prepare/invoke` and
+`tables.<name>.query` surface mirrors Wire Tools' `getSysioContract`. Use either
+the concise root syntax or `getSysioContract` when the contract name is dynamic.
 
 ```ts
-const msig = contracts.sysio.createClient({ client: api, name: "msig" })
-const approve = msig.actions.approve(
+import { SysioContracts } from "@wireio/sdk-core"
+
+const sysio = contracts.sysio.createClient({ client: api })
+const msig = sysio.msig
+const epoch = sysio.getSysioContract(SysioContracts.SysioContractName.epoch)
+
+const approve = msig.actions.approve.prepare(
   {
     proposer: "alice",
     proposal_name: "upgrade1",
     level: { actor: "bob", permission: "active" },
     proposal_hash: null
   },
-  ["bob@active"]
+  { authorization: ["bob@active"] }
 )
-const proposals = await msig.tables.proposal.rows({ scope: "alice" })
+const proposals = await msig.tables.proposal.query({ scope: "alice" })
+
+await epoch.actions.advance.invoke({}, { authorization: ["operator@active"] })
 ```
+
+`prepare` returns an ABI-encoded `Action` when a local runtime codec or caller
+ABI can encode the action. If synchronous encoding is unavailable or fails, it
+returns the same generated data as a typed `AnyAction`; `APIClient` resolves the
+deployed ABI when that payload is invoked or pushed. Authorization is empty by
+default and must be supplied explicitly for writes.
+
+The `AuthexClient`, `MsigClient`, and `ReserveClient` classes remain the public
+domain facades for proof creation, proposal compatibility, reserve
+normalization, and other workflow behavior. Each exposes `contractClient` for
+lower-level generated action and table access without duplicating transport
+logic.
 
 The multisig module supports:
 
@@ -57,8 +83,6 @@ const links = await authex.getLinks("alice")
 
 Current wire-sysio nodes expose `links` as a KV table. `AuthexClient` uses the deployed named indexes and JSON bounds, unwraps KV rows through `ChainAPI`, normalizes generated enum-name responses, and treats compressed/uncompressed EM public-key renderings as the same external key.
 
-The system contract descriptor registry includes `authex`, `chains`, `msig`, and `reserv`.
-
 ## Chain registry
 
 `contracts.sysio.chains` exposes the active Wire chain registry through the
@@ -72,9 +96,6 @@ const activeOutposts = await chains.listChains({
   activeOnly: true,
   includeDepot: false
 })
-
-const proxy = contracts.sysio.createClient({ client: api, name: "chains" })
-const rows = await proxy.tables.chains.rows()
 ```
 
 The on-chain registry is authoritative for protocol identity and activation.
@@ -94,7 +115,7 @@ const pending = await reserves.listReserves({
   status: SysioReservReservestatus.RESERVE_STATUS_PENDING
 })
 
-const action = reserves.buildMatchReserveAction({
+await reserves.pushMatchReserve({
   chainCode: "ETHEREUM",
   tokenCode: "ETH",
   reserveCode: "PRIMARY",
@@ -103,9 +124,45 @@ const action = reserves.buildMatchReserveAction({
 })
 ```
 
-The generic descriptor registry also accepts
-`contracts.sysio.createClient({ client: api, name: "reserv" })` for typed public
-action and table access.
+## Reserve swaps
+
+Reserve swap integrations compose three on-chain sources instead of carrying a
+parallel token or route catalog:
+
+- `contracts.sysio.tokens.TokenRegistryClient` reads canonical token metadata
+  and active chain deployments.
+- `contracts.sysio.reserv.ReserveClient` discovers active liquidity and returns
+  live `swapquote` output for external or WIRE endpoints.
+- `contracts.sysio.uwrit.UnderwritingClient` reads swap lifecycle state and
+  submits WIRE-origin swaps into the next-epoch queue.
+
+```ts
+const tokens = new contracts.sysio.tokens.TokenRegistryClient({ client: api })
+const reserves = new contracts.sysio.reserv.ReserveClient({ client: api })
+const underwriting = new contracts.sysio.uwrit.UnderwritingClient({ client: api })
+
+const assets = await tokens.listAssets()
+const quote = await reserves.getSwapQuote({
+  from: contracts.sysio.uwrit.WIRE_SWAP_ENDPOINT,
+  fromAmount: 10_000_000_000n,
+  to: { chainCode: "SOLANA", tokenCode: "SOL", reserveCode: "PRIMARY" }
+})
+
+await underwriting.pushSwapFromWire({
+  user: "alice",
+  wireAmount: 10_000_000_000n,
+  destination: { chainCode: "SOLANA", tokenCode: "SOL", reserveCode: "PRIMARY" },
+  targetAmount: quote,
+  targetToleranceBps: 500,
+  recipientKind: SysioUwritChainkind.CHAIN_KIND_SVM,
+  recipientAddress: "<solana-public-key-bytes>"
+})
+```
+
+External-origin swap submission remains in the chain SDK that owns the deployed
+outpost ABI or IDL. A mined source transaction means the swap was submitted;
+`uwreqs` remains the source of truth for relay, underwriting, settlement, and
+revert status.
 
 ## Install
 

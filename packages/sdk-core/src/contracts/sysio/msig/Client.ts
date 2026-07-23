@@ -6,6 +6,8 @@ import { Bytes } from "../../../chain/Bytes.js"
 import { Name, NameType } from "../../../chain/Name.js"
 import { SignedTransaction } from "../../../chain/Transaction.js"
 import { Serializer } from "../../../serializer/index.js"
+import { SysioContractName } from "../../../types/SysioContractTypes.js"
+import { getSysioContract, type SysioContractClient } from "../Client.js"
 
 import { buildGetProposalAction } from "./Actions.js"
 import { detectMsigCapabilities } from "./Capabilities.js"
@@ -27,16 +29,22 @@ import type {
   MsigCapabilities,
   MsigClientOptions,
   MsigReadStrategy,
+  MsigTableName,
   ProposalDetail
 } from "./Types.js"
+
+interface MsigNamedRow {
+  proposal_name?: NameType
+  account?: NameType
+}
 
 function nameString(value: NameType): string {
   return Name.from(value).toString()
 }
 
 function rowNameEquals(
-  row: { proposal_name?: unknown; account?: unknown },
-  field: "proposal_name" | "account",
+  row: MsigNamedRow,
+  field: keyof MsigNamedRow,
   value: NameType
 ): boolean {
   const rowValue = row[field]
@@ -101,7 +109,9 @@ export function decodeReadOnlyProposalReturn(response: any): MsigProposal {
       trace?.return_value_data_hex
 
   if (!value) {
-    throw new Error("Unable to find getproposal return value in read-only transaction trace.")
+    throw new Error(
+      "Unable to find getproposal return value in read-only transaction trace."
+    )
   }
 
   return typeof value === "string"
@@ -117,13 +127,20 @@ export class MsigClient {
   /** Multisig contract account. */
   readonly contract: NameType
 
-  private readonly configuredReadStrategy: MsigReadStrategy | "auto"
+  /** Generic typed contract proxy used by the higher-level workflow helpers. */
+  readonly contractClient: SysioContractClient<SysioContractName.msig>
+
+  private readonly configuredReadStrategy: MsigClientOptions["readStrategy"]
   private capabilities: Promise<MsigCapabilities> | null = null
 
   /** Creates a multisig client. */
   constructor(config: MsigClientOptions) {
     this.client = config.client
     this.contract = config.contract || DEFAULT_MSIG_CONTRACT
+    this.contractClient = getSysioContract(SysioContractName.msig, {
+      client: config.client,
+      contract: this.contract
+    })
     this.configuredReadStrategy = config.readStrategy || "auto"
   }
 
@@ -150,9 +167,7 @@ export class MsigClient {
   async listProposalScopes(
     options: ListProposalScopesOptions = {}
   ): Promise<string[]> {
-    const result = await this.client.v1.chain.get_table_by_scope({
-      code: this.contract,
-      table: "proposal",
+    return this.contractClient.tables.proposal.scopes({
       ...(options.lowerBound
         ? { lower_bound: Name.from(options.lowerBound).toString() }
         : {}),
@@ -161,8 +176,6 @@ export class MsigClient {
         : {}),
       limit: options.limit || 100
     })
-
-    return result.rows.map((row: any) => row.scope.toString())
   }
 
   /** Reads a proposal row or reassembled chunked proposal. */
@@ -173,7 +186,11 @@ export class MsigClient {
     const capabilities = await this.getCapabilities()
 
     return (
-      await this.readProposalWithCapabilities(capabilities, proposer, proposalName)
+      await this.readProposalWithCapabilities(
+        capabilities,
+        proposer,
+        proposalName
+      )
     ).proposal
   }
 
@@ -205,14 +222,11 @@ export class MsigClient {
     options: ListProposalsOptions = {}
   ): Promise<MsigProposal[]> {
     const limit = options.limit || 100
-    let rows: any[] = []
+    let rows: any[]
 
     try {
-      const result = await this.client.v1.chain.get_table_rows({
-        json: true,
-        code: this.contract,
+      const result = await this.contractClient.tables.proposal.query({
         scope: nameString(proposer),
-        table: "proposal",
         ...(options.lowerBound
           ? { lower_bound: Name.from(options.lowerBound as NameType) }
           : {}),
@@ -228,7 +242,11 @@ export class MsigClient {
         throw error
       }
 
-      rows = await this.getScopedRows(proposer, "proposal", Math.max(limit, 1000))
+      rows = await this.getScopedRows(
+        proposer,
+        "proposal",
+        Math.max(limit, 1000)
+      )
     }
 
     if (options.lowerBound || options.upperBound) {
@@ -259,7 +277,7 @@ export class MsigClient {
   async getApprovals(
     proposer: NameType,
     proposalName: NameType
-  ): Promise<MsigApprovalsResult | null> {
+  ): Promise<MsigApprovalsResult> {
     const modern = await this.getExactScopedRow(
       proposer,
       "approvals2",
@@ -292,7 +310,7 @@ export class MsigClient {
   }
 
   /** Reads an account invalidation row, when present. */
-  async getInvalidation(account: NameType): Promise<MsigInvalidation | null> {
+  async getInvalidation(account: NameType): Promise<MsigInvalidation> {
     const rows = await this.getScopedRows(this.contract, "invals"),
       row = rows.find((candidate: any) =>
         rowNameEquals(candidate, "account", account)
@@ -310,7 +328,11 @@ export class MsigClient {
 
     return match(strategy)
       .with("read-only-getproposal", async () => {
-        const action = buildGetProposalAction(proposer, proposalName, this.contract)
+        const action = buildGetProposalAction(
+          proposer,
+          proposalName,
+          this.contract
+        )
 
         try {
           const response = await this.sendReadOnlyAction(action)
@@ -476,17 +498,14 @@ export class MsigClient {
 
   private async getExactScopedRow(
     scope: NameType,
-    table: NameType,
+    table: MsigTableName,
     proposalName: NameType
-  ): Promise<any | null> {
-    let rows: any[] = []
+  ): Promise<any> {
+    let rows: any[]
 
     try {
-      const result = await this.client.v1.chain.get_table_rows({
-        json: true,
-        code: this.contract,
+      const result = await this.contractClient.tables[table].query({
         scope: nameString(scope),
-        table,
         lower_bound: Name.from(proposalName),
         limit: 1
       })
@@ -496,15 +515,14 @@ export class MsigClient {
       if (!isKvBoundReadError(error)) {
         throw error
       }
+      rows = []
     }
 
     const row =
       rows.find((candidate: any) =>
         rowNameEquals(candidate, "proposal_name", proposalName)
       ) ||
-      (
-        await this.getScopedRows(scope, table)
-      ).find((candidate: any) =>
+      (await this.getScopedRows(scope, table)).find((candidate: any) =>
         rowNameEquals(candidate, "proposal_name", proposalName)
       ) ||
       null
@@ -514,14 +532,11 @@ export class MsigClient {
 
   private async getScopedRows(
     scope: NameType,
-    table: NameType,
+    table: MsigTableName,
     limit = 1000
   ): Promise<any[]> {
-    const result = await this.client.v1.chain.get_table_rows({
-      json: true,
-      code: this.contract,
+    const result = await this.contractClient.tables[table].query({
       scope: nameString(scope),
-      table,
       limit
     })
 

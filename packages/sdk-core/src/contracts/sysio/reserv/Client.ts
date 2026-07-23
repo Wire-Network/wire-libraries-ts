@@ -7,32 +7,21 @@ import { SignedTransaction } from "../../../chain/Transaction.js"
 import { Serializer } from "../../../serializer/index.js"
 import {
   SysioReservChainkind,
-  SysioReservReservestatus
+  SysioReservReservestatus,
+  SysioContractName
 } from "../../../types/SysioContractTypes.js"
 import type * as SysioContracts from "../../../types/SysioContractTypes.js"
-import {
-  ContractClient,
-  createContractClient,
-  type ContractTableRowsOptions
-} from "../../Contract.js"
+import type { ContractTableRowsOptions } from "../../Contract.js"
+import { getSysioContract, type SysioContractClient } from "../Client.js"
 
-import { buildMatchReserveAction, buildSwapQuoteAction } from "./Actions.js"
+import { buildSwapQuoteAction, matchReserveActionData } from "./Actions.js"
 import {
   DEFAULT_RESERV_CONTRACT,
   DEFAULT_RESERVE_QUERY_LIMIT
 } from "./Constants.js"
-import {
-  descriptor,
-  type SysioReservActionData,
-  type SysioReservTableRows
-} from "./Descriptor.js"
-import {
-  reserveSlugString,
-  reserveSlugValue
-} from "./Slug.js"
+import { reserveSlugString, reserveSlugValue } from "./Slug.js"
 import type {
   ListReservesOptions,
-  MatchReserveOptions,
   PushMatchReserveOptions,
   ReserveClientOptions,
   ReserveIdentity,
@@ -155,19 +144,15 @@ export class ReserveClient {
   readonly contract: NameType
 
   /** Generic typed client for direct public action and table access. */
-  readonly contractClient: ContractClient<
-    SysioReservActionData,
-    SysioReservTableRows
-  >
+  readonly contractClient: SysioContractClient<SysioContractName.reserv>
 
   /** Creates a reserve client. */
   constructor(config: ReserveClientOptions) {
     this.client = config.client
     this.contract = config.contract || DEFAULT_RESERV_CONTRACT
-    this.contractClient = createContractClient({
+    this.contractClient = getSysioContract(SysioContractName.reserv, {
       client: config.client,
-      contract: this.contract,
-      descriptor
+      contract: this.contract
     })
   }
 
@@ -191,21 +176,21 @@ export class ReserveClient {
           limit: DEFAULT_RESERVE_QUERY_LIMIT,
           ...(lowerBound ? { lower_bound: lowerBound } : {})
         },
-        result = await this.contractClient.tables.reserves.rows<string>(query),
+        result = await this.contractClient.tables.reserves.query<string>(query),
         matches = result.rows.filter(row => {
-        const status = enumValue(SysioReservReservestatus, row.status),
-          chainMatches =
-            options.chainCode == null ||
-            rowSlugValue(row.chain_code) ===
-              reserveSlugValue(options.chainCode),
-          tokenMatches =
-            options.tokenCode == null ||
-            rowSlugValue(row.token_code) ===
-              reserveSlugValue(options.tokenCode),
-          statusMatches = options.status == null || status === options.status,
-          ownerMatches = !owner || optionalAccountString(row.owner) === owner,
-          privacyMatches =
-            options.isPrivate == null || row.is_private === options.isPrivate
+          const status = enumValue(SysioReservReservestatus, row.status),
+            chainMatches =
+              options.chainCode == null ||
+              rowSlugValue(row.chain_code) ===
+                reserveSlugValue(options.chainCode),
+            tokenMatches =
+              options.tokenCode == null ||
+              rowSlugValue(row.token_code) ===
+                reserveSlugValue(options.tokenCode),
+            statusMatches = options.status == null || status === options.status,
+            ownerMatches = !owner || optionalAccountString(row.owner) === owner,
+            privacyMatches =
+              options.isPrivate == null || row.is_private === options.isPrivate
 
           return (
             chainMatches &&
@@ -269,31 +254,29 @@ export class ReserveClient {
     }
   }
 
-  /** Builds an unsigned Wire action that funds and activates a pending reserve. */
-  buildMatchReserveAction(options: MatchReserveOptions): Action {
-    return buildMatchReserveAction({ contract: this.contract, ...options })
-  }
-
   /** Builds and pushes a signed Wire transaction that activates a pending reserve. */
   async pushMatchReserve(
     options: PushMatchReserveOptions,
     pushOptions: TransactionExtraOptions = options.pushOptions || {}
   ): Promise<Awaited<ReturnType<APIClient["pushTransaction"]>>> {
-    return this.client.pushTransaction(
-      this.buildMatchReserveAction(options),
-      pushOptions
+    return this.contractClient.actions.matchreserve.invoke(
+      matchReserveActionData(options),
+      {
+        authorization: [
+          {
+            actor: options.matcher,
+            permission: options.permission || "active"
+          }
+        ],
+        pushOptions
+      }
     )
-  }
-
-  /** Builds an unsigned read-only quote action using the deployed reserve curve. */
-  buildSwapQuoteAction(options: ReserveQuoteOptions): Action {
-    return buildSwapQuoteAction({ contract: this.contract, ...options })
   }
 
   /** Reads the current on-chain quote for one reserve route. */
   async getSwapQuote(options: ReserveQuoteOptions): Promise<bigint> {
     const response = await this.sendReadOnlyAction(
-      this.buildSwapQuoteAction(options)
+      buildSwapQuoteAction({ contract: this.contract, ...options })
     )
     return decodeReserveUInt64Return(response)
   }

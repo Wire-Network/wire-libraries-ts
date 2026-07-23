@@ -95,15 +95,14 @@ describe("ChainsClient", () => {
     await expect(client.getChain("MISSING")).resolves.toBeNull()
   })
 
-  test("exposes the registered descriptor through the generic sysio proxy", async () => {
+  test("exposes chain tables through the root sysio proxy", async () => {
     const { client } = clientFixture(),
       proxy = contracts.sysio.createClient({
-        client: client.client,
-        name: "chains"
+        client: client.client
       }),
-      result = await proxy.tables.chains.rows()
+      result = await proxy.chains.tables.chains.rows()
 
-    expect(proxy.contract.toString()).toBe("sysio.chains")
+    expect(proxy.chains.account.toString()).toBe("sysio.chains")
     expect(result.rows).toEqual(CHAIN_ROWS)
   })
 
