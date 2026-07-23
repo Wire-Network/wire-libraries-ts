@@ -6,16 +6,19 @@ import {
   type ContractDescriptor
 } from "../Contract.js"
 import { descriptor as authexDescriptor } from "./authex/Descriptor.js"
+import { descriptor as chainsDescriptor } from "./chains/Descriptor.js"
 import { descriptor as msigDescriptor } from "./msig/Descriptor.js"
 import { descriptor as reservDescriptor } from "./reserv/Descriptor.js"
 
 export * as authex from "./authex/index.js"
+export * as chains from "./chains/index.js"
 export * as msig from "./msig/index.js"
 export * as reserv from "./reserv/index.js"
 
 /** System contract descriptors available to the generic client factory. */
 export const descriptors = {
   authex: authexDescriptor,
+  chains: chainsDescriptor,
   msig: msigDescriptor,
   reserv: reservDescriptor
 } as const
