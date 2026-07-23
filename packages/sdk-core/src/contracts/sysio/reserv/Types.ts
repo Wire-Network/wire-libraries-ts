@@ -63,7 +63,7 @@ export interface PushMatchReserveOptions extends MatchReserveOptions {
 export interface ReserveQuoteOptions {
   /** Source reserve identity. */
   from: ReserveIdentity
-  /** Source amount in source-token base units. */
+  /** Source amount in the reserve's depot precision frame. */
   fromAmount: UInt64Type | bigint
   /** Destination reserve identity. */
   to: ReserveIdentity

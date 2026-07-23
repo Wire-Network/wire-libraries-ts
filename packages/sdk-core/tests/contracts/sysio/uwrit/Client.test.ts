@@ -16,7 +16,7 @@ interface TableQuery {
   table: string
 }
 
-const slug = (value: string) => ({ value: SlugName.from(value) })
+const slug = (value: string) => ({ value: String(SlugName.from(value)) })
 
 function requestRow(overrides: Record<string, unknown> = {}) {
   return {
@@ -32,8 +32,8 @@ function requestRow(overrides: Record<string, unknown> = {}) {
     dst_reserve_code: slug("PRIMARY"),
     dst_amount: "90",
     variance_tolerance_bps: 500,
-    source_tx_id: "abcd",
-    depositor: "alice",
+    source_tx_id: "000000000000002a",
+    depositor: "7412bc256355abd22d53de3a38e8995b5d4c1d1",
     commits_by: [],
     winner: "",
     committed_at_ms: "0",
@@ -122,12 +122,40 @@ describe("UnderwritingClient", () => {
       status:
         SysioUwritUnderwriterequeststatus.UNDERWRITE_REQUEST_STATUS_PENDING,
       source: { chainCode: "ETHEREUM", tokenCode: "ETH" },
-      destination: { chainCode: "SOLANA", tokenCode: "SOL" }
+      destination: { chainCode: "SOLANA", tokenCode: "SOL" },
+      sourceRequestId: 42n,
+      depositor: "7412bc256355abd22d53de3a38e8995b5d4c1d1"
     })
     expect(normalizeFromWireQueue(queueRow() as any)).toMatchObject({
       user: "alice",
       wireAmount: 5000000000n,
       recipientKind: SysioUwritChainkind.CHAIN_KIND_SVM
+    })
+  })
+
+  test("decodes the synthetic WIRE request id and depositor account", () => {
+    const row = requestRow({
+      src_chain_code: slug("WIRE"),
+      src_token_code: slug("WIRE"),
+      src_reserve_code: slug("WIRE"),
+      source_tx_id: "0700000000000080",
+      depositor: "776972656e6f2e616263"
+    })
+
+    expect(normalizeUnderwritingRequest(row as any)).toMatchObject({
+      sourceRequestId: 0x8000000000000007n,
+      depositorAccount: "wireno.abc"
+    })
+  })
+
+  test("leaves malformed protocol correlation bytes undecoded", () => {
+    expect(
+      normalizeUnderwritingRequest(
+        requestRow({ source_tx_id: "not-hex", depositor: "not-hex" }) as any
+      )
+    ).toMatchObject({
+      sourceRequestId: undefined,
+      depositorAccount: undefined
     })
   })
 

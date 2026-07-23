@@ -162,7 +162,9 @@ await underwriting.pushSwapFromWire({
 External-origin swap submission remains in the chain SDK that owns the deployed
 outpost ABI or IDL. A mined source transaction means the swap was submitted;
 `uwreqs` remains the source of truth for relay, underwriting, settlement, and
-revert status.
+revert status. Normalized underwriting rows expose `sourceRequestId` for
+matching the outpost's `SwapDeposit` id; transaction hashes and signatures are
+transport receipts rather than protocol correlation values.
 
 ## Install
 

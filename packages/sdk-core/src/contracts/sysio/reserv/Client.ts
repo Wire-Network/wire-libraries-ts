@@ -19,7 +19,11 @@ import {
   DEFAULT_RESERV_CONTRACT,
   DEFAULT_RESERVE_QUERY_LIMIT
 } from "./Constants.js"
-import { reserveSlugString, reserveSlugValue } from "./Slug.js"
+import {
+  reserveRowSlugValue,
+  reserveSlugString,
+  reserveSlugValue
+} from "./Slug.js"
 import type {
   ListReservesOptions,
   PushMatchReserveOptions,
@@ -46,13 +50,6 @@ function enumValue<T extends Record<string, string | number>>(
   return Number(mapped)
 }
 
-function rowSlugValue(value: SysioContracts.SysioReservSlugNameType): number {
-  const packed = value.value
-  return typeof packed === "string" && /^[0-9]+$/.test(packed)
-    ? reserveSlugValue(Number(packed))
-    : reserveSlugValue(packed)
-}
-
 function bigintValue(value: number | string): bigint {
   return BigInt(value.toString())
 }
@@ -69,9 +66,9 @@ function optionalAccountString(value: NameType): string {
 export function normalizeReserveRow(
   row: SysioContracts.SysioReservReserveRowType
 ): ReserveRecord {
-  const chainCodeValue = rowSlugValue(row.chain_code),
-    tokenCodeValue = rowSlugValue(row.token_code),
-    reserveCodeValue = rowSlugValue(row.reserve_code)
+  const chainCodeValue = reserveRowSlugValue(row.chain_code),
+    tokenCodeValue = reserveRowSlugValue(row.token_code),
+    reserveCodeValue = reserveRowSlugValue(row.reserve_code)
 
   return {
     chainCode: reserveSlugString(chainCodeValue),
@@ -181,11 +178,11 @@ export class ReserveClient {
           const status = enumValue(SysioReservReservestatus, row.status),
             chainMatches =
               options.chainCode == null ||
-              rowSlugValue(row.chain_code) ===
+              reserveRowSlugValue(row.chain_code) ===
                 reserveSlugValue(options.chainCode),
             tokenMatches =
               options.tokenCode == null ||
-              rowSlugValue(row.token_code) ===
+              reserveRowSlugValue(row.token_code) ===
                 reserveSlugValue(options.tokenCode),
             statusMatches = options.status == null || status === options.status,
             ownerMatches = !owner || optionalAccountString(row.owner) === owner,
@@ -230,7 +227,8 @@ export class ReserveClient {
         limit: Number.MAX_SAFE_INTEGER
       }),
       row = rows.find(
-        candidate => rowSlugValue(candidate.reserve_code) === reserveCode
+        candidate =>
+          reserveRowSlugValue(candidate.reserve_code) === reserveCode
       )
 
     return row ? normalizeReserveRow(row) : null

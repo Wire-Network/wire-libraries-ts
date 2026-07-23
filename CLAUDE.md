@@ -215,6 +215,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - `packages/sdk-core/src/contracts/sysio/Codecs.ts` is the only hand-written system-action codec registry. Add entries only when synchronous action construction is required; generated actions without a codec must retain the `AnyAction` fallback.
 - System-contract `prepare` prefers synchronous ABI encoding but must retain a typed `AnyAction` fallback so `APIClient` can resolve the deployed ABI. Never invent a default write authorization in the public SDK.
 - `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
+- `packages/sdk-core/src/contracts/sysio/uwrit` preserves raw request bytes and exposes `sourceRequestId` for swap correlation. External outpost ids are big-endian; synthetic WIRE queue ids are little-endian and high-bit tagged.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
 - Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch
 - Node >=22 required (package.json says >=22, README says >=24 — actual CI uses v24)
