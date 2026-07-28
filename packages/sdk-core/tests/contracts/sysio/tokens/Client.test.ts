@@ -67,6 +67,22 @@ describe("TokenRegistryClient", () => {
     })
   })
 
+  test("normalizes packed slugs serialized as uint64 strings", () => {
+    expect(
+      normalizeTokenRow(
+        tokenRow({ code: { value: String(SlugName.from("ETH")) } }) as any
+      )
+    ).toMatchObject({ code: "ETH" })
+    expect(
+      normalizeChainTokenRow(
+        chainTokenRow({
+          chain_code: { value: String(SlugName.from("ETHEREUM")) },
+          token_code: { value: String(SlugName.from("ETH")) }
+        }) as any
+      )
+    ).toMatchObject({ chainCode: "ETHEREUM", tokenCode: "ETH" })
+  })
+
   test("joins active token metadata to chain deployments", async () => {
     const { client, getTableRows } = fixture()
 

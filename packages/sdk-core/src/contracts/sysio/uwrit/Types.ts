@@ -94,10 +94,19 @@ export interface UnderwritingRequestRecord {
   destinationAmount: bigint
   /** Accepted quote drift in basis points. */
   toleranceBps: number
-  /** Origin-chain transaction identifier bytes. */
+  /** Raw protocol source-request bytes returned by the chain API. */
   sourceTransactionId: string
-  /** Originating Wire account when known. */
+  /**
+   * Decoded outpost deposit id, or the synthetic WIRE queue/request id.
+   *
+   * This is the stable correlation value emitted by source-chain swap
+   * submission. It is not an EVM transaction hash or Solana signature.
+   */
+  sourceRequestId?: bigint
+  /** Raw source-chain depositor address bytes returned by the chain API. */
   depositor: string
+  /** Decoded Wire depositor for WIRE-origin requests. */
+  depositorAccount?: string
   /** Underwriter commitments received for this request. */
   commits: UnderwritingCommitRecord[]
   /** Winning underwriter account, empty while unresolved. */

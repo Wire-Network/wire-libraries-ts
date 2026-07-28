@@ -17,6 +17,16 @@ export function reserveSlugValue(value: ReserveSlugName): number {
   return packed
 }
 
+/** Converts a generated row slug, including JSON-serialized uint64 strings. */
+export function reserveRowSlugValue(
+  value: SysioContracts.SysioReservSlugNameType
+): number {
+  const packed = value.value
+  return typeof packed === "string" && /^[0-9]+$/.test(packed)
+    ? reserveSlugValue(Number(packed))
+    : reserveSlugValue(packed)
+}
+
 /** Converts a friendly reserve slug to generated `slug_name` action data. */
 export function reserveSlugData(
   value: ReserveSlugName
