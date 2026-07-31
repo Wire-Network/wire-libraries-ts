@@ -72,6 +72,7 @@ const Sim2DeploymentDocument = {
     }
   },
   solana: {
+    genesisHash: "3rVuMvjfU8SGyyfYWsmkhJNHSsrbxaGLLzdwnYZvWadc",
     programs: {
       [SolanaProgramName.liqsolCore]: {
         address: "5nBtmutQLrRKBUxNfHJPDjiW5u8id6QM9Hhjg1D1g1XH",
