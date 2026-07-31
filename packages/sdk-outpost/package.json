@@ -12,7 +12,8 @@
     "access": "public"
   },
   "files": [
-    "lib",
+    "lib/cjs",
+    "lib/esm",
     "README.md"
   ],
   "types": "lib/esm/index.d.ts",
