@@ -1,0 +1,55 @@
+{
+  "name": "@wireio/sdk-outpost",
+  "description": "Strictly typed Ethereum and Solana clients for Wire outposts.",
+  "version": "0.0.0",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Wire-Network/wire-libraries-ts",
+    "directory": "packages/sdk-outpost"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "lib",
+    "README.md"
+  ],
+  "types": "lib/esm/index.d.ts",
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.js",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.js",
+      "types": "./lib/esm/index.d.ts"
+    },
+    "./*": {
+      "import": "./lib/esm/*.js",
+      "require": "./lib/cjs/*.js",
+      "types": "./lib/esm/*.d.ts"
+    }
+  },
+  "access": "public",
+  "license": "FSL-1.1-Apache-2.0",
+  "scripts": {
+    "compile": "tsc -b tsconfig.json",
+    "compile:watch": "tsc -b tsconfig.json -w",
+    "test": "jest",
+    "fix:hybrid:exports": "node ../../scripts/fix-hybrid-output.mjs .",
+    "generate:ethereum": "typechain --target ethers-v5 --out-dir src/contracts/ethereum/generated 'src/assets/ethereum/**/*.json'",
+    "generate:solana": "node scripts/generate-solana-types.mjs"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@solana/web3.js": "^1.98.4",
+    "@wireio/sdk-core": "workspace:*",
+    "ethers": "^5.8.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@typechain/ethers-v5": "^11.1.2",
+    "typechain": "^8.3.2",
+    "typescript": "6.0.2"
+  }
+}

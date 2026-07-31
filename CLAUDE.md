@@ -36,6 +36,7 @@ pnpm workspaces with TypeScript composite project references. No Lerna/Nx.
 | `@wireio/shared-web` | Web-specific utilities | No | ESM |
 | `@wireio/shared-node` | Node.js utilities | Yes | Hybrid ESM+CJS |
 | `@wireio/sdk-core` | Wire blockchain SDK types/primitives | Yes | Hybrid ESM+CJS |
+| `@wireio/sdk-outpost` | Typed, versioned external-chain outpost artifacts and clients | Yes | Hybrid ESM+CJS |
 | `@wireio/wallet-ext-sdk` | Wallet extension client SDK | Yes | ESM |
 | `@wireio/wallet-browser-ext` | Chrome extension developer wallet | No | Webpack bundle |
 
@@ -45,7 +46,8 @@ pnpm workspaces with TypeScript composite project references. No Lerna/Nx.
 shared ──→ shared-web
        ──→ shared-node
 
-sdk-core ──→ wallet-ext-sdk ──→ wallet-browser-ext
+sdk-core ──→ sdk-outpost
+         ──→ wallet-ext-sdk ──→ wallet-browser-ext
 ```
 
 Protoc plugins and bundler are standalone (no internal deps).
@@ -68,7 +70,7 @@ Root `tsconfig.json` has project references to all packages. Build order is reso
 
 ## Hybrid ESM/CJS Build Pattern
 
-Packages that publish both ESM and CJS (`shared`, `sdk-core`, `shared-node`) use:
+Packages that publish both ESM and CJS (`shared`, `sdk-core`, `sdk-outpost`, `shared-node`) use:
 
 1. Two tsconfig files: one for `lib/esm/`, one for `lib/cjs/`
 2. Post-build: `scripts/fix-hybrid-output.mjs` patches relative imports with `.js` extensions and creates `lib/cjs/package.json` with `{"type":"commonjs"}`
@@ -191,6 +193,8 @@ Every new/modified symbol ships unit tests in the same change. Tests never assum
 
 ## CI/CD
 
+- Use product- or change-focused branch names, commit messages, pull-request titles, and pull-request descriptions. Do not add automated-authoring labels or attribution to repository history or review metadata.
+
 GitHub Actions (`.github/workflows/publish-npm.yaml`):
 - Triggers on push to `master` (skips if `[skip release]` in commit message)
 - Bumps all packages patch version (`pnpm -r exec -- pnpm version patch`)
@@ -216,6 +220,9 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - System-contract `prepare` prefers synchronous ABI encoding but must retain a typed `AnyAction` fallback so `APIClient` can resolve the deployed ABI. Never invent a default write authorization in the public SDK.
 - `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
 - `packages/sdk-core/src/contracts/sysio/uwrit` preserves raw request bytes and exposes `sourceRequestId` for swap correlation. External outpost ids are big-endian; synthetic WIRE queue ids are little-endian and high-bit tagged.
+- `packages/sdk-outpost` owns external-chain ABI/IDL assets, their deployment provenance, and strictly typed Ethereum/Solana clients. It extends `sdk-core`; it must not duplicate Wire-chain contract types or import generated OPP model packages.
+- `sdk-outpost` deployment documents are untrusted JSON boundaries validated with Zod. ABI/IDL-derived contract and program types remain generator-owned and must never be re-declared as Zod schemas.
+- Add a deployment bundle only with its source revisions, archive/artifact digests, and verified on-chain identities. A checked-in artifact does not by itself prove a contract or program is deployed.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
 - Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch
 - Node >=22 required (package.json says >=22, README says >=24 — actual CI uses v24)
