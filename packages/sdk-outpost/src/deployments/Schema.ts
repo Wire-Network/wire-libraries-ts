@@ -1,3 +1,4 @@
+import { PublicKey } from "@solana/web3.js"
 import { utils as ethersUtils } from "ethers"
 import { z } from "zod"
 
@@ -17,7 +18,19 @@ const SourceRevisionSchema = z.string().regex(/^[0-9a-f]{8,40}$/),
     .transform(value => ChainId.from(value)),
   EthereumAddressSchema = z
     .string()
-    .refine(ethersUtils.isAddress, "Invalid Ethereum address")
+    .refine(ethersUtils.isAddress, "Invalid Ethereum address"),
+  SolanaAddressSchema = z.string().transform((value, context) => {
+    try {
+      return new PublicKey(value).toBase58()
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      context.addIssue({
+        code: "custom",
+        message: `Invalid Solana address: ${message}`
+      })
+      return z.NEVER
+    }
+  })
 
 /** Source repository identity embedded in an artifact bundle. */
 export const ArtifactSourceSchema = z.object({
@@ -31,7 +44,9 @@ export const ArtifactBundleSchema = z.object({
   sourceArchiveSha256: Sha256Schema,
   platformRelease: z.object({
     tag: z.string().regex(/^v\d+\.\d+\.\d+$/),
-    url: z.url()
+    url: z.url(),
+    manifest: ArtifactSourceSchema,
+    libraries: ArtifactSourceSchema
   }),
   sources: z.object({
     wireTools: ArtifactSourceSchema,
@@ -49,7 +64,7 @@ export const EthereumContractDeploymentSchema = z.object({
 
 /** Runtime metadata for one deployed Solana program. */
 export const SolanaProgramDeploymentSchema = z.object({
-  address: z.string().min(32).max(44),
+  address: SolanaAddressSchema,
   artifactSha256: Sha256Schema
 })
 

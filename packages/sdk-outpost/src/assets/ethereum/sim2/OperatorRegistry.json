@@ -1,0 +1,1657 @@
+{
+  "contractName": "OperatorRegistry",
+  "address": "0x367761085BF3C12e5DA2Df99AC6E1a824612b8fb",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "authority",
+          "type": "address"
+        }
+      ],
+      "name": "AccessManagedInvalidAuthority",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "uint32",
+          "name": "delay",
+          "type": "uint32"
+        }
+      ],
+      "name": "AccessManagedRequiredDelay",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "AccessManagedUnauthorized",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "target",
+          "type": "address"
+        }
+      ],
+      "name": "AddressEmptyCode",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "implementation",
+          "type": "address"
+        }
+      ],
+      "name": "ERC1967InvalidImplementation",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ERC1967NonPayable",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "FailedCall",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "raw",
+          "type": "uint64"
+        }
+      ],
+      "name": "InvalidEnumValue",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "raw",
+          "type": "uint64"
+        }
+      ],
+      "name": "InvalidEnumValue",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "raw",
+          "type": "uint64"
+        }
+      ],
+      "name": "InvalidEnumValue",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "raw",
+          "type": "uint64"
+        }
+      ],
+      "name": "InvalidEnumValue",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidInitialization",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotInitializing",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "actualBytes",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "maxBytes",
+          "type": "uint256"
+        }
+      ],
+      "name": "OPP_EnvelopeOverCap",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "expected",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "actual",
+          "type": "bytes32"
+        }
+      ],
+      "name": "OPP_EpochHashMismatch",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "epochIndex",
+          "type": "uint32"
+        }
+      ],
+      "name": "OPP_InboundEnvelopeRecordMissing",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "epochIndex",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "evictBoundary",
+          "type": "uint32"
+        }
+      ],
+      "name": "OPP_InboundEnvelopeStillInRetention",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "required",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "provided",
+          "type": "uint256"
+        }
+      ],
+      "name": "OPP_InsufficientSignatureWeight",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "expected",
+          "type": "address"
+        }
+      ],
+      "name": "OPP_InvalidOPPAddress",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OPP_InvalidRetentionConfig",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "expected",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "actual",
+          "type": "bytes"
+        }
+      ],
+      "name": "OPP_MessageIDMismatch",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OPP_NoAttestationsSent",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OPP_NoPendingAttestations",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "previousEnvelopeHash",
+          "type": "bytes"
+        }
+      ],
+      "name": "OPP_NonCanonicalPreviousEpochHash",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "expected",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "actual",
+          "type": "uint32"
+        }
+      ],
+      "name": "OPP_NonSequentialEpoch",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "OPP_NotActiveOperator",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OPP_NotSending",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OPP_OPPAddressNotSet",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "epochIndex",
+          "type": "uint32"
+        },
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "OPP_OperatorAlreadyDelivered",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "expected",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "actual",
+          "type": "bytes32"
+        }
+      ],
+      "name": "OPP_PayloadChecksumMismatch",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "stack",
+          "type": "uint256"
+        }
+      ],
+      "name": "OPP_SendStackError",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "AttestationType",
+          "name": "attestationType",
+          "type": "uint16"
+        }
+      ],
+      "name": "OPP_UnauthorizedAttestationType",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "AttestationType",
+          "name": "attestationType",
+          "type": "uint16"
+        }
+      ],
+      "name": "OPP_UnhandledAttestationType",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "expectedChainId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "ChainKind",
+          "name": "actualKind",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint32",
+          "name": "actualId",
+          "type": "uint32"
+        }
+      ],
+      "name": "OPP_WrongDestinationChain",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OPP_ZeroTag",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "SafeERC20FailedOperation",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "UUPSUnauthorizedCallContext",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "slot",
+          "type": "bytes32"
+        }
+      ],
+      "name": "UUPSUnsupportedProxiableUUID",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "provided",
+          "type": "address"
+        }
+      ],
+      "name": "WIRE_BadContractAddress",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bps",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "maxBps",
+          "type": "uint256"
+        }
+      ],
+      "name": "WIRE_BasisPointsTooHigh",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_Erc20DepositValueNonZero",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_Erc20TransferFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "WIRE_EthSendFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "WIRE_FeeOnTransferUnsupported",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_GoLiveInProgress",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "required",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "available",
+          "type": "uint256"
+        }
+      ],
+      "name": "WIRE_InsufficientEthBalance",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_InvalidPrice",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "WIRE_LiqEthTransferFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_MultipleNativeTrackedCodes",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_NativeDepositValueMismatch",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "actor",
+          "type": "address"
+        },
+        {
+          "internalType": "OperatorType",
+          "name": "operatorType",
+          "type": "uint8"
+        }
+      ],
+      "name": "WIRE_NoBonds",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_NoPricesRecorded",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_NoYield",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "receiptId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "WIRE_NotReceiptOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "WIRE_OnlyOPPInboundLib",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_OppInboundCallerUnauthorized",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_OutpostChainCodeUnset",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "innerRevert",
+          "type": "bytes"
+        }
+      ],
+      "name": "WIRE_PermitFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_PrecisionOverflow",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "WIRE_PrecisionUnsetForRefund",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "maxPrice",
+          "type": "uint256"
+        }
+      ],
+      "name": "WIRE_PriceOutOfBounds",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "receiptId",
+          "type": "uint256"
+        }
+      ],
+      "name": "WIRE_ReceiptNotWithdrawable",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_RefundingInProgress",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_RefundingOnly",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_ReserveAlreadyExists",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_ReserveBadParam",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_ReserveCancelNotCreator",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_ReserveNotCancellable",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_SwapEmptyRecipient",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_SwapSourceNotNative",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_SwapSourceReserveUnavailable",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "WIRE_SwapSourceTokenNotRegistered",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_SwapUnknownSlugName",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_SwapZeroSourceAmount",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_TokenAddressUnset",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "provided",
+          "type": "uint8"
+        }
+      ],
+      "name": "WIRE_TokenPrecisionOutOfRange",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "WIRE_TokenPrecisionUnset",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_TrackedCodeZero",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
+        }
+      ],
+      "name": "WIRE_UnexpectedError",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_ZeroAmount",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "authority",
+          "type": "address"
+        }
+      ],
+      "name": "AuthorityUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "depositor",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "refundedToDepositor",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "penaltyToReserve",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "originalMessageId",
+          "type": "bytes"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
+        }
+      ],
+      "name": "DepositReverted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "version",
+          "type": "uint64"
+        }
+      ],
+      "name": "Initialized",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "LiqTokenCodeSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "NativeTokenCodeSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "operator",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "OperatorType",
+          "name": "operatorType",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "OperatorDeposited",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "operator",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "reserveTarget",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
+        }
+      ],
+      "name": "OperatorSlashed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "chainCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "OutpostChainCodeSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "underwriter",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "uicBytes",
+          "type": "bytes"
+        }
+      ],
+      "name": "UnderwriteCommitRelayed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "implementation",
+          "type": "address"
+        }
+      ],
+      "name": "Upgraded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "operator",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "requestId",
+          "type": "uint64"
+        }
+      ],
+      "name": "WithdrawRemitted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "operator",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "requestId",
+          "type": "uint64"
+        }
+      ],
+      "name": "WithdrawRequested",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "DEPOSIT_REVERT_ATTESTATION",
+      "outputs": [
+        {
+          "internalType": "AttestationType",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "DEPOSIT_REVERT_GAS_MULTIPLIER",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "OPERATOR_ACTION_ATTESTATION",
+      "outputs": [
+        {
+          "internalType": "AttestationType",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "AttestationType",
+          "name": "attestationType",
+          "type": "uint16"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "OPPAttestationIn",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "UNDERWRITE_INTENT_COMMIT_ATTESTATION",
+      "outputs": [
+        {
+          "internalType": "AttestationType",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "UPGRADE_INTERFACE_VERSION",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "__OPPEndpointManaged_init",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "authority",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "uicBytes",
+          "type": "bytes"
+        }
+      ],
+      "name": "commit",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "OperatorType",
+          "name": "operatorType",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bytes",
+          "name": "compressedPubkey",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "deposit",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "chainCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "OperatorType",
+          "name": "operatorType",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bytes",
+          "name": "compressedPubkey",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "depositNonNative",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "name": "depositedByCode",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getSummaryAttestations",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "AttestationType",
+              "name": "type_",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint32",
+              "name": "dataSize",
+              "type": "uint32"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct AttestationEntry[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_authority",
+          "type": "address"
+        }
+      ],
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isConsumingScheduledOp",
+      "outputs": [
+        {
+          "internalType": "bytes4",
+          "name": "",
+          "type": "bytes4"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "liqToken",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "liqTokenCode",
+      "outputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "nativeTokenCode",
+      "outputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "operators",
+      "outputs": [
+        {
+          "internalType": "OperatorType",
+          "name": "operatorType",
+          "type": "uint8"
+        },
+        {
+          "internalType": "OperatorStatus",
+          "name": "status",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "oppAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "oppInboundAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "outpostChainCode",
+      "outputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "outpostId",
+      "outputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "proxiableUUID",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "reserveManagerAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newAuthority",
+          "type": "address"
+        }
+      ],
+      "name": "setAuthority",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_liqToken",
+          "type": "address"
+        }
+      ],
+      "name": "setLiqToken",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "setLiqTokenCode",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "setNativeTokenCode",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_oppAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_oppInboundAddress",
+          "type": "address"
+        }
+      ],
+      "name": "setOPPAddresses",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "chainCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "setOutpostChainCode",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "_outpostId",
+          "type": "uint64"
+        }
+      ],
+      "name": "setOutpostId",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_reserveManager",
+          "type": "address"
+        }
+      ],
+      "name": "setReserveManagerAddress",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "operator",
+          "type": "address"
+        },
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
+        }
+      ],
+      "name": "slash",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newImplementation",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "upgradeToAndCall",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "compressedPubkey",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "withdraw",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ]
+}

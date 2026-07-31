@@ -26,3 +26,5 @@ pnpm --dir packages/sdk-outpost run generate:solana
 
 Generated contract and program types must be regenerated from checked-in
 artifacts. Do not hand-edit generated files or re-declare their shapes.
+Generated outputs live under each chain's `generated/` directory and are
+excluded from handwritten-code lint rules.

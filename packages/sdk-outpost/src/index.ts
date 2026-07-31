@@ -1,1 +1,3 @@
+export * from "./contracts/index.js"
 export * from "./deployments/index.js"
+export * from "./programs/index.js"

@@ -23,7 +23,15 @@ function createDeploymentFixture() {
       sourceArchiveSha256: Hash,
       platformRelease: {
         tag: "v1.0.0",
-        url: "https://github.com/Wire-Network/wire-platform-build-system/releases/tag/v1.0.0"
+        url: "https://github.com/Wire-Network/wire-platform-build-system/releases/tag/v1.0.0",
+        manifest: {
+          repository: "Wire-Network/wire-platform-manifest",
+          revision: Revision
+        },
+        libraries: {
+          repository: "Wire-Network/wire-libraries-ts",
+          revision: Revision
+        }
       },
       sources: {
         wireTools: {
@@ -82,6 +90,15 @@ describe("OutpostDeploymentSchema", () => {
 
     expect(() => parseOutpostDeployment(fixture)).toThrow(
       "Invalid Ethereum address"
+    )
+  })
+
+  it("rejects an invalid Solana program address", () => {
+    const fixture = createDeploymentFixture()
+    fixture.solana.programs.liqsolCore.address = "not-a-program-address"
+
+    expect(() => parseOutpostDeployment(fixture)).toThrow(
+      "Invalid Solana address"
     )
   })
 })
