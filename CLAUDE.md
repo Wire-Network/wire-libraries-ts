@@ -221,8 +221,10 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
 - `packages/sdk-core/src/contracts/sysio/uwrit` preserves raw request bytes and exposes `sourceRequestId` for swap correlation. External outpost ids are big-endian; synthetic WIRE queue ids are little-endian and high-bit tagged.
 - `packages/sdk-outpost` owns external-chain ABI/IDL assets, their deployment provenance, and strictly typed Ethereum/Solana clients. It extends `sdk-core`; it must not duplicate Wire-chain contract types or import generated OPP model packages.
-- `sdk-outpost` deployment documents are untrusted JSON boundaries validated with Zod. ABI/IDL-derived contract and program types remain generator-owned and must never be re-declared as Zod schemas.
+- `sdk-outpost` deployment payloads are untrusted data boundaries validated with Zod. ABI/IDL-derived contract and program types remain generator-owned and must never be re-declared as Zod schemas.
 - Add a deployment bundle only with its source revisions, archive/artifact digests, and verified on-chain identities. A checked-in artifact does not by itself prove a contract or program is deployed.
+- `sdk-outpost` clients accept caller-owned Ethers/Anchor providers, verify chain identity and deployed bytecode/program executability during asynchronous creation, and expose one typed `OutpostClient` facade. Do not hard-code RPC transport into deployment records.
+- Consumer feature gates must combine SDK deployment verification with flow-specific platform capability checks. A connected typed contract or program is not proof that stake, swap, settlement, or retry lifecycles are operational.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
 - Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch
 - Node >=22 required (package.json says >=22, README says >=24 — actual CI uses v24)

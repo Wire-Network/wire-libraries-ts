@@ -86,6 +86,7 @@ export const OutpostDeploymentSchema = z.object({
     })
   }),
   solana: z.object({
+    genesisHash: SolanaAddressSchema,
     programs: z.object({
       [SolanaProgramName.liqsolCore]: SolanaProgramDeploymentSchema
     })

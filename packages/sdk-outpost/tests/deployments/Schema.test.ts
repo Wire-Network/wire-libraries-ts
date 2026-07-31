@@ -63,6 +63,7 @@ function createDeploymentFixture() {
       }
     },
     solana: {
+      genesisHash: SolanaAddress,
       programs: {
         liqsolCore: {
           address: SolanaAddress,

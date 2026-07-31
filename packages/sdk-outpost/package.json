@@ -47,6 +47,8 @@
     "@solana/web3.js": "^1.98.4",
     "@wireio/sdk-core": "workspace:*",
     "ethers": "^5.8.0",
+    "lodash": "^4.18.1",
+    "ts-pattern": "^5.9.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
