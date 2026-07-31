@@ -197,6 +197,12 @@ importers:
       '@coral-xyz/anchor':
         specifier: ^0.32.1
         version: 0.32.1(bufferutil@4.1.0)(typescript@6.0.2)(utf-8-validate@6.0.6)
+      '@ethersproject/abi':
+        specifier: ^5.8.0
+        version: 5.8.0
+      '@ethersproject/providers':
+        specifier: ^5.8.0
+        version: 5.8.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
       '@solana/web3.js':
         specifier: ^1.98.4
         version: 1.98.4(bufferutil@4.1.0)(typescript@6.0.2)(utf-8-validate@6.0.6)
@@ -213,6 +219,9 @@ importers:
       '@typechain/ethers-v5':
         specifier: ^11.1.2
         version: 11.1.2(@ethersproject/abi@5.8.0)(@ethersproject/providers@5.8.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(ethers@5.8.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(typechain@8.3.2(typescript@6.0.2))(typescript@6.0.2)
+      prettier:
+        specifier: 3.8.1
+        version: 3.8.1
       typechain:
         specifier: ^8.3.2
         version: 8.3.2(typescript@6.0.2)

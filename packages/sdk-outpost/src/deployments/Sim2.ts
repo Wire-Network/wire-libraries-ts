@@ -1,0 +1,86 @@
+import { parseOutpostDeployment } from "./Schema.js"
+import {
+  EthereumContractName,
+  OutpostDeploymentId,
+  SolanaProgramName
+} from "./Types.js"
+
+const Sim2DeploymentDocument = {
+  schemaVersion: 1,
+  id: OutpostDeploymentId.sim2,
+  artifactBundle: {
+    generatedAt: "2026-07-31T15:47:46Z",
+    sourceArchiveSha256:
+      "6bf71096477ef11393c98faa5dca0b89a18978c7d59e9f0ce69caf35117ac4d8",
+    platformRelease: {
+      tag: "v1.0.0",
+      url: "https://github.com/Wire-Network/wire-platform-build-system/releases/tag/v1.0.0",
+      manifest: {
+        repository: "Wire-Network/wire-platform-manifest",
+        revision: "78ed083740e62a03d9ea873ff0a9a44db23ca195"
+      },
+      libraries: {
+        repository: "Wire-Network/wire-libraries-ts",
+        revision: "3cfda4a238e4e8d98bda836e857e6679b85f44fa"
+      }
+    },
+    sources: {
+      wireTools: {
+        repository: "Wire-Network/wire-tools-ts",
+        revision: "ac4ea7a2783f81d03f13a62ead2fa173cf12094f"
+      },
+      wireSysio: {
+        repository: "Wire-Network/wire-sysio",
+        revision: "235501b0ad4612ee842c428182f84cd66ef803fc"
+      },
+      wireEthereum: {
+        repository: "Wire-Network/wire-ethereum",
+        revision: "c1ea82b2b3cffacecec35e5c186e82e381f6be67"
+      },
+      wireSolana: {
+        repository: "Wire-Network/wire-solana",
+        revision: "a9fe169f9c8b536d4f8184c18c2ca66b44592e29"
+      }
+    }
+  },
+  wire: {
+    chainId: "365c441604ccfde28b6608c012c4e1c70545a90409ee2a74d8c6bf365ec61023"
+  },
+  ethereum: {
+    chainId: 31_337,
+    contracts: {
+      [EthereumContractName.OPP]: {
+        address: "0xfbC22278A96299D91d41C453234d97b4F5Eb9B2d",
+        artifactSha256:
+          "5fa0298b0d6ed2e966dd2856ec563de1517b81483913e5b9b26d2c6d6a032b2d"
+      },
+      [EthereumContractName.OPPInbound]: {
+        address: "0xe8D2A1E88c91DCd5433208d4152Cc4F399a7e91d",
+        artifactSha256:
+          "00011fd6bbdb87b3e5dcd1a5e1ef2a993a0635d3054303e8e95848783cc15963"
+      },
+      [EthereumContractName.OperatorRegistry]: {
+        address: "0x367761085BF3C12e5DA2Df99AC6E1a824612b8fb",
+        artifactSha256:
+          "d9ce20dce4d4f5b039bdd52df69037c8c289f9a419b420efdac6c02cafbd5607"
+      },
+      [EthereumContractName.ReserveManager]: {
+        address: "0x5c74c94173F05dA1720953407cbb920F3DF9f887",
+        artifactSha256:
+          "1df4221be4fc24617d3368877e5962214ae55330362bb644028e56518d12b17f"
+      }
+    }
+  },
+  solana: {
+    programs: {
+      [SolanaProgramName.liqsolCore]: {
+        address: "5nBtmutQLrRKBUxNfHJPDjiW5u8id6QM9Hhjg1D1g1XH",
+        artifactSha256:
+          "76f09f63be1f858dad6ba92754a568b996179d438ad651a258dc0adcf07cce41"
+      }
+    }
+  }
+}
+
+/** Validated sim2 deployment and artifact provenance. */
+export const Sim2Deployment = parseOutpostDeployment(Sim2DeploymentDocument)

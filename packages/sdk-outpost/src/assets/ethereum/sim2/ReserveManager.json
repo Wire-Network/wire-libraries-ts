@@ -1,0 +1,2456 @@
+{
+  "contractName": "ReserveManager",
+  "address": "0x5c74c94173F05dA1720953407cbb920F3DF9f887",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "authority",
+          "type": "address"
+        }
+      ],
+      "name": "AccessManagedInvalidAuthority",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "uint32",
+          "name": "delay",
+          "type": "uint32"
+        }
+      ],
+      "name": "AccessManagedRequiredDelay",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "AccessManagedUnauthorized",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "target",
+          "type": "address"
+        }
+      ],
+      "name": "AddressEmptyCode",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "implementation",
+          "type": "address"
+        }
+      ],
+      "name": "ERC1967InvalidImplementation",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ERC1967NonPayable",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EnforcedPause",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ExpectedPause",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "FailedCall",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "raw",
+          "type": "uint64"
+        }
+      ],
+      "name": "InvalidEnumValue",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidInitialization",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotInitializing",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "actualBytes",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "maxBytes",
+          "type": "uint256"
+        }
+      ],
+      "name": "OPP_EnvelopeOverCap",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "expected",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "actual",
+          "type": "bytes32"
+        }
+      ],
+      "name": "OPP_EpochHashMismatch",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "epochIndex",
+          "type": "uint32"
+        }
+      ],
+      "name": "OPP_InboundEnvelopeRecordMissing",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "epochIndex",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "evictBoundary",
+          "type": "uint32"
+        }
+      ],
+      "name": "OPP_InboundEnvelopeStillInRetention",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "required",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "provided",
+          "type": "uint256"
+        }
+      ],
+      "name": "OPP_InsufficientSignatureWeight",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "expected",
+          "type": "address"
+        }
+      ],
+      "name": "OPP_InvalidOPPAddress",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OPP_InvalidRetentionConfig",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "expected",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "actual",
+          "type": "bytes"
+        }
+      ],
+      "name": "OPP_MessageIDMismatch",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OPP_NoAttestationsSent",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OPP_NoPendingAttestations",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "previousEnvelopeHash",
+          "type": "bytes"
+        }
+      ],
+      "name": "OPP_NonCanonicalPreviousEpochHash",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "expected",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "actual",
+          "type": "uint32"
+        }
+      ],
+      "name": "OPP_NonSequentialEpoch",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "OPP_NotActiveOperator",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OPP_NotSending",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OPP_OPPAddressNotSet",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "epochIndex",
+          "type": "uint32"
+        },
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "OPP_OperatorAlreadyDelivered",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "expected",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "actual",
+          "type": "bytes32"
+        }
+      ],
+      "name": "OPP_PayloadChecksumMismatch",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "stack",
+          "type": "uint256"
+        }
+      ],
+      "name": "OPP_SendStackError",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "AttestationType",
+          "name": "attestationType",
+          "type": "uint16"
+        }
+      ],
+      "name": "OPP_UnauthorizedAttestationType",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "AttestationType",
+          "name": "attestationType",
+          "type": "uint16"
+        }
+      ],
+      "name": "OPP_UnhandledAttestationType",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "expectedChainId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "ChainKind",
+          "name": "actualKind",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint32",
+          "name": "actualId",
+          "type": "uint32"
+        }
+      ],
+      "name": "OPP_WrongDestinationChain",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "OPP_ZeroTag",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "SafeERC20FailedOperation",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "UUPSUnauthorizedCallContext",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "slot",
+          "type": "bytes32"
+        }
+      ],
+      "name": "UUPSUnsupportedProxiableUUID",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "provided",
+          "type": "address"
+        }
+      ],
+      "name": "WIRE_BadContractAddress",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bps",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "maxBps",
+          "type": "uint256"
+        }
+      ],
+      "name": "WIRE_BasisPointsTooHigh",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_Erc20DepositValueNonZero",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_Erc20TransferFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "WIRE_EthSendFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "WIRE_FeeOnTransferUnsupported",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_GoLiveInProgress",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "required",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "available",
+          "type": "uint256"
+        }
+      ],
+      "name": "WIRE_InsufficientEthBalance",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_InvalidPrice",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "WIRE_LiqEthTransferFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_MultipleNativeTrackedCodes",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_NativeDepositValueMismatch",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "actor",
+          "type": "address"
+        },
+        {
+          "internalType": "OperatorType",
+          "name": "operatorType",
+          "type": "uint8"
+        }
+      ],
+      "name": "WIRE_NoBonds",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_NoPricesRecorded",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_NoYield",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "receiptId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "WIRE_NotReceiptOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "caller",
+          "type": "address"
+        }
+      ],
+      "name": "WIRE_OnlyOPPInboundLib",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_OppInboundCallerUnauthorized",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_OutpostChainCodeUnset",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "innerRevert",
+          "type": "bytes"
+        }
+      ],
+      "name": "WIRE_PermitFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_PrecisionOverflow",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "WIRE_PrecisionUnsetForRefund",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "maxPrice",
+          "type": "uint256"
+        }
+      ],
+      "name": "WIRE_PriceOutOfBounds",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "receiptId",
+          "type": "uint256"
+        }
+      ],
+      "name": "WIRE_ReceiptNotWithdrawable",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_RefundingInProgress",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_RefundingOnly",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_ReserveAlreadyExists",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_ReserveBadParam",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_ReserveCancelNotCreator",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_ReserveNotCancellable",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_SwapEmptyRecipient",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_SwapSourceNotNative",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_SwapSourceReserveUnavailable",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "WIRE_SwapSourceTokenNotRegistered",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_SwapUnknownSlugName",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_SwapZeroSourceAmount",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_TokenAddressUnset",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint8",
+          "name": "provided",
+          "type": "uint8"
+        }
+      ],
+      "name": "WIRE_TokenPrecisionOutOfRange",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "WIRE_TokenPrecisionUnset",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_TrackedCodeZero",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
+        }
+      ],
+      "name": "WIRE_UnexpectedError",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WIRE_ZeroAmount",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "authority",
+          "type": "address"
+        }
+      ],
+      "name": "AuthorityUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [],
+      "name": "BalanceSheetEmitted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "Deposited",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "version",
+          "type": "uint64"
+        }
+      ],
+      "name": "Initialized",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "chainCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "OutpostChainCodeSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "Paused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "ReserveActivated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        }
+      ],
+      "name": "ReserveCancelRequested",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "refundedAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "ReserveCancelled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "externalTokenAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "requestedWireAmount",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "connectorWeightBps",
+          "type": "uint32"
+        }
+      ],
+      "name": "ReserveCreateRequested",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint64",
+          "name": "id",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "hash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SwapDeposit",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "originalMessageId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SwapRemitPaid",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "depotAmount",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "originalId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
+        }
+      ],
+      "name": "SwapRemitUnpayable",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "sourceTokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "sourceReserveCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "sourceAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "targetChainCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "targetTokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "targetReserveCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "targetRecipient",
+          "type": "bytes"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "targetAmount",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "targetToleranceBps",
+          "type": "uint32"
+        }
+      ],
+      "name": "SwapRequested",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "depositor",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "originalSwapMessageId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "errData",
+          "type": "bytes"
+        }
+      ],
+      "name": "SwapRevertError",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "depositor",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "originalSwapMessageId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
+        }
+      ],
+      "name": "SwapReverted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "addr",
+          "type": "address"
+        }
+      ],
+      "name": "TokenAddressSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [],
+      "name": "TrackedCodesUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "Unpaused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "implementation",
+          "type": "address"
+        }
+      ],
+      "name": "Upgraded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "Withdrawn",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "BALANCE_SHEET_ATTESTATION",
+      "outputs": [
+        {
+          "internalType": "AttestationType",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "AttestationType",
+          "name": "attestationType",
+          "type": "uint16"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "OPPAttestationIn",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "RESERVE_CREATE_ATTESTATION",
+      "outputs": [
+        {
+          "internalType": "AttestationType",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "RESERVE_CREATE_CANCEL_ATTESTATION",
+      "outputs": [
+        {
+          "internalType": "AttestationType",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "SWAP_REQUEST_ATTESTATION",
+      "outputs": [
+        {
+          "internalType": "AttestationType",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "UPGRADE_INTERFACE_VERSION",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "__OPPEndpointManaged_init",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "_payRemit",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "authority",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "cancel_create_reserve",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint256",
+          "name": "externalTokenAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint64",
+          "name": "requestedWireAmount",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint32",
+          "name": "connectorWeightBps",
+          "type": "uint32"
+        },
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "bool",
+          "name": "isPrivate",
+          "type": "bool"
+        },
+        {
+          "internalType": "bytes",
+          "name": "creatorPubKey",
+          "type": "bytes"
+        }
+      ],
+      "name": "create_reserve",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "emitBalanceSheet",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "getReserve",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "tokenCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "reserveCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "externalTokenAmount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint64",
+              "name": "requestedWireAmount",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint32",
+              "name": "connectorWeightBps",
+              "type": "uint32"
+            },
+            {
+              "internalType": "enum ReserveManager.LocalReserveStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "address",
+              "name": "creator",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "exists",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct ReserveManager.ReserveRecord",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getSummaryAttestations",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "AttestationType",
+              "name": "type_",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint32",
+              "name": "dataSize",
+              "type": "uint32"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct AttestationEntry[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_authority",
+          "type": "address"
+        }
+      ],
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isConsumingScheduledOp",
+      "outputs": [
+        {
+          "internalType": "bytes4",
+          "name": "",
+          "type": "bytes4"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "nativeTokenCode",
+      "outputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "chainCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "onReserveCreateCancelled",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "chainCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "onReserveReady",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "depositor",
+          "type": "address"
+        },
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "depotAmount",
+          "type": "uint64"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "originalSwapMessageId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
+        }
+      ],
+      "name": "onSwapRevert",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "oppAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "oppInboundAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "outpostChainCode",
+      "outputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pause",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "paused",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "proxiableUUID",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "tokenCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "reserveCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "externalTokenAmount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint64",
+              "name": "requestedWireAmount",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint32",
+              "name": "connectorWeightBps",
+              "type": "uint32"
+            },
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "description",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "isPrivate",
+              "type": "bool"
+            },
+            {
+              "internalType": "bytes",
+              "name": "creatorPubKey",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct ReserveManagerLib.ReserveCreateArgs",
+          "name": "args",
+          "type": "tuple"
+        }
+      ],
+      "name": "requestReserveCreateErc20WithApproval",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "tokenCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "reserveCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "externalTokenAmount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint64",
+              "name": "requestedWireAmount",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint32",
+              "name": "connectorWeightBps",
+              "type": "uint32"
+            },
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "description",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "isPrivate",
+              "type": "bool"
+            },
+            {
+              "internalType": "bytes",
+              "name": "creatorPubKey",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct ReserveManagerLib.ReserveCreateArgs",
+          "name": "args",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "deadline",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct ReserveManagerLib.PermitSig",
+          "name": "permitSig",
+          "type": "tuple"
+        }
+      ],
+      "name": "requestReserveCreateErc20WithPermit",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "sourceTokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "sourceReserveCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "targetChainCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "targetTokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "targetReserveCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "bytes",
+          "name": "targetRecipient",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint64",
+          "name": "targetAmount",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint32",
+          "name": "targetToleranceBps",
+          "type": "uint32"
+        }
+      ],
+      "name": "requestSwap",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "sourceTokenCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "sourceReserveCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "sourceAmount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint64",
+              "name": "targetChainCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "targetTokenCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "targetReserveCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes",
+              "name": "targetRecipient",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint64",
+              "name": "targetAmount",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint32",
+              "name": "targetToleranceBps",
+              "type": "uint32"
+            }
+          ],
+          "internalType": "struct ReserveManagerLib.SwapArgs",
+          "name": "args",
+          "type": "tuple"
+        }
+      ],
+      "name": "requestSwapErc20WithApproval",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "sourceTokenCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "sourceReserveCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "sourceAmount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint64",
+              "name": "targetChainCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "targetTokenCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "targetReserveCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes",
+              "name": "targetRecipient",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint64",
+              "name": "targetAmount",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint32",
+              "name": "targetToleranceBps",
+              "type": "uint32"
+            }
+          ],
+          "internalType": "struct ReserveManagerLib.SwapArgs",
+          "name": "args",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "deadline",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct ReserveManagerLib.PermitSig",
+          "name": "permitSig",
+          "type": "tuple"
+        }
+      ],
+      "name": "requestSwapErc20WithPermit",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "reserves",
+      "outputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint256",
+          "name": "externalTokenAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint64",
+          "name": "requestedWireAmount",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint32",
+          "name": "connectorWeightBps",
+          "type": "uint32"
+        },
+        {
+          "internalType": "enum ReserveManager.LocalReserveStatus",
+          "name": "status",
+          "type": "uint8"
+        },
+        {
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "exists",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newAuthority",
+          "type": "address"
+        }
+      ],
+      "name": "setAuthority",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_oppAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_oppInboundAddress",
+          "type": "address"
+        }
+      ],
+      "name": "setOPPAddresses",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "chainCode",
+          "type": "uint64"
+        }
+      ],
+      "name": "setOutpostChainCode",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "tokenCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "reserveCode",
+              "type": "uint64"
+            },
+            {
+              "internalType": "address",
+              "name": "tokenAddr",
+              "type": "address"
+            },
+            {
+              "internalType": "uint8",
+              "name": "precision",
+              "type": "uint8"
+            }
+          ],
+          "internalType": "struct ReserveManager.TrackedCodeEntry[]",
+          "name": "entries",
+          "type": "tuple[]"
+        }
+      ],
+      "name": "setTrackedCodes",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "swapDepositCounter",
+      "outputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "name": "tokenAddressesByCode",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "name": "tokenPrecisionByCode",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "trackedCodesCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "trackedReserveCodes",
+      "outputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "trackedTokenCodes",
+      "outputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "unpause",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newImplementation",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "upgradeToAndCall",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "tokenCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "reserveCode",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        }
+      ],
+      "name": "withdraw",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ]
+}
