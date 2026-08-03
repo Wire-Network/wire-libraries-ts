@@ -23,7 +23,7 @@ if (current == null) throw new Error(`Unknown current deployment ${currentId}`)
 for (const deployment of documents) {
   for (const contractName of ContractNames) {
     const path = Path.join(
-        deploymentAssetPath("ethereum", deployment.id),
+        deploymentAssetPath(deployment, "ethereum"),
         `${contractName}.json`
       ),
       actualHash = await sha256(path),
@@ -34,7 +34,7 @@ for (const deployment of documents) {
   }
 
   const solanaPath = Path.join(
-      deploymentAssetPath("solana", deployment.id),
+      deploymentAssetPath(deployment, "solana"),
       "liqsol_core.json"
     ),
     solanaHash = await sha256(solanaPath)
@@ -48,13 +48,13 @@ for (const deployment of documents) {
   for (const contractName of ContractNames) {
     const previous = await readJson(
         Path.join(
-          deploymentAssetPath("ethereum", deployment.id),
+          deploymentAssetPath(deployment, "ethereum"),
           `${contractName}.json`
         )
       ),
       currentArtifact = await readJson(
         Path.join(
-          deploymentAssetPath("ethereum", current.id),
+          deploymentAssetPath(current, "ethereum"),
           `${contractName}.json`
         )
       )

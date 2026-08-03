@@ -5,12 +5,20 @@ import Path from "node:path"
 import {
   PackagePath,
   deploymentAssetPath,
-  readCurrentDeploymentId
+  readCurrentDeploymentId,
+  readDeploymentDocuments
 } from "./deployment-utils.mjs"
 
 const deploymentId = await readCurrentDeploymentId(),
-  assetGlob = Path.join(
-    deploymentAssetPath("ethereum", deploymentId),
+  deployment = (await readDeploymentDocuments()).find(
+    candidate => candidate.id === deploymentId
+  )
+
+if (deployment == null)
+  throw new Error(`Unknown current deployment ${deploymentId}`)
+
+const assetGlob = Path.join(
+    deploymentAssetPath(deployment, "ethereum"),
     "*.json"
   ),
   outputPath = Path.join(PackagePath, "src/contracts/ethereum/generated"),

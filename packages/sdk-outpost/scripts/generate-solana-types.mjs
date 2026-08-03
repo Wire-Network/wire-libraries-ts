@@ -7,12 +7,20 @@ import { format } from "prettier"
 import {
   PackagePath,
   deploymentAssetPath,
-  readCurrentDeploymentId
+  readCurrentDeploymentId,
+  readDeploymentDocuments
 } from "./deployment-utils.mjs"
 
 const deploymentId = await readCurrentDeploymentId(),
-  idlFile = Path.join(
-    deploymentAssetPath("solana", deploymentId),
+  deployment = (await readDeploymentDocuments()).find(
+    candidate => candidate.id === deploymentId
+  )
+
+if (deployment == null)
+  throw new Error(`Unknown current deployment ${deploymentId}`)
+
+const idlFile = Path.join(
+    deploymentAssetPath(deployment, "solana"),
     "liqsol_core.json"
   ),
   outputFile = Path.join(

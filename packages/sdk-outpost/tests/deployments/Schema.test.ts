@@ -16,7 +16,7 @@ function createDeploymentFixture() {
   }
   return {
     schemaVersion: 1,
-    id: "sim2-2026-08-03-ca8d3a9d",
+    id: `${WireChainId}-${Hash.slice(0, 12)}`,
     artifactBundle: {
       generatedAt: "2026-07-31T15:47:46Z",
       sourceArchiveSha256: Hash,
@@ -77,11 +77,11 @@ function createDeploymentFixture() {
 }
 
 describe("OutpostDeploymentSchema", () => {
-  it("parses a valid deployment into sdk-core chain identity", () => {
+  it("parses a valid deployment with its Wire chain identity", () => {
     const deployment = parseOutpostDeployment(createDeploymentFixture())
 
-    expect(deployment.id).toBe("sim2-2026-08-03-ca8d3a9d")
-    expect(deployment.wire.chainId.hexString).toBe(WireChainId)
+    expect(deployment.id).toBe(`${WireChainId}-${Hash.slice(0, 12)}`)
+    expect(deployment.wire.chainId).toBe(WireChainId)
     expect(
       deployment.ethereum.contracts[EthereumContractName.ReserveManager].address
     ).toBe(EthereumAddress)
@@ -102,6 +102,15 @@ describe("OutpostDeploymentSchema", () => {
 
     expect(() => parseOutpostDeployment(fixture)).toThrow(
       "Invalid Solana address"
+    )
+  })
+
+  it("rejects an environment-specific deployment id", () => {
+    const fixture = createDeploymentFixture()
+    fixture.id = "named-environment"
+
+    expect(() => parseOutpostDeployment(fixture)).toThrow(
+      "Deployment id must be"
     )
   })
 })

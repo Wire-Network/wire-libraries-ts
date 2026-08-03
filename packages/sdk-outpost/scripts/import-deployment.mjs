@@ -20,7 +20,6 @@ const ContractNames = [
     "OperatorRegistry",
     "ReserveManager"
   ],
-  IdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
   RevisionPattern = /^[0-9a-f]{40}$/,
   argumentsByName = parseArguments(process.argv.slice(2)),
   archive = requiredPath("archive"),
@@ -43,12 +42,9 @@ try {
     manifest = await readJson(manifestPath),
     generatedAt = await readGeneratedAt(readmePath),
     wireChainId = requiredValue(manifest, "identity.chains.wire.chain_id"),
-    defaultId = `${requiredValue(manifest, "prefix")}-${generatedAt.slice(0, 10)}-${wireChainId.slice(0, 8)}`,
-    id = argumentsByName.get("id") ?? defaultId
+    deploymentChecksum = requiredValue(manifest, "deployment_checksum"),
+    id = `${wireChainId}-${deploymentChecksum.slice(0, 12)}`
 
-  if (!IdPattern.test(id)) {
-    throw new Error(`Invalid deployment id ${id}`)
-  }
   if (standaloneManifest != null) {
     const [embeddedHash, standaloneHash] = await Promise.all([
       sha256(manifestPath),
@@ -59,16 +55,24 @@ try {
     }
   }
 
-  const deploymentPath = Path.join(DeploymentDataPath, `${id}.json`)
+  const deploymentPath = Path.join(
+    DeploymentDataPath,
+    wireChainId,
+    `${deploymentChecksum}.json`
+  )
   if ((await pathExists(deploymentPath)) && !replace) {
     throw new Error(
       `Deployment ${id} already exists; use --replace only for an intentional correction`
     )
   }
 
-  const ethereumContracts = {},
-    ethereumAssetPath = deploymentAssetPath("ethereum", id),
-    solanaAssetPath = deploymentAssetPath("solana", id)
+  const assetIdentity = {
+      artifactBundle: { deploymentChecksum },
+      wire: { chainId: wireChainId }
+    },
+    ethereumContracts = {},
+    ethereumAssetPath = deploymentAssetPath(assetIdentity, "ethereum"),
+    solanaAssetPath = deploymentAssetPath(assetIdentity, "solana")
 
   await Fs.mkdir(ethereumAssetPath, { recursive: true })
   await Fs.mkdir(solanaAssetPath, { recursive: true })
@@ -124,7 +128,7 @@ try {
       generatedAt,
       sourceArchiveSha256: await sha256(archive),
       clusterManifestSha256: await sha256(manifestPath),
-      deploymentChecksum: requiredValue(manifest, "deployment_checksum"),
+      deploymentChecksum,
       snapshotChecksum: requiredValue(manifest, "snapshot_checksum"),
       platformRelease: {
         tag: platformRelease,
@@ -188,16 +192,28 @@ try {
 }
 
 function parseArguments(values) {
-  const parsed = new Map()
+  const booleanArguments = ["current", "replace"],
+    valueArguments = [
+      "archive",
+      "libraries-revision",
+      "manifest",
+      "platform-manifest-revision",
+      "platform-release"
+    ],
+    parsed = new Map()
   for (let index = 0; index < values.length; index += 1) {
     const value = values[index]
+    if (value === "--") continue
     if (!value.startsWith("--")) {
       throw new Error(`Unexpected argument ${value}`)
     }
     const name = value.slice(2)
-    if (["current", "replace"].includes(name)) {
+    if (booleanArguments.includes(name)) {
       parsed.set(name, "true")
       continue
+    }
+    if (!valueArguments.includes(name)) {
+      throw new Error(`Unknown argument --${name}`)
     }
     const next = values[index + 1]
     if (next == null || next.startsWith("--")) {

@@ -19,6 +19,14 @@ describe("assertOutpostDeployment", () => {
     expect(OutpostDeployments).toHaveLength(2)
   })
 
+  it("accepts sdk-core compatible chain identity objects", () => {
+    const deployment = OutpostDeployments[0]
+
+    expect(
+      assertOutpostDeployment({ hexString: deployment.wire.chainId })
+    ).toBe(deployment)
+  })
+
   it("rejects an unsupported Wire chain", () => {
     const unsupportedChainId = "f".repeat(64)
 

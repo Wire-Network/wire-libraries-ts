@@ -32,7 +32,7 @@ describe("OutpostClient", () => {
     const provider = new providers.JsonRpcProvider()
     jest.spyOn(provider, "getNetwork").mockResolvedValue({
       chainId: CurrentOutpostDeployment.ethereum.chainId,
-      name: "sim2"
+      name: "wire-outpost"
     })
     jest.spyOn(provider, "getCode").mockResolvedValue("0x01")
 
