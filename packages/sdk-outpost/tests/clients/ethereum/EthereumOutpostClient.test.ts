@@ -3,15 +3,18 @@ import { providers } from "ethers"
 import {
   EthereumContractName,
   EthereumOutpostClient,
-  Sim2Deployment
+  OutpostDeployments,
+  type OutpostDeployment
 } from "@wireio/sdk-outpost"
 
 const DeployedCode = "0x01"
 
-function createProvider(): providers.JsonRpcProvider {
+function createProvider(
+  deployment: OutpostDeployment
+): providers.JsonRpcProvider {
   const provider = new providers.JsonRpcProvider()
   jest.spyOn(provider, "getNetwork").mockResolvedValue({
-    chainId: Sim2Deployment.ethereum.chainId,
+    chainId: deployment.ethereum.chainId,
     name: "sim2"
   })
   jest.spyOn(provider, "getCode").mockResolvedValue(DeployedCode)
@@ -19,25 +22,29 @@ function createProvider(): providers.JsonRpcProvider {
 }
 
 describe("EthereumOutpostClient", () => {
-  it("verifies the deployment and returns a generated contract type", async () => {
-    const provider = createProvider(),
-      client = await EthereumOutpostClient.create({
-        deployment: Sim2Deployment,
-        connection: provider
-      }),
-      reserveManager = client.contract(EthereumContractName.ReserveManager)
+  it.each(OutpostDeployments)(
+    "verifies $id and returns a generated contract type",
+    async deployment => {
+      const provider = createProvider(deployment),
+        client = await EthereumOutpostClient.create({
+          deployment,
+          connection: provider
+        }),
+        reserveManager = client.contract(EthereumContractName.ReserveManager)
 
-    expect(reserveManager.address).toBe(
-      Sim2Deployment.ethereum.contracts[EthereumContractName.ReserveManager]
-        .address
-    )
-    expect(provider.getCode).toHaveBeenCalledTimes(
-      Object.values(EthereumContractName).length
-    )
-  })
+      expect(reserveManager.address).toBe(
+        deployment.ethereum.contracts[EthereumContractName.ReserveManager]
+          .address
+      )
+      expect(provider.getCode).toHaveBeenCalledTimes(
+        Object.values(EthereumContractName).length
+      )
+    }
+  )
 
   it("rejects the wrong Ethereum chain", async () => {
-    const provider = createProvider()
+    const deployment = OutpostDeployments[0],
+      provider = createProvider(deployment)
     jest.spyOn(provider, "getNetwork").mockResolvedValue({
       chainId: 1,
       name: "mainnet"
@@ -45,19 +52,20 @@ describe("EthereumOutpostClient", () => {
 
     await expect(
       EthereumOutpostClient.create({
-        deployment: Sim2Deployment,
+        deployment,
         connection: provider
       })
     ).rejects.toThrow("Ethereum chain mismatch")
   })
 
   it("rejects a configured contract without bytecode", async () => {
-    const provider = createProvider()
+    const deployment = OutpostDeployments[0],
+      provider = createProvider(deployment)
     jest.spyOn(provider, "getCode").mockResolvedValue("0x")
 
     await expect(
       EthereumOutpostClient.create({
-        deployment: Sim2Deployment,
+        deployment,
         connection: provider
       })
     ).rejects.toThrow("is not deployed")

@@ -3,46 +3,87 @@ import Fs from "node:fs"
 import Path from "node:path"
 
 import {
+  CurrentOutpostDeployment,
   EthereumContractName,
   OPP__factory,
-  Sim2Deployment,
+  OperatorRegistry__factory,
+  OutpostDeployments,
+  ReserveManager__factory,
   SolanaProgramName,
   liqsolCoreIdl
 } from "@wireio/sdk-outpost"
 
-const PackagePath = Path.resolve(__dirname, "../.."),
-  EthereumAssetPath = Path.join(PackagePath, "src/assets/ethereum/sim2"),
-  SolanaAssetPath = Path.join(PackagePath, "src/assets/solana/sim2")
+const PackagePath = Path.resolve(__dirname, "../..")
 
 function sha256(file: string): string {
   return Crypto.createHash("sha256").update(Fs.readFileSync(file)).digest("hex")
 }
 
-describe("sim2 assets", () => {
-  it("matches every recorded Ethereum ABI digest", () => {
-    Object.values(EthereumContractName).forEach(contractName => {
-      const deployment = Sim2Deployment.ethereum.contracts[contractName]
+describe("versioned deployment assets", () => {
+  it.each(OutpostDeployments)(
+    "matches every $id artifact digest",
+    deployment => {
+      Object.values(EthereumContractName).forEach(contractName => {
+        const contract = deployment.ethereum.contracts[contractName]
 
-      expect(sha256(Path.join(EthereumAssetPath, `${contractName}.json`))).toBe(
-        deployment.artifactSha256
-      )
-    })
-  })
+        expect(
+          sha256(
+            Path.join(
+              PackagePath,
+              "src/assets/ethereum",
+              deployment.id,
+              `${contractName}.json`
+            )
+          )
+        ).toBe(contract.artifactSha256)
+      })
 
-  it("matches the recorded Solana IDL and program identity", () => {
-    const deployment =
-      Sim2Deployment.solana.programs[SolanaProgramName.liqsolCore]
+      const program = deployment.solana.programs[SolanaProgramName.liqsolCore]
 
-    expect(sha256(Path.join(SolanaAssetPath, "liqsol_core.json"))).toBe(
-      deployment.artifactSha256
+      expect(
+        sha256(
+          Path.join(
+            PackagePath,
+            "src/assets/solana",
+            deployment.id,
+            "liqsol_core.json"
+          )
+        )
+      ).toBe(program.artifactSha256)
+    }
+  )
+
+  it("generates the current callable swap and collateral surfaces", () => {
+    expect(liqsolCoreIdl.address).toBe(
+      CurrentOutpostDeployment.solana.programs[SolanaProgramName.liqsolCore]
+        .address
     )
-    expect(liqsolCoreIdl.address).toBe(deployment.address)
-  })
-
-  it("generates callable Ethereum factories from the runtime ABI", () => {
     expect(OPP__factory.abi.length).toBeGreaterThan(0)
     expect(
       OPP__factory.createInterface().getFunction("addAttestation")
     ).toBeDefined()
+    expect(
+      ReserveManager__factory.createInterface().getFunction("requestSwap")
+    ).toBeDefined()
+    expect(
+      ReserveManager__factory.createInterface().getFunction(
+        "requestSwapErc20WithApproval"
+      )
+    ).toBeDefined()
+    expect(
+      OperatorRegistry__factory.createInterface().getFunction("deposit")
+    ).toBeDefined()
+    expect(
+      OperatorRegistry__factory.createInterface().getFunction("commit")
+    ).toBeDefined()
+    expect(
+      liqsolCoreIdl.instructions.map(instruction => instruction.name)
+    ).toEqual(
+      expect.arrayContaining([
+        "requestSwap",
+        "requestSwapSpl",
+        "commitUnderwrite"
+      ])
+    )
   })
 })

@@ -1,6 +1,5 @@
 import {
   EthereumContractName,
-  OutpostDeploymentId,
   parseOutpostDeployment
 } from "@wireio/sdk-outpost"
 
@@ -17,10 +16,13 @@ function createDeploymentFixture() {
   }
   return {
     schemaVersion: 1,
-    id: OutpostDeploymentId.sim2,
+    id: "sim2-2026-08-03-ca8d3a9d",
     artifactBundle: {
       generatedAt: "2026-07-31T15:47:46Z",
       sourceArchiveSha256: Hash,
+      clusterManifestSha256: Hash,
+      deploymentChecksum: Hash,
+      snapshotChecksum: Hash,
       platformRelease: {
         tag: "v1.0.0",
         url: "https://github.com/Wire-Network/wire-platform-build-system/releases/tag/v1.0.0",
@@ -78,7 +80,7 @@ describe("OutpostDeploymentSchema", () => {
   it("parses a valid deployment into sdk-core chain identity", () => {
     const deployment = parseOutpostDeployment(createDeploymentFixture())
 
-    expect(deployment.id).toBe(OutpostDeploymentId.sim2)
+    expect(deployment.id).toBe("sim2-2026-08-03-ca8d3a9d")
     expect(deployment.wire.chainId.hexString).toBe(WireChainId)
     expect(
       deployment.ethereum.contracts[EthereumContractName.ReserveManager].address
