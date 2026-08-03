@@ -41,6 +41,12 @@ jobs:
           JEST_JUNIT_OUTPUT_NAME: jest-junit.xml
         run: pnpm run test:ci
 
+      - name: Verify sdk-outpost release
+        run: pnpm --dir packages/sdk-outpost run verify:release
+
+      - name: Inspect sdk-outpost package
+        run: pnpm --dir packages/sdk-outpost pack --dry-run
+
       - name: Upload test results (JUnit XML)
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

@@ -9,8 +9,5 @@
     "strict": true,
     "noImplicitAny": true
   },
-  "references": [
-    { "path": "../sdk-core/tsconfig.cjs.json" }
-  ],
   "include": ["src"]
 }
