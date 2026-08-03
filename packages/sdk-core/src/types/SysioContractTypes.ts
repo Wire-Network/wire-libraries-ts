@@ -352,6 +352,11 @@ export enum SysioChalgDisputestatus {
   DISPUTE_STATUS_RESOLVED = 2,
 }
 
+/** sysio.chalg::chalg_state (type) */
+export interface SysioChalgChalgStateType {
+  open_disputes: number
+}
+
 /** sysio.chalg::chkdispute (action) */
 export interface SysioChalgChkdisputeAction {
   dispute_id: number | string
@@ -373,6 +378,9 @@ export interface SysioChalgDisputeEntryType {
   opened_at: string
   deadline: string
   candidates: SysioChalgDisputeCandidateType[]
+  network_gen: number
+  electorate: string[]
+  quorum: number
 }
 
 /** sysio.chalg::dispute_key (type) */
@@ -421,6 +429,7 @@ export interface SysioChalgContract {
     votedispute: SysioChalgVotedisputeAction
   }
   tables: {
+    chalgstate: SysioChalgChalgStateType
     disputes: SysioChalgDisputeEntryType
     disputevote: SysioChalgDisputeVoteType
   }
@@ -2917,6 +2926,11 @@ export interface SysioUwritLockKeyType {
   lock_id: number | string
 }
 
+/** sysio.uwrit::pruneuwreqs (action) */
+export interface SysioUwritPruneuwreqsAction {
+  max_rows: number
+}
+
 /** sysio.uwrit::rcrdcommit (action) */
 export interface SysioUwritRcrdcommitAction {
   uwreq_id: number | string
@@ -2934,6 +2948,8 @@ export interface SysioUwritSetconfigAction {
   collateral_lock_duration_ms: number | string
   min_fromwire_amount: number | string
   fromwire_revert_fee_bps: number
+  uwreq_pending_timeout_epochs: number
+  uwreq_retention_epochs: number
 }
 
 /** sysio.uwrit::slug_name (type) */
@@ -2967,6 +2983,8 @@ export interface SysioUwritUwConfigType {
   collateral_lock_duration_ms: number | string
   min_fromwire_amount: number | string
   fromwire_revert_fee_bps: number
+  uwreq_pending_timeout_epochs: number
+  uwreq_retention_epochs: number
 }
 
 /** sysio.uwrit::uw_counters (type) */
@@ -3006,6 +3024,7 @@ export interface SysioUwritContract {
     chklocks: SysioUwritChklocksAction
     createuwreq: SysioUwritCreateuwreqAction
     drainfwq: SysioUwritDrainfwqAction
+    pruneuwreqs: SysioUwritPruneuwreqsAction
     rcrdcommit: SysioUwritRcrdcommitAction
     setconfig: SysioUwritSetconfigAction
     sumlocks: SysioUwritSumlocksAction
@@ -3149,7 +3168,7 @@ export const SysioContractDefinitions: {
   [SysioContractName.authex]: { name: SysioContractName.authex, account: "sysio.authex", actions: ["clearlinks", "createlink", "recordlink"], tables: ["links"] },
   [SysioContractName.bios]: { name: SysioContractName.bios, account: "sysio", actions: ["activate", "deleteauth", "linkauth", "newaccount", "reqactivated", "reqauth", "setabi", "setalimits", "setcode", "setfinalizer", "setparams", "setpriv", "setprodkeys", "setprods", "unlinkauth", "updateauth"], tables: ["abihash"] },
   [SysioContractName.chains]: { name: SysioContractName.chains, account: "sysio.chains", actions: ["activchain", "regchain"], tables: ["chains"] },
-  [SysioContractName.chalg]: { name: SysioContractName.chalg, account: "sysio.chalg", actions: ["chkdispute", "opendispute", "slashop", "votedispute"], tables: ["disputes", "disputevote"] },
+  [SysioContractName.chalg]: { name: SysioContractName.chalg, account: "sysio.chalg", actions: ["chkdispute", "opendispute", "slashop", "votedispute"], tables: ["chalgstate", "disputes", "disputevote"] },
   [SysioContractName.dclaim]: { name: SysioContractName.dclaim, account: "sysio.dclaim", actions: ["claim", "flushexpired", "importdone", "importseed", "linkswept", "onreward", "setclmwindow", "setconfig"], tables: ["capcfg", "capcounters", "pclaims", "rwdcursors", "unmapped"] },
   [SysioContractName.epoch]: { name: SysioContractName.epoch, account: "sysio.epoch", actions: ["advance", "pause", "schbatchgps", "setconfig", "unpause"], tables: ["blocklog", "epochcfg", "epochstate"] },
   [SysioContractName.msgch]: { name: SysioContractName.msgch, account: "sysio.msgch", actions: ["bootstrap", "buildenv", "chkcons", "deliver", "evalcons", "queueout", "resolvedisp"], tables: ["attestations", "attseq", "envelopes", "envlog", "messages", "outenvelopes", "outpcons"] },
@@ -3160,7 +3179,7 @@ export const SysioContractDefinitions: {
   [SysioContractName.system]: { name: SysioContractName.system, account: "sysio", actions: ["accrueepoch", "actfinkey", "activate", "addnodeowner", "claimnodedis", "deleteauth", "delfinkey", "delsnapprov", "fundclaim", "getsnaphash", "init", "initt5", "limitauthchg", "linkauth", "newaccount", "onblock", "payepoch", "regfinkey", "regproducer", "regproducer2", "regsnapprov", "rmvproducer", "setabi", "setacctcpu", "setacctnet", "setacctram", "setalimits", "setcode", "setemitcfg", "setinittime", "setparams", "setpriv", "setprodkeys", "setprods", "setram", "setrank", "setsnpcfg", "unlinkauth", "unregprod", "updateauth", "viewemitcfg", "viewepoch", "viewnodedist", "votesnaphash", "wasmcfg", "delpeerkey", "getpeerkeys", "regpeerkey", "addtrxp", "deltrxp"], tables: ["abihash", "blockinfo", "emissionmngr", "emitcfg", "epochlog", "finalizers", "finkeyidgen", "finkeys", "global", "lastpropfins", "nodecount", "nodedist", "producers", "snapconfig", "snapprovs", "snaprecords", "snapvotes", "t5state", "limitauthchg", "peerkeys", "trxpglobal", "trxpriority"] },
   [SysioContractName.token]: { name: SysioContractName.token, account: "sysio.token", actions: ["close", "create", "issue", "open", "retire", "transfer"], tables: ["accounts", "stat"] },
   [SysioContractName.tokens]: { name: SysioContractName.tokens, account: "sysio.tokens", actions: ["activctok", "activtoken", "regctok", "regtoken"], tables: ["chaintokens", "tokens"] },
-  [SysioContractName.uwrit]: { name: SysioContractName.uwrit, account: "sysio.uwrit", actions: ["chklocks", "createuwreq", "drainfwq", "rcrdcommit", "setconfig", "sumlocks", "swapfromwire"], tables: ["fwqueue", "locks", "uwconfig", "uwcounters", "uwreqs"] },
+  [SysioContractName.uwrit]: { name: SysioContractName.uwrit, account: "sysio.uwrit", actions: ["chklocks", "createuwreq", "drainfwq", "pruneuwreqs", "rcrdcommit", "setconfig", "sumlocks", "swapfromwire"], tables: ["fwqueue", "locks", "uwconfig", "uwcounters", "uwreqs"] },
   [SysioContractName.wrap]: { name: SysioContractName.wrap, account: "sysio.wrap", actions: ["exec"], tables: [] },
 }
 
