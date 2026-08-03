@@ -225,6 +225,14 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - Add a deployment bundle only with its source revisions, archive/artifact digests, and verified on-chain identities. A checked-in artifact does not by itself prove a contract or program is deployed.
 - `sdk-outpost` clients accept caller-owned Ethers/Anchor providers, verify chain identity and deployed bytecode/program executability during asynchronous creation, and expose one typed `OutpostClient` facade. Do not hard-code RPC transport into deployment records.
 - Consumer feature gates must combine SDK deployment verification with flow-specific platform capability checks. A connected typed contract or program is not proof that stake, swap, settlement, or retry lifecycles are operational.
+- `sdk-outpost` deployment refreshes are append-only. Import archives with `packages/sdk-outpost/scripts/import-deployment.mjs`; do not hand-edit catalog data or versioned ABI/IDL folders.
+- Each refreshed cluster gets a stable `<prefix>-<date>-<wire-chain-prefix>` deployment id. Change `current.json` only when that deployment should own generated types; use `--replace` only to correct the same deployment.
+- The current ABI/IDL-generated surface must cover every cataloged deployment. If a refresh removes callable functions or events, introduce an explicit version-specific client instead of weakening types or silently dropping history.
+- Hub swap integration should consume `sdk-outpost` for typed external `ReserveManager`, `OperatorRegistry`, and `liqsol_core` access. Wire-chain orchestration stays in `sdk-core`; legacy staking remains isolated until its dedicated replacement work.
+- `sdk-outpost` deployment refreshes are append-only. Import archives with `packages/sdk-outpost/scripts/import-deployment.mjs`; do not hand-edit catalog data or versioned ABI/IDL folders.
+- Each refreshed cluster gets a stable `<prefix>-<date>-<wire-chain-prefix>` deployment id. Change `current.json` only when that deployment should own generated types; use `--replace` only to correct the same deployment.
+- The current ABI/IDL-generated surface must cover every cataloged deployment. If a refresh removes callable functions or events, introduce an explicit version-specific client instead of weakening types or silently dropping history.
+- Hub swap integration should consume `sdk-outpost` for typed external `ReserveManager`, `OperatorRegistry`, and `liqsol_core` access. Wire-chain orchestration stays in `sdk-core`; legacy staking remains isolated until its dedicated replacement work.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
 - Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch
 - Node >=22 required (package.json says >=22, README says >=24 — actual CI uses v24)

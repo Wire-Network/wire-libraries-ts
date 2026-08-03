@@ -10,12 +10,13 @@ applications.
 
 ## Status
 
-This is a preview package. Its first deployment bundle is sourced from the sim2
-artifacts generated on July 31, 2026 and records the compatible Wire platform
-release and every source revision. A deployment is exposed only when the
-supplied artifacts and live chain state prove it exists.
+This is a preview package. Its deployment catalog preserves each sim2 refresh
+as a distinct record keyed by the parent Wire chain ID. The catalog currently
+contains the July 31 and August 3, 2026 sim2 deployments; August 3 owns the
+generated contract and program types. Every record includes its source archive,
+cluster manifest, deployment, snapshot, ABI/IDL, and source-revision digests.
 
-| Family   | sim2 assets                                               |
+| Family   | Versioned sim2 assets                                     |
 | -------- | --------------------------------------------------------- |
 | Ethereum | `OPP`, `OPPInbound`, `OperatorRegistry`, `ReserveManager` |
 | Solana   | `liqsol_core`                                             |
@@ -69,9 +70,36 @@ const solana = await OutpostClient.create({
 const liqsol = solana.program(SolanaProgramName.liqsolCore)
 ```
 
-Zod validates versioned deployment data at the handwritten data boundary.
+Zod validates versioned deployment data at the generated catalog boundary.
 Contract and program call types come directly from generator-owned ABI and IDL
 outputs; the package does not wrap or re-declare them.
+
+## Deployment refreshes
+
+Import each rebuilt cluster as a new immutable deployment. The importer reads
+the archived cluster manifest, verifies the optional standalone manifest,
+copies only the runtime ABIs/IDL used by this package, records exact provenance,
+regenerates the catalog and clients, and verifies that the current generated
+surface still covers older deployments.
+
+```bash
+pnpm --dir packages/sdk-outpost run import:deployment -- \
+  --archive /path/to/sim2-artifacts.tar.gz \
+  --manifest /path/to/sim2-cluster-manifest.json \
+  --platform-manifest-revision <full-git-sha> \
+  --libraries-revision <full-git-sha> \
+  --current
+```
+
+The default ID is `<prefix>-<date>-<wire-chain-prefix>`. Use `--id` when a
+release requires a more specific label. Existing IDs are protected; `--replace`
+is reserved for an intentional correction to the same deployment. Omitting
+`--current` adds history without changing generated client ownership.
+
+The checked-in `current.json` is the only current-version pointer. Tests and
+`verify:deployments` traverse every catalog entry, so switching it between the
+July and August records exercises both artifact generations without deleting
+history.
 
 ## Hub integration sequence
 
@@ -95,12 +123,18 @@ pnpm --dir packages/sdk-outpost run compile
 pnpm --dir packages/sdk-outpost run test
 pnpm --dir packages/sdk-outpost run generate:ethereum
 pnpm --dir packages/sdk-outpost run generate:solana
+pnpm --dir packages/sdk-outpost run verify:deployments
 ```
 
 Generated contract and program types must be regenerated from checked-in
 artifacts. Do not hand-edit generated files or re-declare their shapes.
 Generated outputs live under each chain's `generated/` directory and are
 excluded from handwritten-code lint rules.
+
+Swap consumers use `ReserveManager`, `OperatorRegistry`, and `liqsol_core` from
+this package. Wire quote, reserve, underwriter, and settlement state remains in
+`@wireio/sdk-core`. Retired or placeholder staking surfaces are not restored by
+a deployment import.
 
 The TypeChain generator is isolated on its compatible Prettier 2 dependency; the
 repository and Solana generator remain on the pinned Prettier 3 toolchain.
