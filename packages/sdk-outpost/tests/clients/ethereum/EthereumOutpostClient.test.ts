@@ -15,7 +15,7 @@ function createProvider(
   const provider = new providers.JsonRpcProvider()
   jest.spyOn(provider, "getNetwork").mockResolvedValue({
     chainId: deployment.ethereum.chainId,
-    name: "sim2"
+    name: "wire-outpost"
   })
   jest.spyOn(provider, "getCode").mockResolvedValue(DeployedCode)
   return provider

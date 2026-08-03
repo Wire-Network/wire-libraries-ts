@@ -2,16 +2,11 @@ import { PublicKey } from "@solana/web3.js"
 import { utils as ethersUtils } from "ethers"
 import { z } from "zod"
 
-import { ChainId } from "@wireio/sdk-core"
-
 import { EthereumContractName, SolanaProgramName } from "./Types.js"
 
 const SourceRevisionSchema = z.string().regex(/^[0-9a-f]{8,40}$/),
   Sha256Schema = z.string().regex(/^[0-9a-f]{64}$/),
-  WireChainIdSchema = z
-    .string()
-    .regex(/^[0-9a-f]{64}$/)
-    .transform(value => ChainId.from(value)),
+  WireChainIdSchema = z.string().regex(/^[0-9a-f]{64}$/),
   EthereumAddressSchema = z
     .string()
     .refine(ethersUtils.isAddress, "Invalid Ethereum address"),
@@ -68,29 +63,41 @@ export const SolanaProgramDeploymentSchema = z.object({
 })
 
 /** Complete deployment schema for a Wire network group. */
-export const OutpostDeploymentSchema = z.object({
-  schemaVersion: z.literal(1),
-  id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-  artifactBundle: ArtifactBundleSchema,
-  wire: z.object({
-    chainId: WireChainIdSchema
-  }),
-  ethereum: z.object({
-    chainId: z.number().int().positive(),
-    contracts: z.object({
-      [EthereumContractName.OPP]: EthereumContractDeploymentSchema,
-      [EthereumContractName.OPPInbound]: EthereumContractDeploymentSchema,
-      [EthereumContractName.OperatorRegistry]: EthereumContractDeploymentSchema,
-      [EthereumContractName.ReserveManager]: EthereumContractDeploymentSchema
-    })
-  }),
-  solana: z.object({
-    genesisHash: SolanaAddressSchema,
-    programs: z.object({
-      [SolanaProgramName.liqsolCore]: SolanaProgramDeploymentSchema
+export const OutpostDeploymentSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+    artifactBundle: ArtifactBundleSchema,
+    wire: z.object({
+      chainId: WireChainIdSchema
+    }),
+    ethereum: z.object({
+      chainId: z.number().int().positive(),
+      contracts: z.object({
+        [EthereumContractName.OPP]: EthereumContractDeploymentSchema,
+        [EthereumContractName.OPPInbound]: EthereumContractDeploymentSchema,
+        [EthereumContractName.OperatorRegistry]:
+          EthereumContractDeploymentSchema,
+        [EthereumContractName.ReserveManager]: EthereumContractDeploymentSchema
+      })
+    }),
+    solana: z.object({
+      genesisHash: SolanaAddressSchema,
+      programs: z.object({
+        [SolanaProgramName.liqsolCore]: SolanaProgramDeploymentSchema
+      })
     })
   })
-})
+  .superRefine((deployment, context) => {
+    const expectedId = `${deployment.wire.chainId}-${deployment.artifactBundle.deploymentChecksum.slice(0, 12)}`
+    if (deployment.id !== expectedId) {
+      context.addIssue({
+        code: "custom",
+        message: `Deployment id must be ${expectedId}`,
+        path: ["id"]
+      })
+    }
+  })
 
 /** Parsed source-repository identity. */
 export type ArtifactSource = z.infer<typeof ArtifactSourceSchema>

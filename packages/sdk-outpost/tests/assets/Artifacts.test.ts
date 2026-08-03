@@ -30,8 +30,10 @@ describe("versioned deployment assets", () => {
           sha256(
             Path.join(
               PackagePath,
-              "src/assets/ethereum",
-              deployment.id,
+              "src/assets",
+              deployment.wire.chainId,
+              deployment.artifactBundle.deploymentChecksum,
+              "ethereum",
               `${contractName}.json`
             )
           )
@@ -44,8 +46,10 @@ describe("versioned deployment assets", () => {
         sha256(
           Path.join(
             PackagePath,
-            "src/assets/solana",
-            deployment.id,
+            "src/assets",
+            deployment.wire.chainId,
+            deployment.artifactBundle.deploymentChecksum,
+            "solana",
             "liqsol_core.json"
           )
         )

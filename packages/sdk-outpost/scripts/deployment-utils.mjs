@@ -43,11 +43,8 @@ export async function writeJson(path, value) {
 }
 
 export async function readDeploymentDocuments() {
-  const entries = await Fs.readdir(DeploymentDataPath, { withFileTypes: true })
   const documents = await Promise.all(
-    entries
-      .filter(entry => entry.isFile() && entry.name.endsWith(".json"))
-      .map(entry => readJson(Path.join(DeploymentDataPath, entry.name)))
+    (await jsonFiles(DeploymentDataPath)).map(readJson)
   )
 
   return documents.sort((left, right) =>
@@ -55,6 +52,19 @@ export async function readDeploymentDocuments() {
       right.artifactBundle.generatedAt
     )
   )
+}
+
+async function jsonFiles(root) {
+  const entries = await Fs.readdir(root, { withFileTypes: true }),
+    paths = await Promise.all(
+      entries.map(entry => {
+        const path = Path.join(root, entry.name)
+        if (entry.isDirectory()) return jsonFiles(path)
+        return entry.isFile() && entry.name.endsWith(".json") ? [path] : []
+      })
+    )
+
+  return paths.flat()
 }
 
 export async function readCurrentDeploymentId() {
@@ -76,6 +86,12 @@ export async function writeTypescript(path, source) {
   await Fs.writeFile(path, formatted)
 }
 
-export function deploymentAssetPath(family, deploymentId) {
-  return Path.join(PackagePath, "src/assets", family, deploymentId)
+export function deploymentAssetPath(deployment, family) {
+  return Path.join(
+    PackagePath,
+    "src/assets",
+    deployment.wire.chainId,
+    deployment.artifactBundle.deploymentChecksum,
+    family
+  )
 }

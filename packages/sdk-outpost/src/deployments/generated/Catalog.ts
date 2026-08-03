@@ -4,7 +4,7 @@
 export const OutpostDeploymentDocuments: readonly unknown[] = [
   {
     schemaVersion: 1,
-    id: "sim2-2026-07-31-365c4416",
+    id: "365c441604ccfde28b6608c012c4e1c70545a90409ee2a74d8c6bf365ec61023-274b3c60e7da",
     artifactBundle: {
       generatedAt: "2026-07-31T15:47:46Z",
       sourceArchiveSha256:
@@ -88,7 +88,7 @@ export const OutpostDeploymentDocuments: readonly unknown[] = [
   },
   {
     schemaVersion: 1,
-    id: "sim2-2026-08-03-ca8d3a9d",
+    id: "ca8d3a9de01ad03daacdfb586b0da40b14a1b06834a70d2be5189378c90fdf96-467ffab13361",
     artifactBundle: {
       generatedAt: "2026-08-03T15:21:41Z",
       sourceArchiveSha256:
@@ -173,4 +173,5 @@ export const OutpostDeploymentDocuments: readonly unknown[] = [
 ]
 
 /** Deployment whose ABI and IDL surfaces own the generated client types. */
-export const CurrentOutpostDeploymentId = "sim2-2026-08-03-ca8d3a9d"
+export const CurrentOutpostDeploymentId =
+  "ca8d3a9de01ad03daacdfb586b0da40b14a1b06834a70d2be5189378c90fdf96-467ffab13361"
