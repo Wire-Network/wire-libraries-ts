@@ -1,14 +1,22 @@
 import {
-  OutpostDeploymentId,
-  Sim2Deployment,
-  assertOutpostDeployment
+  CurrentOutpostDeployment,
+  OutpostDeployments,
+  assertOutpostDeployment,
+  getOutpostDeployment
 } from "@wireio/sdk-outpost"
 
 describe("assertOutpostDeployment", () => {
-  it("resolves the deployment from the parent Wire chain", () => {
-    expect(assertOutpostDeployment(Sim2Deployment.wire.chainId).id).toBe(
-      OutpostDeploymentId.sim2
-    )
+  it.each(OutpostDeployments)(
+    "resolves $id from its parent Wire chain",
+    deployment => {
+      expect(assertOutpostDeployment(deployment.wire.chainId)).toBe(deployment)
+      expect(getOutpostDeployment(deployment.id)).toBe(deployment)
+    }
+  )
+
+  it("keeps the generated deployment explicit", () => {
+    expect(OutpostDeployments).toContain(CurrentOutpostDeployment)
+    expect(OutpostDeployments).toHaveLength(2)
   })
 
   it("rejects an unsupported Wire chain", () => {

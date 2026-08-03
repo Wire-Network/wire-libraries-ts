@@ -3,10 +3,10 @@ import { Connection, Keypair, SystemProgram } from "@solana/web3.js"
 import { providers } from "ethers"
 
 import {
+  CurrentOutpostDeployment,
   EthereumOutpostClient,
   OutpostChainFamily,
   OutpostClient,
-  Sim2Deployment,
   SolanaOutpostClient
 } from "@wireio/sdk-outpost"
 
@@ -16,7 +16,7 @@ function createSolanaProvider(): AnchorProvider {
 
   jest
     .spyOn(connection, "getGenesisHash")
-    .mockResolvedValue(Sim2Deployment.solana.genesisHash)
+    .mockResolvedValue(CurrentOutpostDeployment.solana.genesisHash)
   jest.spyOn(connection, "getAccountInfo").mockResolvedValue({
     data: Buffer.alloc(0),
     executable: true,
@@ -31,7 +31,7 @@ describe("OutpostClient", () => {
   it("preserves the precise Ethereum client type", async () => {
     const provider = new providers.JsonRpcProvider()
     jest.spyOn(provider, "getNetwork").mockResolvedValue({
-      chainId: Sim2Deployment.ethereum.chainId,
+      chainId: CurrentOutpostDeployment.ethereum.chainId,
       name: "sim2"
     })
     jest.spyOn(provider, "getCode").mockResolvedValue("0x01")
@@ -39,7 +39,7 @@ describe("OutpostClient", () => {
     const client = await OutpostClient.create({
       family: OutpostChainFamily.ethereum,
       options: {
-        deployment: Sim2Deployment,
+        deployment: CurrentOutpostDeployment,
         connection: provider
       }
     })
@@ -51,7 +51,7 @@ describe("OutpostClient", () => {
     const client = await OutpostClient.create({
       family: OutpostChainFamily.solana,
       options: {
-        deployment: Sim2Deployment,
+        deployment: CurrentOutpostDeployment,
         provider: createSolanaProvider()
       }
     })
