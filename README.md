@@ -22,8 +22,8 @@ A monorepo containing shared TypeScript libraries for Wire applications, providi
 
 ## Requirements
 
-- **Node.js** >= 24
-- **pnpm** >= 9
+- **Node.js** 24 for CI and releases
+- **pnpm** 10.34.5 through Corepack
 
 ## Getting Started
 
@@ -46,7 +46,7 @@ pnpm test
 
 ## Publishing
 
-GitHub Actions publishes non-private workspace packages to npm with provenance. Each published package manifest must keep `repository.url` set to `https://github.com/Wire-Network/wire-libraries-ts` or npm will reject provenance validation.
+GitHub Actions builds hybrid package outputs, verifies `sdk-outpost` generated sources and entrypoints, increments every publishable workspace package, and publishes to npm with provenance. Each published package manifest must keep `repository.url` set to `https://github.com/Wire-Network/wire-libraries-ts` or npm will reject provenance validation. See [`packages/sdk-outpost/RELEASING.md`](packages/sdk-outpost/RELEASING.md) for its first-publication checklist.
 
 ## Project Structure
 
