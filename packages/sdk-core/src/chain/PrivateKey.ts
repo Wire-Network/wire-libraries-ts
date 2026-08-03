@@ -304,17 +304,24 @@ function decodeKey(value: string) {
   }
 
   if (value.startsWith("PVT_")) {
-    // Antelope/SYSIO format
-    const parts = value.split("_")
+    // Antelope/SYSIO format. Split on the FIRST TWO underscores only — never
+    // `split("_")` with a 3-part check: a BLS payload is base64url, whose
+    // alphabet INCLUDES "_", so ~50% of `PVT_BLS_…` keys carry one and would be
+    // rejected as "Invalid PVT format" despite being perfectly valid. This
+    // mirrors `PublicKey.from`, which has always parsed it this way.
+    const firstUnderscore = value.indexOf("_"),
+      secondUnderscore = value.indexOf("_", firstUnderscore + 1)
 
-    if (parts.length !== 3) {
+    if (firstUnderscore === -1 || secondUnderscore === -1) {
       throw new Error("Invalid PVT format")
     }
 
-    const type = KeyType.from(parts[1])
+    const typeString = value.substring(firstUnderscore + 1, secondUnderscore),
+      payload = value.substring(secondUnderscore + 1),
+      type = KeyType.from(typeString)
 
     if (type === KeyType.BLS) {
-      const data = new Bytes(blsDecode(parts[2], 32))
+      const data = new Bytes(blsDecode(payload, 32))
       return { type, data }
     }
 
@@ -330,10 +337,10 @@ function decodeKey(value: string) {
 
     let data: Bytes
     try {
-      data = Base58.decodeRipemd160Check(parts[2], size, type)
+      data = Base58.decodeRipemd160Check(payload, size, type)
     } catch (e) {
       try {
-        let hex = parts[2]
+        let hex = payload
         if (hex.startsWith("0x")) hex = hex.slice(2)
         data = new Bytes(hexToArray(hex))
       } catch (e2) {
