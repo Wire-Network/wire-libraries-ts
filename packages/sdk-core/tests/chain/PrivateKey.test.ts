@@ -147,4 +147,42 @@ describe("PrivateKey", () => {
       expect(sig.toString()).toMatch(/^SIG_ED_/)
     })
   })
+
+  describe("from — PVT_ parsing", () => {
+    /**
+     * Regression: `decodeKey` used to `split("_")` and demand exactly 3 parts.
+     * A BLS payload is base64url, whose alphabet INCLUDES "_", so roughly half
+     * of all valid `PVT_BLS_…` keys carry one and were rejected as
+     * "Invalid PVT format". Measured 150/300 before the fix.
+     */
+    test("round-trips a BLS key whose base64url payload contains an underscore", () => {
+      const underscored = Array.from({ length: 40 }, () =>
+        PrivateKey.generate(KeyType.BLS).toString()
+      ).filter(encoded => encoded.slice("PVT_BLS_".length).includes("_"))
+
+      // 40 draws at ~50% each — an empty set would itself be the anomaly.
+      expect(underscored.length).toBeGreaterThan(0)
+
+      underscored.forEach(encoded => {
+        const parsed = PrivateKey.from(encoded)
+        expect(parsed.type).toBe(KeyType.BLS)
+        expect(parsed.toString()).toBe(encoded)
+      })
+    })
+
+    test("round-trips every curve exactly", () => {
+      ;[KeyType.K1, KeyType.R1, KeyType.EM, KeyType.ED, KeyType.BLS].forEach(
+        keyType => {
+          const encoded = PrivateKey.generate(keyType).toString()
+          expect(PrivateKey.from(encoded).toString()).toBe(encoded)
+        }
+      )
+    })
+
+    test("still rejects a PVT_ string with no second underscore", () => {
+      expect(() => PrivateKey.from("PVT_NOSEPARATOR")).toThrow(
+        /Invalid PVT format/
+      )
+    })
+  })
 })
