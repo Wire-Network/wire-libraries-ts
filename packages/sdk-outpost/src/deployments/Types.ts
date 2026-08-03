@@ -4,11 +4,6 @@ export enum OutpostChainFamily {
   solana = "solana"
 }
 
-/** Versioned deployment bundles shipped by the SDK. */
-export enum OutpostDeploymentId {
-  sim2 = "sim2"
-}
-
 /** Ethereum contracts owned by the current outpost deployment. */
 export enum EthereumContractName {
   OPP = "OPP",

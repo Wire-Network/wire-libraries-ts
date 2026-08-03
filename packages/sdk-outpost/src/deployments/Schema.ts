@@ -4,11 +4,7 @@ import { z } from "zod"
 
 import { ChainId } from "@wireio/sdk-core"
 
-import {
-  EthereumContractName,
-  OutpostDeploymentId,
-  SolanaProgramName
-} from "./Types.js"
+import { EthereumContractName, SolanaProgramName } from "./Types.js"
 
 const SourceRevisionSchema = z.string().regex(/^[0-9a-f]{8,40}$/),
   Sha256Schema = z.string().regex(/^[0-9a-f]{64}$/),
@@ -42,6 +38,9 @@ export const ArtifactSourceSchema = z.object({
 export const ArtifactBundleSchema = z.object({
   generatedAt: z.iso.datetime(),
   sourceArchiveSha256: Sha256Schema,
+  clusterManifestSha256: Sha256Schema,
+  deploymentChecksum: Sha256Schema,
+  snapshotChecksum: Sha256Schema,
   platformRelease: z.object({
     tag: z.string().regex(/^v\d+\.\d+\.\d+$/),
     url: z.url(),
@@ -71,7 +70,7 @@ export const SolanaProgramDeploymentSchema = z.object({
 /** Complete deployment schema for a Wire network group. */
 export const OutpostDeploymentSchema = z.object({
   schemaVersion: z.literal(1),
-  id: z.enum(OutpostDeploymentId),
+  id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   artifactBundle: ArtifactBundleSchema,
   wire: z.object({
     chainId: WireChainIdSchema
