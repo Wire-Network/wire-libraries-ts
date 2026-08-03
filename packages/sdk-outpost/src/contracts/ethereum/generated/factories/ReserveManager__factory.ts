@@ -437,6 +437,22 @@ const _abi = [
     type: "error",
   },
   {
+    inputs: [
+      {
+        internalType: "address",
+        name: "derived",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "caller",
+        type: "address",
+      },
+    ],
+    name: "WIRE_DepositorKeyMismatch",
+    type: "error",
+  },
+  {
     inputs: [],
     name: "WIRE_Erc20DepositValueNonZero",
     type: "error",
@@ -495,8 +511,57 @@ const _abi = [
     type: "error",
   },
   {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "length",
+        type: "uint256",
+      },
+    ],
+    name: "WIRE_InvalidDepositorKey",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
+    ],
+    name: "WIRE_InvalidNodeTier",
+    type: "error",
+  },
+  {
     inputs: [],
     name: "WIRE_InvalidPrice",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "string",
+        name: "name",
+        type: "string",
+      },
+    ],
+    name: "WIRE_InvalidWireAccountName",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "WireKeyType",
+        name: "keyType",
+        type: "uint8",
+      },
+      {
+        internalType: "uint256",
+        name: "keyLength",
+        type: "uint256",
+      },
+    ],
+    name: "WIRE_InvalidWireKey",
     type: "error",
   },
   {
@@ -554,6 +619,27 @@ const _abi = [
   {
     inputs: [],
     name: "WIRE_NoYield",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "nftAddress",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "caller",
+        type: "address",
+      },
+    ],
+    name: "WIRE_NodeTokenNotOwned",
     type: "error",
   },
   {
@@ -764,6 +850,27 @@ const _abi = [
       },
     ],
     name: "WIRE_UnexpectedError",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "operator",
+        type: "address",
+      },
+    ],
+    name: "WIRE_UnexpectedTokenDeposit",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "WIRE_WireNodesContractNotSet",
     type: "error",
   },
   {

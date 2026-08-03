@@ -1,17 +1,22 @@
 import Fs from "node:fs/promises"
 import Path from "node:path"
-import { fileURLToPath } from "node:url"
 
 import { convertIdlToCamelCase } from "@coral-xyz/anchor/dist/cjs/idl.js"
 import { format } from "prettier"
 
-const packagePath = Path.resolve(
-    Path.dirname(fileURLToPath(import.meta.url)),
-    ".."
+import {
+  PackagePath,
+  deploymentAssetPath,
+  readCurrentDeploymentId
+} from "./deployment-utils.mjs"
+
+const deploymentId = await readCurrentDeploymentId(),
+  idlFile = Path.join(
+    deploymentAssetPath("solana", deploymentId),
+    "liqsol_core.json"
   ),
-  idlFile = Path.join(packagePath, "src/assets/solana/sim2/liqsol_core.json"),
   outputFile = Path.join(
-    packagePath,
+    PackagePath,
     "src/programs/solana/generated/LiqsolCore.ts"
   ),
   rawIdl = JSON.parse(await Fs.readFile(idlFile, "utf8")),

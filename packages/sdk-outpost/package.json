@@ -38,8 +38,12 @@
     "compile:watch": "tsc -b tsconfig.json -w",
     "test": "jest",
     "fix:hybrid:exports": "node ../../scripts/fix-hybrid-output.mjs .",
-    "generate:ethereum": "typechain --target ethers-v5 --node16-modules --out-dir src/contracts/ethereum/generated 'src/assets/ethereum/**/*.json'",
-    "generate:solana": "node scripts/generate-solana-types.mjs"
+    "import:deployment": "node scripts/import-deployment.mjs",
+    "generate:deployments": "node scripts/generate-deployment-catalog.mjs",
+    "generate:ethereum": "node scripts/generate-ethereum-types.mjs",
+    "generate:solana": "node scripts/generate-solana-types.mjs",
+    "generate": "pnpm run generate:deployments && pnpm run generate:ethereum && pnpm run generate:solana",
+    "verify:deployments": "node scripts/verify-deployments.mjs"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
