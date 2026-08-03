@@ -11,11 +11,16 @@
   "publishConfig": {
     "access": "public"
   },
-  "files": [
-    "lib/cjs",
-    "lib/esm",
-    "README.md"
-  ],
+  "homepage": "https://github.com/Wire-Network/wire-libraries-ts/tree/master/packages/sdk-outpost",
+  "bugs": {
+    "url": "https://github.com/Wire-Network/wire-libraries-ts/issues"
+  },
+  "keywords": ["wire", "ethereum", "solana", "outpost", "sdk"],
+  "engines": {
+    "node": ">=22"
+  },
+  "sideEffects": false,
+  "files": ["lib/cjs", "lib/esm", "README.md"],
   "types": "lib/esm/index.d.ts",
   "main": "lib/cjs/index.js",
   "module": "lib/esm/index.js",
@@ -36,6 +41,8 @@
   "scripts": {
     "compile": "tsc -b tsconfig.json",
     "compile:watch": "tsc -b tsconfig.json -w",
+    "clean": "node scripts/clean-build.mjs",
+    "build": "pnpm run clean && pnpm run compile && pnpm run fix:hybrid:exports",
     "test": "jest",
     "fix:hybrid:exports": "node ../../scripts/fix-hybrid-output.mjs .",
     "import:deployment": "node scripts/import-deployment.mjs",
@@ -43,16 +50,18 @@
     "generate:ethereum": "node scripts/generate-ethereum-types.mjs",
     "generate:solana": "node scripts/generate-solana-types.mjs",
     "generate": "pnpm run generate:deployments && pnpm run generate:ethereum && pnpm run generate:solana",
-    "verify:deployments": "node scripts/verify-deployments.mjs"
+    "verify:generated": "node scripts/verify-generated.mjs",
+    "verify:deployments": "node scripts/verify-deployments.mjs",
+    "verify:package": "node scripts/verify-package.mjs",
+    "verify:release": "pnpm run verify:generated && pnpm run verify:deployments && pnpm run build && pnpm run verify:package",
+    "prepack": "pnpm run verify:release"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
     "@ethersproject/abi": "^5.8.0",
     "@ethersproject/providers": "^5.8.0",
     "@solana/web3.js": "^1.98.4",
-    "@wireio/sdk-core": "workspace:*",
     "ethers": "^5.8.0",
-    "lodash": "^4.18.1",
     "ts-pattern": "^5.9.0",
     "zod": "^4.4.3"
   },

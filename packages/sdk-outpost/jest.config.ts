@@ -14,8 +14,6 @@ const config: Config = {
     ]
   },
   moduleNameMapper: {
-    "^@wireio/sdk-core$": "<rootDir>/../sdk-core/src/index",
-    "^@wireio/sdk-core/(.*)$": "<rootDir>/../sdk-core/src/$1",
     "^@wireio/sdk-outpost$": "<rootDir>/src/index",
     "^@wireio/sdk-outpost/(.*)$": "<rootDir>/src/$1",
     "^(\\.\\.?/.*)\\.js$": "$1"

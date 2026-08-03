@@ -1,5 +1,4 @@
 import { providers, Signer } from "ethers"
-import { identity } from "lodash"
 import { match } from "ts-pattern"
 
 import {
@@ -14,14 +13,11 @@ import { EthereumContractMap, EthereumOutpostClientOptions } from "./Types.js"
 function resolveProvider(
   connection: providers.Provider | Signer
 ): providers.Provider {
-  return match(connection)
-    .when(Signer.isSigner, signer => {
-      if (signer.provider == null) {
-        throw new Error("Ethereum signer must be connected to a provider")
-      }
-      return signer.provider
-    })
-    .otherwise(identity)
+  if (!Signer.isSigner(connection)) return connection
+  if (connection.provider == null) {
+    throw new Error("Ethereum signer must be connected to a provider")
+  }
+  return connection.provider
 }
 
 /** Strictly typed access to one verified Ethereum outpost deployment. */
