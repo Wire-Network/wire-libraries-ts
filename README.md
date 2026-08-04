@@ -22,8 +22,8 @@ A monorepo containing shared TypeScript libraries for Wire applications, providi
 
 ## Requirements
 
-- **Node.js** 24 for CI and releases
-- **pnpm** 10.34.5 through Corepack
+- **Node.js** >= 24
+- **pnpm** >= 9
 
 ## Getting Started
 
