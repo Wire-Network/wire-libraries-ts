@@ -4,9 +4,9 @@
  * pnpm hook to resolve @wireio packages from the local wire-libraries-ts monorepo.
  *
  * Usage:
- *   1. Build the required sibling-repository artifact outputs.
- *   2. Set the corresponding WIRE_LINK_LOCAL_* environment variable.
- *   3. Run `pnpm install --lockfile=false` to use local paths instead of the registry.
+ *   1. Add packages you want to link to the `localOverrides` map below.
+ *   2. Run `pnpm install` — pnpm will use these local paths instead of the registry.
+ *   3. Comment out or remove entries to revert to registry versions.
  *
  * Docs: https://pnpm.io/pnpmfile
  */
@@ -43,16 +43,6 @@ function isDirectory(dirPath) {
 }
 
 /**
- * Checks whether an opt-in local-link environment variable is enabled.
- *
- * @param {string} name
- * @returns {boolean}
- */
-function isEnabledEnvironment(name) {
-  return process.env[name] === "1" || process.env[name] === "true"
-}
-
-/**
  * Map of package names to their local directory in wire-libraries-ts.
  * Uncomment the entries you want to link locally.
  */
@@ -63,7 +53,11 @@ const localOverrides = {}
  * Normal package installs keep registry resolution so pnpm-lock.yaml is portable.
  */
 function appendLocalOppModelOverrides() {
-  if (!isEnabledEnvironment(linkLocalOppModelsEnv)) {
+  const shouldLinkLocalOppModels =
+    process.env[linkLocalOppModelsEnv] === "1" ||
+    process.env[linkLocalOppModelsEnv] === "true"
+
+  if (!shouldLinkLocalOppModels) {
     return
   }
 
@@ -84,7 +78,11 @@ function appendLocalOppModelOverrides() {
  * remains portable and exact published versions stay authoritative.
  */
 function appendLocalOutpostArtifactOverrides() {
-  if (!isEnabledEnvironment(linkLocalOutpostArtifactsEnv)) {
+  const shouldLinkLocalOutpostArtifacts =
+    process.env[linkLocalOutpostArtifactsEnv] === "1" ||
+    process.env[linkLocalOutpostArtifactsEnv] === "true"
+
+  if (!shouldLinkLocalOutpostArtifacts) {
     return
   }
 
