@@ -75,6 +75,9 @@ importers:
       typescript-eslint:
         specifier: ^8.64.0
         version: 8.64.0(eslint@10.7.0)(typescript@6.0.2)
+      zx:
+        specifier: ^8.8.5
+        version: 8.8.5
 
   examples/web-logging-example:
     dependencies:
@@ -4285,6 +4288,11 @@ packages:
 
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
+  zx@8.8.5:
+    resolution: {integrity: sha512-SNgDF5L0gfN7FwVOdEFguY3orU5AkfFZm9B5YSHog/UDHv+lvmd82ZAsOenOkQixigwH2+yyH198AwNdKhj+RA==}
+    engines: {node: '>= 12.17.0'}
+    hasBin: true
 
 snapshots:
 
@@ -8982,3 +8990,5 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   zod@4.4.3: {}
+
+  zx@8.8.5: {}

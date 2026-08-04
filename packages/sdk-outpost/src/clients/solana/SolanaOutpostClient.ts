@@ -2,7 +2,11 @@ import { Program } from "@coral-xyz/anchor"
 import { PublicKey } from "@solana/web3.js"
 import { match } from "ts-pattern"
 
-import { SolanaProgramName } from "../../deployments/index.js"
+import { assertOutpostArtifactCompatibility } from "../../artifacts/index.js"
+import {
+  OutpostChainFamily,
+  SolanaProgramName
+} from "../../deployments/index.js"
 import { LiqsolCore, liqsolCoreIdl } from "../../programs/solana/index.js"
 import { SolanaOutpostClientOptions, SolanaProgramMap } from "./Types.js"
 
@@ -14,6 +18,8 @@ export class SolanaOutpostClient {
   ): Promise<SolanaOutpostClient> {
     const { deployment, provider } = options,
       genesisHash = await provider.connection.getGenesisHash()
+
+    assertOutpostArtifactCompatibility(deployment, OutpostChainFamily.solana)
 
     if (genesisHash !== deployment.solana.genesisHash) {
       throw new Error(
@@ -41,7 +47,13 @@ export class SolanaOutpostClient {
   private readonly liqsolCore: Program<LiqsolCore>
 
   private constructor(private readonly options: SolanaOutpostClientOptions) {
-    this.liqsolCore = new Program<LiqsolCore>(liqsolCoreIdl, options.provider)
+    const address =
+      options.deployment.solana.programs[SolanaProgramName.liqsolCore].address
+
+    this.liqsolCore = new Program<LiqsolCore>(
+      { ...liqsolCoreIdl, address },
+      options.provider
+    )
   }
 
   /** Provider verified against the configured Solana cluster. */

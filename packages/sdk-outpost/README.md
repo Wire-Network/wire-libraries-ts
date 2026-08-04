@@ -4,9 +4,9 @@ Strictly typed access to the Ethereum contracts and Solana programs deployed
 alongside a Wire chain.
 
 `@wireio/sdk-core` owns Wire-chain identity, signing, and `sysio.*` workflows.
-This package owns external-chain deployment records, generated contract and
-program types, and verified clients. Product orchestration remains in consuming
-applications.
+This package owns verified external-chain clients. Contract ABIs are published
+by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and runtime
+deployment data remains caller-supplied.
 
 Available on npm: <https://www.npmjs.com/package/@wireio/sdk-outpost>
 
@@ -26,30 +26,42 @@ module entrypoints with TypeScript declarations.
 | Ethereum | `OPP`, `OPPInbound`, `OperatorRegistry`, `ReserveManager` |
 | Solana   | `liqsol_core`                                             |
 
-The package does not infer availability from an ABI, IDL, RPC URL, or address
-alone. Client creation verifies the external chain identity and every configured
-contract or program before returning. Higher-level feature gates must still
-verify the complete platform lifecycle required by an application.
+Client creation verifies all three boundaries before returning:
 
-## Deployment catalog
+- the supplied deployment digests match the ABI/IDL packages compiled into this
+  SDK release;
+- the provider is connected to the expected external chain;
+- every configured contract has bytecode and every configured Solana program is
+  executable.
 
-Each catalog record represents one immutable Wire network group:
+These checks prove deployment compatibility, not end-to-end feature readiness.
+Applications must still gate swaps, staking, settlement, retry, funding, and
+underwriting using platform capability evidence.
+
+## Runtime deployment data
+
+The SDK does not contain a network catalog. Resolve the selected Wire network
+group in the application, load its deployment document from the platform
+manifest pipeline, and validate that untrusted input with
+`parseOutpostDeployment`.
+
+A deployment document carries:
 
 - the full parent Wire chain ID;
-- the external Ethereum chain ID and deployed contract addresses;
-- the external Solana genesis hash and program addresses;
-- the platform release and exact source revisions;
-- the source archive, manifest, deployment, snapshot, ABI, and IDL digests.
+- the Ethereum chain ID and deployed contract addresses;
+- the Solana genesis hash and deployed program addresses;
+- platform and source provenance;
+- deployment and interface digests used for compatibility checks.
 
-Artifacts are grouped by full Wire chain ID and deployment checksum. Public
-record IDs use `<wire-chain-id>-<deployment-checksum-prefix>` and do not depend
-on environment names, RPC hostnames, or mutable labels. RPC selection remains
-caller-owned.
+RPC URLs, private keys, wallet state, and mutable capability results are not SDK
+data. A cluster respin updates the runtime deployment document without requiring
+an SDK or interface-package release when the underlying ABI and IDL are
+unchanged.
 
 ## Usage
 
-Resolve the deployment from the selected Wire chain and provide the matching
-external-chain provider:
+Validate caller-owned deployment data and provide the matching external-chain
+provider:
 
 ```ts
 import { providers } from "ethers"
@@ -58,10 +70,10 @@ import {
   EthereumContractName,
   OutpostChainFamily,
   OutpostClient,
-  assertOutpostDeployment
+  parseOutpostDeployment
 } from "@wireio/sdk-outpost"
 
-const deployment = assertOutpostDeployment(wireChainId)
+const deployment = parseOutpostDeployment(clusterManifest.outpost)
 const ethereum = await OutpostClient.create({
   family: OutpostChainFamily.ethereum,
   options: {
@@ -72,7 +84,8 @@ const ethereum = await OutpostClient.create({
 const reserves = ethereum.contract(EthereumContractName.ReserveManager)
 ```
 
-Solana uses the same facade and returns the precise Anchor program type:
+Solana uses the same facade and returns the precise Anchor program type at the
+runtime program address:
 
 ```ts
 import {
@@ -88,31 +101,14 @@ const solana = await OutpostClient.create({
 const liqsol = solana.program(SolanaProgramName.liqsolCore)
 ```
 
-Zod validates deployment documents at the generated catalog boundary. Contract
-and program call types come directly from generator-owned ABI and IDL outputs;
-the package does not wrap or re-declare those shapes.
+## Artifact ownership
 
-## Importing a deployment
-
-Import every rebuilt network group as a new immutable record. The importer
-validates the archived manifest, copies only supported runtime assets, records
-exact provenance, regenerates the catalog and client types, and verifies that
-the current type surface still covers older records.
-
-```sh
-pnpm --dir packages/sdk-outpost run import:deployment -- \
-  --archive /path/to/outpost-artifacts.tar.gz \
-  --manifest /path/to/cluster-manifest.json \
-  --platform-manifest-revision <full-git-sha> \
-  --libraries-revision <full-git-sha> \
-  --current
-```
-
-Existing chain/checksum records are protected. Use `--replace` only to correct
-that exact record. Omitting `--current` adds history without changing which
-artifacts generate the exported contract and program types.
-
-Do not hand-edit generated files or re-declare ABI/IDL shapes.
+`@wireio/outpost-ethereum-artifacts` and `@wireio/outpost-solana-artifacts` are
+build-time inputs. Their exact manifests are compiled into
+`OutpostArtifactManifests` for deployment compatibility and readiness reporting.
+Generated TypeChain and Anchor sources are ignored local build outputs; they are
+compiled into the published package and are never maintained by hand in this
+repository.
 
 ## Consumer boundaries
 
@@ -128,15 +124,13 @@ Do not hand-edit generated files or re-declare ABI/IDL shapes.
 
 ```sh
 pnpm --dir packages/sdk-outpost run generate
-pnpm --dir packages/sdk-outpost run verify:generated
-pnpm --dir packages/sdk-outpost run verify:deployments
 pnpm --dir packages/sdk-outpost run test
 pnpm --dir packages/sdk-outpost run verify:release
 pnpm --dir packages/sdk-outpost pack --dry-run
 ```
 
 Release versions are managed by the monorepo-wide patch workflow. See
-[`RELEASING.md`](RELEASING.md) for the first-publication and verification
+[`RELEASING.md`](RELEASING.md) for artifact prerequisites and the verification
 checklist.
 
 ## License

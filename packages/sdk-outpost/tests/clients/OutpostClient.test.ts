@@ -3,20 +3,22 @@ import { Connection, Keypair, SystemProgram } from "@solana/web3.js"
 import { providers } from "ethers"
 
 import {
-  CurrentOutpostDeployment,
   EthereumOutpostClient,
   OutpostChainFamily,
   OutpostClient,
   SolanaOutpostClient
 } from "@wireio/sdk-outpost"
+import { createDeploymentFixture } from "../Fixtures.js"
 
-function createSolanaProvider(): AnchorProvider {
+function createSolanaProvider(
+  deployment = createDeploymentFixture()
+): AnchorProvider {
   const connection = new Connection("http://127.0.0.1:8899"),
     provider = new AnchorProvider(connection, new Wallet(Keypair.generate()))
 
   jest
     .spyOn(connection, "getGenesisHash")
-    .mockResolvedValue(CurrentOutpostDeployment.solana.genesisHash)
+    .mockResolvedValue(deployment.solana.genesisHash)
   jest.spyOn(connection, "getAccountInfo").mockResolvedValue({
     data: Buffer.alloc(0),
     executable: true,
@@ -29,9 +31,10 @@ function createSolanaProvider(): AnchorProvider {
 
 describe("OutpostClient", () => {
   it("preserves the precise Ethereum client type", async () => {
-    const provider = new providers.JsonRpcProvider()
+    const deployment = createDeploymentFixture(),
+      provider = new providers.JsonRpcProvider()
     jest.spyOn(provider, "getNetwork").mockResolvedValue({
-      chainId: CurrentOutpostDeployment.ethereum.chainId,
+      chainId: deployment.ethereum.chainId,
       name: "wire-outpost"
     })
     jest.spyOn(provider, "getCode").mockResolvedValue("0x01")
@@ -39,7 +42,7 @@ describe("OutpostClient", () => {
     const client = await OutpostClient.create({
       family: OutpostChainFamily.ethereum,
       options: {
-        deployment: CurrentOutpostDeployment,
+        deployment,
         connection: provider
       }
     })
@@ -48,11 +51,12 @@ describe("OutpostClient", () => {
   })
 
   it("preserves the precise Solana client type", async () => {
+    const deployment = createDeploymentFixture()
     const client = await OutpostClient.create({
       family: OutpostChainFamily.solana,
       options: {
-        deployment: CurrentOutpostDeployment,
-        provider: createSolanaProvider()
+        deployment,
+        provider: createSolanaProvider(deployment)
       }
     })
 

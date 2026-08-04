@@ -41,19 +41,14 @@
   "scripts": {
     "compile": "tsc -b tsconfig.json",
     "compile:watch": "tsc -b tsconfig.json -w",
-    "clean": "node scripts/clean-build.mjs",
-    "build": "pnpm run clean && pnpm run compile && pnpm run fix:hybrid:exports",
-    "test": "jest",
+    "clean": "zx ../../scripts/sdk-outpost/clean.mjs",
+    "generate": "zx ../../scripts/sdk-outpost/generate.mjs",
+    "prepare:compile": "pnpm run clean && pnpm run generate",
+    "build": "pnpm run prepare:compile && pnpm run compile && pnpm run fix:hybrid:exports",
+    "test": "pnpm run generate && jest",
     "fix:hybrid:exports": "node ../../scripts/fix-hybrid-output.mjs .",
-    "import:deployment": "node scripts/import-deployment.mjs",
-    "generate:deployments": "node scripts/generate-deployment-catalog.mjs",
-    "generate:ethereum": "node scripts/generate-ethereum-types.mjs",
-    "generate:solana": "node scripts/generate-solana-types.mjs",
-    "generate": "pnpm run generate:deployments && pnpm run generate:ethereum && pnpm run generate:solana",
-    "verify:generated": "node scripts/verify-generated.mjs",
-    "verify:deployments": "node scripts/verify-deployments.mjs",
-    "verify:package": "node scripts/verify-package.mjs",
-    "verify:release": "pnpm run verify:generated && pnpm run verify:deployments && pnpm run build && pnpm run verify:package",
+    "verify:package": "zx ../../scripts/sdk-outpost/verify-package.mjs",
+    "verify:release": "pnpm run build && pnpm run verify:package",
     "prepack": "pnpm run verify:release"
   },
   "dependencies": {
@@ -66,6 +61,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@wireio/outpost-ethereum-artifacts": "0.1.0",
+    "@wireio/outpost-solana-artifacts": "0.1.0",
     "@typechain/ethers-v5": "^11.1.2",
     "prettier": "3.8.1",
     "typechain": "^8.3.2",

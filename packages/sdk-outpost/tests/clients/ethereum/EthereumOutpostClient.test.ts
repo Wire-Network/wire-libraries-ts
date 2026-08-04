@@ -3,9 +3,9 @@ import { providers } from "ethers"
 import {
   EthereumContractName,
   EthereumOutpostClient,
-  OutpostDeployments,
   type OutpostDeployment
 } from "@wireio/sdk-outpost"
+import { createDeploymentFixture } from "../../Fixtures.js"
 
 const DeployedCode = "0x01"
 
@@ -22,28 +22,25 @@ function createProvider(
 }
 
 describe("EthereumOutpostClient", () => {
-  it.each(OutpostDeployments)(
-    "verifies $id and returns a generated contract type",
-    async deployment => {
-      const provider = createProvider(deployment),
-        client = await EthereumOutpostClient.create({
-          deployment,
-          connection: provider
-        }),
-        reserveManager = client.contract(EthereumContractName.ReserveManager)
+  it("verifies a deployment and returns a generated contract type", async () => {
+    const deployment = createDeploymentFixture(),
+      provider = createProvider(deployment),
+      client = await EthereumOutpostClient.create({
+        deployment,
+        connection: provider
+      }),
+      reserveManager = client.contract(EthereumContractName.ReserveManager)
 
-      expect(reserveManager.address).toBe(
-        deployment.ethereum.contracts[EthereumContractName.ReserveManager]
-          .address
-      )
-      expect(provider.getCode).toHaveBeenCalledTimes(
-        Object.values(EthereumContractName).length
-      )
-    }
-  )
+    expect(reserveManager.address).toBe(
+      deployment.ethereum.contracts[EthereumContractName.ReserveManager].address
+    )
+    expect(provider.getCode).toHaveBeenCalledTimes(
+      Object.values(EthereumContractName).length
+    )
+  })
 
   it("rejects the wrong Ethereum chain", async () => {
-    const deployment = OutpostDeployments[0],
+    const deployment = createDeploymentFixture(),
       provider = createProvider(deployment)
     jest.spyOn(provider, "getNetwork").mockResolvedValue({
       chainId: 1,
@@ -59,7 +56,7 @@ describe("EthereumOutpostClient", () => {
   })
 
   it("rejects a configured contract without bytecode", async () => {
-    const deployment = OutpostDeployments[0],
+    const deployment = createDeploymentFixture(),
       provider = createProvider(deployment)
     jest.spyOn(provider, "getCode").mockResolvedValue("0x")
 

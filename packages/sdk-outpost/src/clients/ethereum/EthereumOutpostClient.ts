@@ -1,13 +1,17 @@
 import { providers, Signer } from "ethers"
 import { match } from "ts-pattern"
 
+import { assertOutpostArtifactCompatibility } from "../../artifacts/index.js"
 import {
   OPPInbound__factory,
   OPP__factory,
   OperatorRegistry__factory,
   ReserveManager__factory
 } from "../../contracts/ethereum/index.js"
-import { EthereumContractName } from "../../deployments/index.js"
+import {
+  EthereumContractName,
+  OutpostChainFamily
+} from "../../deployments/index.js"
 import { EthereumContractMap, EthereumOutpostClientOptions } from "./Types.js"
 
 function resolveProvider(
@@ -31,6 +35,8 @@ export class EthereumOutpostClient {
     const { connection, deployment } = options,
       provider = resolveProvider(connection),
       network = await provider.getNetwork()
+
+    assertOutpostArtifactCompatibility(deployment, OutpostChainFamily.ethereum)
 
     if (network.chainId !== deployment.ethereum.chainId) {
       throw new Error(

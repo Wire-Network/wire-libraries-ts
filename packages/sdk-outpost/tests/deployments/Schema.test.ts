@@ -2,89 +2,22 @@ import {
   EthereumContractName,
   parseOutpostDeployment
 } from "@wireio/sdk-outpost"
-
-const Hash = "a".repeat(64),
-  Revision = "b".repeat(40),
-  WireChainId = "c".repeat(64),
-  EthereumAddress = "0x5c74c94173F05dA1720953407cbb920F3DF9f887",
-  SolanaAddress = "5nBtmutQLrRKBUxNfHJPDjiW5u8id6QM9Hhjg1D1g1XH"
-
-function createDeploymentFixture() {
-  const ethereumContract = {
-    address: EthereumAddress,
-    artifactSha256: Hash
-  }
-  return {
-    schemaVersion: 1,
-    id: `${WireChainId}-${Hash.slice(0, 12)}`,
-    artifactBundle: {
-      generatedAt: "2026-07-31T15:47:46Z",
-      sourceArchiveSha256: Hash,
-      clusterManifestSha256: Hash,
-      deploymentChecksum: Hash,
-      snapshotChecksum: Hash,
-      platformRelease: {
-        tag: "v1.0.0",
-        url: "https://github.com/Wire-Network/wire-platform-build-system/releases/tag/v1.0.0",
-        manifest: {
-          repository: "Wire-Network/wire-platform-manifest",
-          revision: Revision
-        },
-        libraries: {
-          repository: "Wire-Network/wire-libraries-ts",
-          revision: Revision
-        }
-      },
-      sources: {
-        wireTools: {
-          repository: "Wire-Network/wire-tools-ts",
-          revision: Revision
-        },
-        wireSysio: {
-          repository: "Wire-Network/wire-sysio",
-          revision: Revision
-        },
-        wireEthereum: {
-          repository: "Wire-Network/wire-ethereum",
-          revision: Revision
-        },
-        wireSolana: {
-          repository: "Wire-Network/wire-solana",
-          revision: Revision
-        }
-      }
-    },
-    wire: { chainId: WireChainId },
-    ethereum: {
-      chainId: 31_337,
-      contracts: {
-        OPP: ethereumContract,
-        OPPInbound: ethereumContract,
-        OperatorRegistry: ethereumContract,
-        ReserveManager: ethereumContract
-      }
-    },
-    solana: {
-      genesisHash: SolanaAddress,
-      programs: {
-        liqsolCore: {
-          address: SolanaAddress,
-          artifactSha256: Hash
-        }
-      }
-    }
-  }
-}
+import { createDeploymentFixture } from "../Fixtures.js"
 
 describe("OutpostDeploymentSchema", () => {
   it("parses a valid deployment with its Wire chain identity", () => {
     const deployment = parseOutpostDeployment(createDeploymentFixture())
 
-    expect(deployment.id).toBe(`${WireChainId}-${Hash.slice(0, 12)}`)
-    expect(deployment.wire.chainId).toBe(WireChainId)
+    expect(deployment.id).toBe(
+      `${deployment.wire.chainId}-${deployment.artifactBundle.deploymentChecksum.slice(0, 12)}`
+    )
     expect(
       deployment.ethereum.contracts[EthereumContractName.ReserveManager].address
-    ).toBe(EthereumAddress)
+    ).toBe(
+      createDeploymentFixture().ethereum.contracts[
+        EthereumContractName.ReserveManager
+      ].address
+    )
   })
 
   it("rejects an invalid contract address", () => {

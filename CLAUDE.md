@@ -36,7 +36,7 @@ pnpm workspaces with TypeScript composite project references. No Lerna/Nx.
 | `@wireio/shared-web` | Web-specific utilities | No | ESM |
 | `@wireio/shared-node` | Node.js utilities | Yes | Hybrid ESM+CJS |
 | `@wireio/sdk-core` | Wire blockchain SDK types/primitives | Yes | Hybrid ESM+CJS |
-| `@wireio/sdk-outpost` | Typed, versioned external-chain outpost artifacts and clients | Yes | Hybrid ESM+CJS |
+| `@wireio/sdk-outpost` | Typed, verified external-chain outpost clients | Yes | Hybrid ESM+CJS |
 | `@wireio/wallet-ext-sdk` | Wallet extension client SDK | Yes | ESM |
 | `@wireio/wallet-browser-ext` | Chrome extension developer wallet | No | Webpack bundle |
 
@@ -46,8 +46,9 @@ pnpm workspaces with TypeScript composite project references. No Lerna/Nx.
 shared ──→ shared-web
        ──→ shared-node
 
-sdk-core ──→ sdk-outpost
-         ──→ wallet-ext-sdk ──→ wallet-browser-ext
+sdk-core ──→ wallet-ext-sdk ──→ wallet-browser-ext
+
+sdk-outpost (source artifact packages ──→ generated external-chain clients)
 ```
 
 Protoc plugins and bundler are standalone (no internal deps).
@@ -220,15 +221,13 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - System-contract `prepare` prefers synchronous ABI encoding but must retain a typed `AnyAction` fallback so `APIClient` can resolve the deployed ABI. Never invent a default write authorization in the public SDK.
 - `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
 - `packages/sdk-core/src/contracts/sysio/uwrit` preserves raw request bytes and exposes `sourceRequestId` for swap correlation. External outpost ids are big-endian; synthetic WIRE queue ids are little-endian and high-bit tagged.
-- `packages/sdk-outpost` owns external-chain ABI/IDL assets, their deployment provenance, and strictly typed Ethereum/Solana clients. It extends `sdk-core`; it must not duplicate Wire-chain contract types or import generated OPP model packages.
+- `packages/sdk-outpost` owns strictly typed Ethereum/Solana clients and validates caller-supplied runtime deployments. Canonical ABIs and IDLs are published by `wire-ethereum` and `wire-solana`; do not copy their outputs into this repository or import generated OPP model packages.
 - `sdk-outpost` deployment payloads are untrusted data boundaries validated with Zod. ABI/IDL-derived contract and program types remain generator-owned and must never be re-declared as Zod schemas.
-- Add a deployment bundle only with its source revisions, archive/artifact digests, and verified on-chain identities. A checked-in artifact does not by itself prove a contract or program is deployed.
+- `scripts/sdk-outpost/` consumes exact producer artifact package versions with `zx`. Generated TypeChain, Anchor, and artifact-manifest sources are ignored build outputs compiled into the release; never edit or commit them.
 - `sdk-outpost` clients accept caller-owned Ethers/Anchor providers, verify chain identity and deployed bytecode/program executability during asynchronous creation, and expose one typed `OutpostClient` facade. Do not hard-code RPC transport into deployment records.
 - Consumer feature gates must combine SDK deployment verification with flow-specific platform capability checks. A connected typed contract or program is not proof that stake, swap, settlement, or retry lifecycles are operational.
-- `sdk-outpost` deployment refreshes are append-only. Import archives with `packages/sdk-outpost/scripts/import-deployment.mjs`; do not hand-edit catalog data or versioned ABI/IDL folders.
-- Group imported assets by the full parent Wire chain id and deployment checksum. The default record id is `<wire-chain-id>-<deployment-checksum-prefix>`; public ids and docs must not encode environment names.
-- Change `current.json` only when that deployment should own generated types; use `--replace` only to correct the same chain/checksum record.
-- The current ABI/IDL-generated surface must cover every cataloged deployment. If a refresh removes callable functions or events, introduce an explicit version-specific client instead of weakening types or silently dropping history.
+- Runtime addresses, chain identities, deployment provenance, and artifact digests come from the platform manifest pipeline. A cluster respin with unchanged interfaces must not require a producer artifact or SDK release.
+- Client creation rejects runtime deployment digests that do not match the producer artifacts compiled into the SDK. If a producer interface changes, publish an immutable artifact version and update the exact sdk-outpost build dependency.
 - Hub swap integration should consume `sdk-outpost` for typed external `ReserveManager`, `OperatorRegistry`, and `liqsol_core` access. Wire-chain orchestration stays in `sdk-core`; staking migration remains separate scope.
 - `sdk-outpost` releases run through the repository-wide patch workflow. Keep `prepack` and both CI release checks passing; do not manually bump or publish the package outside the documented first-release recovery path.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3

@@ -2,11 +2,11 @@ import { AnchorProvider, Wallet } from "@coral-xyz/anchor"
 import { Connection, Keypair, SystemProgram } from "@solana/web3.js"
 
 import {
-  OutpostDeployments,
   type OutpostDeployment,
   SolanaOutpostClient,
   SolanaProgramName
 } from "@wireio/sdk-outpost"
+import { createDeploymentFixture } from "../../Fixtures.js"
 
 function createProvider(deployment: OutpostDeployment): AnchorProvider {
   const connection = new Connection("http://127.0.0.1:8899"),
@@ -26,24 +26,22 @@ function createProvider(deployment: OutpostDeployment): AnchorProvider {
 }
 
 describe("SolanaOutpostClient", () => {
-  it.each(OutpostDeployments)(
-    "verifies $id and returns a generated program type",
-    async deployment => {
-      const provider = createProvider(deployment),
-        client = await SolanaOutpostClient.create({
-          deployment,
-          provider
-        }),
-        program = client.program(SolanaProgramName.liqsolCore)
+  it("verifies a deployment and returns its runtime program address", async () => {
+    const deployment = createDeploymentFixture(),
+      provider = createProvider(deployment),
+      client = await SolanaOutpostClient.create({
+        deployment,
+        provider
+      }),
+      program = client.program(SolanaProgramName.liqsolCore)
 
-      expect(program.programId.toBase58()).toBe(
-        deployment.solana.programs[SolanaProgramName.liqsolCore].address
-      )
-    }
-  )
+    expect(program.programId.toBase58()).toBe(
+      deployment.solana.programs[SolanaProgramName.liqsolCore].address
+    )
+  })
 
   it("rejects the wrong Solana cluster", async () => {
-    const deployment = OutpostDeployments[0],
+    const deployment = createDeploymentFixture(),
       provider = createProvider(deployment)
     jest
       .spyOn(provider.connection, "getGenesisHash")
@@ -58,7 +56,7 @@ describe("SolanaOutpostClient", () => {
   })
 
   it("rejects a configured program that is not executable", async () => {
-    const deployment = OutpostDeployments[0],
+    const deployment = createDeploymentFixture(),
       provider = createProvider(deployment)
     jest.spyOn(provider.connection, "getAccountInfo").mockResolvedValue(null)
 
