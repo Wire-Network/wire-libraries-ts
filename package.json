@@ -4,7 +4,7 @@
   "scripts": {
     "compile": "tsc -b tsconfig.json",
     "compile:watch": "tsc -b tsconfig.json -w --preserveWatchOutput",
-    "build": "pnpm --dir packages/sdk-outpost run clean && pnpm run compile && pnpm -r --if-present run fix:hybrid:exports",
+    "build": "pnpm --dir packages/sdk-outpost run prepare:compile && pnpm run compile && pnpm -r --if-present run fix:hybrid:exports",
     "typecheck:strict-null:sdk-core": "pnpm --dir packages/sdk-core run typecheck:strict-null",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "lint": "eslint .",
@@ -31,7 +31,8 @@
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2",
-    "typescript-eslint": "^8.64.0"
+    "typescript-eslint": "^8.64.0",
+    "zx": "^8.8.5"
   },
   "packageManager": "pnpm@10.34.5",
   "engines": {

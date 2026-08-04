@@ -4,20 +4,37 @@
 `@wireio/sdk-core`. Do not manually change its version or publish a workspace
 directory outside this process.
 
+## Artifact prerequisites
+
+The package consumes exact build-time versions of:
+
+- `@wireio/outpost-ethereum-artifacts`, published from `wire-ethereum`;
+- `@wireio/outpost-solana-artifacts`, published from `wire-solana`.
+
+Publish a new producer package only when its source ABI or IDL changes. A new
+deployment, address, endpoint, or network-group respin belongs in the runtime
+platform manifest and does not require these packages or `sdk-outpost` to be
+republished.
+
+Before updating either dependency, verify its npm provenance, source revision,
+artifact checksums, and immutable version. Keep both versions exact in
+`packages/sdk-outpost/package.json` and update `pnpm-lock.yaml` through a frozen
+pnpm-compatible install.
+
 ## Release requirements
 
 - Use Node.js 24 and the repository-pinned pnpm version through Corepack.
 - Keep the lockfile unchanged after a frozen install.
-- Import deployment assets through `import:deployment`; never edit generated
-  ABI, IDL, catalog, or client files by hand.
-- Confirm the package contains no secrets, RPC credentials, private keys, or
-  mutable environment configuration.
+- Generate clients only through `scripts/sdk-outpost/generate.mjs`; never edit
+  generated TypeChain, Anchor, or artifact-manifest sources by hand.
+- Confirm the package contains no secrets, RPC credentials, private keys,
+  addresses, or mutable environment configuration.
 - Keep `repository.url` exactly equal to
   `https://github.com/Wire-Network/wire-libraries-ts` for npm provenance.
 
-Codespaces and local checkouts are verification environments, not publishing
-authorities. Run the checks there, but let the protected GitHub Actions workflow
-create the release.
+Local checkouts are verification environments, not publishing authorities. Run
+the checks there, but let the protected GitHub Actions workflow create the
+release.
 
 ## Before merge
 
@@ -31,33 +48,30 @@ corepack pnpm --dir packages/sdk-outpost run verify:release
 corepack pnpm --dir packages/sdk-outpost pack --dry-run
 ```
 
-Inspect the package listing from the dry run. It must contain only the README,
-package metadata, and the CJS/ESM build outputs.
+Inspect the dry-run listing. It must contain only the README, package metadata,
+and CJS/ESM build outputs. Raw producer packages and generated source trees must
+not be published by `sdk-outpost`.
 
 ## First npm listing
 
 The first successful publish creates the npm package page. Before merging:
 
-1. Confirm the `wireio` organization exists on npm and the release owner can
+1. Confirm both exact producer artifact versions are publicly installable.
+2. Confirm the `wireio` organization exists on npm and the release owner can
    publish public packages in that scope.
-2. Confirm npm two-factor authentication is enabled for the release owner.
-3. Confirm the GitHub repository secret `NPM_TOKEN` is a valid granular token
-   with read/write access to the `wireio` organization and permission to publish
-   with the organization's required 2FA policy.
-4. Merge the reviewed pull request into `master`.
+3. Confirm npm two-factor authentication is enabled for the release owner.
+4. Confirm the GitHub repository secret `NPM_TOKEN` can publish to the `wireio`
+   organization under its required authentication policy.
+5. Merge the reviewed pull request into `master`.
 
-The `publish-npm.yaml` workflow then:
+The `publish-npm.yaml` workflow installs the frozen workspace, generates clients
+from the producer packages, builds and tests every package, verifies the public
+entrypoints, increments the workspace patch versions, and publishes with npm
+provenance.
 
-1. installs the frozen workspace with Node.js 24 and pnpm 10.34.5;
-2. builds and tests every package;
-3. verifies generated deployment sources and both package entrypoints;
-4. changes `sdk-outpost` from `0.0.0` to `0.0.1` as part of the shared patch
-   increment;
-5. commits the workspace version update with `[skip release]`;
-6. publishes every changed public package with public access and provenance.
-
-Do not create `0.0.1` manually. A failed publish must be corrected in source and
-released as the next patch; published npm versions are immutable.
+Do not create the first `sdk-outpost` version manually. A failed publish must be
+corrected in source and released as the next patch; published npm versions are
+immutable.
 
 ## After the first publication
 
@@ -68,18 +82,10 @@ npm view @wireio/sdk-outpost version dist-tags repository --json
 npm install @wireio/sdk-outpost
 ```
 
-Then configure npm trusted publishing for the package:
-
-- provider: GitHub Actions
-- organization: `Wire-Network`
-- repository: `wire-libraries-ts`
-- workflow filename: `publish-npm.yaml`
-- allowed action: `npm publish`
-
-After a trusted publish succeeds, remove the long-lived write token from the
-publish step and restrict token-based publishing in npm package settings. Keep
-`id-token: write`; npm will generate provenance automatically for the public
-package from the public repository.
+Then configure npm trusted publishing for `publish-npm.yaml`. After a trusted
+publish succeeds, remove the long-lived write token from the publish step and
+restrict token-based publishing in npm package settings. Keep `id-token: write`
+so npm can generate provenance.
 
 References:
 

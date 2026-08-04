@@ -1,67 +1,61 @@
-import Crypto from "node:crypto"
-import Fs from "node:fs"
-import Path from "node:path"
-
 import {
-  CurrentOutpostDeployment,
   EthereumContractName,
   OPP__factory,
   OperatorRegistry__factory,
-  OutpostDeployments,
+  OutpostArtifactManifests,
+  OutpostChainFamily,
   ReserveManager__factory,
   SolanaProgramName,
+  assertOutpostArtifactCompatibility,
   liqsolCoreIdl
 } from "@wireio/sdk-outpost"
 
-const PackagePath = Path.resolve(__dirname, "../..")
+import { createDeploymentFixture } from "../Fixtures.js"
 
-function sha256(file: string): string {
-  return Crypto.createHash("sha256").update(Fs.readFileSync(file)).digest("hex")
-}
+describe("source-owned outpost artifacts", () => {
+  it("records exact producer package identity", () => {
+    expect(OutpostArtifactManifests.ethereum.package.name).toBe(
+      "@wireio/outpost-ethereum-artifacts"
+    )
+    expect(OutpostArtifactManifests.solana.package.name).toBe(
+      "@wireio/outpost-solana-artifacts"
+    )
+  })
 
-describe("versioned deployment assets", () => {
-  it.each(OutpostDeployments)(
-    "matches every $id artifact digest",
-    deployment => {
-      Object.values(EthereumContractName).forEach(contractName => {
-        const contract = deployment.ethereum.contracts[contractName]
-
-        expect(
-          sha256(
-            Path.join(
-              PackagePath,
-              "src/assets",
-              deployment.wire.chainId,
-              deployment.artifactBundle.deploymentChecksum,
-              "ethereum",
-              `${contractName}.json`
-            )
-          )
-        ).toBe(contract.artifactSha256)
-      })
-
-      const program = deployment.solana.programs[SolanaProgramName.liqsolCore]
-
-      expect(
-        sha256(
-          Path.join(
-            PackagePath,
-            "src/assets",
-            deployment.wire.chainId,
-            deployment.artifactBundle.deploymentChecksum,
-            "solana",
-            "liqsol_core.json"
-          )
-        )
-      ).toBe(program.artifactSha256)
+  it.each(Object.values(OutpostChainFamily))(
+    "accepts a runtime deployment aligned with %s artifacts",
+    family => {
+      expect(() =>
+        assertOutpostArtifactCompatibility(createDeploymentFixture(), family)
+      ).not.toThrow()
     }
   )
 
-  it("generates the current callable swap and collateral surfaces", () => {
-    expect(liqsolCoreIdl.address).toBe(
-      CurrentOutpostDeployment.solana.programs[SolanaProgramName.liqsolCore]
-        .address
-    )
+  it("rejects a runtime deployment with an incompatible Ethereum ABI", () => {
+    const deployment = createDeploymentFixture()
+    deployment.ethereum.contracts[
+      EthereumContractName.ReserveManager
+    ].artifactSha256 = "f".repeat(64)
+
+    expect(() =>
+      assertOutpostArtifactCompatibility(
+        deployment,
+        OutpostChainFamily.ethereum
+      )
+    ).toThrow("Ethereum ReserveManager artifact mismatch")
+  })
+
+  it("rejects a runtime deployment with an incompatible Solana IDL", () => {
+    const deployment = createDeploymentFixture()
+    deployment.solana.programs[SolanaProgramName.liqsolCore].artifactSha256 =
+      "f".repeat(64)
+
+    expect(() =>
+      assertOutpostArtifactCompatibility(deployment, OutpostChainFamily.solana)
+    ).toThrow("Solana liqsolCore artifact mismatch")
+  })
+
+  it("generates the callable swap and collateral surfaces", () => {
     expect(OPP__factory.abi.length).toBeGreaterThan(0)
     expect(
       OPP__factory.createInterface().getFunction("addAttestation")
