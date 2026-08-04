@@ -11,7 +11,7 @@ overrides:
   '@aws-sdk/client-ssm': 3.1102.0
   '@aws-sdk/client-sts': 3.1102.0
 
-pnpmfileChecksum: sha256-ZER+VVwwoTSVj67oC/DL+W8X521Aixesi+YR+ei0x30=
+pnpmfileChecksum: sha256-5psJKIPHNOux87E9odDc6Jbm2qY88A3St0AMU0gGmpg=
 
 importers:
 
