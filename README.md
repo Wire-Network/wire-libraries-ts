@@ -48,12 +48,6 @@ pnpm test
 
 GitHub Actions builds hybrid package outputs, generates `sdk-outpost` clients from the exact `wire-ethereum` and `wire-solana` artifact packages, verifies its entrypoints, increments every publishable workspace package, and publishes to npm with provenance. Each published package manifest must keep `repository.url` set to `https://github.com/Wire-Network/wire-libraries-ts` or npm will reject provenance validation. See [`packages/sdk-outpost/RELEASING.md`](packages/sdk-outpost/RELEASING.md) for its artifact prerequisites and first-publication checklist.
 
-Coordinated `repo`-tool platform builds generate those artifact packages in the
-sibling chain repositories and opt into local resolution with
-`WIRE_LINK_LOCAL_OUTPOST_ARTIFACTS=1`. Standalone and release installs leave the
-flag unset and consume exact published versions; the local link is a development
-and cross-repository validation path, not a replacement publication channel.
-
 ## Project Structure
 
 ```
