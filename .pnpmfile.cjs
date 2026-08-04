@@ -20,11 +20,23 @@ const localOppModelTargets = ["typescript", "solidity"]
 const localOutpostArtifactPackages = [
   [
     "@wireio/outpost-ethereum-artifacts",
-    Path.resolve(__dirname, "..", "wire-ethereum", "sdk-artifacts")
+    Path.resolve(
+      __dirname,
+      "..",
+      "wire-ethereum",
+      "build",
+      "sdk-artifacts"
+    )
   ],
   [
     "@wireio/outpost-solana-artifacts",
-    Path.resolve(__dirname, "..", "wire-solana", "sdk-artifacts")
+    Path.resolve(
+      __dirname,
+      "..",
+      "wire-solana",
+      "build",
+      "sdk-artifacts"
+    )
   ]
 ]
 
