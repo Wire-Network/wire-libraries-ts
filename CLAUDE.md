@@ -8,6 +8,8 @@
 pnpm install                # Install registry deps (pnpm 10.34.5, Node >=22)
 # Link local OPP models from wire-sysio:
 WIRE_LINK_LOCAL_OPP_MODELS=1 pnpm install --lockfile=false
+# Link generated source-owned ETH/SOL outpost artifact packages:
+WIRE_LINK_LOCAL_OUTPOST_ARTIFACTS=1 pnpm install --lockfile=false
 pnpm build                  # Build all packages via tsc -b
 pnpm build:dev              # Watch mode (incremental)
 pnpm test                   # Build + jest (all packages)
@@ -228,6 +230,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - Consumer feature gates must combine SDK deployment verification with flow-specific platform capability checks. A connected typed contract or program is not proof that stake, swap, settlement, or retry lifecycles are operational.
 - Runtime addresses, chain identities, deployment provenance, and artifact digests come from the platform manifest pipeline. A cluster respin with unchanged interfaces must not require a producer artifact or SDK release.
 - Client creation rejects runtime deployment digests that do not match the producer artifacts compiled into the SDK. If a producer interface changes, publish an immutable artifact version and update the exact sdk-outpost build dependency.
+- Coordinated platform builds set `WIRE_LINK_LOCAL_OUTPOST_ARTIFACTS=1` only after the sibling Ethereum and Solana artifact targets succeed. Standalone and release installs use exact published package versions.
 - Hub swap integration should consume `sdk-outpost` for typed external `ReserveManager`, `OperatorRegistry`, and `liqsol_core` access. Wire-chain orchestration stays in `sdk-core`; staking migration remains separate scope.
 - `sdk-outpost` releases run through the repository-wide patch workflow. Keep `prepack` and both CI release checks passing; do not manually bump or publish the package outside the documented first-release recovery path.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
