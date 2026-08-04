@@ -4,7 +4,7 @@
   "scripts": {
     "compile": "tsc -b tsconfig.json",
     "compile:watch": "tsc -b tsconfig.json -w --preserveWatchOutput",
-    "build": "pnpm --dir packages/sdk-outpost run prepare:compile && pnpm run compile && pnpm -r --if-present run fix:hybrid:exports",
+    "build": "pnpm --dir packages/sdk-outpost run prepare:compile && pnpm run compile && pnpm --dir packages/sdk-outpost run fix:hybrid:exports",
     "typecheck:strict-null:sdk-core": "pnpm --dir packages/sdk-core run typecheck:strict-null",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "lint": "eslint .",

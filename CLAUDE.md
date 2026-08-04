@@ -194,8 +194,6 @@ Every new/modified symbol ships unit tests in the same change. Tests never assum
 
 ## CI/CD
 
-- Use product- or change-focused branch names, commit messages, pull-request titles, and pull-request descriptions. Do not add automated-authoring labels or attribution to repository history or review metadata.
-
 GitHub Actions (`.github/workflows/publish-npm.yaml`):
 - Triggers on push to `master` (skips if `[skip release]` in commit message)
 - Bumps all packages patch version (`pnpm -r exec -- pnpm version patch`)
@@ -221,15 +219,10 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - System-contract `prepare` prefers synchronous ABI encoding but must retain a typed `AnyAction` fallback so `APIClient` can resolve the deployed ABI. Never invent a default write authorization in the public SDK.
 - `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
 - `packages/sdk-core/src/contracts/sysio/uwrit` preserves raw request bytes and exposes `sourceRequestId` for swap correlation. External outpost ids are big-endian; synthetic WIRE queue ids are little-endian and high-bit tagged.
-- `packages/sdk-outpost` owns strictly typed Ethereum/Solana clients and validates caller-supplied runtime deployments. Canonical ABIs and IDLs are published by `wire-ethereum` and `wire-solana`; do not copy their outputs into this repository or import generated OPP model packages.
-- `sdk-outpost` deployment payloads are untrusted data boundaries validated with Zod. ABI/IDL-derived contract and program types remain generator-owned and must never be re-declared as Zod schemas.
-- `scripts/sdk-outpost/` consumes exact producer artifact package versions with `zx`. Generated TypeChain, Anchor, and artifact-manifest sources are ignored build outputs compiled into the release; never edit or commit them.
-- `sdk-outpost` clients accept caller-owned Ethers/Anchor providers, verify chain identity and deployed bytecode/program executability during asynchronous creation, and expose one typed `OutpostClient` facade. Do not hard-code RPC transport into deployment records.
-- Consumer feature gates must combine SDK deployment verification with flow-specific platform capability checks. A connected typed contract or program is not proof that stake, swap, settlement, or retry lifecycles are operational.
-- Runtime addresses, chain identities, deployment provenance, and artifact digests come from the platform manifest pipeline. A cluster respin with unchanged interfaces must not require a producer artifact or SDK release.
-- Client creation rejects runtime deployment digests that do not match the producer artifacts compiled into the SDK. If a producer interface changes, publish an immutable artifact version and update the exact sdk-outpost build dependency.
-- Hub swap integration should consume `sdk-outpost` for typed external `ReserveManager`, `OperatorRegistry`, and `liqsol_core` access. Wire-chain orchestration stays in `sdk-core`; staking migration remains separate scope.
-- `sdk-outpost` releases run through the repository-wide patch workflow. Keep `prepack` and both CI release checks passing; do not manually bump or publish the package outside the documented first-release recovery path.
+- `packages/sdk-outpost` owns typed Ethereum/Solana clients and validates caller-supplied deployments. Canonical ABIs and IDLs come from exact packages published by `wire-ethereum` and `wire-solana`; generated clients are ignored build outputs and must not be copied or edited here.
+- `sdk-outpost` accepts caller-owned providers and runtime manifest data. A cluster respin with unchanged interfaces must not require an artifact or SDK release.
+- A connected outpost client proves deployment compatibility, not swap or stake readiness. Wire-chain orchestration remains in `sdk-core`, and consumers must retain flow-specific capability gates.
+- Publish `sdk-outpost` only through the repository release workflow, with `prepack` and release verification passing.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
 - Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch
 - Node >=22 required (package.json says >=22, README says >=24 — actual CI uses v24)

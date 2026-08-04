@@ -11,7 +11,7 @@ overrides:
   '@aws-sdk/client-ssm': 3.1102.0
   '@aws-sdk/client-sts': 3.1102.0
 
-pnpmfileChecksum: sha256-aSegbCvK5TyBUeMcgQLjFgZgcFmq1CMqHT+lQb93Qks=
+pnpmfileChecksum: sha256-l5MT63RFu2+KTSHDSf/PtK5iN6T6YIAeV3ky+GtQlBk=
 
 importers:
 
@@ -19,7 +19,7 @@ importers:
     dependencies:
       '@wireio/opp-typescript-models':
         specifier: ^1.0.26
-        version: 1.0.47
+        version: 1.0.30
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -144,7 +144,7 @@ importers:
         version: 1.9.7
       '@wireio/opp-typescript-models':
         specifier: ^1.0.26
-        version: 1.0.47
+        version: 1.0.30
       '@wireio/shared':
         specifier: workspace:*
         version: link:../shared
@@ -1658,8 +1658,8 @@ packages:
       webpack-dev-server:
         optional: true
 
-  '@wireio/opp-typescript-models@1.0.47':
-    resolution: {integrity: sha512-YmeRvOSXUgNtG6S2ASIs/5UDz4BbkGOv3B58yVvRkV/OoSoQhQSe1my9+evG8gKb126VxmgJ/n9OS4Zh0Ifcjw==}
+  '@wireio/opp-typescript-models@1.0.30':
+    resolution: {integrity: sha512-g6DSdq5KULRhp604sYkT0u+0TgjORoc+26FIUdepIeFJpEm9YlBKkJshXTUnDdUKz8fB6LUhW2NRQp/shIgrUg==}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -5698,7 +5698,7 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.20.0
+      '@types/node': 25.5.0
 
   '@types/debug@4.1.13':
     dependencies:
@@ -5827,7 +5827,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 22.20.0
+      '@types/node': 25.5.0
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -6096,7 +6096,7 @@ snapshots:
       webpack: 5.104.1(postcss@8.5.16)(webpack-cli@6.0.1)
       webpack-cli: 6.0.1(webpack@5.104.1)
 
-  '@wireio/opp-typescript-models@1.0.47':
+  '@wireio/opp-typescript-models@1.0.30':
     dependencies:
       '@protobuf-ts/runtime': 2.11.1
 
