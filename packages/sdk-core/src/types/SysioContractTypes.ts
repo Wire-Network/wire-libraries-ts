@@ -919,8 +919,6 @@ export enum SysioMsgchAttestationstatus {
 export enum SysioMsgchAttestationtype {
   ATTESTATION_TYPE_UNSPECIFIED = 0,
   ATTESTATION_TYPE_OPERATOR_ACTION = 2001,
-  ATTESTATION_TYPE_STAKE = 3001,
-  ATTESTATION_TYPE_UNSTAKE = 3002,
   ATTESTATION_TYPE_PRETOKEN_PURCHASE = 3004,
   ATTESTATION_TYPE_PRETOKEN_YIELD = 3006,
   ATTESTATION_TYPE_RESERVE_BALANCE_SHEET = 43520,
@@ -3044,8 +3042,6 @@ export interface SysioTokensContract {
 export enum SysioUwritAttestationtype {
   ATTESTATION_TYPE_UNSPECIFIED = 0,
   ATTESTATION_TYPE_OPERATOR_ACTION = 2001,
-  ATTESTATION_TYPE_STAKE = 3001,
-  ATTESTATION_TYPE_UNSTAKE = 3002,
   ATTESTATION_TYPE_PRETOKEN_PURCHASE = 3004,
   ATTESTATION_TYPE_PRETOKEN_YIELD = 3006,
   ATTESTATION_TYPE_RESERVE_BALANCE_SHEET = 43520,
@@ -3431,4 +3427,3 @@ export const SysioContractDefinitions: {
   [SysioContractName.uwrit]: { name: SysioContractName.uwrit, account: "sysio.uwrit", actions: ["chklocks", "createuwreq", "drainfwq", "pruneuwreqs", "rcrdcommit", "setconfig", "sumlocks", "swapfromwire"], tables: ["fwqueue", "locks", "uwconfig", "uwcounters", "uwreqs"] },
   [SysioContractName.wrap]: { name: SysioContractName.wrap, account: "sysio.wrap", actions: ["exec"], tables: [] },
 }
-
