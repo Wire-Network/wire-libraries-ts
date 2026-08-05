@@ -1,70 +1,79 @@
-import { providers } from "ethers"
+import { utils as ethersUtils } from "ethers"
 
 import {
   EthereumContractName,
-  EthereumOutpostClient,
-  type OutpostDeployment
+  EthereumOutpostClient
 } from "@wireio/sdk-outpost"
-import { createDeploymentFixture } from "../../Fixtures.js"
-
-const DeployedCode = "0x01"
-
-function createProvider(
-  deployment: OutpostDeployment
-): providers.JsonRpcProvider {
-  const provider = new providers.JsonRpcProvider()
-  jest.spyOn(provider, "getNetwork").mockResolvedValue({
-    chainId: deployment.ethereum.chainId,
-    name: "wire-outpost"
-  })
-  jest.spyOn(provider, "getCode").mockResolvedValue(DeployedCode)
-  return provider
-}
+import {
+  createEthereumProviderFixture,
+  createOutpostDeploymentProfileFixture
+} from "../../Fixtures.js"
 
 describe("EthereumOutpostClient", () => {
-  it("verifies a deployment and returns a generated contract type", async () => {
-    const deployment = createDeploymentFixture(),
-      provider = createProvider(deployment),
+  it("verifies a profile and returns a generated contract type", async () => {
+    const profile = createOutpostDeploymentProfileFixture(),
+      provider = createEthereumProviderFixture(profile),
       client = await EthereumOutpostClient.create({
-        deployment,
+        profile,
         connection: provider
       }),
       reserveManager = client.contract(EthereumContractName.ReserveManager)
 
     expect(reserveManager.address).toBe(
-      deployment.ethereum.contracts[EthereumContractName.ReserveManager].address
+      profile.ethereum.contracts[EthereumContractName.ReserveManager].address
     )
     expect(provider.getCode).toHaveBeenCalledTimes(
+      Object.values(EthereumContractName).length * 2
+    )
+    expect(provider.getStorageAt).toHaveBeenCalledTimes(
       Object.values(EthereumContractName).length
     )
   })
 
   it("rejects the wrong Ethereum chain", async () => {
-    const deployment = createDeploymentFixture(),
-      provider = createProvider(deployment)
+    const profile = createOutpostDeploymentProfileFixture(),
+      provider = createEthereumProviderFixture(profile)
     jest.spyOn(provider, "getNetwork").mockResolvedValue({
       chainId: 1,
       name: "mainnet"
     })
 
     await expect(
-      EthereumOutpostClient.create({
-        deployment,
-        connection: provider
-      })
+      EthereumOutpostClient.create({ profile, connection: provider })
     ).rejects.toThrow("Ethereum chain mismatch")
   })
 
-  it("rejects a configured contract without bytecode", async () => {
-    const deployment = createDeploymentFixture(),
-      provider = createProvider(deployment)
+  it("rejects a configured proxy without bytecode", async () => {
+    const profile = createOutpostDeploymentProfileFixture(),
+      provider = createEthereumProviderFixture(profile)
     jest.spyOn(provider, "getCode").mockResolvedValue("0x")
 
     await expect(
-      EthereumOutpostClient.create({
-        deployment,
-        connection: provider
-      })
+      EthereumOutpostClient.create({ profile, connection: provider })
     ).rejects.toThrow("is not deployed")
+  })
+
+  it("rejects an implementation address mismatch", async () => {
+    const profile = createOutpostDeploymentProfileFixture(),
+      provider = createEthereumProviderFixture(profile)
+    jest
+      .spyOn(provider, "getStorageAt")
+      .mockResolvedValue(ethersUtils.hexZeroPad("0x01", 32))
+
+    await expect(
+      EthereumOutpostClient.create({ profile, connection: provider })
+    ).rejects.toThrow("implementation mismatch")
+  })
+
+  it("rejects an implementation code mismatch", async () => {
+    const profile = createOutpostDeploymentProfileFixture(),
+      provider = createEthereumProviderFixture(profile)
+    profile.ethereum.contracts[
+      EthereumContractName.ReserveManager
+    ].implementationCodeSha256 = "f".repeat(64)
+
+    await expect(
+      EthereumOutpostClient.create({ profile, connection: provider })
+    ).rejects.toThrow("implementation code mismatch")
   })
 })

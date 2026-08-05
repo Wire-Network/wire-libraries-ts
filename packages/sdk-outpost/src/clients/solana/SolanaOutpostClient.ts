@@ -1,46 +1,27 @@
 import { Program } from "@coral-xyz/anchor"
-import { PublicKey } from "@solana/web3.js"
 import { match } from "ts-pattern"
 
-import { assertOutpostArtifactCompatibility } from "../../artifacts/index.js"
 import {
   OutpostChainFamily,
   SolanaProgramName
 } from "../../deployments/index.js"
 import { LiqsolCore, liqsolCoreIdl } from "../../programs/solana/index.js"
+import { OutpostDeploymentVerifier } from "../../verification/index.js"
 import { SolanaOutpostClientOptions, SolanaProgramMap } from "./Types.js"
 
 /** Strictly typed access to one verified Solana outpost deployment. */
 export class SolanaOutpostClient {
-  /** Create a client after verifying cluster identity and executable programs. */
+  /** Create a client after verifying its interface and exact live program data. */
   static async create(
     options: SolanaOutpostClientOptions
   ): Promise<SolanaOutpostClient> {
-    const { deployment, provider } = options,
-      genesisHash = await provider.connection.getGenesisHash()
+    const { profile, provider } = options
 
-    assertOutpostArtifactCompatibility(deployment, OutpostChainFamily.solana)
-
-    if (genesisHash !== deployment.solana.genesisHash) {
-      throw new Error(
-        `Solana genesis mismatch: expected ${deployment.solana.genesisHash}, received ${genesisHash}`
-      )
-    }
-
-    await Promise.all(
-      Object.values(SolanaProgramName).map(async programName => {
-        const { address } = deployment.solana.programs[programName],
-          account = await provider.connection.getAccountInfo(
-            new PublicKey(address)
-          )
-
-        if (account == null || !account.executable) {
-          throw new Error(
-            `Solana program ${programName} is not executable at ${address}`
-          )
-        }
-      })
-    )
+    await OutpostDeploymentVerifier.verify({
+      family: OutpostChainFamily.solana,
+      profile,
+      connection: provider.connection
+    })
     return new SolanaOutpostClient(options)
   }
 
@@ -48,7 +29,7 @@ export class SolanaOutpostClient {
 
   private constructor(private readonly options: SolanaOutpostClientOptions) {
     const address =
-      options.deployment.solana.programs[SolanaProgramName.liqsolCore].address
+      options.profile.solana.programs[SolanaProgramName.liqsolCore].address
 
     this.liqsolCore = new Program<LiqsolCore>(
       { ...liqsolCoreIdl, address },
@@ -61,9 +42,9 @@ export class SolanaOutpostClient {
     return this.options.provider
   }
 
-  /** Deployment used to verify and connect this client. */
-  get deployment(): SolanaOutpostClientOptions["deployment"] {
-    return this.options.deployment
+  /** Deployment profile used to verify and connect this client. */
+  get profile(): SolanaOutpostClientOptions["profile"] {
+    return this.options.profile
   }
 
   /** Return a generated Anchor program client by typed deployment name. */

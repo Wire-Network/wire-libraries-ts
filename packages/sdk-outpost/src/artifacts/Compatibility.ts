@@ -3,46 +3,45 @@ import { match } from "ts-pattern"
 import {
   EthereumContractName,
   OutpostChainFamily,
-  OutpostDeployment,
+  OutpostDeploymentProfile,
   SolanaProgramName
 } from "../deployments/index.js"
 import { OutpostArtifactManifests } from "./generated/index.js"
 
-/** Assert that one deployment digest matches the interface compiled into the SDK. */
-function assertArtifactDigest(
+/** Assert that one profile digest matches the interface compiled into the SDK. */
+function assertInterfaceDigest(
   actual: string,
   expected: string,
   label: string
 ): void {
   if (actual !== expected) {
     throw new Error(
-      `${label} artifact mismatch: expected ${expected}, received ${actual}`
+      `${label} interface mismatch: expected ${expected}, received ${actual}`
     )
   }
 }
 
-/** Verify that a runtime deployment matches this SDK's source-owned artifacts. */
+/** Verify that a deployment profile matches this SDK's source-owned interfaces. */
 export function assertOutpostArtifactCompatibility(
-  deployment: OutpostDeployment,
+  profile: OutpostDeploymentProfile,
   family: OutpostChainFamily
 ): void {
   match(family)
     .with(OutpostChainFamily.ethereum, () =>
       Object.values(EthereumContractName).forEach(contractName =>
-        assertArtifactDigest(
-          deployment.ethereum.contracts[contractName].artifactSha256,
-          OutpostArtifactManifests.ethereum.contracts[contractName]
-            .artifactSha256,
-          `Ethereum ${contractName}`
+        assertInterfaceDigest(
+          profile.ethereum.contracts[contractName].abiSha256,
+          OutpostArtifactManifests.ethereum.contracts[contractName].abiSha256,
+          `Ethereum ${contractName} ABI`
         )
       )
     )
     .with(OutpostChainFamily.solana, () =>
       Object.values(SolanaProgramName).forEach(programName =>
-        assertArtifactDigest(
-          deployment.solana.programs[programName].artifactSha256,
+        assertInterfaceDigest(
+          profile.solana.programs[programName].idlSha256,
           OutpostArtifactManifests.solana.programs[programName].idlSha256,
-          `Solana ${programName}`
+          `Solana ${programName} IDL`
         )
       )
     )

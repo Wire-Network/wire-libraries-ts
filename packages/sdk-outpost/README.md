@@ -5,8 +5,8 @@ alongside a Wire chain.
 
 `@wireio/sdk-core` owns Wire-chain identity, signing, and `sysio.*` workflows.
 This package owns verified external-chain clients. Contract ABIs are published
-by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and runtime
-deployment data remains caller-supplied.
+by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
+deployment profiles remain caller-supplied.
 
 Available on npm: <https://www.npmjs.com/package/@wireio/sdk-outpost>
 
@@ -26,37 +26,48 @@ module entrypoints with TypeScript declarations.
 | Ethereum | `OPP`, `OPPInbound`, `OperatorRegistry`, `ReserveManager` |
 | Solana   | `liqsol_core`                                             |
 
-Client creation verifies all three boundaries before returning:
+Client creation verifies all four boundaries before returning:
 
-- the supplied deployment digests match the ABI/IDL packages compiled into this
+- the supplied ABI/IDL digests match the producer packages compiled into this
   SDK release;
 - the provider is connected to the expected external chain;
-- every configured contract has bytecode and every configured Solana program is
-  executable.
+- every Ethereum proxy resolves through its EIP-1967 implementation slot to the
+  configured implementation address and exact implementation code hash;
+- every Solana program resolves through the upgradeable loader to the configured
+  ProgramData account and exact ProgramData hash.
 
 These checks prove deployment compatibility, not end-to-end feature readiness.
 Applications must still gate swaps, staking, settlement, retry, funding, and
 underwriting using platform capability evidence.
 
-## Runtime deployment data
+## Deployment profiles
 
-The SDK does not contain a network catalog. Resolve the selected Wire network
-group in the application, load its deployment document from the platform
-manifest pipeline, and validate that untrusted input with
-`parseOutpostDeployment`.
+The SDK does not contain a mutable network or endpoint catalog. Resolve the
+selected Wire network group in the application, load its immutable deployment
+profile from the platform release/deployment pipeline, and validate that
+untrusted input with `parseOutpostDeploymentProfile`.
 
-A deployment document carries:
+A deployment profile carries:
 
 - the full parent Wire chain ID;
-- the Ethereum chain ID and deployed contract addresses;
-- the Solana genesis hash and deployed program addresses;
-- platform and source provenance;
-- deployment and interface digests used for compatibility checks.
+- one deployment checksum and deployment-checksum-derived profile ID;
+- the Ethereum chain ID, proxy addresses, implementation addresses, ABI hashes,
+  and exact live implementation code hashes;
+- the Solana genesis hash, program and ProgramData addresses, IDL hash, and
+  exact live ProgramData hash.
 
 RPC URLs, private keys, wallet state, and mutable capability results are not SDK
-data. A cluster respin updates the runtime deployment document without requiring
-an SDK or interface-package release when the underlying ABI and IDL are
-unchanged.
+data. Keep mutable RPC/explorer endpoints in a separate catalog that points to a
+deployment-profile ID. A cluster respin with the same deployable code creates a
+new profile without requiring a producer-artifact or SDK release.
+
+| Change                                                  | Producer artifact release | `sdk-outpost` release | Deployment profile                        |
+| ------------------------------------------------------- | ------------------------- | --------------------- | ----------------------------------------- |
+| Same-code chain respin                                  | No                        | No                    | New                                       |
+| Contract/program binary change with unchanged ABI/IDL   | Yes                       | No                    | New                                       |
+| ABI or IDL change                                       | Yes                       | Yes                   | New                                       |
+| Asset/reserve onboarding without code/interface changes | No                        | No                    | Update operational configuration/evidence |
+| RPC or explorer rotation                                | No                        | No                    | Update endpoint catalog only              |
 
 ## Usage
 
@@ -70,14 +81,14 @@ import {
   EthereumContractName,
   OutpostChainFamily,
   OutpostClient,
-  parseOutpostDeployment
+  parseOutpostDeploymentProfile
 } from "@wireio/sdk-outpost"
 
-const deployment = parseOutpostDeployment(clusterManifest.outpost)
+const profile = parseOutpostDeploymentProfile(platformRelease.outpostProfile)
 const ethereum = await OutpostClient.create({
   family: OutpostChainFamily.ethereum,
   options: {
-    deployment,
+    profile,
     connection: new providers.JsonRpcProvider(ethereumRpcUrl)
   }
 })
@@ -96,7 +107,7 @@ import {
 
 const solana = await OutpostClient.create({
   family: OutpostChainFamily.solana,
-  options: { deployment, provider: anchorProvider }
+  options: { profile, provider: anchorProvider }
 })
 const liqsol = solana.program(SolanaProgramName.liqsolCore)
 ```
@@ -105,7 +116,7 @@ const liqsol = solana.program(SolanaProgramName.liqsolCore)
 
 `@wireio/outpost-ethereum-artifacts` and `@wireio/outpost-solana-artifacts` are
 build-time inputs. Their exact manifests are compiled into
-`OutpostArtifactManifests` for deployment compatibility and readiness reporting.
+`OutpostArtifactManifests` for interface compatibility and readiness reporting.
 Generated TypeChain and Anchor sources are ignored local build outputs; they are
 compiled into the published package and are never maintained by hand in this
 repository.
@@ -116,7 +127,7 @@ repository.
   `OPP`, `OPPInbound`, and `liqsol_core` access.
 - Use `@wireio/sdk-core` for Wire transaction construction, reserve and token
   registries, underwriting state, and settlement correlation.
-- Rebuild external clients whenever the selected Wire network group changes.
+- Recreate external clients whenever the selected deployment profile changes.
 - Combine SDK deployment verification with flow-specific capability gates before
   enabling a product action.
 
