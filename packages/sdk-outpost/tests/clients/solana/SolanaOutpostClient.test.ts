@@ -1,70 +1,96 @@
-import { AnchorProvider, Wallet } from "@coral-xyz/anchor"
-import { Connection, Keypair, SystemProgram } from "@solana/web3.js"
+import { PublicKey } from "@solana/web3.js"
 
 import {
-  type OutpostDeployment,
   SolanaOutpostClient,
-  SolanaProgramName
+  SolanaProgramName,
+  SolanaUpgradeableLoaderProgramId
 } from "@wireio/sdk-outpost"
-import { createDeploymentFixture } from "../../Fixtures.js"
+import {
+  createOutpostDeploymentProfileFixture,
+  createSolanaProgramAccountData,
+  createSolanaProgramDataAccountData,
+  createSolanaProviderFixture
+} from "../../Fixtures.js"
 
-function createProvider(deployment: OutpostDeployment): AnchorProvider {
-  const connection = new Connection("http://127.0.0.1:8899"),
-    provider = new AnchorProvider(connection, new Wallet(Keypair.generate()))
-
-  jest
-    .spyOn(connection, "getGenesisHash")
-    .mockResolvedValue(deployment.solana.genesisHash)
-  jest.spyOn(connection, "getAccountInfo").mockResolvedValue({
-    data: Buffer.alloc(0),
-    executable: true,
-    lamports: 1,
-    owner: SystemProgram.programId,
-    rentEpoch: 0
-  })
-  return provider
-}
+const WrongProgramDataAddress = "SysvarRent111111111111111111111111111111111"
 
 describe("SolanaOutpostClient", () => {
-  it("verifies a deployment and returns its runtime program address", async () => {
-    const deployment = createDeploymentFixture(),
-      provider = createProvider(deployment),
-      client = await SolanaOutpostClient.create({
-        deployment,
-        provider
-      }),
+  it("verifies a profile and returns its runtime program address", async () => {
+    const profile = createOutpostDeploymentProfileFixture(),
+      provider = createSolanaProviderFixture(profile),
+      client = await SolanaOutpostClient.create({ profile, provider }),
       program = client.program(SolanaProgramName.liqsolCore)
 
     expect(program.programId.toBase58()).toBe(
-      deployment.solana.programs[SolanaProgramName.liqsolCore].address
+      profile.solana.programs[SolanaProgramName.liqsolCore].address
     )
   })
 
   it("rejects the wrong Solana cluster", async () => {
-    const deployment = createDeploymentFixture(),
-      provider = createProvider(deployment)
+    const profile = createOutpostDeploymentProfileFixture(),
+      provider = createSolanaProviderFixture(profile)
     jest
       .spyOn(provider.connection, "getGenesisHash")
       .mockResolvedValue("9".repeat(32))
 
     await expect(
-      SolanaOutpostClient.create({
-        deployment,
-        provider
-      })
+      SolanaOutpostClient.create({ profile, provider })
     ).rejects.toThrow("Solana genesis mismatch")
   })
 
   it("rejects a configured program that is not executable", async () => {
-    const deployment = createDeploymentFixture(),
-      provider = createProvider(deployment)
+    const profile = createOutpostDeploymentProfileFixture(),
+      provider = createSolanaProviderFixture(profile)
     jest.spyOn(provider.connection, "getAccountInfo").mockResolvedValue(null)
 
     await expect(
-      SolanaOutpostClient.create({
-        deployment,
-        provider
-      })
+      SolanaOutpostClient.create({ profile, provider })
     ).rejects.toThrow("is not executable")
+  })
+
+  it("rejects a Program account pointing at another ProgramData account", async () => {
+    const profile = createOutpostDeploymentProfileFixture(),
+      provider = createSolanaProviderFixture(profile)
+    jest.spyOn(provider.connection, "getAccountInfo").mockResolvedValue({
+      data: createSolanaProgramAccountData(WrongProgramDataAddress),
+      executable: true,
+      lamports: 1,
+      owner: SolanaUpgradeableLoaderProgramId,
+      rentEpoch: 0
+    })
+
+    await expect(
+      SolanaOutpostClient.create({ profile, provider })
+    ).rejects.toThrow("ProgramData mismatch")
+  })
+
+  it("rejects a ProgramData code mismatch", async () => {
+    const profile = createOutpostDeploymentProfileFixture(),
+      provider = createSolanaProviderFixture(profile),
+      program = profile.solana.programs[SolanaProgramName.liqsolCore]
+    program.programDataSha256 = "f".repeat(64)
+    jest
+      .spyOn(provider.connection, "getAccountInfo")
+      .mockImplementation(async address =>
+        address.equals(new PublicKey(program.address))
+          ? {
+              data: createSolanaProgramAccountData(program.programDataAddress),
+              executable: true,
+              lamports: 1,
+              owner: SolanaUpgradeableLoaderProgramId,
+              rentEpoch: 0
+            }
+          : {
+              data: createSolanaProgramDataAccountData(),
+              executable: false,
+              lamports: 1,
+              owner: SolanaUpgradeableLoaderProgramId,
+              rentEpoch: 0
+            }
+      )
+
+    await expect(
+      SolanaOutpostClient.create({ profile, provider })
+    ).rejects.toThrow("ProgramData mismatch")
   })
 })

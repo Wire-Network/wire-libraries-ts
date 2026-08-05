@@ -1,49 +1,52 @@
 import {
   EthereumContractName,
-  parseOutpostDeployment
+  parseOutpostDeploymentProfile
 } from "@wireio/sdk-outpost"
-import { createDeploymentFixture } from "../Fixtures.js"
+import { createOutpostDeploymentProfileFixture } from "../Fixtures.js"
 
-describe("OutpostDeploymentSchema", () => {
-  it("parses a valid deployment with its Wire chain identity", () => {
-    const deployment = parseOutpostDeployment(createDeploymentFixture())
+describe("OutpostDeploymentProfileSchema", () => {
+  it("parses a valid profile with its Wire chain identity", () => {
+    const profile = parseOutpostDeploymentProfile(
+      createOutpostDeploymentProfileFixture()
+    )
 
-    expect(deployment.id).toBe(
-      `${deployment.wire.chainId}-${deployment.artifactBundle.deploymentChecksum.slice(0, 12)}`
+    expect(profile.id).toBe(
+      `${profile.wire.chainId}-${profile.deploymentChecksum.slice(0, 12)}`
     )
     expect(
-      deployment.ethereum.contracts[EthereumContractName.ReserveManager].address
+      profile.ethereum.contracts[EthereumContractName.ReserveManager].address
     ).toBe(
-      createDeploymentFixture().ethereum.contracts[
+      createOutpostDeploymentProfileFixture().ethereum.contracts[
         EthereumContractName.ReserveManager
       ].address
     )
   })
 
   it("rejects an invalid contract address", () => {
-    const fixture = createDeploymentFixture()
+    const fixture = createOutpostDeploymentProfileFixture()
     fixture.ethereum.contracts.OPP.address = "not-an-address"
 
-    expect(() => parseOutpostDeployment(fixture)).toThrow(
+    expect(() => parseOutpostDeploymentProfile(fixture)).toThrow(
       "Invalid Ethereum address"
     )
   })
 
-  it("rejects an invalid Solana program address", () => {
-    const fixture = createDeploymentFixture()
-    fixture.solana.programs.liqsolCore.address = "not-a-program-address"
+  it("rejects an invalid Solana ProgramData address", () => {
+    const fixture = createOutpostDeploymentProfileFixture()
+    fixture.solana.programs.liqsolCore.programDataAddress =
+      "not-a-program-data-address"
 
-    expect(() => parseOutpostDeployment(fixture)).toThrow(
+    expect(() => parseOutpostDeploymentProfile(fixture)).toThrow(
       "Invalid Solana address"
     )
   })
 
-  it("rejects an environment-specific deployment id", () => {
-    const fixture = createDeploymentFixture()
+  it("rejects an environment-specific profile id", () => {
+    const fixture = createOutpostDeploymentProfileFixture()
     fixture.id = "named-environment"
 
-    expect(() => parseOutpostDeployment(fixture)).toThrow(
-      "Deployment id must be"
+    expect(() => parseOutpostDeploymentProfile(fixture)).toThrow(
+      "Deployment profile id must be"
     )
   })
 })

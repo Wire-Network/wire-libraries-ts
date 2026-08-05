@@ -6,13 +6,13 @@ import type {
   OperatorRegistry,
   ReserveManager
 } from "../../contracts/ethereum/index.js"
-import type { OutpostDeployment } from "../../deployments/index.js"
+import type { OutpostDeploymentProfile } from "../../deployments/index.js"
 import { EthereumContractName } from "../../deployments/index.js"
 
 /** Inputs required to connect an Ethereum outpost client. */
 export interface EthereumOutpostClientOptions {
-  /** Validated deployment selected from the parent Wire chain. */
-  deployment: OutpostDeployment
+  /** Immutable deployment profile selected from the parent Wire chain. */
+  profile: OutpostDeploymentProfile
   /** Ethers provider or connected signer for the target Ethereum chain. */
   connection: providers.Provider | Signer
 }

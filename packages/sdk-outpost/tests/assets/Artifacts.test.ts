@@ -10,7 +10,7 @@ import {
   liqsolCoreIdl
 } from "@wireio/sdk-outpost"
 
-import { createDeploymentFixture } from "../Fixtures.js"
+import { createOutpostDeploymentProfileFixture } from "../Fixtures.js"
 
 describe("source-owned outpost artifacts", () => {
   it("records exact producer package identity", () => {
@@ -26,33 +26,32 @@ describe("source-owned outpost artifacts", () => {
     "accepts a runtime deployment aligned with %s artifacts",
     family => {
       expect(() =>
-        assertOutpostArtifactCompatibility(createDeploymentFixture(), family)
+        assertOutpostArtifactCompatibility(
+          createOutpostDeploymentProfileFixture(),
+          family
+        )
       ).not.toThrow()
     }
   )
 
   it("rejects a runtime deployment with an incompatible Ethereum ABI", () => {
-    const deployment = createDeploymentFixture()
-    deployment.ethereum.contracts[
-      EthereumContractName.ReserveManager
-    ].artifactSha256 = "f".repeat(64)
-
-    expect(() =>
-      assertOutpostArtifactCompatibility(
-        deployment,
-        OutpostChainFamily.ethereum
-      )
-    ).toThrow("Ethereum ReserveManager artifact mismatch")
-  })
-
-  it("rejects a runtime deployment with an incompatible Solana IDL", () => {
-    const deployment = createDeploymentFixture()
-    deployment.solana.programs[SolanaProgramName.liqsolCore].artifactSha256 =
+    const profile = createOutpostDeploymentProfileFixture()
+    profile.ethereum.contracts[EthereumContractName.ReserveManager].abiSha256 =
       "f".repeat(64)
 
     expect(() =>
-      assertOutpostArtifactCompatibility(deployment, OutpostChainFamily.solana)
-    ).toThrow("Solana liqsolCore artifact mismatch")
+      assertOutpostArtifactCompatibility(profile, OutpostChainFamily.ethereum)
+    ).toThrow("Ethereum ReserveManager ABI interface mismatch")
+  })
+
+  it("rejects a runtime deployment with an incompatible Solana IDL", () => {
+    const profile = createOutpostDeploymentProfileFixture()
+    profile.solana.programs[SolanaProgramName.liqsolCore].idlSha256 =
+      "f".repeat(64)
+
+    expect(() =>
+      assertOutpostArtifactCompatibility(profile, OutpostChainFamily.solana)
+    ).toThrow("Solana liqsolCore IDL interface mismatch")
   })
 
   it("generates the callable swap and collateral surfaces", () => {

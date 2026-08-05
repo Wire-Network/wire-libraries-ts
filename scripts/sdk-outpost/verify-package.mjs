@@ -15,9 +15,10 @@ const packageJson = await readJson(path.join(PackagePath, "package.json")),
     "EthereumOutpostClient",
     "OutpostArtifactManifests",
     "OutpostClient",
+    "OutpostDeploymentVerifier",
     "SolanaOutpostClient",
     "assertOutpostArtifactCompatibility",
-    "parseOutpostDeployment"
+    "parseOutpostDeploymentProfile"
   ]
 
 assert(packageJson.name === "@wireio/sdk-outpost", "Unexpected package name")

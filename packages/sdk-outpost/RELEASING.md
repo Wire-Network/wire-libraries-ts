@@ -11,10 +11,12 @@ The package consumes exact build-time versions of:
 - `@wireio/outpost-ethereum-artifacts`, published from `wire-ethereum`;
 - `@wireio/outpost-solana-artifacts`, published from `wire-solana`.
 
-Publish a new producer package only when its source ABI or IDL changes. A new
-deployment, address, endpoint, or network-group respin belongs in the runtime
-platform manifest and does not require these packages or `sdk-outpost` to be
-republished.
+Publish a new producer package when its ABI/IDL or deployable contract/program
+binary changes. Publish `sdk-outpost` when its public behavior changes or a new
+ABI/IDL must be compiled into generated clients. A same-code deployment respin,
+address change, or endpoint rotation does not require either package to be
+republished; emit a new immutable deployment profile for a respin and update the
+separate endpoint catalog for mutable endpoints.
 
 Before updating either dependency, verify its npm provenance, source revision,
 artifact checksums, and immutable version. Keep both versions exact in
@@ -28,7 +30,7 @@ pnpm-compatible install.
 - Generate clients only through `scripts/sdk-outpost/generate.mjs`; never edit
   generated TypeChain, Anchor, or artifact-manifest sources by hand.
 - Confirm the package contains no secrets, RPC credentials, private keys,
-  addresses, or mutable environment configuration.
+  deployment addresses, or mutable environment configuration.
 - Keep `repository.url` exactly equal to
   `https://github.com/Wire-Network/wire-libraries-ts` for npm provenance.
 
