@@ -1,8 +1,9 @@
-import { utils as ethersUtils } from "ethers"
+import { BigNumber, utils as ethersUtils } from "ethers"
 
 import {
   EthereumContractName,
-  EthereumOutpostClient
+  EthereumOutpostClient,
+  EthereumReserveSwapClient
 } from "@wireio/sdk-outpost"
 import {
   createEthereumProviderFixture,
@@ -22,11 +23,23 @@ describe("EthereumOutpostClient", () => {
     expect(reserveManager.address).toBe(
       profile.ethereum.contracts[EthereumContractName.ReserveManager].address
     )
+    expect(client.swaps).toBeInstanceOf(EthereumReserveSwapClient)
     expect(provider.getCode).toHaveBeenCalledTimes(
       Object.values(EthereumContractName).length * 2
     )
     expect(provider.getStorageAt).toHaveBeenCalledTimes(
       Object.values(EthereumContractName).length
+    )
+  })
+
+  it("parses the protocol deposit id from a confirmed receipt", () => {
+    const events = [
+      { event: "SwapDeposit", args: [BigNumber.from(42)] }
+    ]
+
+    expect(EthereumReserveSwapClient.parseSourceRequestId(events)).toBe(42n)
+    expect(() => EthereumReserveSwapClient.parseSourceRequestId([])).toThrow(
+      "did not emit SwapDeposit"
     )
   })
 
