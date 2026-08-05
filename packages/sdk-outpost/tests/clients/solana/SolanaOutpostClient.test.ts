@@ -3,6 +3,7 @@ import { PublicKey } from "@solana/web3.js"
 import {
   SolanaOutpostClient,
   SolanaProgramName,
+  SolanaReserveSwapClient,
   SolanaUpgradeableLoaderProgramId
 } from "@wireio/sdk-outpost"
 import {
@@ -23,6 +24,18 @@ describe("SolanaOutpostClient", () => {
 
     expect(program.programId.toBase58()).toBe(
       profile.solana.programs[SolanaProgramName.liqsolCore].address
+    )
+    expect(client.swaps).toBeInstanceOf(SolanaReserveSwapClient)
+  })
+
+  it("parses the protocol deposit id from confirmed program logs", () => {
+    expect(
+      SolanaReserveSwapClient.parseSourceRequestId([
+        "Program log: opp_outpost: SwapDeposit id=42 hash=abc"
+      ])
+    ).toBe(42n)
+    expect(() => SolanaReserveSwapClient.parseSourceRequestId([])).toThrow(
+      "did not log SwapDeposit"
     )
   })
 

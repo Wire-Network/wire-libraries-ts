@@ -8,6 +8,7 @@ import {
 import { LiqsolCore, liqsolCoreIdl } from "../../programs/solana/index.js"
 import { OutpostDeploymentVerifier } from "../../verification/index.js"
 import { SolanaOutpostClientOptions, SolanaProgramMap } from "./Types.js"
+import { SolanaReserveSwapClient } from "./SolanaReserveSwapClient.js"
 
 /** Strictly typed access to one verified Solana outpost deployment. */
 export class SolanaOutpostClient {
@@ -35,7 +36,11 @@ export class SolanaOutpostClient {
       { ...liqsolCoreIdl, address },
       options.provider
     )
+    this.swaps = new SolanaReserveSwapClient(options.provider, this.liqsolCore)
   }
+
+  /** Reserve-swap writes and balance reads for this verified outpost. */
+  readonly swaps: SolanaReserveSwapClient
 
   /** Provider verified against the configured Solana cluster. */
   get provider(): SolanaOutpostClientOptions["provider"] {

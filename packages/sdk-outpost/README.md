@@ -21,10 +21,10 @@ module entrypoints with TypeScript declarations.
 
 ## Supported surfaces
 
-| Family   | Generated clients                                         |
-| -------- | --------------------------------------------------------- |
-| Ethereum | `OPP`, `OPPInbound`, `OperatorRegistry`, `ReserveManager` |
-| Solana   | `liqsol_core`                                             |
+| Family   | Generated clients and workflows                                          |
+| -------- | ------------------------------------------------------------------------- |
+| Ethereum | `OPP`, `OPPInbound`, `OperatorRegistry`, `ReserveManager`, reserve swaps   |
+| Solana   | `liqsol_core`, native SOL and classic SPL reserve swaps                   |
 
 Client creation verifies all four boundaries before returning:
 
@@ -95,6 +95,31 @@ const ethereum = await OutpostClient.create({
 const reserves = ethereum.contract(EthereumContractName.ReserveManager)
 ```
 
+Wallet-connected clients expose verified reserve-swap workflows without a
+separate deployment address book:
+
+```ts
+const submission = await ethereum.swaps.requestNative({
+  sourceTokenCode,
+  sourceReserveCode,
+  sourceAmount,
+  targetChainCode,
+  targetTokenCode,
+  targetReserveCode,
+  targetRecipient,
+  targetAmount,
+  targetToleranceBps
+})
+
+// Correlate this protocol id with sysio.uwrit; the transaction hash alone is
+// only source-chain submission evidence.
+console.log(submission.sourceRequestId)
+```
+
+Ethereum also exposes `requestErc20WithApproval`, `nativeBalance`, and
+`erc20Balance`. Solana exposes `requestNative`, `requestSpl`, `nativeBalance`,
+and `splBalance` through the same `client.swaps` ownership boundary.
+
 Solana uses the same facade and returns the precise Anchor program type at the
 runtime program address:
 
@@ -124,7 +149,7 @@ repository.
 ## Consumer boundaries
 
 - Use this package for typed external `ReserveManager`, `OperatorRegistry`,
-  `OPP`, `OPPInbound`, and `liqsol_core` access.
+  `OPP`, `OPPInbound`, `liqsol_core`, and source reserve-swap execution.
 - Use `@wireio/sdk-core` for Wire transaction construction, reserve and token
   registries, underwriting state, and settlement correlation.
 - Recreate external clients whenever the selected deployment profile changes.
