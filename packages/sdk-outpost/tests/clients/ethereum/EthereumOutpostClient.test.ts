@@ -3,6 +3,7 @@ import { BigNumber, utils as ethersUtils, Wallet } from "ethers"
 import {
   EthereumContractName,
   EthereumOutpostClient,
+  EthereumReserveClient,
   EthereumReserveSwapClient,
   type ReserveSwapRequest
 } from "@wireio/sdk-outpost"
@@ -99,6 +100,7 @@ describe("EthereumOutpostClient", () => {
     expect(reserveManager.address).toBe(
       profile.ethereum.contracts[EthereumContractName.ReserveManager].address
     )
+    expect(client.reserves).toBeInstanceOf(EthereumReserveClient)
     expect(client.swaps).toBeInstanceOf(EthereumReserveSwapClient)
     expect(provider.getCode).toHaveBeenCalledTimes(
       Object.values(EthereumContractName).length * 2

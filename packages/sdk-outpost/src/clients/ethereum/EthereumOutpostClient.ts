@@ -13,6 +13,7 @@ import {
 } from "../../deployments/index.js"
 import { OutpostDeploymentVerifier } from "../../verification/index.js"
 import { EthereumContractMap, EthereumOutpostClientOptions } from "./Types.js"
+import { EthereumReserveClient } from "./EthereumReserveClient.js"
 import { EthereumReserveSwapClient } from "./EthereumReserveSwapClient.js"
 
 function resolveProvider(
@@ -47,11 +48,18 @@ export class EthereumOutpostClient {
     /** Provider verified against the configured Ethereum chain. */
     readonly provider: providers.Provider
   ) {
+    this.reserves = new EthereumReserveClient(
+      this.contract(EthereumContractName.ReserveManager),
+      options.connection
+    )
     this.swaps = new EthereumReserveSwapClient(
       this.contract(EthereumContractName.ReserveManager),
       options.connection
     )
   }
+
+  /** Reserve creation, cancellation, and reads for this verified outpost. */
+  readonly reserves: EthereumReserveClient
 
   /** Reserve-swap writes and balance reads for this verified outpost. */
   readonly swaps: EthereumReserveSwapClient

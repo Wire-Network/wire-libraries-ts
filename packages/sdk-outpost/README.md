@@ -30,9 +30,9 @@ module entrypoints with TypeScript declarations.
 ## Supported surfaces
 
 | Family   | Generated clients and workflows                                          |
-| -------- | ------------------------------------------------------------------------ |
-| Ethereum | `OPP`, `OPPInbound`, `OperatorRegistry`, `ReserveManager`, reserve swaps |
-| Solana   | `liqsol_core`, native SOL and classic SPL reserve swaps                  |
+| -------- | ------------------------------------------------------------------------- |
+| Ethereum | `OPP`, `OPPInbound`, `OperatorRegistry`, `ReserveManager`, reserve lifecycle and swaps |
+| Solana   | `liqsol_core`, configured reserve lifecycle, native SOL and classic SPL reserve swaps  |
 
 Client creation verifies all four boundaries before returning:
 
@@ -134,6 +134,56 @@ Ethereum also exposes `requestErc20WithApproval`, `nativeBalance`, and
 `erc20Balance`. Solana exposes `requestNative`, `requestSpl`, `nativeBalance`,
 and `splBalance` through the same `client.swaps` ownership boundary.
 
+## Reserve lifecycle
+
+Wallet-connected clients expose the external half of the post-bootstrap
+reserve lifecycle. The external create escrows reserve capital and emits the
+attestation that creates a pending `sysio.reserv` row. A signed
+`@wireio/sdk-core` `ReserveClient` then supplies the exact requested WIRE amount
+and activates that row.
+
+```ts
+const ethereumSubmission = await ethereum.reserves.createNative({
+  tokenCode,
+  reserveCode,
+  externalTokenAmount,
+  requestedWireAmount,
+  connectorWeightBps: 5_000,
+  name: "Private ETH reserve",
+  description: "",
+  isPrivate: true,
+  creatorPubKey
+})
+
+const configuredTokens = await solana.reserves.getConfiguredTokens()
+const splToken = configuredTokens.find(token => !token.isNative)
+if (splToken == null) throw new Error("No configured SPL reserve token.")
+
+const solanaSubmission = await solana.reserves.create({
+  tokenCode: splToken.tokenCode,
+  reserveCode,
+  externalTokenAmount: splAmount,
+  requestedWireAmount,
+  connectorWeightBps: 5_000,
+  name: "Private SPL reserve",
+  description: "",
+  isPrivate: true,
+  mint: splToken.mint
+})
+```
+
+Ethereum supports native creation, ERC-20 approval or permit creation, pending
+cancellation, and local reserve reads. Solana supports deployment-configured
+token discovery, instruction assembly, creation, pending cancellation, address
+derivation, and local reserve reads. `cancel` is valid only while creation is
+pending and drives the protocol refund path.
+
+Private is a routing constraint, not access control or confidentiality. Private
+reserves cannot use WIRE as a swap endpoint; when either external route leg is
+private, Wire requires both active reserves to have the same non-empty owner.
+The current protocol exposes no creator withdrawal, close, or redemption after
+activation. This SDK intentionally does not invent an active-reserve exit API.
+
 Solana uses the same facade and returns the precise Anchor program type at the
 runtime program address:
 
@@ -170,7 +220,8 @@ are never maintained by hand in this repository.
 ## Consumer boundaries
 
 - Use this package for typed external `ReserveManager`, `OperatorRegistry`,
-  `OPP`, `OPPInbound`, `liqsol_core`, and source reserve-swap execution.
+  `OPP`, `OPPInbound`, `liqsol_core`, reserve lifecycle, and source reserve-swap
+  execution.
 - Use `@wireio/sdk-core` for Wire transaction construction, reserve and token
   registries, underwriting state, and settlement correlation.
 - Recreate external clients whenever the selected deployment profile changes.
