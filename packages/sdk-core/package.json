@@ -30,6 +30,11 @@
       "types": "./lib/esm/*.d.ts"
     }
   },
+  "typesVersions": {
+    "*": {
+      "*": ["lib/esm/*"]
+    }
+  },
   "access": "public",
   "license": "FSL-1.1-Apache-2.0",
   "scripts": {
