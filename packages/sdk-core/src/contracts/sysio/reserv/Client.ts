@@ -14,7 +14,11 @@ import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 import type { ContractTableRowsOptions } from "../../Contract.js"
 import { getSysioContract, type SysioContractClient } from "../Client.js"
 
-import { buildSwapQuoteAction, matchReserveActionData } from "./Actions.js"
+import {
+  buildMatchReserveAction,
+  buildSwapQuoteAction,
+  matchReserveActionData
+} from "./Actions.js"
 import {
   DEFAULT_RESERV_CONTRACT,
   DEFAULT_RESERVE_QUERY_LIMIT
@@ -27,6 +31,7 @@ import {
 import type {
   ListReservesOptions,
   PushMatchReserveOptions,
+  PushMatchReservesOptions,
   ReserveClientOptions,
   ReserveIdentity,
   ReserveQuoteOptions,
@@ -268,6 +273,21 @@ export class ReserveClient {
         ],
         pushOptions
       }
+    )
+  }
+
+  /** Builds and pushes one signed Wire transaction that activates several pending reserves atomically. */
+  async pushMatchReserves(
+    options: PushMatchReservesOptions,
+    pushOptions: TransactionExtraOptions = options.pushOptions || {}
+  ): Promise<Awaited<ReturnType<APIClient["pushTransaction"]>>> {
+    if (options.matches.length === 0) {
+      throw new Error("At least one reserve match is required.")
+    }
+
+    return this.client.pushTransaction(
+      options.matches.map(buildMatchReserveAction),
+      pushOptions
     )
   }
 

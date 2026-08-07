@@ -163,6 +163,51 @@ describe("ReserveClient", () => {
     expect(action.authorization.map(String)).toEqual(["alice@active"])
   })
 
+  test("pushes ordered reserve matches in one Wire transaction", async () => {
+    const { client, pushTransaction } = clientFixture()
+
+    await expect(
+      client.pushMatchReserves({
+        matches: [
+          {
+            chainCode: "ETHEREUM",
+            tokenCode: "ETH",
+            reserveCode: "PRIVATE",
+            matcher: "alice",
+            wireAmount: "2500000000"
+          },
+          {
+            chainCode: "SOLANA",
+            tokenCode: "USDC",
+            reserveCode: "PRIVATE",
+            matcher: "alice",
+            wireAmount: "2500000000"
+          }
+        ]
+      })
+    ).resolves.toEqual({ transaction_id: "reserve-trx" })
+
+    const [actions] = pushTransaction.mock.calls[0]
+    expect(actions).toHaveLength(2)
+    expect(actions.map(action => action.name.toString())).toEqual([
+      "matchreserve",
+      "matchreserve"
+    ])
+    expect(actions.map(action => action.authorization.map(String))).toEqual([
+      ["alice@active"],
+      ["alice@active"]
+    ])
+  })
+
+  test("rejects an empty atomic reserve match", async () => {
+    const { client, pushTransaction } = clientFixture()
+
+    await expect(client.pushMatchReserves({ matches: [] })).rejects.toThrow(
+      "At least one reserve match is required."
+    )
+    expect(pushTransaction).not.toHaveBeenCalled()
+  })
+
   test("decodes read-only swapquote and rewards values", async () => {
     const { client } = clientFixture()
 
