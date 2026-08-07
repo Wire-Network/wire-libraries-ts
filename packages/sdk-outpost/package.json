@@ -52,6 +52,7 @@
     "prepack": "pnpm run verify:release"
   },
   "dependencies": {
+    "@wireio/sdk-core": "workspace:*",
     "@coral-xyz/anchor": "^0.32.1",
     "@ethersproject/abi": "^5.8.0",
     "@ethersproject/providers": "^5.8.0",

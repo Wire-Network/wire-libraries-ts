@@ -4,6 +4,7 @@ import {
   type ReserveSwapRequest,
   SolanaOutpostClient,
   SolanaProgramName,
+  SolanaReserveClient,
   SolanaReserveSwapClient,
   SolanaUpgradeableLoaderProgramId
 } from "@wireio/sdk-outpost"
@@ -45,6 +46,7 @@ describe("SolanaOutpostClient", () => {
     expect(program.programId.toBase58()).toBe(
       profile.solana.programs[SolanaProgramName.liqsolCore].address
     )
+    expect(client.reserves).toBeInstanceOf(SolanaReserveClient)
     expect(client.swaps).toBeInstanceOf(SolanaReserveSwapClient)
   })
 
