@@ -1,9 +1,10 @@
-import { BigNumber, utils as ethersUtils } from "ethers"
+import { BigNumber, utils as ethersUtils, Wallet } from "ethers"
 
 import {
   EthereumContractName,
   EthereumOutpostClient,
-  EthereumReserveSwapClient
+  EthereumReserveSwapClient,
+  type ReserveSwapRequest
 } from "@wireio/sdk-outpost"
 import {
   createEthereumProviderFixture,
@@ -11,6 +12,66 @@ import {
 } from "../../Fixtures.js"
 
 describe("EthereumOutpostClient", () => {
+  it("submits native reserve swaps with estimated gas headroom", async () => {
+    const request: ReserveSwapRequest = {
+        sourceTokenCode: 1,
+        sourceReserveCode: 2,
+        sourceAmount: 3,
+        targetChainCode: 4,
+        targetTokenCode: 5,
+        targetReserveCode: 6,
+        targetRecipient: new Uint8Array([7]),
+        targetAmount: 8,
+        targetToleranceBps: 500
+      },
+      wait = jest.fn().mockResolvedValue({
+        events: [{ event: "SwapDeposit", args: [BigNumber.from(42)] }]
+      }),
+      requestSwap = jest.fn().mockResolvedValue({ hash: "0xabc", wait }),
+      reserveManager = {
+        callStatic: { requestSwap: jest.fn().mockResolvedValue(null) },
+        estimateGas: {
+          requestSwap: jest.fn().mockResolvedValue(BigNumber.from(100_000))
+        },
+        requestSwap
+      } as unknown as ConstructorParameters<
+        typeof EthereumReserveSwapClient
+      >[0],
+      client = new EthereumReserveSwapClient(
+        reserveManager,
+        Wallet.createRandom()
+      )
+
+    await expect(client.requestNative(request)).resolves.toEqual({
+      transactionId: "0xabc",
+      sourceRequestId: 42n
+    })
+    expect(requestSwap).toHaveBeenCalledWith(
+      request.sourceTokenCode,
+      request.sourceReserveCode,
+      request.targetChainCode,
+      request.targetTokenCode,
+      request.targetReserveCode,
+      request.targetRecipient,
+      request.targetAmount,
+      request.targetToleranceBps,
+      {
+        value: request.sourceAmount,
+        gasLimit: BigNumber.from(125_000)
+      }
+    )
+    expect(wait).toHaveBeenCalledWith(1)
+  })
+
+  it("adds 25% gas headroom to reserve swap submissions", () => {
+    expect(EthereumReserveSwapClient.addSubmissionGasHeadroom(789_767)).toEqual(
+      BigNumber.from(987_209)
+    )
+    expect(EthereumReserveSwapClient.addSubmissionGasHeadroom(1)).toEqual(
+      BigNumber.from(2)
+    )
+  })
+
   it("verifies a profile and returns a generated contract type", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createEthereumProviderFixture(profile),
@@ -33,9 +94,7 @@ describe("EthereumOutpostClient", () => {
   })
 
   it("parses the protocol deposit id from a confirmed receipt", () => {
-    const events = [
-      { event: "SwapDeposit", args: [BigNumber.from(42)] }
-    ]
+    const events = [{ event: "SwapDeposit", args: [BigNumber.from(42)] }]
 
     expect(EthereumReserveSwapClient.parseSourceRequestId(events)).toBe(42n)
     expect(() => EthereumReserveSwapClient.parseSourceRequestId([])).toThrow(
