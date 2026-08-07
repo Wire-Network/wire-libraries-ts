@@ -68,7 +68,7 @@ export interface EthereumReserveRecord {
 
 /** Solana reserve-creation request for the permissionless outpost path. */
 export interface SolanaReserveCreateRequest extends ReserveCreateDefinition {
-  /** Custody mint for SPL reserves, or a valid placeholder mint for native SOL. */
+  /** Custody mint for SPL reserves, or a real placeholder SPL mint for native SOL. */
   mint: PublicKey
   /** Creator token-account override. Defaults to the canonical ATA. */
   creatorTokenAccount?: PublicKey

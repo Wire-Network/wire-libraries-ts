@@ -2,6 +2,7 @@ import {
   constants as ethersConstants,
   Contract,
   Signer,
+  utils as ethersUtils,
   type providers
 } from "ethers"
 import { match } from "ts-pattern"
@@ -67,17 +68,26 @@ export class EthereumReserveClient {
     assertEthereumReserveCreateRequest(request)
     const signer = this.assertSigner(),
       owner = await signer.getAddress(),
-      resolvedTokenAddress =
-        tokenAddress ??
-        (await this.reserveManager.tokenAddressesByCode(request.tokenCode))
+      configuredTokenAddress = await this.reserveManager.tokenAddressesByCode(
+        request.tokenCode
+      )
 
-    if (resolvedTokenAddress === ethersConstants.AddressZero) {
+    if (configuredTokenAddress === ethersConstants.AddressZero) {
       throw new Error(
         `No ERC-20 address is configured for tokenCode ${request.tokenCode.toString()}.`
       )
     }
+    if (
+      tokenAddress != null &&
+      ethersUtils.getAddress(tokenAddress) !==
+        ethersUtils.getAddress(configuredTokenAddress)
+    ) {
+      throw new Error(
+        `ERC-20 address ${tokenAddress} does not match the configured route ${configuredTokenAddress}.`
+      )
+    }
 
-    const token = new Contract(resolvedTokenAddress, Erc20Interface, signer),
+    const token = new Contract(configuredTokenAddress, Erc20Interface, signer),
       allowance = await token.allowance(owner, this.reserveManager.address)
     if (allowance.lt(request.externalTokenAmount)) {
       const approval = await token.approve(

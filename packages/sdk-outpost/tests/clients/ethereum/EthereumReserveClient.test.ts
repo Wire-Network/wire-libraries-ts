@@ -199,4 +199,16 @@ describe("EthereumReserveClient", () => {
       "No ERC-20 address is configured"
     )
   })
+
+  it("rejects an ERC-20 address that differs from the configured route", async () => {
+    const { reserveManager } = reserveManagerFixture(),
+      signer = new Erc20Signer(),
+      client = new EthereumReserveClient(reserveManager, signer),
+      differentTokenAddress = Wallet.createRandom().address
+
+    await expect(
+      client.createErc20WithApproval(request, differentTokenAddress)
+    ).rejects.toThrow("does not match the configured route")
+    expect(signer.approvalWait).not.toHaveBeenCalled()
+  })
 })

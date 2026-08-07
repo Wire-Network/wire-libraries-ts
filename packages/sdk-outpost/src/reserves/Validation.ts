@@ -17,7 +17,13 @@ const MaximumUnsigned64 = BigNumber.from("18446744073709551615"),
   MaximumToleranceBps = 10_000,
   MaximumReserveNameBytes = 64,
   MaximumReserveDescriptionBytes = 256,
-  CompressedSecp256k1PublicKeyBytes = 33
+  CompressedSecp256k1PublicKeyBytes = 33,
+  CompressedSecp256k1PublicKeyPrefix = {
+    even: 2,
+    odd: 3
+  } as const,
+  InvalidCompressedSecp256k1PublicKeyMessage =
+    "creatorPubKey must be a 33-byte compressed secp256k1 public key."
 
 /** Validate one value against the positive unsigned 64-bit protocol boundary. */
 export function assertReserveUnsigned64(
@@ -89,13 +95,16 @@ export function assertEthereumReserveCreateRequest(
   request: EthereumReserveCreateRequest
 ): void {
   assertReserveCreateDefinition(request)
+  if (!ethersUtils.isBytesLike(request.creatorPubKey)) {
+    throw new Error(InvalidCompressedSecp256k1PublicKeyMessage)
+  }
+  const creatorPublicKey = ethersUtils.arrayify(request.creatorPubKey)
   if (
-    ethersUtils.arrayify(request.creatorPubKey).length !==
-    CompressedSecp256k1PublicKeyBytes
+    creatorPublicKey.length !== CompressedSecp256k1PublicKeyBytes ||
+    (creatorPublicKey[0] !== CompressedSecp256k1PublicKeyPrefix.even &&
+      creatorPublicKey[0] !== CompressedSecp256k1PublicKeyPrefix.odd)
   ) {
-    throw new Error(
-      "creatorPubKey must be a 33-byte compressed secp256k1 public key."
-    )
+    throw new Error(InvalidCompressedSecp256k1PublicKeyMessage)
   }
 }
 

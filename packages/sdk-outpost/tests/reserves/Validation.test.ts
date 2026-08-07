@@ -60,6 +60,18 @@ describe("reserve swap validation", () => {
         creatorPubKey: "0x02"
       })
     ).toThrow("33-byte compressed")
+    expect(() =>
+      assertEthereumReserveCreateRequest({
+        ...ethereumRequest,
+        creatorPubKey: `0x04${"11".repeat(32)}`
+      })
+    ).toThrow("33-byte compressed")
+    expect(() =>
+      assertEthereumReserveCreateRequest({
+        ...ethereumRequest,
+        creatorPubKey: "not-hex"
+      })
+    ).toThrow("33-byte compressed")
   })
 
   it("accepts a portable positive request", () => {
