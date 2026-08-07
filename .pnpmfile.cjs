@@ -43,7 +43,31 @@ const wireOPPPkgPaths = ["typescript", "solidity"].map(target => [
   Path.resolve(__dirname, "..", "wire-sysio", "build", "opp", target)
 ])
 
+const wireOutpostArtifactPkgPaths = [
+  [
+    "@wireio/outpost-ethereum-artifacts",
+    Path.resolve(
+      __dirname,
+      "..",
+      "wire-ethereum",
+      "build",
+      "sdk-artifacts"
+    )
+  ],
+  [
+    "@wireio/outpost-solana-artifacts",
+    Path.resolve(
+      __dirname,
+      "..",
+      "wire-solana",
+      "build",
+      "sdk-artifacts"
+    )
+  ]
+]
+
 wireOPPPkgPaths
+  .concat(wireOutpostArtifactPkgPaths)
   .filter(([, path]) => isDirectory(path))
   .forEach(([pkgName, path]) => {
     localOverrides[pkgName] = path

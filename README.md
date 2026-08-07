@@ -10,8 +10,14 @@ A monorepo containing shared TypeScript libraries for Wire applications, providi
 | [`@wireio/shared-web`](packages/shared-web/) | Web-specific utilities | *private* |
 | [`@wireio/shared-node`](packages/shared-node/) | Node.js-specific utilities | *private* |
 | [`@wireio/sdk-core`](packages/sdk-core/) | Wire blockchain SDK core types, primitives, signing helpers, generated `sysio` contract proxy, and domain workflows such as multisig and reserves | [![npm](https://img.shields.io/npm/v/@wireio/sdk-core)](https://www.npmjs.com/package/@wireio/sdk-core) |
+| [`@wireio/sdk-outpost`](packages/sdk-outpost/) | Strictly typed Ethereum and Solana outpost clients generated from source-owned artifact packages | [![npm](https://img.shields.io/npm/v/@wireio/sdk-outpost)](https://www.npmjs.com/package/@wireio/sdk-outpost) |
 | [`@wireio/wallet-ext-sdk`](packages/wallet-ext-sdk/) | Client SDK for the Wire Wallet browser extension | [![npm](https://img.shields.io/npm/v/@wireio/wallet-ext-sdk)](https://www.npmjs.com/package/@wireio/wallet-ext-sdk) |
 | [`@wireio/wallet-browser-ext`](packages/wallet-browser-ext/) | Chrome extension developer wallet for Wire | *private* |
+
+The `sdk-outpost` generator preserves the source Solana IDL's literal account
+names, so Anchor consumers retain precise `Program<LiqsolCore>["account"]`
+members after regeneration. Generated clients remain build outputs and must not
+be edited by hand.
 
 ## Examples
 
@@ -56,6 +62,7 @@ wire-libraries-ts/
 │   ├── shared-web/          # Web-specific utilities
 │   ├── shared-node/         # Node.js-specific utilities
 │   ├── sdk-core/            # Wire blockchain SDK core
+│   ├── sdk-outpost/         # Typed external-chain outpost SDK
 │   ├── wallet-ext-sdk/      # Wallet extension client SDK
 │   ├── wallet-browser-ext/  # Chrome extension wallet
 │   ├── protoc-gen-solana/   # protoc plugin → Rust/Solana
