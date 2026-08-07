@@ -22,9 +22,9 @@ module entrypoints with TypeScript declarations.
 ## Supported surfaces
 
 | Family   | Generated clients and workflows                                          |
-| -------- | ------------------------------------------------------------------------- |
-| Ethereum | `OPP`, `OPPInbound`, `OperatorRegistry`, `ReserveManager`, reserve swaps   |
-| Solana   | `liqsol_core`, native SOL and classic SPL reserve swaps                   |
+| -------- | ------------------------------------------------------------------------ |
+| Ethereum | `OPP`, `OPPInbound`, `OperatorRegistry`, `ReserveManager`, reserve swaps |
+| Solana   | `liqsol_core`, native SOL and classic SPL reserve swaps                  |
 
 Client creation verifies all four boundaries before returning:
 
@@ -155,6 +155,8 @@ repository.
 - Recreate external clients whenever the selected deployment profile changes.
 - Combine SDK deployment verification with flow-specific capability gates before
   enabling a product action.
+- Ethereum reserve-swap submissions estimate the live call and add 25% gas
+  headroom for nested OPP execution; unused gas is not charged.
 
 ## Maintainer commands
 

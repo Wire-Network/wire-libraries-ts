@@ -1,4 +1,5 @@
 import {
+  BigNumber,
   Contract,
   Signer,
   type BigNumberish,
@@ -13,12 +14,14 @@ import {
   type ReserveSwapSubmission
 } from "../../reserves/index.js"
 
-const ConfirmationCount = 1,
+const BasisPointDenominator = 10_000,
+  ConfirmationCount = 1,
   Erc20Interface = [
     "function allowance(address owner,address spender) view returns (uint256)",
     "function approve(address spender,uint256 amount) returns (bool)",
     "function balanceOf(address owner) view returns (uint256)"
-  ]
+  ],
+  SubmissionGasHeadroomBps = 2_500
 
 /** Event fields required to extract a ReserveManager deposit id. */
 interface EthereumReserveSwapEvent {
@@ -44,9 +47,19 @@ export class EthereumReserveSwapClient {
       overrides = { value: request.sourceAmount }
 
     await this.reserveManager.callStatic.requestSwap(...parameters, overrides)
-    const transaction = await this.reserveManager.requestSwap(
+    const estimatedGas = await this.reserveManager.estimateGas.requestSwap(
         ...parameters,
         overrides
+      ),
+      submissionOverrides = {
+        ...overrides,
+        gasLimit:
+          EthereumReserveSwapClient.addSubmissionGasHeadroom(estimatedGas)
+      }
+
+    const transaction = await this.reserveManager.requestSwap(
+        ...parameters,
+        submissionOverrides
       ),
       receipt = await transaction.wait(ConfirmationCount)
     return {
@@ -77,9 +90,21 @@ export class EthereumReserveSwapClient {
     }
 
     const arguments_ = this.swapArguments(request)
-    await this.reserveManager.callStatic.requestSwapErc20WithApproval(arguments_)
-    const transaction =
-        await this.reserveManager.requestSwapErc20WithApproval(arguments_),
+    await this.reserveManager.callStatic.requestSwapErc20WithApproval(
+      arguments_
+    )
+    const estimatedGas =
+        await this.reserveManager.estimateGas.requestSwapErc20WithApproval(
+          arguments_
+        ),
+      overrides = {
+        gasLimit:
+          EthereumReserveSwapClient.addSubmissionGasHeadroom(estimatedGas)
+      }
+    const transaction = await this.reserveManager.requestSwapErc20WithApproval(
+        arguments_,
+        overrides
+      ),
       receipt = await transaction.wait(ConfirmationCount)
     return {
       transactionId: transaction.hash,
@@ -142,6 +167,15 @@ export class EthereumReserveSwapClient {
     }
   }
 
+  /** Add bounded headroom to estimates that traverse OPP delegate calls. */
+  static addSubmissionGasHeadroom(estimatedGas: BigNumberish): BigNumber {
+    const gas = BigNumber.from(estimatedGas)
+    return gas
+      .mul(BasisPointDenominator + SubmissionGasHeadroomBps)
+      .add(BasisPointDenominator - 1)
+      .div(BasisPointDenominator)
+  }
+
   /** Parse the canonical deposit id emitted by `requestSwap*`. */
   static parseSourceRequestId(
     events: readonly EthereumReserveSwapEvent[] | undefined
@@ -149,7 +183,9 @@ export class EthereumReserveSwapClient {
     const event = events?.find(candidate => candidate.event === "SwapDeposit"),
       id = event?.args?.[0]
     if (id == null) {
-      throw new Error("Confirmed Ethereum reserve swap did not emit SwapDeposit.")
+      throw new Error(
+        "Confirmed Ethereum reserve swap did not emit SwapDeposit."
+      )
     }
     return BigInt(id.toString())
   }
