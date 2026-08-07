@@ -1,3 +1,5 @@
+import type { Program } from "@coral-xyz/anchor"
+
 import {
   EthereumContractName,
   OPP__factory,
@@ -6,6 +8,7 @@ import {
   OutpostChainFamily,
   ReserveManager__factory,
   SolanaProgramName,
+  type LiqsolCore,
   assertOutpostArtifactCompatibility,
   liqsolCoreIdl
 } from "@wireio/sdk-outpost"
@@ -55,6 +58,10 @@ describe("source-owned outpost artifacts", () => {
   })
 
   it("generates the callable swap and collateral surfaces", () => {
+    const accountNames: Array<keyof Program<LiqsolCore>["account"]> = [
+      "outpostConfig",
+      "reserve"
+    ]
     expect(OPP__factory.abi.length).toBeGreaterThan(0)
     expect(
       OPP__factory.createInterface().getFunction("addAttestation")
@@ -82,5 +89,6 @@ describe("source-owned outpost artifacts", () => {
         "commitUnderwrite"
       ])
     )
+    expect(accountNames).toEqual(["outpostConfig", "reserve"])
   })
 })

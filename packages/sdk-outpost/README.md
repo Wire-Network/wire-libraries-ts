@@ -137,6 +137,12 @@ const solana = await OutpostClient.create({
 const liqsol = solana.program(SolanaProgramName.liqsolCore)
 ```
 
+The generated `LiqsolCore` type preserves the IDL's literal account namespace,
+including `Program<LiqsolCore>["account"]["outpostConfig"]` and
+`Program<LiqsolCore>["account"]["reserve"]`. Regenerate from the source artifact
+package; never widen the IDL to the base `Idl` type or edit generated Anchor
+output by hand.
+
 ## Artifact ownership
 
 `@wireio/outpost-ethereum-artifacts` and `@wireio/outpost-solana-artifacts` are

@@ -220,6 +220,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
 - `packages/sdk-core/src/contracts/sysio/uwrit` preserves raw request bytes and exposes `sourceRequestId` for swap correlation. External outpost ids are big-endian; synthetic WIRE queue ids are little-endian and high-bit tagged.
 - `packages/sdk-outpost` owns typed Ethereum/Solana clients and validates caller-supplied immutable deployment profiles. Canonical ABIs and IDLs come from exact packages published by `wire-ethereum` and `wire-solana`; generated clients are ignored build outputs and must not be copied or edited here.
+- `scripts/sdk-outpost/generate.mjs` must preserve literal Solana IDL account names in `LiqsolCore`; widening the generated type to base `Idl` erases precise `Program<LiqsolCore>["account"]` members.
 - `packages/sdk-outpost` owns external reserve-swap instruction assembly,
   allowance handling, source submission, balance reads, and canonical
   `sourceRequestId` extraction. Staking remains outside this package until its
