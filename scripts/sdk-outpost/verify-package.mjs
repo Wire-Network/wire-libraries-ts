@@ -13,10 +13,12 @@ const packageJson = await readJson(path.join(PackagePath, "package.json")),
   ExpectedPublishedFiles = ["lib/cjs", "lib/esm", "README.md"],
   ExpectedExports = [
     "EthereumOutpostClient",
+    "EthereumReserveClient",
     "OutpostArtifactManifests",
     "OutpostClient",
     "OutpostDeploymentVerifier",
     "SolanaOutpostClient",
+    "SolanaReserveClient",
     "assertOutpostArtifactCompatibility",
     "parseOutpostDeploymentProfile"
   ]

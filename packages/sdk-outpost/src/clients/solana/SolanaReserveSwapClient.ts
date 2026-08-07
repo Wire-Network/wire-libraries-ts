@@ -1,4 +1,4 @@
-import { BN, type AnchorProvider, type Program } from "@coral-xyz/anchor"
+import { type AnchorProvider, type Program } from "@coral-xyz/anchor"
 import {
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID
@@ -15,11 +15,11 @@ import { utils as ethersUtils } from "ethers"
 import type { LiqsolCore } from "../../programs/solana/index.js"
 import {
   assertReserveSwapRequest,
-  assertReserveUnsigned64,
   type ReserveSwapRequest,
   type ReserveSwapSubmission,
   type SolanaSplReserveSwapRequest
 } from "../../reserves/index.js"
+import { SolanaReserveAddresses } from "./SolanaReserveAddresses.js"
 
 const ConfirmationCommitment = "confirmed",
   ConfirmationPollIntervalMs = 1_500,
@@ -27,20 +27,19 @@ const ConfirmationCommitment = "confirmed",
     confirmed: "confirmed",
     finalized: "finalized"
   } as const,
-  OutpostConfigSeed = Buffer.from("outpost_config"),
-  ReserveSeed = Buffer.from("reserve"),
-  ReserveVaultSeed = Buffer.from("reserve_vault"),
-  OutboundMessageBufferSeed = Buffer.from("outbound_message_buffer"),
-  Unsigned64ByteLength = 8,
   SwapDepositLog = /opp_outpost: SwapDeposit id=(\d+)\b/
 
 /** Reserve-swap writes and balance reads for one verified Solana outpost. */
 export class SolanaReserveSwapClient {
+  private readonly addresses: SolanaReserveAddresses
+
   /** Create a Solana reserve-swap workflow bound to a verified deployment. */
   constructor(
     private readonly provider: AnchorProvider,
     private readonly program: Program<LiqsolCore>
-  ) {}
+  ) {
+    this.addresses = new SolanaReserveAddresses(program.programId)
+  }
 
   /** Build a native-SOL reserve-swap instruction without signing it. */
   async createNativeInstruction(
@@ -52,11 +51,12 @@ export class SolanaReserveSwapClient {
       .requestSwap(...this.instructionArguments(request))
       .accounts({
         user,
-        config: this.deriveAddress([OutpostConfigSeed]),
-        reserve: this.deriveReserveAddress(ReserveSeed, request),
-        outboundMessageBuffer: this.deriveAddress([
-          OutboundMessageBufferSeed
-        ]),
+        config: this.addresses.outpostConfig(),
+        reserve: this.addresses.reserve({
+          tokenCode: request.sourceTokenCode,
+          reserveCode: request.sourceReserveCode
+        }),
+        outboundMessageBuffer: this.addresses.outboundMessageBuffer(),
         systemProgram: SystemProgram.programId
       })
       .instruction()
@@ -88,14 +88,18 @@ export class SolanaReserveSwapClient {
       .requestSwapSpl(...this.instructionArguments(request))
       .accounts({
         user,
-        config: this.deriveAddress([OutpostConfigSeed]),
-        reserve: this.deriveReserveAddress(ReserveSeed, request),
-        reserveVault: this.deriveReserveAddress(ReserveVaultSeed, request),
+        config: this.addresses.outpostConfig(),
+        reserve: this.addresses.reserve({
+          tokenCode: request.sourceTokenCode,
+          reserveCode: request.sourceReserveCode
+        }),
+        reserveVault: this.addresses.reserveVault({
+          tokenCode: request.sourceTokenCode,
+          reserveCode: request.sourceReserveCode
+        }),
         mint: request.mint,
         userAta: userTokenAccount,
-        outboundMessageBuffer: this.deriveAddress([
-          OutboundMessageBufferSeed
-        ]),
+        outboundMessageBuffer: this.addresses.outboundMessageBuffer(),
         tokenProgram: TOKEN_PROGRAM_ID
       })
       .instruction()
@@ -149,32 +153,6 @@ export class SolanaReserveSwapClient {
     return publicKey
   }
 
-  private deriveAddress(seeds: Buffer[]): PublicKey {
-    return PublicKey.findProgramAddressSync(seeds, this.program.programId)[0]
-  }
-
-  private deriveReserveAddress(
-    seed: Buffer,
-    request: ReserveSwapRequest
-  ): PublicKey {
-    return this.deriveAddress([
-      seed,
-      this.unsigned64Seed(request.sourceTokenCode, "sourceTokenCode"),
-      this.unsigned64Seed(request.sourceReserveCode, "sourceReserveCode")
-    ])
-  }
-
-  private unsigned64Seed(
-    value: ReserveSwapRequest["sourceTokenCode"],
-    field: string
-  ): Buffer {
-    return new BN(assertReserveUnsigned64(value, field).toString()).toArrayLike(
-      Buffer,
-      "le",
-      Unsigned64ByteLength
-    )
-  }
-
   private instructionArguments(request: ReserveSwapRequest) {
     return [
       this.unsigned64(request.sourceTokenCode, "sourceTokenCode"),
@@ -192,8 +170,8 @@ export class SolanaReserveSwapClient {
   private unsigned64(
     value: ReserveSwapRequest["sourceTokenCode"],
     field: string
-  ): BN {
-    return new BN(assertReserveUnsigned64(value, field).toString())
+  ) {
+    return this.addresses.unsigned64(value, field)
   }
 
   private async submit(
