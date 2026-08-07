@@ -161,6 +161,9 @@ describe("SolanaReserveClient", () => {
     await expect(
       client.createInstructions({ ...request, externalTokenAmount: 0 })
     ).rejects.toThrow("externalTokenAmount must be greater than zero.")
+    await expect(
+      client.createInstructions({ ...request, mint: NativeTokenMarker })
+    ).rejects.toThrow("requires a real placeholder SPL mint")
   })
 
   it("rejects a configured SPL reserve route without chain precision", async () => {

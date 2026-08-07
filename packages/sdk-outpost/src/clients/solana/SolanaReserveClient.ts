@@ -31,7 +31,8 @@ import {
 import { SolanaReserveAddresses } from "./SolanaReserveAddresses.js"
 
 const PublicKeyByteLength = 32,
-  NativeSolanaDecimals = 9
+  NativeSolanaDecimals = 9,
+  NativeTokenMarker = new PublicKey(new Uint8Array(PublicKeyByteLength))
 
 type LiqsolCoreAccounts = IdlAccounts<LiqsolCore>
 
@@ -63,14 +64,11 @@ export class SolanaReserveClient {
           entry.tokenCode.toString(),
           entry.decimals
         ])
-      ),
-      nativeTokenMarker = new PublicKey(
-        new Uint8Array(PublicKeyByteLength)
       )
 
     return config.tokenAddressesByCode.map(entry => {
       const tokenCode = entry.tokenCode.toString(),
-        isNative = entry.mint.equals(nativeTokenMarker),
+        isNative = entry.mint.equals(NativeTokenMarker),
         configuredDecimals = precisionByTokenCode.get(tokenCode)
       if (!isNative && configuredDecimals == null) {
         throw new Error(
@@ -97,6 +95,11 @@ export class SolanaReserveClient {
   ): Promise<TransactionInstruction[]> {
     assertReserveCreateDefinition(request)
     assertReserveUnsigned64(request.externalTokenAmount, "externalTokenAmount")
+    if (request.mint.equals(NativeTokenMarker)) {
+      throw new Error(
+        "Native SOL reserve creation requires a real placeholder SPL mint and creator token account; the all-zero native marker is configuration metadata only."
+      )
+    }
     const creator = this.assertWallet(),
       {
         creatorTokenAccount = getAssociatedTokenAddressSync(

@@ -164,6 +164,12 @@ token discovery, instruction assembly, creation, pending cancellation, address
 derivation, and local reserve reads. `cancel` is valid only while creation is
 pending and drives the protocol refund path.
 
+The all-zero mint returned for a configured native SOL route is protocol
+metadata, not an Anchor account. The current `create_reserve` account context
+still requires a real placeholder SPL mint and the creator's token account for
+native SOL creation. Consumers that have not provisioned those accounts should
+select a configured non-native SPL route, as in the example above.
+
 Private is a routing constraint, not access control or confidentiality. Private
 reserves cannot use WIRE as a swap endpoint; when either external route leg is
 private, Wire requires both active reserves to have the same non-empty owner.
