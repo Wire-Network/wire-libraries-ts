@@ -1,6 +1,6 @@
 {
   "name": "@wireio/shared",
-  "version": "1.0.76",
+  "version": "1.0.80",
   "private": false,
   "repository": {
     "type": "git",
@@ -47,8 +47,8 @@
     "typescript": "6.0.2"
   },
   "dependencies": {
-    "@aws-sdk/client-firehose": "3.1080.0",
-    "@aws-sdk/client-sts": "3.1080.0",
+    "@aws-sdk/client-firehose": "3.1102.0",
+    "@aws-sdk/client-sts": "3.1102.0",
     "bluebird": "3.7.2",
     "debug": "^4.3.4",
     "eventemitter3": "^5.0.4",

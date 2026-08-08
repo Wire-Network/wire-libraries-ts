@@ -352,6 +352,11 @@ export enum SysioChalgDisputestatus {
   DISPUTE_STATUS_RESOLVED = 2,
 }
 
+/** sysio.chalg::chalg_state (type) */
+export interface SysioChalgChalgStateType {
+  open_disputes: number
+}
+
 /** sysio.chalg::chkdispute (action) */
 export interface SysioChalgChkdisputeAction {
   dispute_id: number | string
@@ -373,6 +378,9 @@ export interface SysioChalgDisputeEntryType {
   opened_at: string
   deadline: string
   candidates: SysioChalgDisputeCandidateType[]
+  network_gen: number
+  electorate: string[]
+  quorum: number
 }
 
 /** sysio.chalg::dispute_key (type) */
@@ -421,8 +429,254 @@ export interface SysioChalgContract {
     votedispute: SysioChalgVotedisputeAction
   }
   tables: {
+    chalgstate: SysioChalgChalgStateType
     disputes: SysioChalgDisputeEntryType
     disputevote: SysioChalgDisputeVoteType
+  }
+}
+
+// ── sysio.councl ──
+
+/** sysio.councl::cleanup_mode (enum, uint8) */
+export enum SysioCounclCleanupMode {
+  NONE = 0,
+  INIT_ABORT = 1,
+  ACTIVE_ABORT = 2,
+  COMPLETED = 3,
+}
+
+/** sysio.councl::cleanup_stage (enum, uint8) */
+export enum SysioCounclCleanupStage {
+  CANDIDATES = 0,
+  ROSTER = 1,
+  TIER2 = 2,
+  TIER3 = 3,
+  REMAP = 4,
+  COUNCIL = 5,
+  COMPLETE = 6,
+}
+
+/** sysio.councl::election_phase (enum, uint8) */
+export enum SysioCounclElectionPhase {
+  AWAIT_REP = 0,
+  VOTING = 1,
+  BACKSTOP = 2,
+  DONE = 3,
+}
+
+/** sysio.councl::election_tier (enum, uint8) */
+export enum SysioCounclElectionTier {
+  GOVERNANCE = 0,
+  T1 = 1,
+  T2 = 2,
+  T3 = 3,
+}
+
+/** sysio.councl::init_phase (enum, uint8) */
+export enum SysioCounclInitPhase {
+  REG = 0,
+  LOADING = 1,
+  READY = 2,
+  CLEANING = 3,
+}
+
+/** sysio.councl::addcandidate (action) */
+export interface SysioCounclAddcandidateAction {
+  account: string
+  handle: string
+}
+
+/** sysio.councl::cand_key (type) */
+export interface SysioCounclCandKeyType {
+  account: number | string
+}
+
+/** sysio.councl::candidate_row (type) */
+export interface SysioCounclCandidateRowType {
+  account: string
+  handle: string
+  elected: boolean
+}
+
+/** sysio.councl::config_state (type) */
+export interface SysioCounclConfigStateType {
+  init_phase: SysioCounclInitPhase | keyof typeof SysioCounclInitPhase
+  time_slot_sec: number | string
+  network_gen: number
+  election_gen: number | string
+  n2: number
+  n3: number
+  t2_loaded: number
+  t3_loaded: number
+  t2_cursor: number | string
+  t3_cursor: number | string
+  t2_scan_complete: boolean
+  t3_scan_complete: boolean
+  cand_count: number
+  cleanup_mode: SysioCounclCleanupMode | keyof typeof SysioCounclCleanupMode
+  cleanup_stage: SysioCounclCleanupStage | keyof typeof SysioCounclCleanupStage
+  cleanup_seat: number
+}
+
+/** sysio.councl::council_row (type) */
+export interface SysioCounclCouncilRowType {
+  seat: number | string
+  seat_owner: string
+  filled_tier: SysioCounclElectionTier | keyof typeof SysioCounclElectionTier
+  proposer: string
+  member: string
+}
+
+/** sysio.councl::election_state (type) */
+export interface SysioCounclElectionStateType {
+  phase: SysioCounclElectionPhase | keyof typeof SysioCounclElectionPhase
+  active_seat: number
+  tier: SysioCounclElectionTier | keyof typeof SysioCounclElectionTier
+  proposer: string
+  round_id: number | string
+  round_open_ts: string
+  vote_deadline: string
+  elect_N: number
+  eligible_voters: number
+  votes_cast: number
+  tier3_available: number
+  seats_filled: number
+  voted_bitmap: string
+  c1: string
+  c2: string
+  c3: string
+  yes1: number
+  yes2: number
+  yes3: number
+  no1: number
+  no2: number
+  no3: number
+  acc: string
+  stir_count: number | string
+}
+
+/** sysio.councl::finalizeinit (action) */
+export interface SysioCounclFinalizeinitAction {
+}
+
+/** sysio.councl::forceassign (action) */
+export interface SysioCounclForceassignAction {
+  member: string
+}
+
+/** sysio.councl::forceback (action) */
+export interface SysioCounclForcebackAction {
+}
+
+/** sysio.councl::index_key (type) */
+export interface SysioCounclIndexKeyType {
+  idx: number | string
+}
+
+/** sysio.councl::loadtier (action) */
+export interface SysioCounclLoadtierAction {
+  tier: number
+  max_rows: number
+}
+
+/** sysio.councl::purge (action) */
+export interface SysioCounclPurgeAction {
+  max_rows: number
+}
+
+/** sysio.councl::remap_row (type) */
+export interface SysioCounclRemapRowType {
+  virtual_idx: number | string
+  actual_idx: number | string
+}
+
+/** sysio.councl::repcandidate (action) */
+export interface SysioCounclRepcandidateAction {
+  proposer: string
+  c1: string
+  c2: string
+  c3: string
+  expected_round?: number | string | null
+}
+
+/** sysio.councl::reset (action) */
+export interface SysioCounclResetAction {
+}
+
+/** sysio.councl::rmcandidate (action) */
+export interface SysioCounclRmcandidateAction {
+  account: string
+}
+
+/** sysio.councl::roster_row (type) */
+export interface SysioCounclRosterRowType {
+  idx: number | string
+  owner: string
+}
+
+/** sysio.councl::settle (action) */
+export interface SysioCounclSettleAction {
+  caller: string
+}
+
+/** sysio.councl::startinit (action) */
+export interface SysioCounclStartinitAction {
+  time_slot_sec: number | string
+  ordered_owners: string[]
+}
+
+/** sysio.councl::stir (action) */
+export interface SysioCounclStirAction {
+  caller: string
+}
+
+/** sysio.councl::tier2_row (type) */
+export interface SysioCounclTier2RowType {
+  idx: number | string
+  owner: string
+}
+
+/** sysio.councl::tier3_row (type) */
+export interface SysioCounclTier3RowType {
+  idx: number | string
+  owner: string
+}
+
+/** sysio.councl::vote (action) */
+export interface SysioCounclVoteAction {
+  voter: string
+  v1: boolean
+  v2: boolean
+  v3: boolean
+  expected_round?: number | string | null
+}
+
+/** sysio.councl - action + table surface for the typed contract client. */
+export interface SysioCounclContract {
+  actions: {
+    addcandidate: SysioCounclAddcandidateAction
+    finalizeinit: SysioCounclFinalizeinitAction
+    forceassign: SysioCounclForceassignAction
+    forceback: SysioCounclForcebackAction
+    loadtier: SysioCounclLoadtierAction
+    purge: SysioCounclPurgeAction
+    repcandidate: SysioCounclRepcandidateAction
+    reset: SysioCounclResetAction
+    rmcandidate: SysioCounclRmcandidateAction
+    settle: SysioCounclSettleAction
+    startinit: SysioCounclStartinitAction
+    stir: SysioCounclStirAction
+    vote: SysioCounclVoteAction
+  }
+  tables: {
+    candidates: SysioCounclCandidateRowType
+    config: SysioCounclConfigStateType
+    council: SysioCounclCouncilRowType
+    roster: SysioCounclRosterRowType
+    state: SysioCounclElectionStateType
+    tier2: SysioCounclTier2RowType
+    tier3: SysioCounclTier3RowType
+    tier3remap: SysioCounclRemapRowType
   }
 }
 
@@ -2913,6 +3167,11 @@ export interface SysioUwritLockKeyType {
   lock_id: number | string
 }
 
+/** sysio.uwrit::pruneuwreqs (action) */
+export interface SysioUwritPruneuwreqsAction {
+  max_rows: number
+}
+
 /** sysio.uwrit::rcrdcommit (action) */
 export interface SysioUwritRcrdcommitAction {
   uwreq_id: number | string
@@ -2930,6 +3189,8 @@ export interface SysioUwritSetconfigAction {
   collateral_lock_duration_ms: number | string
   min_fromwire_amount: number | string
   fromwire_revert_fee_bps: number
+  uwreq_pending_timeout_epochs: number
+  uwreq_retention_epochs: number
 }
 
 /** sysio.uwrit::slug_name (type) */
@@ -2963,6 +3224,8 @@ export interface SysioUwritUwConfigType {
   collateral_lock_duration_ms: number | string
   min_fromwire_amount: number | string
   fromwire_revert_fee_bps: number
+  uwreq_pending_timeout_epochs: number
+  uwreq_retention_epochs: number
 }
 
 /** sysio.uwrit::uw_counters (type) */
@@ -3002,6 +3265,7 @@ export interface SysioUwritContract {
     chklocks: SysioUwritChklocksAction
     createuwreq: SysioUwritCreateuwreqAction
     drainfwq: SysioUwritDrainfwqAction
+    pruneuwreqs: SysioUwritPruneuwreqsAction
     rcrdcommit: SysioUwritRcrdcommitAction
     setconfig: SysioUwritSetconfigAction
     sumlocks: SysioUwritSumlocksAction
@@ -3078,6 +3342,7 @@ export enum SysioContractName {
   bios = "bios",
   chains = "chains",
   chalg = "chalg",
+  councl = "councl",
   dclaim = "dclaim",
   epoch = "epoch",
   msgch = "msgch",
@@ -3098,6 +3363,7 @@ export const SysioContractAccount: Record<SysioContractName, string> = {
   [SysioContractName.bios]: "sysio",
   [SysioContractName.chains]: "sysio.chains",
   [SysioContractName.chalg]: "sysio.chalg",
+  [SysioContractName.councl]: "sysio.councl",
   [SysioContractName.dclaim]: "sysio.dclaim",
   [SysioContractName.epoch]: "sysio.epoch",
   [SysioContractName.msgch]: "sysio.msgch",
@@ -3118,6 +3384,7 @@ export interface SysioContractMapping {
   [SysioContractName.bios]: SysioBiosContract
   [SysioContractName.chains]: SysioChainsContract
   [SysioContractName.chalg]: SysioChalgContract
+  [SysioContractName.councl]: SysioCounclContract
   [SysioContractName.dclaim]: SysioDclaimContract
   [SysioContractName.epoch]: SysioEpochContract
   [SysioContractName.msgch]: SysioMsgchContract
@@ -3145,7 +3412,8 @@ export const SysioContractDefinitions: {
   [SysioContractName.authex]: { name: SysioContractName.authex, account: "sysio.authex", actions: ["clearlinks", "createlink", "recordlink"], tables: ["links"] },
   [SysioContractName.bios]: { name: SysioContractName.bios, account: "sysio", actions: ["activate", "deleteauth", "linkauth", "newaccount", "reqactivated", "reqauth", "setabi", "setalimits", "setcode", "setfinalizer", "setparams", "setpriv", "setprodkeys", "setprods", "unlinkauth", "updateauth"], tables: ["abihash"] },
   [SysioContractName.chains]: { name: SysioContractName.chains, account: "sysio.chains", actions: ["activchain", "regchain"], tables: ["chains"] },
-  [SysioContractName.chalg]: { name: SysioContractName.chalg, account: "sysio.chalg", actions: ["chkdispute", "opendispute", "slashop", "votedispute"], tables: ["disputes", "disputevote"] },
+  [SysioContractName.chalg]: { name: SysioContractName.chalg, account: "sysio.chalg", actions: ["chkdispute", "opendispute", "slashop", "votedispute"], tables: ["chalgstate", "disputes", "disputevote"] },
+  [SysioContractName.councl]: { name: SysioContractName.councl, account: "sysio.councl", actions: ["addcandidate", "finalizeinit", "forceassign", "forceback", "loadtier", "purge", "repcandidate", "reset", "rmcandidate", "settle", "startinit", "stir", "vote"], tables: ["candidates", "config", "council", "roster", "state", "tier2", "tier3", "tier3remap"] },
   [SysioContractName.dclaim]: { name: SysioContractName.dclaim, account: "sysio.dclaim", actions: ["claim", "flushexpired", "importdone", "importseed", "linkswept", "onreward", "setclmwindow", "setconfig"], tables: ["capcfg", "capcounters", "pclaims", "rwdcursors", "unmapped"] },
   [SysioContractName.epoch]: { name: SysioContractName.epoch, account: "sysio.epoch", actions: ["advance", "pause", "schbatchgps", "setconfig", "unpause"], tables: ["blocklog", "epochcfg", "epochstate"] },
   [SysioContractName.msgch]: { name: SysioContractName.msgch, account: "sysio.msgch", actions: ["bootstrap", "buildenv", "chkcons", "deliver", "evalcons", "queueout", "resolvedisp"], tables: ["attestations", "attseq", "envelopes", "envlog", "messages", "outenvelopes", "outpcons"] },
@@ -3156,6 +3424,6 @@ export const SysioContractDefinitions: {
   [SysioContractName.system]: { name: SysioContractName.system, account: "sysio", actions: ["accrueepoch", "actfinkey", "activate", "addnodeowner", "claimnodedis", "deleteauth", "delfinkey", "delsnapprov", "fundclaim", "getsnaphash", "init", "initt5", "limitauthchg", "linkauth", "newaccount", "onblock", "payepoch", "regfinkey", "regproducer", "regproducer2", "regsnapprov", "rmvproducer", "setabi", "setacctcpu", "setacctnet", "setacctram", "setalimits", "setcode", "setemitcfg", "setinittime", "setparams", "setpriv", "setprodkeys", "setprods", "setram", "setrank", "setsnpcfg", "unlinkauth", "unregprod", "updateauth", "viewemitcfg", "viewepoch", "viewnodedist", "votesnaphash", "wasmcfg", "delpeerkey", "getpeerkeys", "regpeerkey", "addtrxp", "deltrxp"], tables: ["abihash", "blockinfo", "emissionmngr", "emitcfg", "epochlog", "finalizers", "finkeyidgen", "finkeys", "global", "lastpropfins", "nodecount", "nodedist", "producers", "snapconfig", "snapprovs", "snaprecords", "snapvotes", "t5state", "limitauthchg", "peerkeys", "trxpglobal", "trxpriority"] },
   [SysioContractName.token]: { name: SysioContractName.token, account: "sysio.token", actions: ["close", "create", "issue", "open", "retire", "transfer"], tables: ["accounts", "stat"] },
   [SysioContractName.tokens]: { name: SysioContractName.tokens, account: "sysio.tokens", actions: ["activctok", "activtoken", "regctok", "regtoken"], tables: ["chaintokens", "tokens"] },
-  [SysioContractName.uwrit]: { name: SysioContractName.uwrit, account: "sysio.uwrit", actions: ["chklocks", "createuwreq", "drainfwq", "rcrdcommit", "setconfig", "sumlocks", "swapfromwire"], tables: ["fwqueue", "locks", "uwconfig", "uwcounters", "uwreqs"] },
+  [SysioContractName.uwrit]: { name: SysioContractName.uwrit, account: "sysio.uwrit", actions: ["chklocks", "createuwreq", "drainfwq", "pruneuwreqs", "rcrdcommit", "setconfig", "sumlocks", "swapfromwire"], tables: ["fwqueue", "locks", "uwconfig", "uwcounters", "uwreqs"] },
   [SysioContractName.wrap]: { name: SysioContractName.wrap, account: "sysio.wrap", actions: ["exec"], tables: [] },
 }
