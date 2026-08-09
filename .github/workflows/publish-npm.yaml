@@ -17,18 +17,36 @@ concurrency:
 
 jobs:
   release:
-    # Prevent the workflow from running on its own bump commit
+    # Prevent the workflow from running on its own bump commit. The real guard is
+    # the [skip release] tag in the bump commit message (set below), which stops
+    # the re-run the App's push triggers. The actor check names the App for
+    # clarity -- update it if the App is not named `wire-release-bot`.
     if: >
-      github.actor != 'github-actions[bot]' &&
+      github.actor != 'wire-release-bot[bot]' &&
       !contains(github.event.head_commit.message, '[skip release]')
 
     runs-on: ubuntu-latest
 
     steps:
+      - name: Mint the release-bot token
+        id: app-token
+        # A dedicated GitHub App, added to the org ruleset's bypass list in
+        # "Always" mode. Pushing as this App is what lets the bump commit land on
+        # protected master. Needs the secrets RELEASE_BOT_APP_ID and
+        # RELEASE_BOT_PRIVATE_KEY (see the setup notes in the PR description).
+        uses: actions/create-github-app-token@v2 # TODO: pin to a commit SHA
+        with:
+          app-id: ${{ secrets.RELEASE_BOT_APP_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
+          # Persist the App token so the `git push` in the bump step below is
+          # attributed to the App (which the ruleset lets bypass), not the default
+          # GITHUB_TOKEN (which cannot push to protected master).
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
@@ -62,10 +80,16 @@ jobs:
           path: reports/junit/
           if-no-files-found: ignore
 
-      - name: Configure git author
+      - name: Configure git author (release bot)
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Attribute the bump commit to the App. Its verified noreply address is
+          # <bot-user-id>+<app-slug>[bot]@users.noreply.github.com.
+          bot_id="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
+          git config user.name  "${APP_SLUG}[bot]"
+          git config user.email "${bot_id}+${APP_SLUG}[bot]@users.noreply.github.com"
 
       - name: Bump patch versions (workspace)
         run: |
