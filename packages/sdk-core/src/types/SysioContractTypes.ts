@@ -3247,6 +3247,7 @@ export interface SysioUwritUwRequestTType {
   dst_token_code: SysioUwritSlugNameType
   dst_reserve_code: SysioUwritSlugNameType
   dst_amount: number | string
+  target_amount: number | string
   variance_tolerance_bps: number
   source_tx_id: string
   depositor: string
@@ -3427,3 +3428,4 @@ export const SysioContractDefinitions: {
   [SysioContractName.uwrit]: { name: SysioContractName.uwrit, account: "sysio.uwrit", actions: ["chklocks", "createuwreq", "drainfwq", "pruneuwreqs", "rcrdcommit", "setconfig", "sumlocks", "swapfromwire"], tables: ["fwqueue", "locks", "uwconfig", "uwcounters", "uwreqs"] },
   [SysioContractName.wrap]: { name: SysioContractName.wrap, account: "sysio.wrap", actions: ["exec"], tables: [] },
 }
+
