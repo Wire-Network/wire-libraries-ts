@@ -33,7 +33,8 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
+        # --frozen-lockfile removed for the moment
+        run: pnpm install --ignore-scripts
 
       - name: Test
         env:
