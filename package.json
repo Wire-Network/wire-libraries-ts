@@ -40,5 +40,12 @@
   },
   "dependencies": {
     "@wireio/opp-typescript-models": "^1.0.26"
+  },
+  "resolutions": {
+    "@aws-sdk/client-firehose": "3.1102.0",
+    "@aws-sdk/client-kms": "3.1102.0",
+    "@aws-sdk/client-sns": "3.1102.0",
+    "@aws-sdk/client-ssm": "3.1102.0",
+    "@aws-sdk/client-sts": "3.1102.0"
   }
 }

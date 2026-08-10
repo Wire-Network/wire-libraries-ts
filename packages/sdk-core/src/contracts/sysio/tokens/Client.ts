@@ -5,7 +5,11 @@ import {
 } from "../../../types/SysioContractTypes.js"
 import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 import { getSysioContract, type SysioContractClient } from "../Client.js"
-import { reserveSlugString, reserveSlugValue } from "../reserv/Slug.js"
+import {
+  reserveRowSlugValue,
+  reserveSlugString,
+  reserveSlugValue
+} from "../reserv/Slug.js"
 
 import {
   DEFAULT_TOKENS_CONTRACT,
@@ -19,10 +23,6 @@ import type {
   TokenRecord,
   TokenRegistryClientOptions
 } from "./Types.js"
-
-interface SlugValue {
-  value: number | string
-}
 
 function bigintValue(value: number | string): bigint {
   return BigInt(value.toString())
@@ -40,15 +40,11 @@ function enumValue<T extends Record<string, string | number>>(
   return Number(mapped)
 }
 
-function slugValue(value: SlugValue): number {
-  return reserveSlugValue(value.value)
-}
-
 /** Normalizes a generated `sysio.tokens::tokens` row. */
 export function normalizeTokenRow(
   row: SysioContracts.SysioTokensTokenRowType
 ): TokenRecord {
-  const codeValue = slugValue(row.code)
+  const codeValue = reserveRowSlugValue(row.code)
 
   return {
     code: reserveSlugString(codeValue),
@@ -73,8 +69,8 @@ export function normalizeTokenRow(
 export function normalizeChainTokenRow(
   row: SysioContracts.SysioTokensChainTokenRowType
 ): ChainTokenRecord {
-  const chainCodeValue = slugValue(row.chain_code),
-    tokenCodeValue = slugValue(row.token_code)
+  const chainCodeValue = reserveRowSlugValue(row.chain_code),
+    tokenCodeValue = reserveRowSlugValue(row.token_code)
 
   return {
     chainCode: reserveSlugString(chainCodeValue),

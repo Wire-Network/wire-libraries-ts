@@ -8,7 +8,11 @@ import {
 } from "../../../types/SysioContractTypes.js"
 import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 import { getSysioContract, type SysioContractClient } from "../Client.js"
-import { reserveSlugString, reserveSlugValue } from "../reserv/Slug.js"
+import {
+  reserveRowSlugValue,
+  reserveSlugString,
+  reserveSlugValue
+} from "../reserv/Slug.js"
 
 import { swapFromWireActionData } from "./Actions.js"
 import {
@@ -26,14 +30,10 @@ import type {
   UnderwritingRequestRecord
 } from "./Types.js"
 
-interface SlugValue {
-  value: number | string
-}
-
 interface ReserveIdentitySlugs {
-  chain: SlugValue
-  token: SlugValue
-  reserve: SlugValue
+  chain: SysioContracts.SysioUwritSlugNameType
+  token: SysioContracts.SysioUwritSlugNameType
+  reserve: SysioContracts.SysioUwritSlugNameType
 }
 
 function bigintValue(value: number | string): bigint {
@@ -52,19 +52,50 @@ function enumValue<T extends Record<string, string | number>>(
   return Number(mapped)
 }
 
-function slugValue(value: SlugValue): number {
-  return reserveSlugValue(value.value)
-}
-
 function identity(
   chain: ReserveIdentitySlugs["chain"],
   token: ReserveIdentitySlugs["token"],
   reserve: ReserveIdentitySlugs["reserve"]
 ) {
   return {
-    chainCode: reserveSlugString(slugValue(chain)),
-    tokenCode: reserveSlugString(slugValue(token)),
-    reserveCode: reserveSlugString(slugValue(reserve))
+    chainCode: reserveSlugString(reserveRowSlugValue(chain)),
+    tokenCode: reserveSlugString(reserveRowSlugValue(token)),
+    reserveCode: reserveSlugString(reserveRowSlugValue(reserve))
+  }
+}
+
+function hexBytes(value: string): number[] {
+  const normalized = String(value || "")
+    .trim()
+    .replace(/^0x/i, "")
+  if (
+    !normalized ||
+    normalized.length % 2 !== 0 ||
+    !/^[0-9a-f]+$/i.test(normalized)
+  ) {
+    return []
+  }
+  const pairs = normalized.match(/.{2}/g)
+  return pairs ? pairs.map(pair => Number.parseInt(pair, 16)) : []
+}
+
+function sourceRequestId(
+  value: string,
+  wireOrigin: boolean
+): bigint | undefined {
+  const bytes = hexBytes(value)
+  if (bytes.length !== 8) return undefined
+  const ordered = wireOrigin ? [...bytes].reverse() : bytes
+  return ordered.reduce((result, byte) => (result << 8n) | BigInt(byte), 0n)
+}
+
+function wireDepositorAccount(value: string): string | undefined {
+  const bytes = hexBytes(value)
+  if (!bytes.length) return undefined
+  try {
+    return Name.from(String.fromCharCode(...bytes)).toString()
+  } catch {
+    return undefined
   }
 }
 
@@ -88,6 +119,13 @@ function normalizeCommit(
 export function normalizeUnderwritingRequest(
   row: SysioContracts.SysioUwritUwRequestTType
 ): UnderwritingRequestRecord {
+  const source = identity(
+      row.src_chain_code,
+      row.src_token_code,
+      row.src_reserve_code
+    ),
+    wireOrigin = source.chainCode === "WIRE"
+
   return {
     id: bigintValue(row.id),
     type: enumValue(
@@ -98,11 +136,7 @@ export function normalizeUnderwritingRequest(
       SysioUwritUnderwriterequeststatus,
       row.status
     ) as SysioUwritUnderwriterequeststatus,
-    source: identity(
-      row.src_chain_code,
-      row.src_token_code,
-      row.src_reserve_code
-    ),
+    source,
     sourceAmount: bigintValue(row.src_amount),
     destination: identity(
       row.dst_chain_code,
@@ -112,7 +146,11 @@ export function normalizeUnderwritingRequest(
     destinationAmount: bigintValue(row.dst_amount),
     toleranceBps: row.variance_tolerance_bps,
     sourceTransactionId: row.source_tx_id,
+    sourceRequestId: sourceRequestId(row.source_tx_id, wireOrigin),
     depositor: row.depositor,
+    depositorAccount: wireOrigin
+      ? wireDepositorAccount(row.depositor)
+      : undefined,
     commits: row.commits_by.map(normalizeCommit),
     winner: row.winner,
     settledAtMs: bigintValue(row.settled_at_ms),
