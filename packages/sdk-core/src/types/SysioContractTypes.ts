@@ -3320,6 +3320,7 @@ export interface SysioUwritUwRequestTType {
   dst_token_code: SysioUwritSlugNameType
   dst_reserve_code: SysioUwritSlugNameType
   dst_amount: number | string
+  target_amount: number | string
   variance_tolerance_bps: number
   source_tx_id: string
   depositor: string
