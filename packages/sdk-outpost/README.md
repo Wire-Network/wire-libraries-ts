@@ -8,13 +8,21 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-Available on npm: <https://www.npmjs.com/package/@wireio/sdk-outpost>
+Publication status as of August 10, 2026: the first npm release is pending.
+`@wireio/sdk-outpost@0.0.0` is a workspace development version, and the exact
+Ethereum and Solana producer artifact packages are also unpublished. Sibling
+checkouts may be used for local integration testing, but they are not release
+evidence.
 
-## Install
+## Install after the first release
 
 ```sh
 npm install @wireio/sdk-outpost
 ```
+
+Before using the registry command, verify that both producer artifact versions
+and `@wireio/sdk-outpost` resolve through `npm view`. Do not replace that check
+with a committed machine-local link or a weakened frozen install.
 
 Node.js 22 or newer is supported. The package publishes CommonJS and native ES
 module entrypoints with TypeScript declarations.

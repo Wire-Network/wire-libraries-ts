@@ -36,7 +36,7 @@ pnpm workspaces with TypeScript composite project references. No Lerna/Nx.
 | `@wireio/shared-web` | Web-specific utilities | No | ESM |
 | `@wireio/shared-node` | Node.js utilities | Yes | Hybrid ESM+CJS |
 | `@wireio/sdk-core` | Wire blockchain SDK types/primitives | Yes | Hybrid ESM+CJS |
-| `@wireio/sdk-outpost` | Typed, verified external-chain outpost clients | Yes | Hybrid ESM+CJS |
+| `@wireio/sdk-outpost` | Typed, verified external-chain outpost clients | No — first release pending | Hybrid ESM+CJS |
 | `@wireio/wallet-ext-sdk` | Wallet extension client SDK | Yes | ESM |
 | `@wireio/wallet-browser-ext` | Chrome extension developer wallet | No | Webpack bundle |
 
@@ -219,7 +219,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - System-contract `prepare` prefers synchronous ABI encoding but must retain a typed `AnyAction` fallback so `APIClient` can resolve the deployed ABI. Never invent a default write authorization in the public SDK.
 - `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
 - `packages/sdk-core/src/contracts/sysio/uwrit` preserves raw request bytes and exposes `sourceRequestId` for swap correlation. External outpost ids are big-endian; synthetic WIRE queue ids are little-endian and high-bit tagged.
-- `packages/sdk-outpost` owns typed Ethereum/Solana clients and validates caller-supplied immutable deployment profiles. Canonical ABIs and IDLs come from exact packages published by `wire-ethereum` and `wire-solana`; generated clients are ignored build outputs and must not be copied or edited here.
+- `packages/sdk-outpost` owns typed Ethereum/Solana clients and validates caller-supplied immutable deployment profiles. Canonical ABIs and IDLs come from exact producer packages owned by `wire-ethereum` and `wire-solana`; until their first publication, local sibling artifacts are testing inputs only. Generated clients are ignored build outputs and must not be copied or edited here.
 - `scripts/sdk-outpost/generate.mjs` must preserve literal Solana IDL account names in `LiqsolCore`; widening the generated type to base `Idl` erases precise `Program<LiqsolCore>["account"]` members.
 - `packages/sdk-outpost` owns external reserve-swap instruction assembly,
   allowance handling, source submission, balance reads, and canonical
@@ -228,6 +228,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - `sdk-outpost` accepts caller-owned providers and deployment profiles, verifies exact Ethereum implementations and Solana ProgramData, and never owns mutable endpoint catalogs. A same-code cluster respin requires a new profile, not an artifact or SDK release.
 - A connected outpost client proves deployment compatibility, not swap or stake readiness. Wire-chain orchestration remains in `sdk-core`, and consumers must retain flow-specific capability gates.
 - Publish `sdk-outpost` only through the repository release workflow, with `prepack` and release verification passing.
+- Do not describe `sdk-outpost` as npm-available until `npm view` succeeds for both exact producer artifact versions and `@wireio/sdk-outpost`, and a clean frozen install passes without sibling links.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
 - Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch
 - Node >=22 required (package.json says >=22, README says >=24 — actual CI uses v24)

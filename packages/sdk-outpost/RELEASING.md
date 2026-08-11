@@ -4,6 +4,14 @@
 `@wireio/sdk-core`. Do not manually change its version or publish a workspace
 directory outside this process.
 
+## Current first-release state
+
+As of August 10, 2026, neither exact producer artifact package nor
+`@wireio/sdk-outpost` is listed on npm. The producer branches may be tested as
+siblings, but the SDK lockfile and frozen-install gate must remain blocked until
+the real registry packages exist. Do not generate lockfile entries from local
+paths or advertise the package as installable before the registry checks pass.
+
 ## Artifact prerequisites
 
 The package consumes exact build-time versions of:
