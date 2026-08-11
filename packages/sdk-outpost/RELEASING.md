@@ -21,10 +21,11 @@ The package consumes exact build-time versions of:
 
 Publish a new producer package when its ABI/IDL or deployable contract/program
 binary changes. Publish `sdk-outpost` when its public behavior changes or a new
-ABI/IDL must be compiled into generated clients. A same-code deployment respin,
-address change, or endpoint rotation does not require either package to be
-republished; emit a new immutable deployment profile for a respin and update the
-separate endpoint catalog for mutable endpoints.
+ABI, IDL, normalized Ethereum runtime, or Solana program binary must be compiled
+into deployment verification. A same-code deployment respin, address change, or
+endpoint rotation does not require either package to be republished; emit a new
+immutable deployment profile for a respin and update the separate endpoint
+catalog for mutable endpoints.
 
 Before updating either dependency, verify its npm provenance, source revision,
 artifact checksums, and immutable version. Keep both versions exact in
@@ -39,6 +40,9 @@ pnpm-compatible install.
   generated TypeChain, Anchor, or artifact-manifest sources by hand.
 - Confirm the package contains no secrets, RPC credentials, private keys,
   deployment addresses, or mutable environment configuration.
+- Confirm deployment profiles are distributed through the authenticated
+  platform release channel; their schema and checksum-derived IDs are not
+  signatures.
 - Keep `repository.url` exactly equal to
   `https://github.com/Wire-Network/wire-libraries-ts` for npm provenance.
 

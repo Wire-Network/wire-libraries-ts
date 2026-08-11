@@ -1,4 +1,5 @@
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js"
+import { utils as ethersUtils } from "ethers"
 
 import {
   type ReserveSwapRequest,
@@ -16,6 +17,7 @@ import {
 
 const WrongProgramDataAddress = "SysvarRent111111111111111111111111111111111"
 const SubmittedSignature = "3".repeat(64)
+const SolanaProgramDataMetadataByteLength = 45
 
 const reserveSwapRequest: ReserveSwapRequest = {
   sourceTokenCode: 1,
@@ -226,5 +228,39 @@ describe("SolanaOutpostClient", () => {
     await expect(
       SolanaOutpostClient.create({ profile, provider })
     ).rejects.toThrow("ProgramData mismatch")
+  })
+
+  it("rejects ProgramData executable bytes from another producer binary", async () => {
+    const profile = createOutpostDeploymentProfileFixture(),
+      program = profile.solana.programs[SolanaProgramName.liqsolCore],
+      incompatibleProgramData = createSolanaProgramDataAccountData()
+    incompatibleProgramData[SolanaProgramDataMetadataByteLength] ^= 1
+    program.programDataSha256 = ethersUtils
+      .sha256(incompatibleProgramData)
+      .slice(2)
+    const provider = createSolanaProviderFixture(profile)
+    jest
+      .spyOn(provider.connection, "getAccountInfo")
+      .mockImplementation(async address =>
+        address.equals(new PublicKey(program.address))
+          ? {
+              data: createSolanaProgramAccountData(program.programDataAddress),
+              executable: true,
+              lamports: 1,
+              owner: SolanaUpgradeableLoaderProgramId,
+              rentEpoch: 0
+            }
+          : {
+              data: incompatibleProgramData,
+              executable: false,
+              lamports: 1,
+              owner: SolanaUpgradeableLoaderProgramId,
+              rentEpoch: 0
+            }
+      )
+
+    await expect(
+      SolanaOutpostClient.create({ profile, provider })
+    ).rejects.toThrow("artifact program mismatch")
   })
 })

@@ -4,7 +4,11 @@ import type { BytesLike, providers } from "ethers"
 import { utils as ethersUtils } from "ethers"
 import { match } from "ts-pattern"
 
-import { assertOutpostArtifactCompatibility } from "../artifacts/index.js"
+import {
+  assertEthereumRuntimeArtifactCompatibility,
+  assertOutpostArtifactCompatibility,
+  assertSolanaProgramArtifactCompatibility
+} from "../artifacts/index.js"
 import {
   EthereumContractName,
   OutpostChainFamily,
@@ -112,6 +116,10 @@ async function verifyEthereum(
           `Ethereum ${contractName} implementation code mismatch: expected ${contract.implementationCodeSha256}, received ${implementationCodeSha256}`
         )
       }
+      assertEthereumRuntimeArtifactCompatibility(
+        contractName,
+        implementationCode
+      )
     })
   )
 }
@@ -203,6 +211,10 @@ async function verifySolana(
           `Solana ${programName} ProgramData mismatch: expected ${program.programDataSha256}, received ${programDataSha256}`
         )
       }
+      assertSolanaProgramArtifactCompatibility(
+        programName,
+        programDataAccount.data
+      )
     })
   )
 }

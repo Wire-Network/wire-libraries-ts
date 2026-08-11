@@ -40,9 +40,10 @@ Client creation verifies all four boundaries before returning:
   SDK release;
 - the provider is connected to the expected external chain;
 - every Ethereum proxy resolves through its EIP-1967 implementation slot to the
-  configured implementation address and exact implementation code hash;
+  configured implementation address, exact implementation code hash, and the
+  producer package's normalized runtime template;
 - every Solana program resolves through the upgradeable loader to the configured
-  ProgramData account and exact ProgramData hash.
+  ProgramData account, exact ProgramData hash, and producer program binary.
 
 These checks prove deployment compatibility, not end-to-end feature readiness.
 Applications must still gate swaps, staking, settlement, retry, funding, and
@@ -54,6 +55,11 @@ The SDK does not contain a mutable network or endpoint catalog. Resolve the
 selected Wire network group in the application, load its immutable deployment
 profile from the platform release/deployment pipeline, and validate that
 untrusted input with `parseOutpostDeploymentProfile`.
+
+Schema validation and the checksum-derived profile ID do not authenticate a
+profile. Load profiles only through the platform's authenticated release
+channel; deployment-profile signing and distribution remain release-pipeline
+responsibilities rather than SDK-owned mutable network data.
 
 A deployment profile carries:
 
@@ -72,7 +78,7 @@ new profile without requiring a producer-artifact or SDK release.
 | Change                                                  | Producer artifact release | `sdk-outpost` release | Deployment profile                        |
 | ------------------------------------------------------- | ------------------------- | --------------------- | ----------------------------------------- |
 | Same-code chain respin                                  | No                        | No                    | New                                       |
-| Contract/program binary change with unchanged ABI/IDL   | Yes                       | No                    | New                                       |
+| Contract/program binary change with unchanged ABI/IDL   | Yes                       | Yes                   | New                                       |
 | ABI or IDL change                                       | Yes                       | Yes                   | New                                       |
 | Asset/reserve onboarding without code/interface changes | No                        | No                    | Update operational configuration/evidence |
 | RPC or explorer rotation                                | No                        | No                    | Update endpoint catalog only              |
@@ -154,11 +160,12 @@ output by hand.
 ## Artifact ownership
 
 `@wireio/outpost-ethereum-artifacts` and `@wireio/outpost-solana-artifacts` are
-build-time inputs. Their exact manifests are compiled into
-`OutpostArtifactManifests` for interface compatibility and readiness reporting.
-Generated TypeChain and Anchor sources are ignored local build outputs; they are
-compiled into the published package and are never maintained by hand in this
-repository.
+build-time inputs. Generation verifies every packaged ABI, IDL, normalized
+runtime template, and program binary before compiling exact manifests into
+`OutpostArtifactManifests`. Runtime verification then binds live executable
+bytes to those producer artifacts. Generated TypeChain and Anchor sources are
+ignored local build outputs; they are compiled into the published package and
+are never maintained by hand in this repository.
 
 ## Consumer boundaries
 

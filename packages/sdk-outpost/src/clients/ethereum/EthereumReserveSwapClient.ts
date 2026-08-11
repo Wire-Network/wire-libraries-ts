@@ -81,13 +81,14 @@ export class EthereumReserveSwapClient {
       token = new Contract(tokenAddress, Erc20Interface, signer),
       allowance = await token.allowance(owner, this.reserveManager.address)
 
-    if (allowance.lt(request.sourceAmount)) {
-      const approval = await token.approve(
-        this.reserveManager.address,
-        request.sourceAmount
-      )
+    await EthereumReserveSwapClient.approvalAmounts(
+      allowance,
+      request.sourceAmount
+    ).reduce<Promise<void>>(async (previousApproval, amount) => {
+      await previousApproval
+      const approval = await token.approve(this.reserveManager.address, amount)
       await approval.wait(ConfirmationCount)
-    }
+    }, Promise.resolve())
 
     const arguments_ = this.swapArguments(request)
     await this.reserveManager.callStatic.requestSwapErc20WithApproval(
@@ -174,6 +175,17 @@ export class EthereumReserveSwapClient {
       .mul(BasisPointDenominator + SubmissionGasHeadroomBps)
       .add(BasisPointDenominator - 1)
       .div(BasisPointDenominator)
+  }
+
+  /** Return the safe approval sequence for zero-first ERC-20 implementations. */
+  static approvalAmounts(
+    currentAllowance: BigNumberish,
+    requiredAllowance: BigNumberish
+  ): readonly BigNumber[] {
+    const current = BigNumber.from(currentAllowance),
+      required = BigNumber.from(requiredAllowance)
+    if (current.gte(required)) return []
+    return current.isZero() ? [required] : [BigNumber.from(0), required]
   }
 
   /** Parse the canonical deposit id emitted by `requestSwap*`. */

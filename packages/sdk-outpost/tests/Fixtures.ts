@@ -1,5 +1,7 @@
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor"
 import { Connection, Keypair, PublicKey } from "@solana/web3.js"
+import { readFileSync } from "node:fs"
+import { createRequire } from "node:module"
 import { providers, utils as ethersUtils } from "ethers"
 
 import {
@@ -13,9 +15,6 @@ import {
 
 const TestHash = "a".repeat(64),
   TestWireChainId = "c".repeat(64),
-  TestEthereumProxyAddress = "0x5c74c94173F05dA1720953407cbb920F3DF9f887",
-  TestEthereumImplementationAddress =
-    "0x7412BC256355ABD22dD53De3a38E8995b5d4c1D1",
   TestSolanaGenesisHash = "5nBtmutQLrRKBUxNfHJPDjiW5u8id6QM9Hhjg1D1g1XH",
   TestSolanaProgramAddress = "4vJ9JU1bJJE96FWSJKvHsmmFADCg4gpZQff4P3bkLKi",
   TestSolanaProgramDataAddress = "8qbHbw2BbbTHBW1sbeqakYXVKRQM8Ne7pLK7m6CVfeR",
@@ -24,12 +23,47 @@ const TestHash = "a".repeat(64),
   SolanaPublicKeyByteLength = 32,
   ProgramAccountDataByteLength =
     UpgradeableLoaderStateTagByteLength + SolanaPublicKeyByteLength,
-  ProgramDataAccountDataByteLength = 8,
+  SolanaProgramDataMetadataByteLength = 45,
+  SolanaProgramDataPaddingByteLength = 16,
   ProgramStateTag = 2,
-  ProgramDataStateTag = 3
+  ProgramDataStateTag = 3,
+  TestEthereumProxyAddressBase = 100,
+  TestEthereumImplementationAddressBase = 200,
+  TestEthereumProxyCode = "0x01",
+  PackageRequire = createRequire(__filename),
+  SolanaProgramArtifact =
+    OutpostArtifactManifests.solana.programs[SolanaProgramName.liqsolCore],
+  SolanaProgramBinary = readFileSync(
+    PackageRequire.resolve(
+      `${OutpostArtifactManifests.solana.package.name}/${SolanaProgramArtifact.programBinaryPath}`
+    )
+  )
 
-/** Runtime bytecode returned by the Ethereum provider fixture. */
-export const TestEthereumImplementationCode = "0x01"
+/** Create one deterministic Ethereum address for a fixture index. */
+function createEthereumAddress(index: number): string {
+  return ethersUtils.getAddress(
+    ethersUtils.hexZeroPad(ethersUtils.hexlify(index), 20)
+  )
+}
+
+/** Create linked live implementation code from one producer runtime template. */
+export function createEthereumImplementationCode(
+  contractName: EthereumContractName
+): string {
+  const artifact = OutpostArtifactManifests.ethereum.contracts[contractName],
+    runtimeCode = Buffer.from(
+      readFileSync(
+        PackageRequire.resolve(
+          `${OutpostArtifactManifests.ethereum.package.name}/${artifact.runtimeBytecodePath}`
+        )
+      )
+    )
+
+  artifact.runtimeLinkReferences.forEach(({ start, length }) =>
+    runtimeCode.fill(1, start, start + length)
+  )
+  return ethersUtils.hexlify(runtimeCode)
+}
 
 /** Encode the upgradeable-loader Program account for one ProgramData address. */
 export function createSolanaProgramAccountData(
@@ -45,24 +79,31 @@ export function createSolanaProgramAccountData(
 
 /** Encode deterministic upgradeable-loader ProgramData account contents. */
 export function createSolanaProgramDataAccountData(): Buffer {
-  const data = Buffer.alloc(ProgramDataAccountDataByteLength)
+  const data = Buffer.alloc(
+    SolanaProgramDataMetadataByteLength +
+      SolanaProgramBinary.length +
+      SolanaProgramDataPaddingByteLength
+  )
   data.writeUInt32LE(ProgramDataStateTag, 0)
-  data.writeUInt32LE(1, UpgradeableLoaderStateTagByteLength)
+  data.writeBigUInt64LE(1n, UpgradeableLoaderStateTagByteLength)
+  SolanaProgramBinary.copy(data, SolanaProgramDataMetadataByteLength)
   return data
 }
 
 /** Create a valid profile aligned with the SDK's source-owned artifacts. */
 export function createOutpostDeploymentProfileFixture(): OutpostDeploymentProfile {
   const ethereumContracts = Object.fromEntries(
-      Object.values(EthereumContractName).map(contractName => [
+      Object.values(EthereumContractName).map((contractName, index) => [
         contractName,
         {
-          address: TestEthereumProxyAddress,
-          implementationAddress: TestEthereumImplementationAddress,
+          address: createEthereumAddress(TestEthereumProxyAddressBase + index),
+          implementationAddress: createEthereumAddress(
+            TestEthereumImplementationAddressBase + index
+          ),
           abiSha256:
             OutpostArtifactManifests.ethereum.contracts[contractName].abiSha256,
           implementationCodeSha256: ethersUtils
-            .sha256(TestEthereumImplementationCode)
+            .sha256(createEthereumImplementationCode(contractName))
             .slice(2)
         }
       ])
@@ -105,9 +146,21 @@ export function createEthereumProviderFixture(
     chainId: profile.ethereum.chainId,
     name: "wire-outpost"
   })
-  jest
-    .spyOn(provider, "getCode")
-    .mockResolvedValue(TestEthereumImplementationCode)
+  jest.spyOn(provider, "getCode").mockImplementation(async address => {
+    const implementation = Object.entries(profile.ethereum.contracts).find(
+      ([, deployment]) => deployment.implementationAddress === address
+    )
+    if (implementation != null) {
+      return createEthereumImplementationCode(
+        implementation[0] as EthereumContractName
+      )
+    }
+    return Object.values(profile.ethereum.contracts).some(
+      deployment => deployment.address === address
+    )
+      ? TestEthereumProxyCode
+      : "0x"
+  })
   jest.spyOn(provider, "getStorageAt").mockImplementation(async address => {
     const contract = Object.values(profile.ethereum.contracts).find(
       deployment => deployment.address === address

@@ -7,6 +7,7 @@ import {
   type ReserveSwapRequest
 } from "@wireio/sdk-outpost"
 import {
+  createEthereumImplementationCode,
   createEthereumProviderFixture,
   createOutpostDeploymentProfileFixture
 } from "../../Fixtures.js"
@@ -70,6 +71,20 @@ describe("EthereumOutpostClient", () => {
     expect(EthereumReserveSwapClient.addSubmissionGasHeadroom(1)).toEqual(
       BigNumber.from(2)
     )
+  })
+
+  it("resets nonzero ERC-20 allowances before increasing them", () => {
+    expect(
+      EthereumReserveSwapClient.approvalAmounts(2, 3).map(amount =>
+        amount.toNumber()
+      )
+    ).toEqual([0, 3])
+    expect(
+      EthereumReserveSwapClient.approvalAmounts(0, 3).map(amount =>
+        amount.toNumber()
+      )
+    ).toEqual([3])
+    expect(EthereumReserveSwapClient.approvalAmounts(3, 3)).toEqual([])
   })
 
   it("verifies a profile and returns a generated contract type", async () => {
@@ -147,5 +162,28 @@ describe("EthereumOutpostClient", () => {
     await expect(
       EthereumOutpostClient.create({ profile, connection: provider })
     ).rejects.toThrow("implementation code mismatch")
+  })
+
+  it("rejects live code from another producer runtime", async () => {
+    const profile = createOutpostDeploymentProfileFixture(),
+      contract = profile.ethereum.contracts[EthereumContractName.OPP],
+      incompatibleCodeBytes = ethersUtils.arrayify(
+        createEthereumImplementationCode(EthereumContractName.OPP)
+      )
+    incompatibleCodeBytes[0] ^= 1
+    const incompatibleCode = ethersUtils.hexlify(incompatibleCodeBytes),
+      incompatibleCodeSha256 = ethersUtils.sha256(incompatibleCode).slice(2)
+    contract.implementationCodeSha256 = incompatibleCodeSha256
+    const provider = createEthereumProviderFixture(profile),
+      getCode = (provider.getCode as jest.Mock).getMockImplementation()
+    jest.spyOn(provider, "getCode").mockImplementation(async address =>
+      address === contract.implementationAddress
+        ? incompatibleCode
+        : getCode(address)
+    )
+
+    await expect(
+      EthereumOutpostClient.create({ profile, connection: provider })
+    ).rejects.toThrow("artifact runtime")
   })
 })

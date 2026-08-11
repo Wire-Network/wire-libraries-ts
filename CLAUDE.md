@@ -225,7 +225,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
   allowance handling, source submission, balance reads, and canonical
   `sourceRequestId` extraction. Staking remains outside this package until its
   dedicated migration.
-- `sdk-outpost` accepts caller-owned providers and deployment profiles, verifies exact Ethereum implementations and Solana ProgramData, and never owns mutable endpoint catalogs. A same-code cluster respin requires a new profile, not an artifact or SDK release.
+- `sdk-outpost` accepts caller-owned providers and deployment profiles, verifies exact Ethereum implementations and Solana ProgramData against source-owned runtime artifacts, and never owns mutable endpoint catalogs. A same-code cluster respin requires a new profile, not an artifact or SDK release; any deployable binary change requires both a producer artifact and SDK release.
 - A connected outpost client proves deployment compatibility, not swap or stake readiness. Wire-chain orchestration remains in `sdk-core`, and consumers must retain flow-specific capability gates.
 - Publish `sdk-outpost` only through the repository release workflow, with `prepack` and release verification passing.
 - Do not describe `sdk-outpost` as npm-available until `npm view` succeeds for both exact producer artifact versions and `@wireio/sdk-outpost`, and a clean frozen install passes without sibling links.
