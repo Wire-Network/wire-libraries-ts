@@ -1553,6 +1553,7 @@ export interface SysioOpregReleaselockAction {
 export interface SysioOpregRemitClaimType {
   account: string
   balance: number | string
+  expires_at_sec: number
 }
 
 /** sysio.opreg::remitclaim_key (type) */
@@ -1700,6 +1701,7 @@ export interface SysioReservApplyfromwireAction {
   dst_reserve_code: SysioReservSlugNameType
   wire_in: number | string
   dst_amount: number | string
+  underwriter: string
 }
 
 /** sysio.reserv::applyswap (action) */
@@ -1712,6 +1714,19 @@ export interface SysioReservApplyswapAction {
   dst_token_code: SysioReservSlugNameType
   dst_reserve_code: SysioReservSlugNameType
   dst_amount: number | string
+  underwriter: string
+}
+
+/** sysio.reserv::claimrsvfee (action) */
+export interface SysioReservClaimrsvfeeAction {
+  chain_code: SysioReservSlugNameType
+  token_code: SysioReservSlugNameType
+  reserve_code: SysioReservSlugNameType
+}
+
+/** sysio.reserv::claimuwfee (action) */
+export interface SysioReservClaimuwfeeAction {
+  underwriter: string
 }
 
 /** sysio.reserv::claimwire (action) */
@@ -1775,6 +1790,7 @@ export interface SysioReservPaywireAction {
   src_amount: number | string
   recipient: string
   wire_out: number | string
+  underwriter: string
 }
 
 /** sysio.reserv::refundwire (action) */
@@ -1797,6 +1813,11 @@ export interface SysioReservRegreserveAction {
   connector_weight_bps: number
   is_private: boolean
   owner: string
+}
+
+/** sysio.reserv::reserve_config (type) */
+export interface SysioReservReserveConfigType {
+  fee_emissions_share_bps: number
 }
 
 /** sysio.reserv::reserve_key (type) */
@@ -1827,6 +1848,9 @@ export interface SysioReservReserveRowType {
   is_private: boolean
   owner: string
   creator_pub_key: string
+  owner_fee_bps: number
+  owner_fee_accrued: number | string
+  owner_fee_lifetime: number | string
 }
 
 /** sysio.reserv::rewardbal (action) */
@@ -1837,6 +1861,26 @@ export interface SysioReservRewardbalAction {
 export interface SysioReservRewardsBucketType {
   balance: number | string
   lifetime_accrued: number | string
+}
+
+/** sysio.reserv::rsvfeebal (action) */
+export interface SysioReservRsvfeebalAction {
+  chain_code: SysioReservSlugNameType
+  token_code: SysioReservSlugNameType
+  reserve_code: SysioReservSlugNameType
+}
+
+/** sysio.reserv::setconfig (action) */
+export interface SysioReservSetconfigAction {
+  fee_emissions_share_bps: number
+}
+
+/** sysio.reserv::setrsvfee (action) */
+export interface SysioReservSetrsvfeeAction {
+  chain_code: SysioReservSlugNameType
+  token_code: SysioReservSlugNameType
+  reserve_code: SysioReservSlugNameType
+  owner_fee_bps: number
 }
 
 /** sysio.reserv::slug_name (type) */
@@ -1853,6 +1897,24 @@ export interface SysioReservSwapquoteAction {
   to_chain_code: SysioReservSlugNameType
   to_token_code: SysioReservSlugNameType
   to_reserve_code: SysioReservSlugNameType
+}
+
+/** sysio.reserv::uw_fee_key (type) */
+export interface SysioReservUwFeeKeyType {
+  underwriter: string
+}
+
+/** sysio.reserv::uw_fee_row (type) */
+export interface SysioReservUwFeeRowType {
+  underwriter: string
+  balance: number | string
+  lifetime_accrued: number | string
+  lifetime_claimed: number | string
+}
+
+/** sysio.reserv::uwfeebal (action) */
+export interface SysioReservUwfeebalAction {
+  underwriter: string
 }
 
 /** sysio.reserv::wire_claim (type) */
@@ -1872,6 +1934,8 @@ export interface SysioReservContract {
   actions: {
     applyfromwire: SysioReservApplyfromwireAction
     applyswap: SysioReservApplyswapAction
+    claimrsvfee: SysioReservClaimrsvfeeAction
+    claimuwfee: SysioReservClaimuwfeeAction
     claimwire: SysioReservClaimwireAction
     debit: SysioReservDebitAction
     drainrewards: SysioReservDrainrewardsAction
@@ -1882,11 +1946,17 @@ export interface SysioReservContract {
     refundwire: SysioReservRefundwireAction
     regreserve: SysioReservRegreserveAction
     rewardbal: SysioReservRewardbalAction
+    rsvfeebal: SysioReservRsvfeebalAction
+    setconfig: SysioReservSetconfigAction
+    setrsvfee: SysioReservSetrsvfeeAction
     swapquote: SysioReservSwapquoteAction
+    uwfeebal: SysioReservUwfeebalAction
   }
   tables: {
+    reservcfg: SysioReservReserveConfigType
     reserves: SysioReservReserveRowType
     rewardbkt: SysioReservRewardsBucketType
+    uwfees: SysioReservUwFeeRowType
     wireclaims: SysioReservWireClaimType
   }
 }
@@ -2434,6 +2504,7 @@ export interface SysioSystemOnblockAction {
 export interface SysioSystemPayClaimType {
   account_name: string
   balance: number | string
+  expires_at_sec: number
 }
 
 /** sysio.system::pay_claim_total (type) */
@@ -3485,7 +3556,7 @@ export const SysioContractDefinitions: {
   [SysioContractName.msgch]: { name: SysioContractName.msgch, account: "sysio.msgch", actions: ["bootstrap", "buildenv", "chkcons", "deliver", "evalcons", "queueout", "resolvedisp"], tables: ["attestations", "attseq", "envelopes", "envlog", "messages", "outenvelopes", "outpcons"] },
   [SysioContractName.msig]: { name: SysioContractName.msig, account: "sysio.msig", actions: ["approve", "cancel", "exec", "getproposal", "invalidate", "propose", "unapprove"], tables: ["approvals", "approvals2", "invals", "propchunks", "proposal"] },
   [SysioContractName.opreg]: { name: SysioContractName.opreg, account: "sysio.opreg", actions: ["available", "cancelwtdw", "claimremit", "deposit", "depositinle", "flushwtdw", "processbatch", "processprod", "processuw", "prune", "recorddel", "regoperator", "releaselock", "setconfig", "slash", "termcheck", "terminate", "withdraw", "withdrawinle"], tables: ["dellog", "opconfig", "opcounters", "operators", "remitclaims", "wtdwqueue"] },
-  [SysioContractName.reserv]: { name: SysioContractName.reserv, account: "sysio.reserv", actions: ["applyfromwire", "applyswap", "claimwire", "debit", "drainrewards", "matchreserve", "oncnclrsv", "oncrtreserve", "paywire", "refundwire", "regreserve", "rewardbal", "swapquote"], tables: ["reserves", "rewardbkt", "wireclaims"] },
+  [SysioContractName.reserv]: { name: SysioContractName.reserv, account: "sysio.reserv", actions: ["applyfromwire", "applyswap", "claimrsvfee", "claimuwfee", "claimwire", "debit", "drainrewards", "matchreserve", "oncnclrsv", "oncrtreserve", "paywire", "refundwire", "regreserve", "rewardbal", "rsvfeebal", "setconfig", "setrsvfee", "swapquote", "uwfeebal"], tables: ["reservcfg", "reserves", "rewardbkt", "uwfees", "wireclaims"] },
   [SysioContractName.roa]: { name: SysioContractName.roa, account: "sysio.roa", actions: ["activateroa", "addpolicy", "expandpolicy", "extendpolicy", "forcereg", "giftram", "newnameduser", "newuser", "nodeownreg", "reducepolicy", "setbyteprice", "setsysabi", "setsyscode"], tables: ["nodeownerreg", "nodeowners", "policies", "reslimit", "roastate", "sponsorcount", "sponsors"] },
   [SysioContractName.system]: { name: SysioContractName.system, account: "sysio", actions: ["accrueepoch", "actfinkey", "activate", "addnodeowner", "claimnodedis", "claimpay", "deleteauth", "delfinkey", "delsnapprov", "fundclaim", "getsnaphash", "init", "initt5", "limitauthchg", "linkauth", "newaccount", "onblock", "payepoch", "regfinkey", "regproducer", "regproducer2", "regsnapprov", "rmvproducer", "setabi", "setacctcpu", "setacctnet", "setacctram", "setalimits", "setcode", "setemitcfg", "setinittime", "setparams", "setpriv", "setprodkeys", "setprods", "setram", "setrank", "setsnpcfg", "unlinkauth", "unregprod", "updateauth", "viewemitcfg", "viewepoch", "viewnodedist", "votesnaphash", "wasmcfg", "delpeerkey", "getpeerkeys", "regpeerkey", "addtrxp", "deltrxp"], tables: ["abihash", "blockinfo", "emissionmngr", "emitcfg", "epochlog", "finalizers", "finkeyidgen", "finkeys", "global", "lastpropfins", "nodecount", "nodedist", "payclaims", "payclaimtot", "producers", "snapconfig", "snapprovs", "snaprecords", "snapvotes", "t5state", "limitauthchg", "peerkeys", "trxpglobal", "trxpriority"] },
   [SysioContractName.token]: { name: SysioContractName.token, account: "sysio.token", actions: ["close", "create", "issue", "open", "retire", "transfer"], tables: ["accounts", "stat"] },
