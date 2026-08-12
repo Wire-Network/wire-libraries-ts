@@ -3460,6 +3460,7 @@ export interface SysioUwritUwRequestTType {
   expires_at_epoch: number
   attestation_inbound_data: string
   attestation_outbound_data: string
+  challenge_id: number | string
 }
 
 /** sysio.uwrit - action + table surface for the typed contract client. */
