@@ -31,6 +31,11 @@ available from npm. Local sibling links are valid for integration testing but
 do not prove a frozen registry install and must not be committed as the final
 consumer dependency.
 
+In the manifest workspace, `pnpm install --lockfile=false` automatically links
+producer outputs that exist under the sibling sysio, Ethereum, and Solana build
+directories. Remove those outputs when exercising the registry-only release
+gate.
+
 ## Examples
 
 | Example | Description |
@@ -48,8 +53,8 @@ consumer dependency.
 # Install dependencies
 pnpm install
 
-# Install with locally generated OPP models from wire-sysio
-WIRE_LINK_LOCAL_OPP_MODELS=1 pnpm install --lockfile=false
+# Install with available sibling producer outputs
+pnpm install --lockfile=false
 
 # Build all packages
 pnpm build
