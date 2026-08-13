@@ -90,6 +90,11 @@ ExpectedExports.forEach(name => {
   assert(name in cjs, `CommonJS entrypoint is missing ${name}`)
   assert(name in esm, `ES module entrypoint is missing ${name}`)
 })
+assert(
+  cjs.OutpostArtifactManifests.mode === cjs.OutpostArtifactMode.sourcePackage &&
+    esm.OutpostArtifactManifests.mode === esm.OutpostArtifactMode.sourcePackage,
+  "Publishable sdk-outpost output must use canonical source-package artifacts"
+)
 
 process.stdout.write(
   "Verified sdk-outpost package boundaries and entrypoints\n"

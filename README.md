@@ -19,6 +19,13 @@ names, so Anchor consumers retain precise `Program<LiqsolCore>["account"]`
 members after regeneration. Generated clients remain build outputs and must not
 be edited by hand.
 
+For local cluster integration, the same generator accepts an infra deployment
+artifact directory or tarball through `--deployment-artifacts-path`. That mode
+compiles the bundle's exact ABI/IDL and binds runtime verification to its exact
+implementation and ProgramData hashes. It is deliberately rejected by the
+package release verifier; published builds always regenerate from canonical
+producer packages.
+
 `@wireio/sdk-outpost` and its two producer artifact packages are not yet
 available from npm. Local sibling links are valid for integration testing but
 do not prove a frozen registry install and must not be committed as the final

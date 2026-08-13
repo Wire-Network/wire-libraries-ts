@@ -221,6 +221,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - `packages/sdk-core/src/contracts/sysio/uwrit` preserves raw request bytes and exposes `sourceRequestId` for swap correlation. External outpost ids are big-endian; synthetic WIRE queue ids are little-endian and high-bit tagged.
 - `packages/sdk-outpost` owns typed Ethereum/Solana clients and validates caller-supplied immutable deployment profiles. Canonical ABIs and IDLs come from exact producer packages owned by `wire-ethereum` and `wire-solana`; until their first publication, local sibling artifacts are testing inputs only. Generated clients are ignored build outputs and must not be copied or edited here.
 - `scripts/sdk-outpost/generate.mjs` must preserve literal Solana IDL account names in `LiqsolCore`; widening the generated type to base `Idl` erases precise `Program<LiqsolCore>["account"]` members.
+- `scripts/sdk-outpost/generate.mjs --deployment-artifacts-path <dir|tar.gz>` is a local integration mode for exact infra bundles. It must verify bundled ABI/IDL hashes and bind executable verification to the profile's exact implementation/ProgramData hashes. `verify:package` must reject this mode; release builds always regenerate from producer packages.
 - `packages/sdk-outpost` owns external reserve-swap instruction assembly,
   allowance handling, source submission, balance reads, and canonical
   `sourceRequestId` extraction. Staking remains outside this package until its

@@ -14,6 +14,25 @@ Ethereum and Solana producer artifact packages are also unpublished. Sibling
 checkouts may be used for local integration testing, but they are not release
 evidence.
 
+### Local deployment-bundle generation
+
+When a cluster deployment predates the current producer packages, generate a
+local-only SDK directly from the exact infra artifact directory or tarball:
+
+```sh
+pnpm --dir packages/sdk-outpost run clean
+pnpm --dir packages/sdk-outpost run generate -- \
+  --deployment-artifacts-path /path/to/sim2-artifacts.tar.gz
+pnpm --dir packages/sdk-outpost run compile
+pnpm --dir packages/sdk-outpost run fix:hybrid:exports
+```
+
+This mode verifies every bundled ABI and IDL against the deployment profile,
+generates the exact TypeChain/Anchor clients, and binds live executable checks
+to the profile's implementation-code and ProgramData hashes. It is for local
+integration only: `verify:package` rejects the result, while `verify:release`
+and `prepack` first regenerate canonical producer-package output.
+
 ## Install after the first release
 
 ```sh
@@ -44,6 +63,11 @@ Client creation verifies all four boundaries before returning:
   producer package's normalized runtime template;
 - every Solana program resolves through the upgradeable loader to the configured
   ProgramData account, exact ProgramData hash, and producer program binary.
+
+Local deployment-bundle builds replace the final producer-template/binary
+comparison with the bundle profile's exact full implementation-code and
+ProgramData hashes. Interface digests, chain identity, proxy/ProgramData
+addresses, and exact live hashes remain mandatory.
 
 These checks prove deployment compatibility, not end-to-end feature readiness.
 Applications must still gate swaps, staking, settlement, retry, funding, and
@@ -244,6 +268,9 @@ pnpm --dir packages/sdk-outpost run test
 pnpm --dir packages/sdk-outpost run verify:release
 pnpm --dir packages/sdk-outpost pack --dry-run
 ```
+
+The release commands always use ordinary producer-package generation. Never
+publish or pack output generated with `--deployment-artifacts-path`.
 
 Release versions are managed by the monorepo-wide patch workflow. See
 [`RELEASING.md`](RELEASING.md) for artifact prerequisites and the verification
