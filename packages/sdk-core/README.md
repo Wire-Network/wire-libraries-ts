@@ -7,6 +7,9 @@ optional `created` timestamp.
 
 Available on npm: <https://www.npmjs.com/package/@wireio/sdk-core>
 
+Published type declarations support both package-root and subpath imports,
+including consumers that still use TypeScript's classic Node resolution.
+
 ## Multisig
 
 `contracts.sysio.msig` provides UI-neutral helpers for `sysio.msig` proposal workflows, including action builders, proposal reads, transaction decoding, hash verification, and legacy/chunked contract compatibility.
