@@ -6,11 +6,11 @@ directory outside this process.
 
 ## Current first-release state
 
-As of August 10, 2026, neither exact producer artifact package nor
-`@wireio/sdk-outpost` is listed on npm. The producer branches may be tested as
-siblings, but the SDK lockfile and frozen-install gate must remain blocked until
-the real registry packages exist. Do not generate lockfile entries from local
-paths or advertise the package as installable before the registry checks pass.
+As of August 14, 2026, both exact producer artifact packages are public on npm
+at `0.1.0`. The first `@wireio/sdk-outpost` release is still pending. Its
+workspace version remains `0.0.0` until the existing repository-wide patch
+workflow bumps and publishes it; do not create a one-off version or publish the
+workspace directory manually.
 
 ## Artifact prerequisites
 
@@ -27,10 +27,12 @@ endpoint rotation does not require either package to be republished; emit a new
 immutable deployment profile for a respin and update the separate endpoint
 catalog for mutable endpoints.
 
-Before updating either dependency, verify its npm provenance, source revision,
-artifact checksums, and immutable version. Keep both versions exact in
-`packages/sdk-outpost/package.json` and update `pnpm-lock.yaml` through a frozen
-pnpm-compatible install.
+Before updating either dependency, verify its registry integrity/signature,
+source revision, artifact checksums, and immutable version. The producer repos
+are non-public, so their current npm releases do not carry public provenance.
+Keep both versions exact in `packages/sdk-outpost/package.json`, update
+`pnpm-lock.yaml` with the repository-pinned pnpm version, and then prove the
+result with a frozen install.
 
 ## Release requirements
 
@@ -71,20 +73,29 @@ not be published by `sdk-outpost`.
 
 ## First npm listing
 
-The first successful publish creates the npm package page. Before merging:
+The first successful publish creates the npm package page. Release sequence:
 
-1. Confirm both exact producer artifact versions are publicly installable.
+1. Confirm both exact `0.1.0` producer artifact versions are publicly
+   installable.
 2. Confirm the `wireio` organization exists on npm and the release owner can
    publish public packages in that scope.
 3. Confirm npm two-factor authentication is enabled for the release owner.
 4. Confirm the GitHub repository secret `NPM_TOKEN` can publish to the `wireio`
    organization under its required authentication policy.
-5. Merge the reviewed pull request into `master`.
+5. Confirm the GitHub `release` environment exists with required reviewers; the
+   environment approval is the second release gate.
+6. Merge the reviewed feature pull request into `master`.
+7. Dispatch **Prepare Release** with the intended bump, approve its checks, and
+   merge the generated version-bump pull request.
+8. Dispatch **Tag Release** and approve the `release` environment gate.
 
-The `publish-npm.yaml` workflow installs the frozen workspace, generates clients
-from the producer packages, builds and tests every package, verifies the public
-entrypoints, increments the workspace patch versions, and publishes with npm
-provenance.
+The preparation gate keeps each package on its existing version track. A patch
+bump therefore makes the first SDK release `@wireio/sdk-outpost@0.0.1`, while
+`@wireio/sdk-core` advances by one patch on its independent track. `workspace:*`
+is rewritten to that concrete `sdk-core` version in the published SDK manifest.
+The Tag Release gate must install the frozen workspace, generate clients from
+the producer packages, build and test every package, verify public entrypoints,
+and publish with npm provenance.
 
 Do not create the first `sdk-outpost` version manually. A failed publish must be
 corrected in source and released as the next patch; published npm versions are
@@ -99,7 +110,7 @@ npm view @wireio/sdk-outpost version dist-tags repository --json
 npm install @wireio/sdk-outpost
 ```
 
-Then configure npm trusted publishing for `publish-npm.yaml`. After a trusted
+Then configure npm trusted publishing for `tag-release.yaml`. After a trusted
 publish succeeds, remove the long-lived write token from the publish step and
 restrict token-based publishing in npm package settings. Keep `id-token: write`
 so npm can generate provenance.

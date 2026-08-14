@@ -6,8 +6,8 @@
 
 ```bash
 pnpm install                # Install registry deps (pnpm 10.34.5, Node >=22)
-# Link available sibling producer outputs:
-pnpm install --lockfile=false
+# Link available sibling wire-sysio OPP model outputs:
+WIRE_USE_LOCAL_OPP_MODELS=true pnpm install --lockfile=false
 pnpm build                  # Build all packages via tsc -b
 pnpm build:dev              # Watch mode (incremental)
 pnpm test                   # Build + jest (all packages)
@@ -194,12 +194,19 @@ Every new/modified symbol ships unit tests in the same change. Tests never assum
 
 ## CI/CD
 
-GitHub Actions (`.github/workflows/publish-npm.yaml`):
-- Triggers on push to `master` (skips if `[skip release]` in commit message)
-- Bumps all packages patch version (`pnpm -r exec -- pnpm version patch`)
-- Auto-commits `chore(release): bump patch [skip release]`
-- Publishes all non-private packages to npm with provenance (`pnpm -r publish --access public --provenance`)
-- Published package manifests must keep `repository.url` set to `https://github.com/Wire-Network/wire-libraries-ts` so npm provenance matches GitHub Actions source metadata.
+GitHub Actions uses a two-gate release flow:
+- `prepare-release.yaml` is manually dispatched with a bump type. It bumps each
+  package on its own version track and opens a release-preparation PR; it never
+  pushes directly to `master` or publishes.
+- After that PR is reviewed and merged, `tag-release.yaml` is manually
+  dispatched and pauses for approval in the `release` environment.
+- The approved job installs the workspace, builds and tests, publishes all
+  non-private packages in dependency order, creates the annotated tag, and
+  creates the GitHub release.
+- `workspace:*` dependencies become concrete current workspace versions at
+  publish time. Published package manifests must keep `repository.url` set to
+  `https://github.com/Wire-Network/wire-libraries-ts` so npm provenance matches
+  GitHub Actions source metadata.
 
 ## Documentation Comments
 
@@ -219,7 +226,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - System-contract `prepare` prefers synchronous ABI encoding but must retain a typed `AnyAction` fallback so `APIClient` can resolve the deployed ABI. Never invent a default write authorization in the public SDK.
 - `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
 - `packages/sdk-core/src/contracts/sysio/uwrit` preserves raw request bytes and exposes `sourceRequestId` for swap correlation. External outpost ids are big-endian; synthetic WIRE queue ids are little-endian and high-bit tagged.
-- `packages/sdk-outpost` owns typed Ethereum/Solana clients and validates caller-supplied immutable deployment profiles. Canonical ABIs and IDLs come from exact producer packages owned by `wire-ethereum` and `wire-solana`; until their first publication, local sibling artifacts are testing inputs only. Generated clients are ignored build outputs and must not be copied or edited here.
+- `packages/sdk-outpost` owns typed Ethereum/Solana clients and validates caller-supplied immutable deployment profiles. Canonical ABIs, IDLs, runtime templates, and program binaries come from exact npm package versions owned by `wire-ethereum` and `wire-solana`; never replace them with sibling artifact links. Generated clients are ignored build outputs and must not be copied or edited here.
 - `scripts/sdk-outpost/generate.mjs` must preserve literal Solana IDL account names in `LiqsolCore`; widening the generated type to base `Idl` erases precise `Program<LiqsolCore>["account"]` members.
 - `scripts/sdk-outpost/generate.mjs --deployment-artifacts-path <dir|tar.gz>` is a local integration mode for exact infra bundles. It must verify bundled ABI/IDL hashes and bind executable verification to the profile's exact implementation/ProgramData hashes. `verify:package` must reject this mode; release builds always regenerate from producer packages.
 - `packages/sdk-outpost` owns external reserve-swap instruction assembly,

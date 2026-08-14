@@ -1,12 +1,14 @@
 // noinspection JSUnresolvedReference
 
 /**
- * pnpm hook to resolve @wireio packages from the local wire-libraries-ts monorepo.
+ * pnpm hook to resolve OPP model packages from a local wire-sysio build.
  *
  * Usage:
- *   1. Build the wire-sysio and outpost producer outputs in the sibling repos.
- *   2. Run `pnpm install --lockfile=false` to consume those local outputs.
- *   3. Remove the sibling outputs to exercise registry-only release resolution.
+ *   1. Build the wire-sysio OPP model outputs in the sibling repo.
+ *   2. Run `WIRE_USE_LOCAL_OPP_MODELS=true pnpm install --lockfile=false`.
+ *
+ * Registry resolution is the default. Outpost artifact packages always resolve
+ * from their exact registry versions.
  *
  * Docs: https://pnpm.io/pnpmfile
  */
@@ -14,29 +16,8 @@
 const Path = require("path")
 const Fs = require("node:fs")
 
+const LOCAL_OPP_MODELS_ENABLED = "true"
 const localOppModelTargets = ["typescript", "solidity"]
-const localOutpostArtifactPackages = [
-  [
-    "@wireio/outpost-ethereum-artifacts",
-    Path.resolve(
-      __dirname,
-      "..",
-      "wire-ethereum",
-      "build",
-      "sdk-artifacts"
-    )
-  ],
-  [
-    "@wireio/outpost-solana-artifacts",
-    Path.resolve(
-      __dirname,
-      "..",
-      "wire-solana",
-      "build",
-      "sdk-artifacts"
-    )
-  ]
-]
 
 /**
  * Checks whether a path exists and is a directory, without throwing.
@@ -59,25 +40,25 @@ function isDirectory(dirPath) {
 const localOverrides = {}
 
 /**
- * Appends every locally available source-owned producer package.
+ * Appends every locally available OPP model package.
  *
- * Platform builds consume sibling outputs automatically after their producers
- * run. Registry-only release verification runs without those sibling outputs.
+ * Platform builds may consume wire-sysio model output after its producer runs.
  */
-function appendLocalProducerOverrides() {
+function appendLocalOppModelOverrides() {
   localOppModelTargets
     .map(target => [
       `@wireio/opp-${target}-models`,
       Path.resolve(__dirname, "..", "wire-sysio", "build", "opp", target)
     ])
-    .concat(localOutpostArtifactPackages)
     .filter(([, path]) => isDirectory(path))
     .forEach(([pkgName, path]) => {
       localOverrides[pkgName] = path
     })
 }
 
-appendLocalProducerOverrides()
+if (process.env.WIRE_USE_LOCAL_OPP_MODELS === LOCAL_OPP_MODELS_ENABLED) {
+  appendLocalOppModelOverrides()
+}
 
 /**
  * `readPackage` hook, which links locally available versions of

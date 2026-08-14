@@ -11,7 +11,7 @@ overrides:
   '@aws-sdk/client-ssm': 3.1102.0
   '@aws-sdk/client-sts': 3.1102.0
 
-pnpmfileChecksum: sha256-uSx+WmIL/VwwGy+UhtMMAEPNy0OCCSd9SN1949okJSo=
+pnpmfileChecksum: sha256-Gl0c7XVg8cIwDrX6fNVtOwqQlawXgg1Ges5mY3w2B98=
 
 importers:
 
@@ -228,6 +228,12 @@ importers:
       '@typechain/ethers-v5':
         specifier: ^11.1.2
         version: 11.1.2(@ethersproject/abi@5.8.0)(@ethersproject/providers@5.8.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(ethers@5.8.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(typechain@8.3.2(typescript@6.0.2))(typescript@6.0.2)
+      '@wireio/outpost-ethereum-artifacts':
+        specifier: 0.1.0
+        version: 0.1.0
+      '@wireio/outpost-solana-artifacts':
+        specifier: 0.1.0
+        version: 0.1.0
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -1719,6 +1725,12 @@ packages:
 
   '@wireio/opp-typescript-models@1.0.30':
     resolution: {integrity: sha512-g6DSdq5KULRhp604sYkT0u+0TgjORoc+26FIUdepIeFJpEm9YlBKkJshXTUnDdUKz8fB6LUhW2NRQp/shIgrUg==}
+
+  '@wireio/outpost-ethereum-artifacts@0.1.0':
+    resolution: {integrity: sha512-q7QqsPErrDpW5Js+hKyHMwWackY9ut7F7fSf8DaiY1jB7ABT1bGgLGFzS7zqvnZz+lYCThy50adRkMmqq/EP0w==}
+
+  '@wireio/outpost-solana-artifacts@0.1.0':
+    resolution: {integrity: sha512-mqS3wxZbG6BH3KC5Op8RW8yQr+SD/dPxFW8Qd7WHGpsx0Jvd9FeBz8Nkz3z2R0lEyNKCIfer33DZSiNLI/pS5w==}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -6262,6 +6274,10 @@ snapshots:
   '@wireio/opp-typescript-models@1.0.30':
     dependencies:
       '@protobuf-ts/runtime': 2.11.1
+
+  '@wireio/outpost-ethereum-artifacts@0.1.0': {}
+
+  '@wireio/outpost-solana-artifacts@0.1.0': {}
 
   '@xtuc/ieee754@1.2.0': {}
 

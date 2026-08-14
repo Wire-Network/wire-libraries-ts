@@ -8,11 +8,10 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-Publication status as of August 10, 2026: the first npm release is pending.
-`@wireio/sdk-outpost@0.0.0` is a workspace development version, and the exact
-Ethereum and Solana producer artifact packages are also unpublished. Sibling
-checkouts may be used for local integration testing, but they are not release
-evidence.
+Publication status as of August 14, 2026: the exact Ethereum and Solana producer
+artifact packages are publicly available as `0.1.0`, while the first
+`@wireio/sdk-outpost` npm release is pending. The workspace version remains
+`0.0.0` until the repository-wide release workflow performs its patch bump.
 
 ### Local deployment-bundle generation
 
@@ -33,15 +32,18 @@ to the profile's implementation-code and ProgramData hashes. It is for local
 integration only: `verify:package` rejects the result, while `verify:release`
 and `prepack` first regenerate canonical producer-package output.
 
-## Install after the first release
+## Install after the first SDK release
 
 ```sh
 npm install @wireio/sdk-outpost
 ```
 
-Before using the registry command, verify that both producer artifact versions
-and `@wireio/sdk-outpost` resolve through `npm view`. Do not replace that check
-with a committed machine-local link or a weakened frozen install.
+Before using the registry command, verify that `@wireio/sdk-outpost` resolves
+through `npm view`. The generator consumes exact registry versions of
+[`@wireio/outpost-ethereum-artifacts`](https://www.npmjs.com/package/@wireio/outpost-ethereum-artifacts)
+and
+[`@wireio/outpost-solana-artifacts`](https://www.npmjs.com/package/@wireio/outpost-solana-artifacts);
+do not replace them with committed machine-local links.
 
 Node.js 22 or newer is supported. The package publishes CommonJS and native ES
 module entrypoints with TypeScript declarations.
