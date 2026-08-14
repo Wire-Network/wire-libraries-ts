@@ -112,6 +112,10 @@ chain/token and status filters, exact reserve lookup, WIRE-side activation, and
 read-only swap quotes. External-chain reserve creation and cancellation remain
 in the chain SDK that owns the deployed ABI or IDL.
 
+External-chain SDKs that only need reserve validation bounds use the supported
+`@wireio/sdk-core/contracts/sysio/reserv/constants` entrypoint without loading
+the complete Wire client graph.
+
 ```ts
 const reserves = new contracts.sysio.reserv.ReserveClient({ client: api })
 const pending = await reserves.listReserves({

@@ -1,8 +1,8 @@
 import {
-  EthereumOutpostClient,
   OutpostChainFamily,
   OutpostClient,
-  SolanaOutpostClient
+  type EthereumOutpostClient,
+  type SolanaOutpostClient
 } from "@wireio/sdk-outpost"
 import {
   createEthereumProviderFixture,
@@ -19,9 +19,11 @@ describe("OutpostClient", () => {
           profile,
           connection: createEthereumProviderFixture(profile)
         }
-      })
+      }),
+      typedClient: EthereumOutpostClient = client
 
-    expect(client).toBeInstanceOf(EthereumOutpostClient)
+    expect(typedClient.profile).toBe(profile)
+    expect(typedClient.reserves).toBeDefined()
   })
 
   it("preserves the precise Solana client type", async () => {
@@ -32,8 +34,10 @@ describe("OutpostClient", () => {
           profile,
           provider: createSolanaProviderFixture(profile)
         }
-      })
+      }),
+      typedClient: SolanaOutpostClient = client
 
-    expect(client).toBeInstanceOf(SolanaOutpostClient)
+    expect(typedClient.profile).toBe(profile)
+    expect(typedClient.reserves).toBeDefined()
   })
 })

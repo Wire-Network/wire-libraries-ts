@@ -2,12 +2,15 @@ import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js"
 import { utils as ethersUtils } from "ethers"
 
 import {
+  OutpostChainFamily,
+  OutpostClient,
   type ReserveSwapRequest,
-  SolanaOutpostClient,
   SolanaProgramName,
   SolanaReserveClient,
   SolanaReserveSwapClient,
-  SolanaUpgradeableLoaderProgramId
+  SolanaUpgradeableLoaderProgramId,
+  type SolanaOutpostClient,
+  type SolanaOutpostClientOptions
 } from "@wireio/sdk-outpost"
 import {
   createOutpostDeploymentProfileFixture,
@@ -19,6 +22,16 @@ import {
 const WrongProgramDataAddress = "SysvarRent111111111111111111111111111111111"
 const SubmittedSignature = "3".repeat(64)
 const SolanaProgramDataMetadataByteLength = 45
+
+/** Create the Solana client through the package's only public facade. */
+function createSolanaClient(
+  options: SolanaOutpostClientOptions
+): Promise<SolanaOutpostClient> {
+  return OutpostClient.create({
+    family: OutpostChainFamily.solana,
+    options
+  })
+}
 
 const reserveSwapRequest: ReserveSwapRequest = {
   sourceTokenCode: 1,
@@ -42,7 +55,7 @@ describe("SolanaOutpostClient", () => {
   it("verifies a profile and returns its runtime program address", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createSolanaProviderFixture(profile),
-      client = await SolanaOutpostClient.create({ profile, provider }),
+      client = await createSolanaClient({ profile, provider }),
       program = client.program(SolanaProgramName.liqsolCore)
 
     expect(program.programId.toBase58()).toBe(
@@ -66,7 +79,7 @@ describe("SolanaOutpostClient", () => {
   it("derives native reserve accounts from the deployed program seeds", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createSolanaProviderFixture(profile),
-      client = await SolanaOutpostClient.create({ profile, provider }),
+      client = await createSolanaClient({ profile, provider }),
       instruction = await client.swaps.createNativeInstruction(
         reserveSwapRequest
       ),
@@ -88,7 +101,7 @@ describe("SolanaOutpostClient", () => {
   it("derives SPL reserve vaults from the deployed program seeds", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createSolanaProviderFixture(profile),
-      client = await SolanaOutpostClient.create({ profile, provider }),
+      client = await createSolanaClient({ profile, provider }),
       instruction = await client.swaps.createSplInstruction({
         ...reserveSwapRequest,
         mint: Keypair.generate().publicKey
@@ -111,7 +124,7 @@ describe("SolanaOutpostClient", () => {
   it("polls a submitted reserve swap until Solana confirms it", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createSolanaProviderFixture(profile),
-      client = await SolanaOutpostClient.create({ profile, provider }),
+      client = await createSolanaClient({ profile, provider }),
       instruction = SystemProgram.transfer({
         fromPubkey: provider.wallet.publicKey,
         toPubkey: provider.wallet.publicKey,
@@ -141,7 +154,7 @@ describe("SolanaOutpostClient", () => {
   it("reports an explicit on-chain reserve swap failure", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createSolanaProviderFixture(profile),
-      client = await SolanaOutpostClient.create({ profile, provider }),
+      client = await createSolanaClient({ profile, provider }),
       instruction = SystemProgram.transfer({
         fromPubkey: provider.wallet.publicKey,
         toPubkey: provider.wallet.publicKey,
@@ -172,7 +185,7 @@ describe("SolanaOutpostClient", () => {
       .mockResolvedValue("9".repeat(32))
 
     await expect(
-      SolanaOutpostClient.create({ profile, provider })
+      createSolanaClient({ profile, provider })
     ).rejects.toThrow("Solana genesis mismatch")
   })
 
@@ -182,7 +195,7 @@ describe("SolanaOutpostClient", () => {
     jest.spyOn(provider.connection, "getAccountInfo").mockResolvedValue(null)
 
     await expect(
-      SolanaOutpostClient.create({ profile, provider })
+      createSolanaClient({ profile, provider })
     ).rejects.toThrow("is not executable")
   })
 
@@ -198,7 +211,7 @@ describe("SolanaOutpostClient", () => {
     })
 
     await expect(
-      SolanaOutpostClient.create({ profile, provider })
+      createSolanaClient({ profile, provider })
     ).rejects.toThrow("ProgramData mismatch")
   })
 
@@ -228,7 +241,7 @@ describe("SolanaOutpostClient", () => {
       )
 
     await expect(
-      SolanaOutpostClient.create({ profile, provider })
+      createSolanaClient({ profile, provider })
     ).rejects.toThrow("ProgramData mismatch")
   })
 
@@ -262,7 +275,7 @@ describe("SolanaOutpostClient", () => {
       )
 
     await expect(
-      SolanaOutpostClient.create({ profile, provider })
+      createSolanaClient({ profile, provider })
     ).rejects.toThrow("artifact program mismatch")
   })
 })

@@ -29,11 +29,6 @@
       "import": "./lib/esm/index.js",
       "require": "./lib/cjs/index.js",
       "types": "./lib/esm/index.d.ts"
-    },
-    "./*": {
-      "import": "./lib/esm/*.js",
-      "require": "./lib/cjs/*.js",
-      "types": "./lib/esm/*.d.ts"
     }
   },
   "access": "public",
@@ -41,13 +36,13 @@
   "scripts": {
     "compile": "tsc -b tsconfig.json",
     "compile:watch": "tsc -b tsconfig.json -w",
-    "clean": "zx ../../scripts/sdk-outpost/clean.mjs",
-    "generate": "zx ../../scripts/sdk-outpost/generate.mjs",
+    "clean": "../../scripts/sdk-outpost/clean.mjs",
+    "generate": "../../scripts/sdk-outpost/generate.mjs",
     "prepare:compile": "pnpm run clean && pnpm run generate",
     "build": "pnpm run prepare:compile && pnpm run compile && pnpm run fix:hybrid:exports",
     "test": "pnpm run generate && NODE_OPTIONS=--experimental-vm-modules jest",
     "fix:hybrid:exports": "node ../../scripts/fix-hybrid-output.mjs .",
-    "verify:package": "zx ../../scripts/sdk-outpost/verify-package.mjs",
+    "verify:package": "../../scripts/sdk-outpost/verify-package.mjs",
     "verify:release": "pnpm run build && pnpm run verify:package",
     "prepack": "pnpm run verify:release"
   },

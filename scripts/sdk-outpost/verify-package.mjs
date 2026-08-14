@@ -1,4 +1,20 @@
-#!/usr/bin/env zx
+#!/usr/bin/env node
+
+/**
+ * Verify sdk-outpost's publishable files and CommonJS/ESM entrypoints.
+ *
+ * Usage:
+ *   ./scripts/sdk-outpost/verify-package.mjs
+ *
+ * Options:
+ *   None.
+ *
+ * Examples:
+ *   ./scripts/sdk-outpost/verify-package.mjs
+ *
+ * Exit codes:
+ *   0 when the package is publishable; nonzero when an invariant fails.
+ */
 
 import { createRequire } from "node:module"
 import { pathToFileURL } from "node:url"
@@ -11,13 +27,12 @@ const packageJson = await readJson(path.join(PackagePath, "package.json")),
   readme = await fs.readFile(path.join(PackagePath, "README.md"), "utf8"),
   ExpectedRepository = "https://github.com/Wire-Network/wire-libraries-ts",
   ExpectedPublishedFiles = ["lib/cjs", "lib/esm", "README.md"],
+  InternalExports = ["EthereumOutpostClient", "SolanaOutpostClient"],
   ExpectedExports = [
-    "EthereumOutpostClient",
     "EthereumReserveClient",
     "OutpostArtifactManifests",
     "OutpostClient",
     "OutpostDeploymentVerifier",
-    "SolanaOutpostClient",
     "SolanaReserveClient",
     "assertOutpostArtifactCompatibility",
     "parseOutpostDeploymentProfile"
@@ -40,6 +55,10 @@ assert(
 assert(
   packageJson.license === "FSL-1.1-Apache-2.0",
   "Package license is missing"
+)
+assert(
+  JSON.stringify(Object.keys(packageJson.exports)) === JSON.stringify(["."]),
+  "Only the package-root entrypoint may be published"
 )
 assert(
   JSON.stringify(packageJson.files) === JSON.stringify(ExpectedPublishedFiles),
@@ -89,6 +108,11 @@ const require = createRequire(import.meta.url),
 ExpectedExports.forEach(name => {
   assert(name in cjs, `CommonJS entrypoint is missing ${name}`)
   assert(name in esm, `ES module entrypoint is missing ${name}`)
+})
+
+InternalExports.forEach(name => {
+  assert(!(name in cjs), `CommonJS entrypoint exposes internal ${name}`)
+  assert(!(name in esm), `ES module entrypoint exposes internal ${name}`)
 })
 assert(
   cjs.OutpostArtifactManifests.mode === cjs.OutpostArtifactMode.sourcePackage &&

@@ -17,7 +17,7 @@ const Path = require("path")
 const Fs = require("node:fs")
 
 const LOCAL_OPP_MODELS_ENABLED = "true"
-const localOppModelTargets = ["typescript", "solidity"]
+const localOppModelTargets = ["typescript"]
 
 /**
  * Checks whether a path exists and is a directory, without throwing.

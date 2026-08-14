@@ -56,6 +56,9 @@
       "@wireio/sdk-core": [
         "./packages/sdk-core/src"
       ],
+      "@wireio/sdk-core/contracts/sysio/reserv/constants": [
+        "./packages/sdk-core/src/contracts/sysio/reserv/Constants.ts"
+      ],
       "@wireio/sdk-core/*": [
         "./packages/sdk-core/src/*"
       ],

@@ -3,7 +3,7 @@ import { BigNumber, utils as ethersUtils } from "ethers"
 import {
   MAX_CONNECTOR_WEIGHT_BPS,
   MIN_CONNECTOR_WEIGHT_BPS
-} from "@wireio/sdk-core/contracts/sysio/reserv/Constants"
+} from "@wireio/sdk-core/contracts/sysio/reserv/constants"
 
 import type {
   EthereumReserveCreateRequest,

@@ -1,8 +1,8 @@
 import { match } from "ts-pattern"
 
 import { OutpostChainFamily } from "../deployments/index.js"
-import { EthereumOutpostClient } from "./ethereum/index.js"
-import { SolanaOutpostClient } from "./solana/index.js"
+import { EthereumOutpostClient } from "./ethereum/EthereumOutpostClient.js"
+import { SolanaOutpostClient } from "./solana/SolanaOutpostClient.js"
 import { OutpostClientFor, OutpostClientInput } from "./Types.js"
 
 /** Cross-chain facade for creating a verified, family-specific outpost client. */
@@ -13,10 +13,10 @@ export namespace OutpostClient {
   ): Promise<OutpostClientFor<T["family"]>> {
     const client = await match(input as OutpostClientInput)
       .with({ family: OutpostChainFamily.ethereum }, ({ options }) =>
-        EthereumOutpostClient.create(options)
+        EthereumOutpostClient.createEthereum(options)
       )
       .with({ family: OutpostChainFamily.solana }, ({ options }) =>
-        SolanaOutpostClient.create(options)
+        SolanaOutpostClient.createSolana(options)
       )
       .exhaustive()
 

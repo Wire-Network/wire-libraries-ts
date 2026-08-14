@@ -2,9 +2,12 @@ import { BigNumber, utils as ethersUtils, Wallet } from "ethers"
 
 import {
   EthereumContractName,
-  EthereumOutpostClient,
   EthereumReserveClient,
   EthereumReserveSwapClient,
+  OutpostChainFamily,
+  OutpostClient,
+  type EthereumOutpostClient,
+  type EthereumOutpostClientOptions,
   type ReserveSwapRequest
 } from "@wireio/sdk-outpost"
 import {
@@ -12,6 +15,16 @@ import {
   createEthereumProviderFixture,
   createOutpostDeploymentProfileFixture
 } from "../../Fixtures.js"
+
+/** Create the Ethereum client through the package's only public facade. */
+function createEthereumClient(
+  options: EthereumOutpostClientOptions
+): Promise<EthereumOutpostClient> {
+  return OutpostClient.create({
+    family: OutpostChainFamily.ethereum,
+    options
+  })
+}
 
 describe("EthereumOutpostClient", () => {
   it("submits native reserve swaps with estimated gas headroom", async () => {
@@ -91,7 +104,7 @@ describe("EthereumOutpostClient", () => {
   it("verifies a profile and returns a generated contract type", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createEthereumProviderFixture(profile),
-      client = await EthereumOutpostClient.create({
+      client = await createEthereumClient({
         profile,
         connection: provider
       }),
@@ -128,7 +141,7 @@ describe("EthereumOutpostClient", () => {
     })
 
     await expect(
-      EthereumOutpostClient.create({ profile, connection: provider })
+      createEthereumClient({ profile, connection: provider })
     ).rejects.toThrow("Ethereum chain mismatch")
   })
 
@@ -138,7 +151,7 @@ describe("EthereumOutpostClient", () => {
     jest.spyOn(provider, "getCode").mockResolvedValue("0x")
 
     await expect(
-      EthereumOutpostClient.create({ profile, connection: provider })
+      createEthereumClient({ profile, connection: provider })
     ).rejects.toThrow("is not deployed")
   })
 
@@ -150,7 +163,7 @@ describe("EthereumOutpostClient", () => {
       .mockResolvedValue(ethersUtils.hexZeroPad("0x01", 32))
 
     await expect(
-      EthereumOutpostClient.create({ profile, connection: provider })
+      createEthereumClient({ profile, connection: provider })
     ).rejects.toThrow("implementation mismatch")
   })
 
@@ -162,7 +175,7 @@ describe("EthereumOutpostClient", () => {
     ].implementationCodeSha256 = "f".repeat(64)
 
     await expect(
-      EthereumOutpostClient.create({ profile, connection: provider })
+      createEthereumClient({ profile, connection: provider })
     ).rejects.toThrow("implementation code mismatch")
   })
 
@@ -185,7 +198,7 @@ describe("EthereumOutpostClient", () => {
     )
 
     await expect(
-      EthereumOutpostClient.create({ profile, connection: provider })
+      createEthereumClient({ profile, connection: provider })
     ).rejects.toThrow("artifact runtime")
   })
 })

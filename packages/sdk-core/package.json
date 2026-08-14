@@ -24,6 +24,11 @@
       "require": "./lib/cjs/index.js",
       "types": "./lib/esm/index.d.ts"
     },
+    "./contracts/sysio/reserv/constants": {
+      "import": "./lib/esm/contracts/sysio/reserv/Constants.js",
+      "require": "./lib/cjs/contracts/sysio/reserv/Constants.js",
+      "types": "./lib/esm/contracts/sysio/reserv/Constants.d.ts"
+    },
     "./*": {
       "import": "./lib/esm/*.js",
       "require": "./lib/cjs/*.js",
@@ -32,6 +37,9 @@
   },
   "typesVersions": {
     "*": {
+      "contracts/sysio/reserv/constants": [
+        "lib/esm/contracts/sysio/reserv/Constants.d.ts"
+      ],
       "lib/esm/*": ["lib/esm/*"],
       "*": ["lib/esm/*"]
     }

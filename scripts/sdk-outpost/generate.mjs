@@ -1,4 +1,21 @@
-#!/usr/bin/env zx
+#!/usr/bin/env node
+
+/**
+ * Generate sdk-outpost clients and manifests from canonical producer artifacts.
+ *
+ * Usage:
+ *   ./scripts/sdk-outpost/generate.mjs [options]
+ *
+ * Options:
+ *   --deployment-artifacts-path <path>  Generate a local-only build from an exact deployment directory or tarball.
+ *
+ * Examples:
+ *   ./scripts/sdk-outpost/generate.mjs
+ *   ./scripts/sdk-outpost/generate.mjs --deployment-artifacts-path /path/to/sim2-artifacts.tar.gz
+ *
+ * Exit codes:
+ *   0 on success; nonzero when artifact validation or generation fails.
+ */
 
 import Crypto from "node:crypto"
 import Os from "node:os"

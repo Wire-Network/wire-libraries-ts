@@ -1,12 +1,14 @@
-import type {
-  EthereumOutpostClient,
-  EthereumOutpostClientOptions
-} from "./ethereum/index.js"
-import type {
-  SolanaOutpostClient,
-  SolanaOutpostClientOptions
-} from "./solana/index.js"
+import type { EthereumOutpostClientOptions } from "./ethereum/index.js"
+import type { EthereumOutpostClient as EthereumOutpostClientImplementation } from "./ethereum/EthereumOutpostClient.js"
+import type { SolanaOutpostClientOptions } from "./solana/index.js"
+import type { SolanaOutpostClient as SolanaOutpostClientImplementation } from "./solana/SolanaOutpostClient.js"
 import { OutpostChainFamily } from "../deployments/index.js"
+
+/** Verified Ethereum outpost client instance returned by `OutpostClient.create`. */
+export type EthereumOutpostClient = EthereumOutpostClientImplementation
+
+/** Verified Solana outpost client instance returned by `OutpostClient.create`. */
+export type SolanaOutpostClient = SolanaOutpostClientImplementation
 
 /** Request for an Ethereum outpost client. */
 export interface EthereumOutpostClientInput {

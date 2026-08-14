@@ -66,6 +66,11 @@ Client creation verifies all four boundaries before returning:
 - every Solana program resolves through the upgradeable loader to the configured
   ProgramData account, exact ProgramData hash, and producer program binary.
 
+`OutpostClient.create` is the single public construction facade. Its family
+discriminator preserves the precise `EthereumOutpostClient` or
+`SolanaOutpostClient` instance type without publishing separate chain-specific
+factory entrypoints or internal module paths.
+
 Local deployment-bundle builds replace the final producer-template/binary
 comparison with the bundle profile's exact full implementation-code and
 ProgramData hashes. Interface digests, chain identity, proxy/ProgramData
