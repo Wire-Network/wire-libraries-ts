@@ -39,9 +39,7 @@
     "*": {
       "contracts/sysio/reserv/constants": [
         "lib/esm/contracts/sysio/reserv/Constants.d.ts"
-      ],
-      "lib/esm/*": ["lib/esm/*"],
-      "*": ["lib/esm/*"]
+      ]
     }
   },
   "access": "public",

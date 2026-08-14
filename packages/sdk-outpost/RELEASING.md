@@ -40,9 +40,6 @@ result with a frozen install.
 - Keep the lockfile unchanged after a frozen install.
 - Generate clients only through `scripts/sdk-outpost/generate.mjs`; never edit
   generated TypeChain, Anchor, or artifact-manifest sources by hand.
-- Do not release output generated with `--deployment-artifacts-path`. That mode
-  is limited to exact local integration bundles and the package verifier must
-  reject it.
 - Confirm the package contains no secrets, RPC credentials, private keys,
   deployment addresses, or mutable environment configuration.
 - Confirm deployment profiles are distributed through the authenticated

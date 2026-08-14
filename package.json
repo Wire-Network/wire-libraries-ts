@@ -8,8 +8,8 @@
     "typecheck:strict-null:sdk-core": "pnpm --dir packages/sdk-core run typecheck:strict-null",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "lint": "eslint .",
-    "test": "pnpm run build && jest --selectProjects shared shared-node shared-web @wireio/sdk-core wallet-browser-ext wallet-ext-sdk && pnpm --filter @wireio/sdk-outpost run test",
-    "test:ci": "pnpm run build && pnpm run typecheck:strict-null:sdk-core && jest --selectProjects shared shared-node shared-web @wireio/sdk-core wallet-browser-ext wallet-ext-sdk --reporters=default --reporters=jest-junit && pnpm --filter @wireio/sdk-outpost run test",
+    "test": "pnpm run build && jest && pnpm --filter @wireio/sdk-outpost run test",
+    "test:ci": "pnpm run build && pnpm run typecheck:strict-null:sdk-core && jest --reporters=default --reporters=jest-junit && pnpm --filter @wireio/sdk-outpost run test",
     "clean": "./scripts/clean.sh && pnpm -r run clean",
     "prepare": "husky"
   },

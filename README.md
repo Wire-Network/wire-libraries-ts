@@ -14,27 +14,9 @@ A monorepo containing shared TypeScript libraries for Wire applications, providi
 | [`@wireio/wallet-ext-sdk`](packages/wallet-ext-sdk/) | Client SDK for the Wire Wallet browser extension | [![npm](https://img.shields.io/npm/v/@wireio/wallet-ext-sdk)](https://www.npmjs.com/package/@wireio/wallet-ext-sdk) |
 | [`@wireio/wallet-browser-ext`](packages/wallet-browser-ext/) | Chrome extension developer wallet for Wire | *private* |
 
-The `sdk-outpost` generator preserves the source Solana IDL's literal account
-names, so Anchor consumers retain precise `Program<LiqsolCore>["account"]`
-members after regeneration. Generated clients remain build outputs and must not
-be edited by hand.
-
-For local cluster integration, the same generator accepts an infra deployment
-artifact directory or tarball through `--deployment-artifacts-path`. That mode
-compiles the bundle's exact ABI/IDL and binds runtime verification to its exact
-implementation and ProgramData hashes. It is deliberately rejected by the
-package release verifier; published builds always regenerate from canonical
-producer packages.
-
-`@wireio/sdk-outpost` and its two producer artifact packages are not yet
-available from npm. Local sibling links are valid for integration testing but
-do not prove a frozen registry install and must not be committed as the final
-consumer dependency.
-
-In the manifest workspace, `pnpm install --lockfile=false` automatically links
-producer outputs that exist under the sibling sysio, Ethereum, and Solana build
-directories. Remove those outputs when exercising the registry-only release
-gate.
+The sdk-outpost build consumes exact published versions of the Ethereum and
+Solana artifact packages. Generated TypeChain and Anchor clients are ignored
+build outputs and must not be edited or committed.
 
 ## Examples
 
@@ -52,9 +34,6 @@ gate.
 ```bash
 # Install dependencies
 pnpm install
-
-# Install with available sibling producer outputs
-pnpm install --lockfile=false
 
 # Build all packages
 pnpm build

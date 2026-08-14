@@ -6,7 +6,6 @@ const config: Config = {
     "packages/shared-node",
     "packages/shared-web",
     "packages/sdk-core",
-    "packages/sdk-outpost",
     "packages/wallet-browser-ext",
     "packages/wallet-ext-sdk"
   ]

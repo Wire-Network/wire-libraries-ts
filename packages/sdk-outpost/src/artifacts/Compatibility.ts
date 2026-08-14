@@ -8,7 +8,6 @@ import {
   SolanaProgramName
 } from "../deployments/index.js"
 import { OutpostArtifactManifests } from "./generated/index.js"
-import { OutpostArtifactMode } from "./Mode.js"
 
 const SolanaProgramDataMetadataByteLength = 45
 
@@ -54,36 +53,23 @@ export function assertEthereumRuntimeArtifactCompatibility(
   contractName: EthereumContractName,
   code: string
 ): void {
-  const artifact = OutpostArtifactManifests.ethereum.contracts[contractName]
+  const artifact = OutpostArtifactManifests.ethereum.contracts[contractName],
+    normalizedCode = normalizeEthereumRuntimeCode(
+      code,
+      artifact.runtimeLinkReferences
+    )
 
-  match(OutpostArtifactManifests.mode)
-    .with(OutpostArtifactMode.sourcePackage, () => {
-      const normalizedCode = normalizeEthereumRuntimeCode(
-        code,
-        artifact.runtimeLinkReferences
-      )
-
-      if (normalizedCode.length !== artifact.runtimeBytecodeLength) {
-        throw new Error(
-          `Ethereum ${contractName} artifact runtime length mismatch: expected ${artifact.runtimeBytecodeLength}, received ${normalizedCode.length}`
-        )
-      }
-      const digest = sha256(normalizedCode)
-      if (digest !== artifact.runtimeBytecodeSha256) {
-        throw new Error(
-          `Ethereum ${contractName} artifact runtime mismatch: expected ${artifact.runtimeBytecodeSha256}, received ${digest}`
-        )
-      }
-    })
-    .with(OutpostArtifactMode.deploymentBundle, () => {
-      const digest = sha256(ethersUtils.arrayify(code))
-      if (digest !== artifact.implementationCodeSha256) {
-        throw new Error(
-          `Ethereum ${contractName} deployment runtime mismatch: expected ${artifact.implementationCodeSha256}, received ${digest}`
-        )
-      }
-    })
-    .exhaustive()
+  if (normalizedCode.length !== artifact.runtimeBytecodeLength) {
+    throw new Error(
+      `Ethereum ${contractName} artifact runtime length mismatch: expected ${artifact.runtimeBytecodeLength}, received ${normalizedCode.length}`
+    )
+  }
+  const digest = sha256(normalizedCode)
+  if (digest !== artifact.runtimeBytecodeSha256) {
+    throw new Error(
+      `Ethereum ${contractName} artifact runtime mismatch: expected ${artifact.runtimeBytecodeSha256}, received ${digest}`
+    )
+  }
 }
 
 /** Verify live Solana executable bytes against the source-owned program binary. */
@@ -91,39 +77,26 @@ export function assertSolanaProgramArtifactCompatibility(
   programName: SolanaProgramName,
   programData: Uint8Array
 ): void {
-  const artifact = OutpostArtifactManifests.solana.programs[programName]
+  const artifact = OutpostArtifactManifests.solana.programs[programName],
+    programBinaryEnd =
+      SolanaProgramDataMetadataByteLength + artifact.programBinaryLength
 
-  match(OutpostArtifactManifests.mode)
-    .with(OutpostArtifactMode.sourcePackage, () => {
-      const programBinaryEnd =
-        SolanaProgramDataMetadataByteLength + artifact.programBinaryLength
-
-      if (programData.length < programBinaryEnd) {
-        throw new Error(
-          `Solana ${programName} artifact program is truncated: expected ${artifact.programBinaryLength} executable bytes`
-        )
-      }
-      const digest = sha256(
-        programData.subarray(
-          SolanaProgramDataMetadataByteLength,
-          programBinaryEnd
-        )
-      )
-      if (digest !== artifact.programBinarySha256) {
-        throw new Error(
-          `Solana ${programName} artifact program mismatch: expected ${artifact.programBinarySha256}, received ${digest}`
-        )
-      }
-    })
-    .with(OutpostArtifactMode.deploymentBundle, () => {
-      const digest = sha256(programData)
-      if (digest !== artifact.programDataSha256) {
-        throw new Error(
-          `Solana ${programName} deployment ProgramData mismatch: expected ${artifact.programDataSha256}, received ${digest}`
-        )
-      }
-    })
-    .exhaustive()
+  if (programData.length < programBinaryEnd) {
+    throw new Error(
+      `Solana ${programName} artifact program is truncated: expected ${artifact.programBinaryLength} executable bytes`
+    )
+  }
+  const digest = sha256(
+    programData.subarray(
+      SolanaProgramDataMetadataByteLength,
+      programBinaryEnd
+    )
+  )
+  if (digest !== artifact.programBinarySha256) {
+    throw new Error(
+      `Solana ${programName} artifact program mismatch: expected ${artifact.programBinarySha256}, received ${digest}`
+    )
+  }
 }
 
 /** Assert that one profile digest matches the interface compiled into the SDK. */
@@ -152,16 +125,6 @@ export function assertOutpostArtifactCompatibility(
           OutpostArtifactManifests.ethereum.contracts[contractName].abiSha256,
           `Ethereum ${contractName} ABI`
         )
-        if (
-          OutpostArtifactManifests.mode === OutpostArtifactMode.deploymentBundle
-        ) {
-          assertInterfaceDigest(
-            profile.ethereum.contracts[contractName].implementationCodeSha256,
-            OutpostArtifactManifests.ethereum.contracts[contractName]
-              .implementationCodeSha256,
-            `Ethereum ${contractName} deployment runtime`
-          )
-        }
       })
     })
     .with(OutpostChainFamily.solana, () => {
@@ -171,16 +134,6 @@ export function assertOutpostArtifactCompatibility(
           OutpostArtifactManifests.solana.programs[programName].idlSha256,
           `Solana ${programName} IDL`
         )
-        if (
-          OutpostArtifactManifests.mode === OutpostArtifactMode.deploymentBundle
-        ) {
-          assertInterfaceDigest(
-            profile.solana.programs[programName].programDataSha256,
-            OutpostArtifactManifests.solana.programs[programName]
-              .programDataSha256,
-            `Solana ${programName} deployment ProgramData`
-          )
-        }
       })
     })
     .exhaustive()

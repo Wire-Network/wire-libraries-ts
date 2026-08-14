@@ -228,12 +228,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - `packages/sdk-core/src/contracts/sysio/uwrit` preserves raw request bytes and exposes `sourceRequestId` for swap correlation. External outpost ids are big-endian; synthetic WIRE queue ids are little-endian and high-bit tagged.
 - `packages/sdk-outpost` owns typed Ethereum/Solana clients and validates caller-supplied immutable deployment profiles. Canonical ABIs, IDLs, runtime templates, and program binaries come from exact npm package versions owned by `wire-ethereum` and `wire-solana`; never replace them with sibling artifact links. Generated clients are ignored build outputs and must not be copied or edited here.
 - `OutpostClient.create` is sdk-outpost's only published client-construction facade. Concrete Ethereum/Solana instance types remain available for typing, but their backend factories and module paths are not package entrypoints.
-- `scripts/sdk-outpost/generate.mjs` must preserve literal Solana IDL account names in `LiqsolCore`; widening the generated type to base `Idl` erases precise `Program<LiqsolCore>["account"]` members.
-- `scripts/sdk-outpost/generate.mjs --deployment-artifacts-path <dir|tar.gz>` is a local integration mode for exact infra bundles. It must verify bundled ABI/IDL hashes and bind executable verification to the profile's exact implementation/ProgramData hashes. `verify:package` must reject this mode; release builds always regenerate from producer packages.
-- `packages/sdk-outpost` owns external reserve-swap instruction assembly,
-  allowance handling, source submission, balance reads, and canonical
-  `sourceRequestId` extraction. Staking remains outside this package until its
-  dedicated migration.
+- `packages/sdk-outpost` owns external reserve lifecycle and swap execution. Staking remains outside this package until its dedicated migration.
 - `sdk-outpost` accepts caller-owned providers and deployment profiles, verifies exact Ethereum implementations and Solana ProgramData against source-owned runtime artifacts, and never owns mutable endpoint catalogs. A same-code cluster respin requires a new profile, not an artifact or SDK release; any deployable binary change requires both a producer artifact and SDK release.
 - A connected outpost client proves deployment compatibility, not swap or stake readiness. Wire-chain orchestration remains in `sdk-core`, and consumers must retain flow-specific capability gates.
 - Publish `sdk-outpost` only through the repository release workflow, with `prepack` and release verification passing.
