@@ -96,12 +96,17 @@ jobs:
           JEST_JUNIT_OUTPUT_DIR: reports/junit
           JEST_JUNIT_OUTPUT_NAME: jest-junit.xml
         run: |
-          # --no-frozen-lockfile to match ci.yaml / publish-npm.yaml: the OPP
-          # models are resolved via .pnpmfile.cjs, not locked, so a frozen install
-          # fails on the resulting lockfile drift.
-          pnpm install --ignore-scripts --no-frozen-lockfile
+          # Release inputs are registry-backed and fully represented in the
+          # reviewed lockfile. Refuse dependency drift at the publishing gate.
+          pnpm install --ignore-scripts --frozen-lockfile
           pnpm run build
           pnpm run test:ci
+
+      - name: Verify sdk-outpost release
+        run: pnpm --dir packages/sdk-outpost run verify:release
+
+      - name: Inspect sdk-outpost package
+        run: pnpm --dir packages/sdk-outpost pack --dry-run
 
       # npm is the irreversible step -- do it once the gate is green, BEFORE
       # tagging, so a failed publish leaves no dangling tag to trip the
