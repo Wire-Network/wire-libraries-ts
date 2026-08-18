@@ -119,7 +119,7 @@ export function createOutpostDeploymentProfileFixture(): OutpostDeploymentProfil
     ),
     programData = createSolanaProgramDataAccountData(),
     profile = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       id: `${TestWireChainId}-${TestHash.slice(0, 12)}`,
       deploymentChecksum: TestHash,
       wire: { chainId: TestWireChainId },

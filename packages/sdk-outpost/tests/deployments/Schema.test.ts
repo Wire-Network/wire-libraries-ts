@@ -31,6 +31,15 @@ describe("OutpostDeploymentProfileSchema", () => {
     )
   })
 
+  it("rejects a pre-BAR deployment profile schema", () => {
+    const profile = {
+      ...createOutpostDeploymentProfileFixture(),
+      schemaVersion: 1
+    }
+
+    expect(() => parseOutpostDeploymentProfile(profile)).toThrow("expected 2")
+  })
+
   it("rejects an invalid Solana ProgramData address", () => {
     const fixture = createOutpostDeploymentProfileFixture()
     fixture.solana.programs.liqsolCore.programDataAddress =
