@@ -6,8 +6,8 @@ directory outside this process.
 
 ## Current first-release state
 
-As of August 14, 2026, both exact producer artifact packages are public on npm
-at `0.1.0`. The first `@wireio/sdk-outpost` release is still pending. Its
+As of August 18, 2026, both exact producer artifact packages are public on npm
+at `0.1.1`. The first `@wireio/sdk-outpost` release is still pending. Its
 workspace version remains `0.0.0` until the existing repository-wide patch
 workflow bumps and publishes it; do not create a one-off version or publish the
 workspace directory manually.
@@ -72,7 +72,7 @@ not be published by `sdk-outpost`.
 
 The first successful publish creates the npm package page. Release sequence:
 
-1. Confirm both exact `0.1.0` producer artifact versions are publicly
+1. Confirm both exact `0.1.1` producer artifact versions are publicly
    installable.
 2. Confirm the `wireio` organization exists on npm and the release owner can
    publish public packages in that scope.

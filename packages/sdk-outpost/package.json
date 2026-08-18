@@ -58,8 +58,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@wireio/outpost-ethereum-artifacts": "0.1.0",
-    "@wireio/outpost-solana-artifacts": "0.1.0",
+    "@wireio/outpost-ethereum-artifacts": "0.1.1",
+    "@wireio/outpost-solana-artifacts": "0.1.1",
     "@typechain/ethers-v5": "^11.1.2",
     "prettier": "3.8.1",
     "typechain": "^8.3.2",

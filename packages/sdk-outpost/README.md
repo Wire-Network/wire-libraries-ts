@@ -8,8 +8,8 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-Publication status as of August 14, 2026: the exact Ethereum and Solana producer
-artifact packages are publicly available as `0.1.0`, while the first
+Publication status as of August 18, 2026: the exact Ethereum and Solana producer
+artifact packages are publicly available as `0.1.1`, while the first
 `@wireio/sdk-outpost` npm release is pending. The workspace version remains
 `0.0.0` until the repository-wide release workflow performs its patch bump.
 
