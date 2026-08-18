@@ -38,8 +38,13 @@ result with a frozen install.
 
 - Use Node.js 24 and the repository-pinned pnpm version through Corepack.
 - Keep the lockfile unchanged after a frozen install.
-- Generate clients only through `scripts/sdk-outpost/generate.mjs`; never edit
-  generated TypeChain, Anchor, or artifact-manifest sources by hand.
+- Generate clients only through `scripts/sdk-outpost/generate.mjs`; this
+  consumer-side step validates the pinned producer packages and converts their
+  ABI/IDL into ignored TypeChain, Anchor, and artifact-manifest sources. Never
+  edit those generated sources by hand.
+- Keep `scripts/sdk-outpost/verify-package.mjs` as the package boundary check;
+  it verifies the built CommonJS/ESM entrypoints and rejects raw producer or
+  generated sources from the npm payload.
 - Confirm the package contains no secrets, RPC credentials, private keys,
   deployment addresses, or mutable environment configuration.
 - Confirm deployment profiles are distributed through the authenticated

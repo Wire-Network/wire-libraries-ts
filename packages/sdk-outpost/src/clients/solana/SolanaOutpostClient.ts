@@ -14,7 +14,7 @@ import { SolanaReserveSwapClient } from "./SolanaReserveSwapClient.js"
 /** Strictly typed access to one verified Solana outpost deployment. */
 export class SolanaOutpostClient {
   /** Create the Solana backend for the package-level outpost client facade. */
-  static async createSolana(
+  static async create(
     options: SolanaOutpostClientOptions
   ): Promise<SolanaOutpostClient> {
     const { profile, provider } = options

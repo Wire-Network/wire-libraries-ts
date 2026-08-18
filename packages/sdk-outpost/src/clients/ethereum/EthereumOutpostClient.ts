@@ -29,7 +29,7 @@ function resolveProvider(
 /** Strictly typed access to one verified Ethereum outpost deployment. */
 export class EthereumOutpostClient {
   /** Create the Ethereum backend for the package-level outpost client facade. */
-  static async createEthereum(
+  static async create(
     options: EthereumOutpostClientOptions
   ): Promise<EthereumOutpostClient> {
     const { connection, profile } = options,

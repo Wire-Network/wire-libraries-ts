@@ -1,23 +1,18 @@
 // noinspection JSUnresolvedReference
 
 /**
- * pnpm hook to resolve OPP model packages from a local wire-sysio build.
+ * pnpm hook to resolve @wireio packages from the local wire-libraries-ts monorepo.
  *
  * Usage:
- *   1. Build the wire-sysio OPP model outputs in the sibling repo.
- *   2. Run `WIRE_USE_LOCAL_OPP_MODELS=true pnpm install --lockfile=false`.
- *
- * Registry resolution is the default. Outpost artifact packages always resolve
- * from their exact registry versions.
+ *   1. Add packages you want to link to the `localOverrides` map below.
+ *   2. Run `pnpm install` — pnpm will use these local paths instead of the registry.
+ *   3. Comment out or remove entries to revert to registry versions.
  *
  * Docs: https://pnpm.io/pnpmfile
  */
 
 const Path = require("path")
 const Fs = require("node:fs")
-
-const LOCAL_OPP_MODELS_ENABLED = "true"
-const localOppModelTargets = ["typescript"]
 
 /**
  * Checks whether a path exists and is a directory, without throwing.
@@ -39,26 +34,20 @@ function isDirectory(dirPath) {
  */
 const localOverrides = {}
 
-/**
- * Appends every locally available OPP model package.
- *
- * Platform builds may consume wire-sysio model output after its producer runs.
- */
-function appendLocalOppModelOverrides() {
-  localOppModelTargets
-    .map(target => [
-      `@wireio/opp-${target}-models`,
-      Path.resolve(__dirname, "..", "wire-sysio", "build", "opp", target)
-    ])
-    .filter(([, path]) => isDirectory(path))
-    .forEach(([pkgName, path]) => {
-      localOverrides[pkgName] = path
-    })
-}
+// AS THE PROTOBUF LIBS HAVE BEEN RELOCATED TO SYSIO
+// WE CAN NOW USE THE MODELS WITHOUT ISSUE.
+// CIRCULAR DEP REMOVED
 
-if (process.env.WIRE_USE_LOCAL_OPP_MODELS === LOCAL_OPP_MODELS_ENABLED) {
-  appendLocalOppModelOverrides()
-}
+const wireOPPPkgPaths = ["typescript", "solidity"].map(target => [
+  `@wireio/opp-${target}-models`,
+  Path.resolve(__dirname, "..", "wire-sysio", "build", "opp", target)
+])
+
+wireOPPPkgPaths
+  .filter(([, path]) => isDirectory(path))
+  .forEach(([pkgName, path]) => {
+    localOverrides[pkgName] = path
+  })
 
 /**
  * `readPackage` hook, which links locally available versions of

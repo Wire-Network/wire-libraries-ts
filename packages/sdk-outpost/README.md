@@ -252,9 +252,9 @@ pnpm --dir packages/sdk-outpost run verify:release
 pnpm --dir packages/sdk-outpost pack --dry-run
 ```
 
-Release versions are managed by the monorepo-wide patch workflow. See
-[`RELEASING.md`](RELEASING.md) for artifact prerequisites and the verification
-checklist.
+Release versions are managed by the monorepo-wide patch workflow. See the
+[repository release guide](https://github.com/Wire-Network/wire-libraries-ts/blob/master/RELEASING.md)
+for artifact prerequisites and the verification checklist.
 
 ## License
 

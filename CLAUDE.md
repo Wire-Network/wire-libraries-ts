@@ -5,9 +5,7 @@
 ## Build & Development
 
 ```bash
-pnpm install                # Install registry deps (pnpm 10.34.5, Node >=22)
-# Link available sibling wire-sysio OPP model outputs:
-WIRE_USE_LOCAL_OPP_MODELS=true pnpm install --lockfile=false
+pnpm install                # Install deps (pnpm 10.34.5, Node >=22); available sibling OPP models link automatically
 pnpm build                  # Build all packages via tsc -b
 pnpm build:dev              # Watch mode (incremental)
 pnpm test                   # Build + jest (all packages)
@@ -227,7 +225,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
 - `packages/sdk-core/src/contracts/sysio/uwrit` preserves raw request bytes and exposes `sourceRequestId` for swap correlation. External outpost ids are big-endian; synthetic WIRE queue ids are little-endian and high-bit tagged.
 - `packages/sdk-outpost` owns typed Ethereum/Solana clients and validates caller-supplied immutable deployment profiles. Canonical ABIs, IDLs, runtime templates, and program binaries come from exact npm package versions owned by `wire-ethereum` and `wire-solana`; never replace them with sibling artifact links. Generated clients are ignored build outputs and must not be copied or edited here.
-- `OutpostClient.create` is sdk-outpost's only published client-construction facade. Concrete Ethereum/Solana instance types remain available for typing, but their backend factories and module paths are not package entrypoints.
+- `OutpostClient.create` is sdk-outpost's only published client-construction facade. It delegates family selection to an internal factory; concrete Ethereum/Solana instance types remain available for typing, but their backend factories and module paths are not package entrypoints.
 - `packages/sdk-outpost` owns external reserve lifecycle and swap execution. Staking remains outside this package until its dedicated migration.
 - `sdk-outpost` accepts caller-owned providers and deployment profiles, verifies exact Ethereum implementations and Solana ProgramData against source-owned runtime artifacts, and never owns mutable endpoint catalogs. A same-code cluster respin requires a new profile, not an artifact or SDK release; any deployable binary change requires both a producer artifact and SDK release.
 - A connected outpost client proves deployment compatibility, not swap or stake readiness. Wire-chain orchestration remains in `sdk-core`, and consumers must retain flow-specific capability gates.
