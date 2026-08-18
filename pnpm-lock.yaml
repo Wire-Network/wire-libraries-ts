@@ -19,7 +19,7 @@ importers:
     dependencies:
       '@wireio/opp-typescript-models':
         specifier: ^1.0.26
-        version: 1.0.30
+        version: 1.0.48
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -144,7 +144,7 @@ importers:
         version: 1.9.7
       '@wireio/opp-typescript-models':
         specifier: ^1.0.26
-        version: 1.0.30
+        version: 1.0.48
       '@wireio/shared':
         specifier: workspace:*
         version: link:../shared
@@ -1723,8 +1723,8 @@ packages:
       webpack-dev-server:
         optional: true
 
-  '@wireio/opp-typescript-models@1.0.30':
-    resolution: {integrity: sha512-g6DSdq5KULRhp604sYkT0u+0TgjORoc+26FIUdepIeFJpEm9YlBKkJshXTUnDdUKz8fB6LUhW2NRQp/shIgrUg==}
+  '@wireio/opp-typescript-models@1.0.48':
+    resolution: {integrity: sha512-3HDC88AohYBBMuVdSqdI5tIRHPZWWTOaS+yQ/Xs1sCvhKuqlpF3KnYLcgIiXX3x6IC87dfo55xBfHPFcWpthmw==}
 
   '@wireio/outpost-ethereum-artifacts@0.1.0':
     resolution: {integrity: sha512-q7QqsPErrDpW5Js+hKyHMwWackY9ut7F7fSf8DaiY1jB7ABT1bGgLGFzS7zqvnZz+lYCThy50adRkMmqq/EP0w==}
@@ -4579,7 +4579,7 @@ snapshots:
       '@babel/types': 7.29.7
       '@jridgewell/remapping': 2.3.5
       convert-source-map: 2.0.0
-      debug: 4.3.4
+      debug: 4.4.3
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -4738,7 +4738,7 @@ snapshots:
       '@babel/parser': 7.29.7
       '@babel/template': 7.29.7
       '@babel/types': 7.29.7
-      debug: 4.3.4
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -5873,7 +5873,7 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 25.5.0
+      '@types/node': 22.20.0
 
   '@types/debug@4.1.13':
     dependencies:
@@ -5998,11 +5998,11 @@ snapshots:
 
   '@types/ws@7.4.7':
     dependencies:
-      '@types/node': 25.5.0
+      '@types/node': 22.20.0
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 25.5.0
+      '@types/node': 22.20.0
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -6271,7 +6271,7 @@ snapshots:
       webpack: 5.104.1(postcss@8.5.16)(webpack-cli@6.0.1)
       webpack-cli: 6.0.1(webpack@5.104.1)
 
-  '@wireio/opp-typescript-models@1.0.30':
+  '@wireio/opp-typescript-models@1.0.48':
     dependencies:
       '@protobuf-ts/runtime': 2.11.1
 
@@ -7327,7 +7327,7 @@ snapshots:
   http-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.4
-      debug: 4.3.4
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -7344,7 +7344,7 @@ snapshots:
   https-proxy-agent@7.0.6:
     dependencies:
       agent-base: 7.1.4
-      debug: 4.3.4
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -7473,7 +7473,7 @@ snapshots:
   istanbul-lib-source-maps@5.0.6:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
-      debug: 4.3.4
+      debug: 4.4.3
       istanbul-lib-coverage: 3.2.2
     transitivePeerDependencies:
       - supports-color
@@ -8777,7 +8777,7 @@ snapshots:
   typechain@8.3.2(typescript@6.0.2):
     dependencies:
       '@types/prettier': 2.7.3
-      debug: 4.3.4
+      debug: 4.4.3
       fs-extra: 7.0.1
       glob: 7.1.7
       js-sha3: 0.8.0
