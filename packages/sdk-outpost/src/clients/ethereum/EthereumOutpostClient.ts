@@ -49,10 +49,12 @@ export class EthereumOutpostClient {
       this.contract(EthereumContractName.ReserveManager),
       options.connection
     )
-    this.nodeOwners = new EthereumNodeOwnerClient(
-      this.contract(EthereumContractName.BAR),
-      options.connection
-    )
+    if (options.profile.ethereum.contracts[EthereumContractName.BAR] != null) {
+      this.nodeOwnerClient = new EthereumNodeOwnerClient(
+        this.contract(EthereumContractName.BAR),
+        options.connection
+      )
+    }
   }
 
   /** Reserve creation, cancellation, and reads for this verified outpost. */
@@ -61,8 +63,17 @@ export class EthereumOutpostClient {
   /** Reserve-swap writes and balance reads for this verified outpost. */
   readonly swaps: EthereumReserveSwapClient
 
-  /** Node-owner slot reads, approvals, and BAR registration. */
-  readonly nodeOwners: EthereumNodeOwnerClient
+  private readonly nodeOwnerClient?: EthereumNodeOwnerClient
+
+  /** Node-owner slot reads, approvals, and BAR registration when deployed. */
+  get nodeOwners(): EthereumNodeOwnerClient {
+    if (this.nodeOwnerClient == null) {
+      throw new Error(
+        "Ethereum node owners are unavailable because this deployment profile has no BAR identity."
+      )
+    }
+    return this.nodeOwnerClient
+  }
 
   /** Deployment profile used to verify and connect this client. */
   get profile(): EthereumOutpostClientOptions["profile"] {
@@ -73,12 +84,15 @@ export class EthereumOutpostClient {
   contract<T extends EthereumContractName>(name: T): EthereumContractMap[T] {
     const { connection, profile } = this.options,
       contract = match(name as EthereumContractName)
-        .with(EthereumContractName.BAR, () =>
-          BAR__factory.connect(
-            profile.ethereum.contracts[EthereumContractName.BAR].address,
-            connection
-          )
-        )
+        .with(EthereumContractName.BAR, () => {
+          const bar = profile.ethereum.contracts[EthereumContractName.BAR]
+          if (bar == null) {
+            throw new Error(
+              "Ethereum node owners are unavailable because this deployment profile has no BAR identity."
+            )
+          }
+          return BAR__factory.connect(bar.address, connection)
+        })
         .with(EthereumContractName.OPP, () =>
           OPP__factory.connect(
             profile.ethereum.contracts[EthereumContractName.OPP].address,

@@ -31,13 +31,15 @@ describe("OutpostDeploymentProfileSchema", () => {
     )
   })
 
-  it("rejects a pre-BAR deployment profile schema", () => {
-    const profile = {
-      ...createOutpostDeploymentProfileFixture(),
-      schemaVersion: 1
-    }
+  it("preserves schema-v1 profiles when BAR is not deployed", () => {
+    const profile = createOutpostDeploymentProfileFixture()
+    delete profile.ethereum.contracts[EthereumContractName.BAR]
 
-    expect(() => parseOutpostDeploymentProfile(profile)).toThrow("expected 2")
+    expect(
+      parseOutpostDeploymentProfile(profile).ethereum.contracts[
+        EthereumContractName.BAR
+      ]
+    ).toBeUndefined()
   })
 
   it("rejects an invalid Solana ProgramData address", () => {

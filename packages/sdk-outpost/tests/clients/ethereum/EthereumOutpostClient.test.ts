@@ -123,6 +123,23 @@ describe("EthereumOutpostClient", () => {
     )
   })
 
+  it("keeps existing Ethereum clients usable when BAR is not deployed", async () => {
+    const profile = createOutpostDeploymentProfileFixture()
+    delete profile.ethereum.contracts[EthereumContractName.BAR]
+    const provider = createEthereumProviderFixture(profile),
+      client = await createEthereumClient({
+        profile,
+        connection: provider
+      })
+
+    expect(client.reserves).toBeInstanceOf(EthereumReserveClient)
+    expect(client.swaps).toBeInstanceOf(EthereumReserveSwapClient)
+    expect(() => client.nodeOwners).toThrow("has no BAR identity")
+    expect(provider.getCode).toHaveBeenCalledTimes(
+      (Object.values(EthereumContractName).length - 1) * 2
+    )
+  })
+
   it("parses the protocol deposit id from a confirmed receipt", () => {
     const events = [
       { eventName: "SwapDeposit", args: [42n] } as unknown as EventLog

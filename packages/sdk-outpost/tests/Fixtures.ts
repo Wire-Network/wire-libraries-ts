@@ -119,7 +119,7 @@ export function createOutpostDeploymentProfileFixture(): OutpostDeploymentProfil
     ),
     programData = createSolanaProgramDataAccountData(),
     profile = {
-      schemaVersion: 2,
+      schemaVersion: 1,
       id: `${TestWireChainId}-${TestHash.slice(0, 12)}`,
       deploymentChecksum: TestHash,
       wire: { chainId: TestWireChainId },
@@ -159,7 +159,7 @@ export function createEthereumProviderFixture(
   )
   jest.spyOn(provider, "getCode").mockImplementation(async address => {
     const implementation = Object.entries(profile.ethereum.contracts).find(
-      ([, deployment]) => deployment.implementationAddress === address
+      ([, deployment]) => deployment?.implementationAddress === address
     )
     if (implementation != null) {
       return createEthereumImplementationCode(
@@ -167,14 +167,14 @@ export function createEthereumProviderFixture(
       )
     }
     return Object.values(profile.ethereum.contracts).some(
-      deployment => deployment.address === address
+      deployment => deployment?.address === address
     )
       ? TestEthereumProxyCode
       : "0x"
   })
   jest.spyOn(provider, "getStorage").mockImplementation(async address => {
     const contract = Object.values(profile.ethereum.contracts).find(
-      deployment => deployment.address === address
+      deployment => deployment?.address === address
     )
     return zeroPadValue(
       contract?.implementationAddress ??

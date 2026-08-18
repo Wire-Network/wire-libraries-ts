@@ -50,7 +50,7 @@ export const SolanaProgramDeploymentProfileSchema = z.object({
 /** Immutable compatibility profile for one Wire outpost deployment. */
 export const OutpostDeploymentProfileSchema = z
   .object({
-    schemaVersion: z.literal(2),
+    schemaVersion: z.literal(1),
     id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
     deploymentChecksum: Sha256Schema,
     wire: z.object({
@@ -59,7 +59,8 @@ export const OutpostDeploymentProfileSchema = z
     ethereum: z.object({
       chainId: z.number().int().positive(),
       contracts: z.object({
-        [EthereumContractName.BAR]: EthereumContractDeploymentProfileSchema,
+        [EthereumContractName.BAR]:
+          EthereumContractDeploymentProfileSchema.optional(),
         [EthereumContractName.OPP]: EthereumContractDeploymentProfileSchema,
         [EthereumContractName.OPPInbound]:
           EthereumContractDeploymentProfileSchema,
