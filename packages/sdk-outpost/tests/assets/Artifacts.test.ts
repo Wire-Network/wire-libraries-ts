@@ -1,16 +1,20 @@
 import type { Program } from "@coral-xyz/anchor"
+import {
+  OPP__factory,
+  OperatorRegistry__factory,
+  ReserveManager__factory
+} from "@wireio/outpost-ethereum-artifacts"
+import {
+  liqsolCoreIdl,
+  type LiqsolCore
+} from "@wireio/outpost-solana-artifacts"
 
 import {
   EthereumContractName,
-  OPP__factory,
-  OperatorRegistry__factory,
   OutpostArtifactManifests,
   OutpostChainFamily,
-  ReserveManager__factory,
   SolanaProgramName,
-  type LiqsolCore,
-  assertOutpostArtifactCompatibility,
-  liqsolCoreIdl
+  assertOutpostArtifactCompatibility
 } from "@wireio/sdk-outpost"
 
 import { createOutpostDeploymentProfileFixture } from "../Fixtures.js"

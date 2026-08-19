@@ -36,32 +36,21 @@
   "scripts": {
     "compile": "tsc -b tsconfig.json",
     "compile:watch": "tsc -b tsconfig.json -w",
-    "clean": "../../scripts/sdk-outpost/clean.mjs",
-    "generate": "../../scripts/sdk-outpost/generate.mjs",
-    "prepare:compile": "pnpm run clean && pnpm run generate",
-    "build": "pnpm run prepare:compile && pnpm run compile && pnpm run fix:hybrid:exports",
-    "test": "pnpm run generate && NODE_OPTIONS=--experimental-vm-modules jest",
-    "fix:hybrid:exports": "node ../../scripts/fix-hybrid-output.mjs .",
-    "verify:package": "../../scripts/sdk-outpost/verify-package.mjs",
-    "verify:release": "pnpm run build && pnpm run verify:package",
-    "prepack": "pnpm run verify:release"
+    "build": "pnpm run compile && pnpm run fix:hybrid:exports",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "fix:hybrid:exports": "node ../../scripts/fix-hybrid-output.mjs ."
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
-    "@ethersproject/abi": "^5.8.0",
-    "@ethersproject/providers": "^5.8.0",
     "@solana/spl-token": "^0.3.11",
     "@solana/web3.js": "^1.98.4",
-    "ethers": "^5.8.0",
+    "@wireio/outpost-ethereum-artifacts": "0.2.1",
+    "@wireio/outpost-solana-artifacts": "0.2.1",
+    "ethers": "^6.15.0",
     "ts-pattern": "^5.9.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@wireio/outpost-ethereum-artifacts": "0.1.1",
-    "@wireio/outpost-solana-artifacts": "0.1.1",
-    "@typechain/ethers-v5": "^11.1.2",
-    "prettier": "3.8.1",
-    "typechain": "^8.3.2",
     "typescript": "6.0.2"
   }
 }

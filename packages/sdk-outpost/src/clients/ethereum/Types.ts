@@ -1,11 +1,11 @@
-import type { providers, Signer } from "ethers"
-
 import type {
   OPP,
   OPPInbound,
   OperatorRegistry,
   ReserveManager
-} from "../../contracts/ethereum/index.js"
+} from "@wireio/outpost-ethereum-artifacts"
+import type { Provider, Signer } from "ethers"
+
 import type { OutpostDeploymentProfile } from "../../deployments/index.js"
 import { EthereumContractName } from "../../deployments/index.js"
 
@@ -14,7 +14,7 @@ export interface EthereumOutpostClientOptions {
   /** Immutable deployment profile selected from the parent Wire chain. */
   profile: OutpostDeploymentProfile
   /** Ethers provider or connected signer for the target Ethereum chain. */
-  connection: providers.Provider | Signer
+  connection: Provider | Signer
 }
 
 /** Generated contract clients keyed by their deployment identity. */

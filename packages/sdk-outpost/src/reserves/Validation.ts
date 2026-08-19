@@ -1,4 +1,4 @@
-import { BigNumber, utils as ethersUtils } from "ethers"
+import { getBigInt, getBytes, isBytesLike, toUtf8Bytes } from "ethers"
 
 import type {
   EthereumReserveCreateRequest,
@@ -6,8 +6,8 @@ import type {
   ReserveSwapRequest
 } from "./Types.js"
 
-const MaximumUnsigned64 = BigNumber.from("18446744073709551615"),
-  MinimumReserveValue = BigNumber.from(1),
+const MaximumUnsigned64 = 18_446_744_073_709_551_615n,
+  MinimumReserveValue = 1n,
   MinimumConnectorWeightBps = 1,
   MaximumConnectorWeightBps = 9999,
   MinimumToleranceBps = 0,
@@ -26,14 +26,14 @@ const MaximumUnsigned64 = BigNumber.from("18446744073709551615"),
 export function assertReserveUnsigned64(
   value: ReserveSwapRequest["sourceTokenCode"],
   field: string
-): BigNumber {
-  let parsed: BigNumber
+): bigint {
+  let parsed: bigint
   try {
-    parsed = BigNumber.from(value)
+    parsed = getBigInt(value)
   } catch (error: unknown) {
     throw new Error(`${field} must be an integer.`, { cause: error })
   }
-  if (parsed.lt(MinimumReserveValue) || parsed.gt(MaximumUnsigned64)) {
+  if (parsed < MinimumReserveValue || parsed > MaximumUnsigned64) {
     throw new Error(`${field} must be between 1 and uint64 max.`)
   }
   return parsed
@@ -46,13 +46,13 @@ export function assertReserveCreateDefinition(
   assertReserveUnsigned64(definition.tokenCode, "tokenCode")
   assertReserveUnsigned64(definition.reserveCode, "reserveCode")
 
-  let externalTokenAmount: BigNumber
+  let externalTokenAmount: bigint
   try {
-    externalTokenAmount = BigNumber.from(definition.externalTokenAmount)
+    externalTokenAmount = getBigInt(definition.externalTokenAmount)
   } catch (error: unknown) {
     throw new Error("externalTokenAmount must be an integer.", { cause: error })
   }
-  if (externalTokenAmount.lt(MinimumReserveValue)) {
+  if (externalTokenAmount < MinimumReserveValue) {
     throw new Error("externalTokenAmount must be greater than zero.")
   }
 
@@ -67,16 +67,14 @@ export function assertReserveCreateDefinition(
     )
   }
 
-  const nameBytes = ethersUtils.toUtf8Bytes(definition.name).length
+  const nameBytes = toUtf8Bytes(definition.name).length
   if (nameBytes === 0 || nameBytes > MaximumReserveNameBytes) {
     throw new Error(
       `name must contain 1 to ${MaximumReserveNameBytes} UTF-8 bytes.`
     )
   }
 
-  const descriptionBytes = ethersUtils.toUtf8Bytes(
-    definition.description
-  ).length
+  const descriptionBytes = toUtf8Bytes(definition.description).length
   if (descriptionBytes > MaximumReserveDescriptionBytes) {
     throw new Error(
       `description must contain at most ${MaximumReserveDescriptionBytes} UTF-8 bytes.`
@@ -89,10 +87,10 @@ export function assertEthereumReserveCreateRequest(
   request: EthereumReserveCreateRequest
 ): void {
   assertReserveCreateDefinition(request)
-  if (!ethersUtils.isBytesLike(request.creatorPubKey)) {
+  if (!isBytesLike(request.creatorPubKey)) {
     throw new Error(InvalidCompressedSecp256k1PublicKeyMessage)
   }
-  const creatorPublicKey = ethersUtils.arrayify(request.creatorPubKey)
+  const creatorPublicKey = getBytes(request.creatorPubKey)
   if (
     creatorPublicKey.length !== CompressedSecp256k1PublicKeyBytes ||
     (creatorPublicKey[0] !== CompressedSecp256k1PublicKeyPrefix.even &&
@@ -121,7 +119,7 @@ export function assertReserveSwapRequest(request: ReserveSwapRequest): void {
       `targetToleranceBps must be between ${MinimumToleranceBps} and ${MaximumToleranceBps}.`
     )
   }
-  if (ethersUtils.arrayify(request.targetRecipient).length === 0) {
+  if (getBytes(request.targetRecipient).length === 0) {
     throw new Error("targetRecipient is required.")
   }
 }

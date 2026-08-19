@@ -46,7 +46,7 @@ shared ──→ shared-web
 
 sdk-core ──→ wallet-ext-sdk ──→ wallet-browser-ext
 
-sdk-outpost (source artifact packages ──→ generated external-chain clients)
+source artifact libraries ──→ sdk-outpost external-chain clients
 ```
 
 Protoc plugins and bundler are standalone (no internal deps).
@@ -224,12 +224,12 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - System-contract `prepare` prefers synchronous ABI encoding but must retain a typed `AnyAction` fallback so `APIClient` can resolve the deployed ABI. Never invent a default write authorization in the public SDK.
 - `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
 - `packages/sdk-core/src/contracts/sysio/uwrit` preserves raw request bytes and exposes `sourceRequestId` for swap correlation. External outpost ids are big-endian; synthetic WIRE queue ids are little-endian and high-bit tagged.
-- `packages/sdk-outpost` owns typed Ethereum/Solana clients and validates caller-supplied immutable deployment profiles. Canonical ABIs, IDLs, runtime templates, and program binaries come from exact npm package versions owned by `wire-ethereum` and `wire-solana`; never replace them with sibling artifact links. Generated clients are ignored build outputs and must not be copied or edited here.
+- `packages/sdk-outpost` owns typed Ethereum/Solana clients and validates caller-supplied immutable deployment profiles. Canonical ABIs, IDLs, runtime templates, program binaries, ethers v6 factories, and Anchor types come directly from exact npm package versions owned by `wire-ethereum` and `wire-solana`; never regenerate them here or replace them with committed sibling links.
 - `OutpostClient.create` is sdk-outpost's only published client-construction facade. It delegates family selection to an internal factory; concrete Ethereum/Solana instance types remain available for typing, but their backend factories and module paths are not package entrypoints.
 - `packages/sdk-outpost` owns external reserve lifecycle and swap execution. Staking remains outside this package until its dedicated migration.
 - `sdk-outpost` accepts caller-owned providers and deployment profiles, verifies exact Ethereum implementations and Solana ProgramData against source-owned runtime artifacts, and never owns mutable endpoint catalogs. A same-code cluster respin requires a new profile, not an artifact or SDK release; any deployable binary change requires both a producer artifact and SDK release.
 - A connected outpost client proves deployment compatibility, not swap or stake readiness. Wire-chain orchestration remains in `sdk-core`, and consumers must retain flow-specific capability gates.
-- Publish `sdk-outpost` only through the repository release workflow, with `prepack` and release verification passing.
+- Publish `sdk-outpost` only through the repository release workflow after its normal build and tests pass.
 - Do not describe `sdk-outpost` as npm-available until `npm view` succeeds for both exact producer artifact versions and `@wireio/sdk-outpost`, and a clean platform-compatible install passes without sibling artifact links.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
 - Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch

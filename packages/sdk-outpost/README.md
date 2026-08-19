@@ -8,10 +8,11 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-Publication status as of August 18, 2026: the exact Ethereum and Solana producer
-artifact packages are publicly available as `0.1.1`, while the first
-`@wireio/sdk-outpost` npm release is pending. The workspace version remains
-`0.0.0` until the repository-wide release workflow performs its patch bump.
+Release target: producer package `0.2.1` adds directly importable TypeScript
+libraries and ethers v6 bindings. The first `@wireio/sdk-outpost` npm release
+remains pending until both producer releases are published. The workspace
+version remains `0.0.0` until the repository release workflow performs its
+patch bump.
 
 ## Install after the first SDK release
 
@@ -20,14 +21,14 @@ npm install @wireio/sdk-outpost
 ```
 
 Before using the registry command, verify that `@wireio/sdk-outpost` resolves
-through `npm view`. The generator consumes exact registry versions of
+through `npm view`. The SDK consumes exact registry versions of
 [`@wireio/outpost-ethereum-artifacts`](https://www.npmjs.com/package/@wireio/outpost-ethereum-artifacts)
 and
 [`@wireio/outpost-solana-artifacts`](https://www.npmjs.com/package/@wireio/outpost-solana-artifacts);
 do not replace them with committed machine-local links.
 
-Node.js 22 or newer is supported. The package publishes CommonJS and native ES
-module entrypoints with TypeScript declarations.
+Node.js 22 or newer and ethers v6 are supported. The package publishes CommonJS
+and native ES module entrypoints with TypeScript declarations.
 
 ## Supported surfaces
 
@@ -96,7 +97,7 @@ Validate caller-owned deployment data and provide the matching external-chain
 provider:
 
 ```ts
-import { providers } from "ethers"
+import { JsonRpcProvider } from "ethers"
 
 import {
   EthereumContractName,
@@ -110,7 +111,7 @@ const ethereum = await OutpostClient.create({
   family: OutpostChainFamily.ethereum,
   options: {
     profile,
-    connection: new providers.JsonRpcProvider(ethereumRpcUrl)
+    connection: new JsonRpcProvider(ethereumRpcUrl)
   }
 })
 const reserves = ethereum.contract(EthereumContractName.ReserveManager)
@@ -214,21 +215,18 @@ const solana = await OutpostClient.create({
 const liqsol = solana.program(SolanaProgramName.liqsolCore)
 ```
 
-The generated `LiqsolCore` type preserves the IDL's literal account namespace,
+The producer-owned `LiqsolCore` type preserves the IDL's literal account namespace,
 including `Program<LiqsolCore>["account"]["outpostConfig"]` and
-`Program<LiqsolCore>["account"]["reserve"]`. Regenerate from the source artifact
-package; never widen the IDL to the base `Idl` type or edit generated Anchor
-output by hand.
+`Program<LiqsolCore>["account"]["reserve"]`. Import it from
+`@wireio/outpost-solana-artifacts`; never widen the IDL to the base `Idl` type.
 
 ## Artifact ownership
 
 `@wireio/outpost-ethereum-artifacts` and `@wireio/outpost-solana-artifacts` are
-build-time inputs. Generation verifies every packaged ABI, IDL, normalized
-runtime template, and program binary before compiling exact manifests into
-`OutpostArtifactManifests`. Runtime verification then binds live executable
-bytes to those producer artifacts. Generated TypeChain and Anchor sources are
-ignored local build outputs; they are compiled into the published package and
-are never maintained by hand in this repository.
+normal runtime dependencies. Their producers verify and publish the ABIs, IDL,
+runtime bytes, manifests, ethers v6 factories, and Anchor types together.
+`sdk-outpost` imports those published libraries directly and only composes their
+manifests for live deployment verification; it does not regenerate chain code.
 
 ## Consumer boundaries
 
@@ -246,9 +244,8 @@ are never maintained by hand in this repository.
 ## Maintainer commands
 
 ```sh
-pnpm --dir packages/sdk-outpost run generate
+pnpm --dir packages/sdk-outpost run build
 pnpm --dir packages/sdk-outpost run test
-pnpm --dir packages/sdk-outpost run verify:release
 ```
 
 Release versions are managed by the monorepo-wide patch workflow. See the

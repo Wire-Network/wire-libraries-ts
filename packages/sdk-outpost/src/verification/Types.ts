@@ -1,5 +1,5 @@
 import type { Connection } from "@solana/web3.js"
-import type { providers } from "ethers"
+import type { Provider } from "ethers"
 
 import type { OutpostDeploymentProfile } from "../deployments/index.js"
 import { OutpostChainFamily } from "../deployments/index.js"
@@ -11,7 +11,7 @@ export interface EthereumOutpostDeploymentVerificationInput {
   /** Immutable deployment profile to verify. */
   profile: OutpostDeploymentProfile
   /** Ethereum provider connected to the deployed contracts. */
-  provider: providers.Provider
+  provider: Provider
 }
 
 /** Solana verification request for an outpost deployment profile. */

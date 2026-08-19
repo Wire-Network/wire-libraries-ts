@@ -39,6 +39,9 @@ import type {
   ReserveRewards
 } from "./Types.js"
 
+/** Push-transaction response returned by the configured API client. */
+type APIClientPushTransactionResponse = ReturnType<APIClient["pushTransaction"]>
+
 function enumValue<T extends Record<string, string | number>>(
   enumType: T,
   value: number | keyof T
@@ -232,8 +235,7 @@ export class ReserveClient {
         limit: Number.MAX_SAFE_INTEGER
       }),
       row = rows.find(
-        candidate =>
-          reserveRowSlugValue(candidate.reserve_code) === reserveCode
+        candidate => reserveRowSlugValue(candidate.reserve_code) === reserveCode
       )
 
     return row ? normalizeReserveRow(row) : null
@@ -261,7 +263,7 @@ export class ReserveClient {
   async pushMatchReserve(
     options: PushMatchReserveOptions,
     pushOptions: TransactionExtraOptions = options.pushOptions || {}
-  ): Promise<Awaited<ReturnType<APIClient["pushTransaction"]>>> {
+  ): APIClientPushTransactionResponse {
     return this.contractClient.actions.matchreserve.invoke(
       matchReserveActionData(options),
       {
@@ -280,7 +282,7 @@ export class ReserveClient {
   async pushMatchReserves(
     options: PushMatchReservesOptions,
     pushOptions: TransactionExtraOptions = options.pushOptions || {}
-  ): Promise<Awaited<ReturnType<APIClient["pushTransaction"]>>> {
+  ): APIClientPushTransactionResponse {
     if (options.matches.length === 0) {
       throw new Error("At least one reserve match is required.")
     }

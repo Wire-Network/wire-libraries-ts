@@ -4,12 +4,12 @@
   "scripts": {
     "compile": "tsc -b tsconfig.json",
     "compile:watch": "tsc -b tsconfig.json -w --preserveWatchOutput",
-    "build": "pnpm --dir packages/sdk-outpost run prepare:compile && pnpm run compile && pnpm --dir packages/sdk-outpost run fix:hybrid:exports",
+    "build": "pnpm run compile",
     "typecheck:strict-null:sdk-core": "pnpm --dir packages/sdk-core run typecheck:strict-null",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "lint": "eslint .",
-    "test": "pnpm run build && jest && pnpm --filter @wireio/sdk-outpost run test && pnpm --filter @wireio/sdk-outpost run verify:package",
-    "test:ci": "pnpm run build && pnpm run typecheck:strict-null:sdk-core && jest --reporters=default --reporters=jest-junit && pnpm --filter @wireio/sdk-outpost run test && pnpm --filter @wireio/sdk-outpost run verify:package",
+    "test": "pnpm run build && jest",
+    "test:ci": "pnpm run build && pnpm run typecheck:strict-null:sdk-core && jest --reporters=default --reporters=jest-junit",
     "clean": "./scripts/clean.sh && pnpm -r run clean",
     "prepare": "husky"
   },

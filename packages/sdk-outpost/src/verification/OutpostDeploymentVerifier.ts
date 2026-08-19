@@ -1,7 +1,7 @@
 import { PublicKey } from "@solana/web3.js"
 import type { AccountInfo, Connection } from "@solana/web3.js"
-import type { BytesLike, providers } from "ethers"
-import { utils as ethersUtils } from "ethers"
+import type { BytesLike, Provider } from "ethers"
+import { dataSlice, getAddress, sha256 as ethersSha256 } from "ethers"
 import { match } from "ts-pattern"
 
 import {
@@ -37,7 +37,7 @@ export const SolanaUpgradeableLoaderProgramId = new PublicKey(
 )
 
 function sha256(value: BytesLike): string {
-  return ethersUtils.sha256(value).slice(2)
+  return ethersSha256(value).slice(2)
 }
 
 function upgradeableLoaderStateTag(data: Uint8Array): number {
@@ -64,12 +64,12 @@ function assertSolanaUpgradeableLoaderAccount(
 
 async function verifyEthereum(
   profile: OutpostDeploymentProfile,
-  provider: providers.Provider
+  provider: Provider
 ): Promise<void> {
   assertOutpostArtifactCompatibility(profile, OutpostChainFamily.ethereum)
 
   const network = await provider.getNetwork()
-  if (network.chainId !== profile.ethereum.chainId) {
+  if (network.chainId !== BigInt(profile.ethereum.chainId)) {
     throw new Error(
       `Ethereum chain mismatch: expected ${profile.ethereum.chainId}, received ${network.chainId}`
     )
@@ -86,15 +86,12 @@ async function verifyEthereum(
         )
       }
 
-      const implementationWord = await provider.getStorageAt(
+      const implementationWord = await provider.getStorage(
           contract.address,
           Eip1967ImplementationStorageSlot
         ),
-        implementationAddress = ethersUtils.getAddress(
-          ethersUtils.hexDataSlice(
-            implementationWord,
-            Eip1967ImplementationAddressOffset
-          )
+        implementationAddress = getAddress(
+          dataSlice(implementationWord, Eip1967ImplementationAddressOffset)
         )
 
       if (implementationAddress !== contract.implementationAddress) {

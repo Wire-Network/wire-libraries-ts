@@ -1,27 +1,34 @@
+import type { ReserveManager } from "@wireio/outpost-ethereum-artifacts"
 import {
-  BigNumber,
-  Signer,
+  AbiCoder,
+  AbstractSigner,
+  JsonRpcProvider,
   Wallet,
-  constants as ethersConstants,
-  providers,
-  utils as ethersUtils
+  ZeroAddress,
+  ZeroHash,
+  type Provider,
+  type TransactionReceipt,
+  type TransactionRequest,
+  type TransactionResponse,
+  type TypedDataDomain,
+  type TypedDataField
 } from "ethers"
 
 import {
   EthereumReserveClient,
   OutpostReserveStatus,
-  type EthereumReserveCreateRequest,
-  type ReserveManager
+  type EthereumReserveCreateRequest
 } from "@wireio/sdk-outpost"
 
 const ReserveTransactionHash = `0x${"11".repeat(32)}`,
   ApprovalTransactionHash = `0x${"22".repeat(32)}`,
+  ReserveManagerAddress = "0x18E317A7D70d8fBf8e6E893616b52390EbBdb629",
   TokenAddress = "0x5c74c94173F05dA1720953407cbb920F3DF9f887",
   CreatorAddress = "0x7412BC256355ABD22dD53De3a38E8995b5d4c1D1",
-  TransactionReceipt = {
+  TransactionReceiptFixture = {
     logs: [],
     status: 1
-  } as unknown as providers.TransactionReceipt
+  } as unknown as TransactionReceipt
 
 const request: EthereumReserveCreateRequest = {
   tokenCode: 1,
@@ -35,43 +42,47 @@ const request: EthereumReserveCreateRequest = {
   creatorPubKey: `0x02${"11".repeat(32)}`
 }
 
+/** Create one v6 transaction response fixture. */
 function transactionFixture(
   hash = ReserveTransactionHash,
-  wait: providers.TransactionResponse["wait"] = jest.fn(
-    async (): Promise<providers.TransactionReceipt> => TransactionReceipt
+  wait: TransactionResponse["wait"] = jest.fn(
+    async (): Promise<TransactionReceipt> => TransactionReceiptFixture
   )
-) {
-  return {
-    hash,
-    wait
-  } as unknown as providers.TransactionResponse
+): TransactionResponse {
+  return { hash, wait } as unknown as TransactionResponse
 }
 
-function reserveManagerFixture() {
+/** Create one callable v6 contract method with a static preflight. */
+function contractMethodFixture(transaction: TransactionResponse) {
+  return Object.assign(
+    jest.fn(async () => transaction),
+    {
+      staticCall: jest.fn(async (): Promise<void> => undefined)
+    }
+  )
+}
+
+/** Create the ReserveManager contract surface exercised by this client. */
+function reserveManagerFixture(configuredTokenAddress = TokenAddress) {
   const transaction = transactionFixture(),
+    createReserve = contractMethodFixture(transaction),
+    createErc20WithApproval = contractMethodFixture(transaction),
+    createErc20WithPermit = contractMethodFixture(transaction),
     reserveManager = {
-      address: "0x18E317A7D70d8fBf8e6E893616b52390EbBdb629",
-      callStatic: {
-        create_reserve: jest.fn(async (): Promise<void> => undefined),
-        requestReserveCreateErc20WithApproval: jest.fn(
-          async (): Promise<void> => undefined
-        ),
-        requestReserveCreateErc20WithPermit: jest.fn(
-          async (): Promise<void> => undefined
-        )
-      },
-      create_reserve: jest.fn(async () => transaction),
-      requestReserveCreateErc20WithApproval: jest.fn(async () => transaction),
-      requestReserveCreateErc20WithPermit: jest.fn(async () => transaction),
+      target: ReserveManagerAddress,
+      getAddress: jest.fn(async () => ReserveManagerAddress),
+      create_reserve: createReserve,
+      requestReserveCreateErc20WithApproval: createErc20WithApproval,
+      requestReserveCreateErc20WithPermit: createErc20WithPermit,
       cancel_create_reserve: jest.fn(async () => transaction),
-      tokenAddressesByCode: jest.fn(async () => TokenAddress),
+      tokenAddressesByCode: jest.fn(async () => configuredTokenAddress),
       getReserve: jest.fn(async () => ({
-        tokenCode: BigNumber.from(1),
-        reserveCode: BigNumber.from(2),
-        externalTokenAmount: BigNumber.from(3),
-        requestedWireAmount: BigNumber.from(4),
-        connectorWeightBps: 5_000,
-        status: 1,
+        tokenCode: 1n,
+        reserveCode: 2n,
+        externalTokenAmount: 3n,
+        requestedWireAmount: 4n,
+        connectorWeightBps: 5_000n,
+        status: 1n,
         creator: CreatorAddress,
         exists: true
       }))
@@ -80,15 +91,24 @@ function reserveManagerFixture() {
   return { reserveManager, transaction }
 }
 
-class Erc20Signer extends Signer {
-  readonly provider = new providers.JsonRpcProvider()
-  readonly approvalWait = jest.fn(
-    async (): Promise<providers.TransactionReceipt> => TransactionReceipt
-  )
-  readonly approval = transactionFixture(
-    ApprovalTransactionHash,
-    this.approvalWait
-  )
+/** Create a static v6 provider that confirms the mocked ERC-20 transaction. */
+function erc20Provider(): JsonRpcProvider {
+  const provider = new JsonRpcProvider(undefined, 31_337, {
+    staticNetwork: true
+  })
+  jest
+    .spyOn(provider, "getTransactionReceipt")
+    .mockResolvedValue(TransactionReceiptFixture)
+  return provider
+}
+
+/** Minimal ethers v6 signer used to observe ERC-20 calls and submissions. */
+class Erc20Signer extends AbstractSigner<Provider> {
+  readonly approval = transactionFixture(ApprovalTransactionHash)
+
+  constructor(provider: Provider = erc20Provider()) {
+    super(provider)
+  }
 
   async getAddress(): Promise<string> {
     return CreatorAddress
@@ -102,15 +122,25 @@ class Erc20Signer extends Signer {
     return "0x"
   }
 
-  connect(): Signer {
-    return this
+  async signTypedData(
+    _domain: TypedDataDomain,
+    _types: Record<string, Array<TypedDataField>>,
+    _value: Record<string, unknown>
+  ): Promise<string> {
+    return "0x"
+  }
+
+  connect(provider: Provider): Erc20Signer {
+    return new Erc20Signer(provider)
   }
 
   async call(): Promise<string> {
-    return ethersUtils.defaultAbiCoder.encode(["uint256"], [0])
+    return AbiCoder.defaultAbiCoder().encode(["uint256"], [0])
   }
 
-  async sendTransaction(): Promise<providers.TransactionResponse> {
+  async sendTransaction(
+    _transaction: TransactionRequest
+  ): Promise<TransactionResponse> {
     return this.approval
   }
 }
@@ -123,7 +153,7 @@ describe("EthereumReserveClient", () => {
     await expect(client.createNative(request)).resolves.toEqual({
       transactionId: ReserveTransactionHash
     })
-    expect(reserveManager.callStatic.create_reserve).toHaveBeenCalledTimes(1)
+    expect(reserveManager.create_reserve.staticCall).toHaveBeenCalledTimes(1)
     expect(reserveManager.create_reserve).toHaveBeenCalledTimes(1)
     expect(transaction.wait).toHaveBeenCalledWith(1)
   })
@@ -138,7 +168,9 @@ describe("EthereumReserveClient", () => {
       TokenAddress
     )
     expect(submission).toEqual({ transactionId: ReserveTransactionHash })
-    expect(signer.approvalWait).toHaveBeenCalledWith(1)
+    expect(signer.provider.getTransactionReceipt).toHaveBeenCalledWith(
+      ApprovalTransactionHash
+    )
     expect(
       reserveManager.requestReserveCreateErc20WithApproval
     ).toHaveBeenCalledTimes(1)
@@ -152,12 +184,12 @@ describe("EthereumReserveClient", () => {
       client.createErc20WithPermit(request, {
         deadline: 100,
         v: 27,
-        r: ethersConstants.HashZero,
-        s: ethersConstants.HashZero
+        r: ZeroHash,
+        s: ZeroHash
       })
     ).resolves.toEqual({ transactionId: ReserveTransactionHash })
     expect(
-      reserveManager.callStatic.requestReserveCreateErc20WithPermit
+      reserveManager.requestReserveCreateErc20WithPermit.staticCall
     ).toHaveBeenCalledTimes(1)
   })
 
@@ -181,20 +213,19 @@ describe("EthereumReserveClient", () => {
 
   it("requires a signer and a configured ERC-20 route", async () => {
     const { reserveManager } = reserveManagerFixture(),
-      provider = new providers.JsonRpcProvider(),
+      provider = new JsonRpcProvider(),
       providerClient = new EthereumReserveClient(reserveManager, provider)
 
     await expect(providerClient.createNative(request)).rejects.toThrow(
       "requires a connected signer"
     )
 
-    reserveManager.tokenAddressesByCode = jest.fn(
-      async () => ethersConstants.AddressZero
-    )
-    const signerClient = new EthereumReserveClient(
-      reserveManager,
-      new Erc20Signer()
-    )
+    const { reserveManager: unconfiguredReserveManager } =
+        reserveManagerFixture(ZeroAddress),
+      signerClient = new EthereumReserveClient(
+        unconfiguredReserveManager,
+        new Erc20Signer()
+      )
     await expect(signerClient.createErc20WithApproval(request)).rejects.toThrow(
       "No ERC-20 address is configured"
     )
@@ -209,6 +240,6 @@ describe("EthereumReserveClient", () => {
     await expect(
       client.createErc20WithApproval(request, differentTokenAddress)
     ).rejects.toThrow("does not match the configured route")
-    expect(signer.approvalWait).not.toHaveBeenCalled()
+    expect(signer.provider.getTransactionReceipt).not.toHaveBeenCalled()
   })
 })

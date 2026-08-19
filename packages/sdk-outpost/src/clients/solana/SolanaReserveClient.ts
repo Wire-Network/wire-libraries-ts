@@ -17,7 +17,7 @@ import {
 } from "@solana/web3.js"
 import { match } from "ts-pattern"
 
-import type { LiqsolCore } from "../../programs/solana/index.js"
+import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
 import {
   assertReserveCreateDefinition,
   assertReserveUnsigned64,

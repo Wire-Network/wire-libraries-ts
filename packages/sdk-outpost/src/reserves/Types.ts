@@ -1,6 +1,6 @@
 import type { PublicKey } from "@solana/web3.js"
+import type { ReserveManagerLib } from "@wireio/outpost-ethereum-artifacts"
 import type { BigNumberish, BytesLike } from "ethers"
-import type { ReserveManagerLib } from "../contracts/ethereum/generated/ReserveManager.js"
 
 /** Two-part identity shared by external-chain reserve custody clients. */
 export interface OutpostReserveIdentity {
@@ -27,8 +27,7 @@ export interface ReserveCreateDefinition extends OutpostReserveIdentity {
 }
 
 /** Ethereum reserve-creation request with the creator's AuthEx public key. */
-export interface EthereumReserveCreateRequest
-  extends ReserveCreateDefinition {
+export interface EthereumReserveCreateRequest extends ReserveCreateDefinition {
   /** Compressed secp256k1 public key that derives to the connected signer. */
   creatorPubKey: BytesLike
 }
@@ -115,8 +114,7 @@ export interface SolanaConfiguredReserveToken {
 }
 
 /** Permit signature accepted by Ethereum ReserveManager. */
-export type EthereumReservePermitSignature =
-  ReserveManagerLib.PermitSigStruct
+export type EthereumReservePermitSignature = ReserveManagerLib.PermitSigStruct
 
 /** Confirmed source-outpost submission used to correlate a swap with Wire. */
 export interface ReserveSwapSubmission {

@@ -1,4 +1,12 @@
-import { BigNumber, utils as ethersUtils, Wallet } from "ethers"
+import {
+  getBytes,
+  hexlify,
+  Network,
+  sha256,
+  Wallet,
+  zeroPadValue,
+  type EventLog
+} from "ethers"
 
 import {
   EthereumContractName,
@@ -40,14 +48,16 @@ describe("EthereumOutpostClient", () => {
         targetToleranceBps: 500
       },
       wait = jest.fn().mockResolvedValue({
-        events: [{ event: "SwapDeposit", args: [BigNumber.from(42)] }]
+        logs: [{ eventName: "SwapDeposit", args: [42n] } as unknown as EventLog]
       }),
-      requestSwap = jest.fn().mockResolvedValue({ hash: "0xabc", wait }),
+      requestSwap = Object.assign(
+        jest.fn().mockResolvedValue({ hash: "0xabc", wait }),
+        {
+          staticCall: jest.fn().mockResolvedValue(null),
+          estimateGas: jest.fn().mockResolvedValue(100_000n)
+        }
+      ),
       reserveManager = {
-        callStatic: { requestSwap: jest.fn().mockResolvedValue(null) },
-        estimateGas: {
-          requestSwap: jest.fn().mockResolvedValue(BigNumber.from(100_000))
-        },
         requestSwap
       } as unknown as ConstructorParameters<
         typeof EthereumReserveSwapClient
@@ -72,7 +82,7 @@ describe("EthereumOutpostClient", () => {
       request.targetToleranceBps,
       {
         value: request.sourceAmount,
-        gasLimit: BigNumber.from(125_000)
+        gasLimit: 125_000n
       }
     )
     expect(wait).toHaveBeenCalledWith(1)
@@ -80,24 +90,14 @@ describe("EthereumOutpostClient", () => {
 
   it("adds 25% gas headroom to reserve swap submissions", () => {
     expect(EthereumReserveSwapClient.addSubmissionGasHeadroom(789_767)).toEqual(
-      BigNumber.from(987_209)
+      987_209n
     )
-    expect(EthereumReserveSwapClient.addSubmissionGasHeadroom(1)).toEqual(
-      BigNumber.from(2)
-    )
+    expect(EthereumReserveSwapClient.addSubmissionGasHeadroom(1)).toEqual(2n)
   })
 
   it("resets nonzero ERC-20 allowances before increasing them", () => {
-    expect(
-      EthereumReserveSwapClient.approvalAmounts(2, 3).map(amount =>
-        amount.toNumber()
-      )
-    ).toEqual([0, 3])
-    expect(
-      EthereumReserveSwapClient.approvalAmounts(0, 3).map(amount =>
-        amount.toNumber()
-      )
-    ).toEqual([3])
+    expect(EthereumReserveSwapClient.approvalAmounts(2, 3)).toEqual([0n, 3n])
+    expect(EthereumReserveSwapClient.approvalAmounts(0, 3)).toEqual([3n])
     expect(EthereumReserveSwapClient.approvalAmounts(3, 3)).toEqual([])
   })
 
@@ -110,7 +110,7 @@ describe("EthereumOutpostClient", () => {
       }),
       reserveManager = client.contract(EthereumContractName.ReserveManager)
 
-    expect(reserveManager.address).toBe(
+    expect(reserveManager.target).toBe(
       profile.ethereum.contracts[EthereumContractName.ReserveManager].address
     )
     expect(client.reserves).toBeInstanceOf(EthereumReserveClient)
@@ -118,13 +118,15 @@ describe("EthereumOutpostClient", () => {
     expect(provider.getCode).toHaveBeenCalledTimes(
       Object.values(EthereumContractName).length * 2
     )
-    expect(provider.getStorageAt).toHaveBeenCalledTimes(
+    expect(provider.getStorage).toHaveBeenCalledTimes(
       Object.values(EthereumContractName).length
     )
   })
 
   it("parses the protocol deposit id from a confirmed receipt", () => {
-    const events = [{ event: "SwapDeposit", args: [BigNumber.from(42)] }]
+    const events = [
+      { eventName: "SwapDeposit", args: [42n] } as unknown as EventLog
+    ]
 
     expect(EthereumReserveSwapClient.parseSourceRequestId(events)).toBe(42n)
     expect(() => EthereumReserveSwapClient.parseSourceRequestId([])).toThrow(
@@ -135,10 +137,9 @@ describe("EthereumOutpostClient", () => {
   it("rejects the wrong Ethereum chain", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createEthereumProviderFixture(profile)
-    jest.spyOn(provider, "getNetwork").mockResolvedValue({
-      chainId: 1,
-      name: "mainnet"
-    })
+    jest
+      .spyOn(provider, "getNetwork")
+      .mockResolvedValue(Network.from({ chainId: 1, name: "mainnet" }))
 
     await expect(
       createEthereumClient({ profile, connection: provider })
@@ -159,8 +160,8 @@ describe("EthereumOutpostClient", () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createEthereumProviderFixture(profile)
     jest
-      .spyOn(provider, "getStorageAt")
-      .mockResolvedValue(ethersUtils.hexZeroPad("0x01", 32))
+      .spyOn(provider, "getStorage")
+      .mockResolvedValue(zeroPadValue("0x01", 32))
 
     await expect(
       createEthereumClient({ profile, connection: provider })
@@ -182,20 +183,22 @@ describe("EthereumOutpostClient", () => {
   it("rejects live code from another producer runtime", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       contract = profile.ethereum.contracts[EthereumContractName.OPP],
-      incompatibleCodeBytes = ethersUtils.arrayify(
+      incompatibleCodeBytes = getBytes(
         createEthereumImplementationCode(EthereumContractName.OPP)
       )
     incompatibleCodeBytes[0] ^= 1
-    const incompatibleCode = ethersUtils.hexlify(incompatibleCodeBytes),
-      incompatibleCodeSha256 = ethersUtils.sha256(incompatibleCode).slice(2)
+    const incompatibleCode = hexlify(incompatibleCodeBytes),
+      incompatibleCodeSha256 = sha256(incompatibleCode).slice(2)
     contract.implementationCodeSha256 = incompatibleCodeSha256
     const provider = createEthereumProviderFixture(profile),
       getCode = (provider.getCode as jest.Mock).getMockImplementation()
-    jest.spyOn(provider, "getCode").mockImplementation(async address =>
-      address === contract.implementationAddress
-        ? incompatibleCode
-        : getCode(address)
-    )
+    jest
+      .spyOn(provider, "getCode")
+      .mockImplementation(async address =>
+        address === contract.implementationAddress
+          ? incompatibleCode
+          : getCode(address)
+      )
 
     await expect(
       createEthereumClient({ profile, connection: provider })

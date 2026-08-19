@@ -1,18 +1,23 @@
+import type {
+  ReserveManager,
+  ReserveManagerLib
+} from "@wireio/outpost-ethereum-artifacts"
 import {
-  BigNumber,
   Contract,
-  Signer,
+  getBigInt,
   type BigNumberish,
-  type providers
+  type EventLog,
+  type Log,
+  type Provider,
+  type Signer
 } from "ethers"
 
-import type { ReserveManager } from "../../contracts/ethereum/index.js"
-import type { ReserveManagerLib } from "../../contracts/ethereum/generated/ReserveManager.js"
 import {
   assertReserveSwapRequest,
   type ReserveSwapRequest,
   type ReserveSwapSubmission
 } from "../../reserves/index.js"
+import { assertEthereumSigner, ethereumProvider } from "./Connection.js"
 
 const BasisPointDenominator = 10_000,
   ConfirmationCount = 1,
@@ -23,18 +28,12 @@ const BasisPointDenominator = 10_000,
   ],
   SubmissionGasHeadroomBps = 2_500
 
-/** Event fields required to extract a ReserveManager deposit id. */
-interface EthereumReserveSwapEvent {
-  event?: string
-  args?: readonly BigNumberish[]
-}
-
 /** Reserve-swap writes and balance reads for one verified Ethereum outpost. */
 export class EthereumReserveSwapClient {
   /** Create an Ethereum reserve-swap workflow bound to a verified deployment. */
   constructor(
     private readonly reserveManager: ReserveManager,
-    private readonly connection: providers.Provider | Signer
+    private readonly connection: Provider | Signer
   ) {}
 
   /** Escrow native ETH and return the confirmed protocol deposit id. */
@@ -46,8 +45,8 @@ export class EthereumReserveSwapClient {
     const parameters = this.nativeParameters(request),
       overrides = { value: request.sourceAmount }
 
-    await this.reserveManager.callStatic.requestSwap(...parameters, overrides)
-    const estimatedGas = await this.reserveManager.estimateGas.requestSwap(
+    await this.reserveManager.requestSwap.staticCall(...parameters, overrides)
+    const estimatedGas = await this.reserveManager.requestSwap.estimateGas(
         ...parameters,
         overrides
       ),
@@ -65,7 +64,7 @@ export class EthereumReserveSwapClient {
     return {
       transactionId: transaction.hash,
       sourceRequestId: EthereumReserveSwapClient.parseSourceRequestId(
-        receipt.events
+        receipt?.logs
       )
     }
   }
@@ -79,23 +78,24 @@ export class EthereumReserveSwapClient {
     const signer = this.assertSigner(),
       owner = await signer.getAddress(),
       token = new Contract(tokenAddress, Erc20Interface, signer),
-      allowance = await token.allowance(owner, this.reserveManager.address)
+      reserveManagerAddress = await this.reserveManager.getAddress(),
+      allowance = await token.allowance(owner, reserveManagerAddress)
 
     await EthereumReserveSwapClient.approvalAmounts(
       allowance,
       request.sourceAmount
     ).reduce<Promise<void>>(async (previousApproval, amount) => {
       await previousApproval
-      const approval = await token.approve(this.reserveManager.address, amount)
+      const approval = await token.approve(reserveManagerAddress, amount)
       await approval.wait(ConfirmationCount)
     }, Promise.resolve())
 
     const arguments_ = this.swapArguments(request)
-    await this.reserveManager.callStatic.requestSwapErc20WithApproval(
+    await this.reserveManager.requestSwapErc20WithApproval.staticCall(
       arguments_
     )
     const estimatedGas =
-        await this.reserveManager.estimateGas.requestSwapErc20WithApproval(
+        await this.reserveManager.requestSwapErc20WithApproval.estimateGas(
           arguments_
         ),
       overrides = {
@@ -110,33 +110,24 @@ export class EthereumReserveSwapClient {
     return {
       transactionId: transaction.hash,
       sourceRequestId: EthereumReserveSwapClient.parseSourceRequestId(
-        receipt.events
+        receipt?.logs
       )
     }
   }
 
   /** Read the native balance of an Ethereum account. */
   async nativeBalance(address: string): Promise<bigint> {
-    const provider = Signer.isSigner(this.connection)
-      ? this.connection.provider
-      : this.connection
-    if (provider == null) {
-      throw new Error("Ethereum signer must be connected to a provider")
-    }
-    return (await provider.getBalance(address)).toBigInt()
+    return ethereumProvider(this.connection).getBalance(address)
   }
 
   /** Read the ERC-20 balance of an Ethereum account. */
   async erc20Balance(tokenAddress: string, address: string): Promise<bigint> {
     const token = new Contract(tokenAddress, Erc20Interface, this.connection)
-    return (await token.balanceOf(address)).toBigInt()
+    return getBigInt(await token.balanceOf(address))
   }
 
   private assertSigner(): Signer {
-    if (!Signer.isSigner(this.connection)) {
-      throw new Error("Ethereum reserve swap requires a connected signer.")
-    }
-    return this.connection
+    return assertEthereumSigner(this.connection, "Ethereum reserve swap")
   }
 
   private nativeParameters(request: ReserveSwapRequest) {
@@ -169,31 +160,37 @@ export class EthereumReserveSwapClient {
   }
 
   /** Add bounded headroom to estimates that traverse OPP delegate calls. */
-  static addSubmissionGasHeadroom(estimatedGas: BigNumberish): BigNumber {
-    const gas = BigNumber.from(estimatedGas)
-    return gas
-      .mul(BasisPointDenominator + SubmissionGasHeadroomBps)
-      .add(BasisPointDenominator - 1)
-      .div(BasisPointDenominator)
+  static addSubmissionGasHeadroom(estimatedGas: BigNumberish): bigint {
+    const gas = getBigInt(estimatedGas),
+      denominator = BigInt(BasisPointDenominator)
+    return (
+      (gas * BigInt(BasisPointDenominator + SubmissionGasHeadroomBps) +
+        denominator -
+        1n) /
+      denominator
+    )
   }
 
   /** Return the safe approval sequence for zero-first ERC-20 implementations. */
   static approvalAmounts(
     currentAllowance: BigNumberish,
     requiredAllowance: BigNumberish
-  ): readonly BigNumber[] {
-    const current = BigNumber.from(currentAllowance),
-      required = BigNumber.from(requiredAllowance)
-    if (current.gte(required)) return []
-    return current.isZero() ? [required] : [BigNumber.from(0), required]
+  ): readonly bigint[] {
+    const current = getBigInt(currentAllowance),
+      required = getBigInt(requiredAllowance)
+    if (current >= required) return []
+    return current === 0n ? [required] : [0n, required]
   }
 
   /** Parse the canonical deposit id emitted by `requestSwap*`. */
   static parseSourceRequestId(
-    events: readonly EthereumReserveSwapEvent[] | undefined
+    events: readonly (EventLog | Log)[] | undefined
   ): bigint {
-    const event = events?.find(candidate => candidate.event === "SwapDeposit"),
-      id = event?.args?.[0]
+    const event = events?.find(
+        candidate =>
+          "eventName" in candidate && candidate.eventName === "SwapDeposit"
+      ),
+      id = event != null && "args" in event ? event.args[0] : null
     if (id == null) {
       throw new Error(
         "Confirmed Ethereum reserve swap did not emit SwapDeposit."

@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js"
-import { utils as ethersUtils } from "ethers"
+import { getAddress } from "ethers"
 import { z } from "zod"
 
 import { EthereumContractName, SolanaProgramName } from "./Types.js"
@@ -8,7 +8,7 @@ const Sha256Schema = z.string().regex(/^[0-9a-f]{64}$/),
   WireChainIdSchema = z.string().regex(/^[0-9a-f]{64}$/),
   EthereumAddressSchema = z.string().transform((value, context) => {
     try {
-      return ethersUtils.getAddress(value)
+      return getAddress(value)
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error)
       context.addIssue({

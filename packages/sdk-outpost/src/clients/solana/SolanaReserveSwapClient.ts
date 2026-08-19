@@ -10,9 +10,9 @@ import {
   type TransactionInstruction,
   type VersionedTransactionResponse
 } from "@solana/web3.js"
-import { utils as ethersUtils } from "ethers"
+import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
+import { getBytes } from "ethers"
 
-import type { LiqsolCore } from "../../programs/solana/index.js"
 import {
   assertReserveSwapRequest,
   type ReserveSwapRequest,
@@ -161,7 +161,7 @@ export class SolanaReserveSwapClient {
       this.unsigned64(request.targetChainCode, "targetChainCode"),
       this.unsigned64(request.targetTokenCode, "targetTokenCode"),
       this.unsigned64(request.targetReserveCode, "targetReserveCode"),
-      Buffer.from(ethersUtils.arrayify(request.targetRecipient)),
+      Buffer.from(getBytes(request.targetRecipient)),
       this.unsigned64(request.targetAmount, "targetAmount"),
       request.targetToleranceBps
     ] as const

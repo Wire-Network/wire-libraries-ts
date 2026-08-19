@@ -6,15 +6,15 @@ directory outside this process.
 
 ## Current first-release state
 
-As of August 18, 2026, both exact producer artifact packages are public on npm
-at `0.1.1`. The first `@wireio/sdk-outpost` release is still pending. Its
+Producer package `0.2.1` is the prerequisite release for directly importable
+TypeScript libraries and ethers v6 bindings. The first `@wireio/sdk-outpost`
+release remains pending until both producer packages publish that version. Its
 workspace version remains `0.0.0` until the existing repository-wide patch
-workflow bumps and publishes it; do not create a one-off version or publish the
-workspace directory manually.
+workflow bumps and publishes it.
 
 ## Artifact prerequisites
 
-The package consumes exact build-time versions of:
+The package consumes exact runtime versions of:
 
 - `@wireio/outpost-ethereum-artifacts`, published from `wire-ethereum`;
 - `@wireio/outpost-solana-artifacts`, published from `wire-solana`.
@@ -30,20 +30,16 @@ catalog for mutable endpoints.
 Before updating either dependency, verify its registry integrity/signature,
 source revision, artifact checksums, and immutable version. The producer repos
 are non-public, so their current npm releases do not carry public provenance.
-Keep both versions exact in `packages/sdk-outpost/package.json`, update
-`pnpm-lock.yaml` with the repository-pinned pnpm version, and then run the
-repository's platform-compatible install and test flow.
+Keep both versions exact in `packages/sdk-outpost/package.json`. Update
+`pnpm-lock.yaml` with the repository-pinned pnpm version only after both exact
+versions resolve from npm, then run the repository install and test flow.
 
 ## Release requirements
 
 - Use Node.js 24 and the repository-pinned pnpm version through Corepack.
-- Generate clients only through `scripts/sdk-outpost/generate.mjs`; this
-  consumer-side step validates the pinned producer packages and converts their
-  ABI/IDL into ignored TypeChain, Anchor, and artifact-manifest sources. Never
-  edit those generated sources by hand.
-- Keep `scripts/sdk-outpost/verify-package.mjs` as the package boundary check;
-  it verifies the built CommonJS/ESM entrypoints and rejects raw producer or
-  generated sources from the npm payload.
+- Import ethers v6 factories, Anchor types, runtime artifacts, and manifests
+  directly from the exact producer packages; `sdk-outpost` must not regenerate
+  or duplicate them.
 - Confirm the package contains no secrets, RPC credentials, private keys,
   deployment addresses, or mutable environment configuration.
 - Confirm deployment profiles are distributed through the authenticated
@@ -64,7 +60,7 @@ From the repository root:
 corepack pnpm install --no-frozen-lockfile --ignore-scripts
 corepack pnpm run lint
 corepack pnpm run test:ci
-corepack pnpm --dir packages/sdk-outpost run verify:release
+corepack pnpm --dir packages/sdk-outpost run build
 ```
 
 Package verification requires the publishable files to remain limited to the
@@ -75,7 +71,7 @@ trees must not be published by `sdk-outpost`.
 
 The first successful publish creates the npm package page. Release sequence:
 
-1. Confirm both exact `0.1.1` producer artifact versions are publicly
+1. Confirm both exact `0.2.1` producer artifact versions are publicly
    installable.
 2. Confirm the `wireio` organization exists on npm and the release owner can
    publish public packages in that scope.
@@ -92,8 +88,7 @@ The first successful publish creates the npm package page. Release sequence:
 The preparation gate keeps each package on its existing version track. A patch
 bump therefore makes the first SDK release `@wireio/sdk-outpost@0.0.1`, while
 `@wireio/sdk-core` advances by one patch on its independent track.
-The Tag Release gate must install the workspace, generate clients from
-the producer packages, build and test every package, verify public entrypoints,
+The Tag Release gate must install the workspace, build and test every package,
 and publish with npm provenance.
 
 Do not create the first `sdk-outpost` version manually. A failed publish must be

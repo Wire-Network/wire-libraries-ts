@@ -1,5 +1,5 @@
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js"
-import { utils as ethersUtils } from "ethers"
+import { sha256 } from "ethers"
 
 import {
   OutpostChainFamily,
@@ -250,9 +250,7 @@ describe("SolanaOutpostClient", () => {
       program = profile.solana.programs[SolanaProgramName.liqsolCore],
       incompatibleProgramData = createSolanaProgramDataAccountData()
     incompatibleProgramData[SolanaProgramDataMetadataByteLength] ^= 1
-    program.programDataSha256 = ethersUtils
-      .sha256(incompatibleProgramData)
-      .slice(2)
+    program.programDataSha256 = sha256(incompatibleProgramData).slice(2)
     const provider = createSolanaProviderFixture(profile)
     jest
       .spyOn(provider.connection, "getAccountInfo")

@@ -1,30 +1,21 @@
-import { providers, Signer } from "ethers"
-import { match } from "ts-pattern"
-
 import {
   OPPInbound__factory,
   OPP__factory,
   OperatorRegistry__factory,
   ReserveManager__factory
-} from "../../contracts/ethereum/index.js"
+} from "@wireio/outpost-ethereum-artifacts"
+import type { Provider } from "ethers"
+import { match } from "ts-pattern"
+
 import {
   EthereumContractName,
   OutpostChainFamily
 } from "../../deployments/index.js"
 import { OutpostDeploymentVerifier } from "../../verification/index.js"
+import { ethereumProvider } from "./Connection.js"
 import { EthereumContractMap, EthereumOutpostClientOptions } from "./Types.js"
 import { EthereumReserveClient } from "./EthereumReserveClient.js"
 import { EthereumReserveSwapClient } from "./EthereumReserveSwapClient.js"
-
-function resolveProvider(
-  connection: providers.Provider | Signer
-): providers.Provider {
-  if (!Signer.isSigner(connection)) return connection
-  if (connection.provider == null) {
-    throw new Error("Ethereum signer must be connected to a provider")
-  }
-  return connection.provider
-}
 
 /** Strictly typed access to one verified Ethereum outpost deployment. */
 export class EthereumOutpostClient {
@@ -33,7 +24,7 @@ export class EthereumOutpostClient {
     options: EthereumOutpostClientOptions
   ): Promise<EthereumOutpostClient> {
     const { connection, profile } = options,
-      provider = resolveProvider(connection)
+      provider = ethereumProvider(connection)
 
     await OutpostDeploymentVerifier.verify({
       family: OutpostChainFamily.ethereum,
@@ -46,7 +37,7 @@ export class EthereumOutpostClient {
   private constructor(
     private readonly options: EthereumOutpostClientOptions,
     /** Provider verified against the configured Ethereum chain. */
-    readonly provider: providers.Provider
+    readonly provider: Provider
   ) {
     this.reserves = new EthereumReserveClient(
       this.contract(EthereumContractName.ReserveManager),

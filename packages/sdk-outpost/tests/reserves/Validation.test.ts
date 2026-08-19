@@ -80,7 +80,7 @@ describe("reserve swap validation", () => {
 
   it("accepts a portable positive request", () => {
     expect(() => assertReserveSwapRequest(request)).not.toThrow()
-    expect(assertReserveUnsigned64(8, "value").toNumber()).toBe(8)
+    expect(assertReserveUnsigned64(8, "value")).toBe(8n)
   })
 
   it("rejects an empty recipient and values outside uint64", () => {

@@ -1,5 +1,5 @@
 import { match } from "ts-pattern"
-import { utils as ethersUtils } from "ethers"
+import { getBytes, sha256 as ethersSha256 } from "ethers"
 
 import {
   EthereumContractName,
@@ -7,7 +7,7 @@ import {
   OutpostDeploymentProfile,
   SolanaProgramName
 } from "../deployments/index.js"
-import { OutpostArtifactManifests } from "./generated/index.js"
+import { OutpostArtifactManifests } from "./Manifests.js"
 
 const SolanaProgramDataMetadataByteLength = 45
 
@@ -19,7 +19,7 @@ interface EthereumRuntimeLinkReference {
 
 /** Return the SHA-256 digest for chain runtime bytes. */
 function sha256(value: Uint8Array): string {
-  return ethersUtils.sha256(value).slice(2)
+  return ethersSha256(value).slice(2)
 }
 
 /** Zero environment-specific linked-library addresses in live runtime code. */
@@ -27,7 +27,7 @@ function normalizeEthereumRuntimeCode(
   code: string,
   linkReferences: readonly EthereumRuntimeLinkReference[]
 ): Uint8Array {
-  const runtimeCode = Uint8Array.from(ethersUtils.arrayify(code))
+  const runtimeCode = Uint8Array.from(getBytes(code))
   let previousReferenceEnd = 0
 
   linkReferences.forEach(({ start, length }) => {
@@ -87,10 +87,7 @@ export function assertSolanaProgramArtifactCompatibility(
     )
   }
   const digest = sha256(
-    programData.subarray(
-      SolanaProgramDataMetadataByteLength,
-      programBinaryEnd
-    )
+    programData.subarray(SolanaProgramDataMetadataByteLength, programBinaryEnd)
   )
   if (digest !== artifact.programBinarySha256) {
     throw new Error(

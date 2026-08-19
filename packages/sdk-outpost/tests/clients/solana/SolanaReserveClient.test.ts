@@ -1,13 +1,15 @@
 import { BN, Program } from "@coral-xyz/anchor"
+import {
+  liqsolCoreIdl,
+  type LiqsolCore
+} from "@wireio/outpost-solana-artifacts"
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token"
 import { Keypair, PublicKey } from "@solana/web3.js"
 
 import {
-  type LiqsolCore,
   OutpostReserveStatus,
   type SolanaReserveCreateRequest,
-  SolanaReserveClient,
-  liqsolCoreIdl
+  SolanaReserveClient
 } from "@wireio/sdk-outpost"
 import {
   createOutpostDeploymentProfileFixture,

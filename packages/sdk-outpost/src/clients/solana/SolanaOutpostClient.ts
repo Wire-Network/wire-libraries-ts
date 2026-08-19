@@ -5,7 +5,10 @@ import {
   OutpostChainFamily,
   SolanaProgramName
 } from "../../deployments/index.js"
-import { LiqsolCore, liqsolCoreIdl } from "../../programs/solana/index.js"
+import {
+  liqsolCoreIdl,
+  type LiqsolCore
+} from "@wireio/outpost-solana-artifacts"
 import { OutpostDeploymentVerifier } from "../../verification/index.js"
 import { SolanaOutpostClientOptions, SolanaProgramMap } from "./Types.js"
 import { SolanaReserveClient } from "./SolanaReserveClient.js"

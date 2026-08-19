@@ -1,14 +1,17 @@
+import type {
+  ReserveManager,
+  ReserveManagerLib
+} from "@wireio/outpost-ethereum-artifacts"
 import {
-  constants as ethersConstants,
   Contract,
-  Signer,
-  utils as ethersUtils,
-  type providers
+  getAddress,
+  getBigInt,
+  ZeroAddress,
+  type Provider,
+  type Signer
 } from "ethers"
 import { match } from "ts-pattern"
 
-import type { ReserveManager } from "../../contracts/ethereum/index.js"
-import type { ReserveManagerLib } from "../../contracts/ethereum/generated/ReserveManager.js"
 import {
   assertEthereumReserveCreateRequest,
   assertReserveUnsigned64,
@@ -19,12 +22,13 @@ import {
   type OutpostReserveIdentity,
   type OutpostReserveSubmission
 } from "../../reserves/index.js"
+import { assertEthereumSigner } from "./Connection.js"
 
 const ConfirmationCount = 1,
   EthereumLocalReserveStatus = {
-    pending: 0,
-    active: 1,
-    cancelled: 2
+    pending: 0n,
+    active: 1n,
+    cancelled: 2n
   } as const,
   Erc20Interface = [
     "function allowance(address owner,address spender) view returns (uint256)",
@@ -36,7 +40,7 @@ export class EthereumReserveClient {
   /** Bind reserve lifecycle operations to a generated ReserveManager client. */
   constructor(
     private readonly reserveManager: ReserveManager,
-    private readonly connection: providers.Provider | Signer
+    private readonly connection: Provider | Signer
   ) {}
 
   /** Create a pending native-token reserve. */
@@ -48,7 +52,7 @@ export class EthereumReserveClient {
     const parameters = this.nativeParameters(request),
       overrides = { value: request.externalTokenAmount }
 
-    await this.reserveManager.callStatic.create_reserve(
+    await this.reserveManager.create_reserve.staticCall(
       ...parameters,
       overrides
     )
@@ -72,15 +76,14 @@ export class EthereumReserveClient {
         request.tokenCode
       )
 
-    if (configuredTokenAddress === ethersConstants.AddressZero) {
+    if (configuredTokenAddress === ZeroAddress) {
       throw new Error(
         `No ERC-20 address is configured for tokenCode ${request.tokenCode.toString()}.`
       )
     }
     if (
       tokenAddress != null &&
-      ethersUtils.getAddress(tokenAddress) !==
-        ethersUtils.getAddress(configuredTokenAddress)
+      getAddress(tokenAddress) !== getAddress(configuredTokenAddress)
     ) {
       throw new Error(
         `ERC-20 address ${tokenAddress} does not match the configured route ${configuredTokenAddress}.`
@@ -88,21 +91,26 @@ export class EthereumReserveClient {
     }
 
     const token = new Contract(configuredTokenAddress, Erc20Interface, signer),
-      allowance = await token.allowance(owner, this.reserveManager.address)
-    if (allowance.lt(request.externalTokenAmount)) {
+      reserveManagerAddress = await this.reserveManager.getAddress(),
+      allowance = getBigInt(
+        await token.allowance(owner, reserveManagerAddress)
+      )
+    if (allowance < getBigInt(request.externalTokenAmount)) {
       const approval = await token.approve(
-        this.reserveManager.address,
+        reserveManagerAddress,
         request.externalTokenAmount
       )
       await approval.wait(ConfirmationCount)
     }
 
     const arguments_ = this.createArguments(request)
-    await this.reserveManager.callStatic.requestReserveCreateErc20WithApproval(
+    await this.reserveManager.requestReserveCreateErc20WithApproval.staticCall(
       arguments_
     )
     const transaction =
-      await this.reserveManager.requestReserveCreateErc20WithApproval(arguments_)
+      await this.reserveManager.requestReserveCreateErc20WithApproval(
+        arguments_
+      )
     await transaction.wait(ConfirmationCount)
     return { transactionId: transaction.hash }
   }
@@ -116,7 +124,7 @@ export class EthereumReserveClient {
     this.assertSigner()
     const arguments_ = this.createArguments(request)
 
-    await this.reserveManager.callStatic.requestReserveCreateErc20WithPermit(
+    await this.reserveManager.requestReserveCreateErc20WithPermit.staticCall(
       arguments_,
       permitSignature
     )
@@ -153,11 +161,11 @@ export class EthereumReserveClient {
       identity.reserveCode
     )
     return {
-      tokenCode: reserve.tokenCode.toBigInt(),
-      reserveCode: reserve.reserveCode.toBigInt(),
-      externalTokenAmount: reserve.externalTokenAmount.toBigInt(),
-      requestedWireAmount: reserve.requestedWireAmount.toBigInt(),
-      connectorWeightBps: reserve.connectorWeightBps,
+      tokenCode: reserve.tokenCode,
+      reserveCode: reserve.reserveCode,
+      externalTokenAmount: reserve.externalTokenAmount,
+      requestedWireAmount: reserve.requestedWireAmount,
+      connectorWeightBps: Number(reserve.connectorWeightBps),
       status: match(reserve.status)
         .with(
           EthereumLocalReserveStatus.pending,
@@ -180,10 +188,7 @@ export class EthereumReserveClient {
   }
 
   private assertSigner(): Signer {
-    if (!Signer.isSigner(this.connection)) {
-      throw new Error("Ethereum reserve operation requires a connected signer.")
-    }
-    return this.connection
+    return assertEthereumSigner(this.connection, "Ethereum reserve operation")
   }
 
   private createArguments(

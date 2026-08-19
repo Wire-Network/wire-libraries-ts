@@ -2,7 +2,7 @@ import type { AnchorProvider, Program } from "@coral-xyz/anchor"
 
 import type { OutpostDeploymentProfile } from "../../deployments/index.js"
 import { SolanaProgramName } from "../../deployments/index.js"
-import type { LiqsolCore } from "../../programs/solana/index.js"
+import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
 
 /** Inputs required to connect a Solana outpost client. */
 export interface SolanaOutpostClientOptions {
