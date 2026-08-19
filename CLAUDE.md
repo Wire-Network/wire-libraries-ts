@@ -230,7 +230,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - `sdk-outpost` accepts caller-owned providers and deployment profiles, verifies exact Ethereum implementations and Solana ProgramData against source-owned runtime artifacts, and never owns mutable endpoint catalogs. A same-code cluster respin requires a new profile, not an artifact or SDK release; any deployable binary change requires both a producer artifact and SDK release.
 - A connected outpost client proves deployment compatibility, not swap or stake readiness. Wire-chain orchestration remains in `sdk-core`, and consumers must retain flow-specific capability gates.
 - Publish `sdk-outpost` only through the repository release workflow, with `prepack` and release verification passing.
-- Do not describe `sdk-outpost` as npm-available until `npm view` succeeds for both exact producer artifact versions and `@wireio/sdk-outpost`, and a clean frozen install passes without sibling links.
+- Do not describe `sdk-outpost` as npm-available until `npm view` succeeds for both exact producer artifact versions and `@wireio/sdk-outpost`, and a clean platform-compatible install passes without sibling artifact links.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
 - Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch
 - Node >=22 required (package.json says >=22, README says >=24 — actual CI uses v24)

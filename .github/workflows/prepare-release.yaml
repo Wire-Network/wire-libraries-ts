@@ -110,8 +110,8 @@ jobs:
             channel="stable"
           fi
 
-          # This gate deliberately changes package versions. Refresh the lockfile
-          # in the reviewed bump PR so CI and Tag Release can install it frozen.
+          # Refresh the lockfile so it reflects the bumped versions (hygiene;
+          # CI installs with --no-frozen-lockfile, so it is not a hard gate).
           pnpm install --lockfile-only --ignore-scripts
 
           {

@@ -1,10 +1,5 @@
 import { BigNumber, utils as ethersUtils } from "ethers"
 
-import {
-  MAX_CONNECTOR_WEIGHT_BPS,
-  MIN_CONNECTOR_WEIGHT_BPS
-} from "@wireio/sdk-core/contracts/sysio/reserv/constants"
-
 import type {
   EthereumReserveCreateRequest,
   ReserveCreateDefinition,
@@ -13,6 +8,8 @@ import type {
 
 const MaximumUnsigned64 = BigNumber.from("18446744073709551615"),
   MinimumReserveValue = BigNumber.from(1),
+  MinimumConnectorWeightBps = 1,
+  MaximumConnectorWeightBps = 9999,
   MinimumToleranceBps = 0,
   MaximumToleranceBps = 10_000,
   MaximumReserveNameBytes = 64,
@@ -59,17 +56,14 @@ export function assertReserveCreateDefinition(
     throw new Error("externalTokenAmount must be greater than zero.")
   }
 
-  assertReserveUnsigned64(
-    definition.requestedWireAmount,
-    "requestedWireAmount"
-  )
+  assertReserveUnsigned64(definition.requestedWireAmount, "requestedWireAmount")
   if (
     !Number.isInteger(definition.connectorWeightBps) ||
-    definition.connectorWeightBps < MIN_CONNECTOR_WEIGHT_BPS ||
-    definition.connectorWeightBps > MAX_CONNECTOR_WEIGHT_BPS
+    definition.connectorWeightBps < MinimumConnectorWeightBps ||
+    definition.connectorWeightBps > MaximumConnectorWeightBps
   ) {
     throw new Error(
-      `connectorWeightBps must be an integer from ${MIN_CONNECTOR_WEIGHT_BPS} to ${MAX_CONNECTOR_WEIGHT_BPS}.`
+      `connectorWeightBps must be an integer from ${MinimumConnectorWeightBps} to ${MaximumConnectorWeightBps}.`
     )
   }
 

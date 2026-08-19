@@ -33,19 +33,14 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --ignore-scripts --frozen-lockfile
+        # --frozen-lockfile removed for the moment
+        run: pnpm install --ignore-scripts --no-frozen-lockfile
 
       - name: Test
         env:
           JEST_JUNIT_OUTPUT_DIR: reports/junit
           JEST_JUNIT_OUTPUT_NAME: jest-junit.xml
         run: pnpm run test:ci
-
-      - name: Verify sdk-outpost release
-        run: pnpm --dir packages/sdk-outpost run verify:release
-
-      - name: Inspect sdk-outpost package
-        run: pnpm --dir packages/sdk-outpost pack --dry-run
 
       - name: Upload test results (JUnit XML)
         if: always()

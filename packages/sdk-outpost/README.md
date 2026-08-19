@@ -249,7 +249,6 @@ are never maintained by hand in this repository.
 pnpm --dir packages/sdk-outpost run generate
 pnpm --dir packages/sdk-outpost run test
 pnpm --dir packages/sdk-outpost run verify:release
-pnpm --dir packages/sdk-outpost pack --dry-run
 ```
 
 Release versions are managed by the monorepo-wide patch workflow. See the

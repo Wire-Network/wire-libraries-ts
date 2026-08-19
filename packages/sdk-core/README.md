@@ -7,9 +7,6 @@ optional `created` timestamp.
 
 Available on npm: <https://www.npmjs.com/package/@wireio/sdk-core>
 
-Published type declarations support both package-root and subpath imports,
-including consumers that still use TypeScript's classic Node resolution.
-
 ## Multisig
 
 `contracts.sysio.msig` provides UI-neutral helpers for `sysio.msig` proposal workflows, including action builders, proposal reads, transaction decoding, hash verification, and legacy/chunked contract compatibility.
@@ -111,10 +108,6 @@ in the consuming application's runtime configuration.
 chain/token and status filters, exact reserve lookup, WIRE-side activation, and
 read-only swap quotes. External-chain reserve creation and cancellation remain
 in the chain SDK that owns the deployed ABI or IDL.
-
-External-chain SDKs that only need reserve validation bounds use the supported
-`@wireio/sdk-core/contracts/sysio/reserv/constants` entrypoint without loading
-the complete Wire client graph.
 
 ```ts
 const reserves = new contracts.sysio.reserv.ReserveClient({ client: api })

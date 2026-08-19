@@ -8,6 +8,8 @@ import {
   type ReserveSwapRequest
 } from "@wireio/sdk-outpost"
 
+const InvalidConnectorWeights = [0, 10_000]
+
 const reserveDefinition: ReserveCreateDefinition = {
   tokenCode: 1,
   reserveCode: 2,
@@ -45,12 +47,14 @@ describe("reserve swap validation", () => {
   })
 
   it("rejects invalid reserve creation metadata and creator keys", () => {
-    expect(() =>
-      assertReserveCreateDefinition({
-        ...reserveDefinition,
-        connectorWeightBps: 10_000
-      })
-    ).toThrow("connectorWeightBps")
+    InvalidConnectorWeights.forEach(connectorWeightBps =>
+      expect(() =>
+        assertReserveCreateDefinition({
+          ...reserveDefinition,
+          connectorWeightBps
+        })
+      ).toThrow("connectorWeightBps")
+    )
     expect(() =>
       assertReserveCreateDefinition({ ...reserveDefinition, name: "" })
     ).toThrow("name must contain")

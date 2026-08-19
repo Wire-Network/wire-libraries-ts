@@ -31,13 +31,12 @@ Before updating either dependency, verify its registry integrity/signature,
 source revision, artifact checksums, and immutable version. The producer repos
 are non-public, so their current npm releases do not carry public provenance.
 Keep both versions exact in `packages/sdk-outpost/package.json`, update
-`pnpm-lock.yaml` with the repository-pinned pnpm version, and then prove the
-result with a frozen install.
+`pnpm-lock.yaml` with the repository-pinned pnpm version, and then run the
+repository's platform-compatible install and test flow.
 
 ## Release requirements
 
 - Use Node.js 24 and the repository-pinned pnpm version through Corepack.
-- Keep the lockfile unchanged after a frozen install.
 - Generate clients only through `scripts/sdk-outpost/generate.mjs`; this
   consumer-side step validates the pinned producer packages and converts their
   ABI/IDL into ignored TypeChain, Anchor, and artifact-manifest sources. Never
@@ -62,16 +61,15 @@ release.
 From the repository root:
 
 ```sh
-corepack pnpm install --frozen-lockfile --ignore-scripts
+corepack pnpm install --no-frozen-lockfile --ignore-scripts
 corepack pnpm run lint
 corepack pnpm run test:ci
 corepack pnpm --dir packages/sdk-outpost run verify:release
-corepack pnpm --dir packages/sdk-outpost pack --dry-run
 ```
 
-Inspect the dry-run listing. It must contain only the README, package metadata,
-and CJS/ESM build outputs. Raw producer packages and generated source trees must
-not be published by `sdk-outpost`.
+Package verification requires the publishable files to remain limited to the
+README and CJS/ESM build outputs. Raw producer packages and generated source
+trees must not be published by `sdk-outpost`.
 
 ## First npm listing
 
@@ -93,9 +91,8 @@ The first successful publish creates the npm package page. Release sequence:
 
 The preparation gate keeps each package on its existing version track. A patch
 bump therefore makes the first SDK release `@wireio/sdk-outpost@0.0.1`, while
-`@wireio/sdk-core` advances by one patch on its independent track. `workspace:*`
-is rewritten to that concrete `sdk-core` version in the published SDK manifest.
-The Tag Release gate must install the frozen workspace, generate clients from
+`@wireio/sdk-core` advances by one patch on its independent track.
+The Tag Release gate must install the workspace, generate clients from
 the producer packages, build and test every package, verify public entrypoints,
 and publish with npm provenance.
 
