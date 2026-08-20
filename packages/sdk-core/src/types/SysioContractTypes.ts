@@ -316,6 +316,15 @@ export interface SysioChainsChainRowType {
   active: boolean
   registered_at_ms: number | string
   activated_at_ms: number | string
+  outpost: SysioChainsOutpostAddrsType
+}
+
+/** sysio.chains::outpost_addrs (type) */
+export interface SysioChainsOutpostAddrsType {
+  opp_addr: string
+  opp_inbound_addr: string
+  operator_registry_addr: string
+  source_deposit_addr: string
 }
 
 /** sysio.chains::regchain (action) */
@@ -325,6 +334,13 @@ export interface SysioChainsRegchainAction {
   external_chain_id: number
   name: string
   description: string
+  outpost: SysioChainsOutpostAddrsType
+}
+
+/** sysio.chains::setoutpost (action) */
+export interface SysioChainsSetoutpostAction {
+  code: SysioChainsSlugNameType
+  outpost: SysioChainsOutpostAddrsType
 }
 
 /** sysio.chains::slug_name (type) */
@@ -337,6 +353,7 @@ export interface SysioChainsContract {
   actions: {
     activchain: SysioChainsActivchainAction
     regchain: SysioChainsRegchainAction
+    setoutpost: SysioChainsSetoutpostAction
   }
   tables: {
     chains: SysioChainsChainRowType
@@ -3704,7 +3721,7 @@ export const SysioContractDefinitions: {
 } = {
   [SysioContractName.authex]: { name: SysioContractName.authex, account: "sysio.authex", actions: ["clearlinks", "createlink", "recordlink"], tables: ["links"] },
   [SysioContractName.bios]: { name: SysioContractName.bios, account: "sysio", actions: ["activate", "deleteauth", "linkauth", "newaccount", "reqactivated", "reqauth", "setabi", "setalimits", "setcode", "setfinalizer", "setparams", "setpriv", "setprodkeys", "setprods", "unlinkauth", "updateauth"], tables: ["abihash"] },
-  [SysioContractName.chains]: { name: SysioContractName.chains, account: "sysio.chains", actions: ["activchain", "regchain"], tables: ["chains"] },
+  [SysioContractName.chains]: { name: SysioContractName.chains, account: "sysio.chains", actions: ["activchain", "regchain", "setoutpost"], tables: ["chains"] },
   [SysioContractName.chalg]: { name: SysioContractName.chalg, account: "sysio.chalg", actions: ["chkdispute", "chkuwchal", "claimbond", "opendispute", "openuwchal", "slashop", "uwchalbond", "votedispute", "voteuwchal"], tables: ["bondcredits", "chalgstate", "disputes", "disputevote", "uwchals", "uwchalvote"] },
   [SysioContractName.councl]: { name: SysioContractName.councl, account: "sysio.councl", actions: ["addcandidate", "finalizeinit", "forceassign", "forceback", "loadtier", "purge", "repcandidate", "reset", "rmcandidate", "settle", "startinit", "stir", "vote"], tables: ["candidates", "config", "council", "roster", "state", "tier2", "tier3", "tier3remap"] },
   [SysioContractName.dclaim]: { name: SysioContractName.dclaim, account: "sysio.dclaim", actions: ["claim", "flushexpired", "importdone", "importseed", "linkswept", "onreward", "setclmwindow", "setconfig"], tables: ["capcfg", "capcounters", "pclaims", "rwdcursors", "unmapped"] },
