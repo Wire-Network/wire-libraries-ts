@@ -52,7 +52,7 @@ function createEthereumAddress(index: number): string {
   return getAddress(zeroPadValue(toBeHex(index), 20))
 }
 
-/** Create linked live implementation code from one producer runtime template. */
+/** Create deployment-substituted live code from one producer runtime template. */
 export function createEthereumImplementationCode(
   contractName: EthereumContractName
 ): string {
@@ -67,6 +67,9 @@ export function createEthereumImplementationCode(
 
   artifact.runtimeLinkReferences.forEach(({ start, length }) =>
     runtimeCode.fill(1, start, start + length)
+  )
+  artifact.runtimeImmutableReferences.forEach(({ start, length }) =>
+    runtimeCode.fill(2, start, start + length)
   )
   return hexlify(runtimeCode)
 }

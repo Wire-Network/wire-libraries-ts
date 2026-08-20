@@ -11,8 +11,8 @@ import { OutpostArtifactManifests } from "./Manifests.js"
 
 const SolanaProgramDataMetadataByteLength = 45
 
-/** Byte range occupied by one linked Ethereum library address. */
-interface EthereumRuntimeLinkReference {
+/** Deployment-specific byte range in one Ethereum runtime template. */
+interface EthereumRuntimeReference {
   readonly start: number
   readonly length: number
 }
@@ -22,15 +22,15 @@ function sha256(value: Uint8Array): string {
   return ethersSha256(value).slice(2)
 }
 
-/** Zero environment-specific linked-library addresses in live runtime code. */
+/** Zero environment-specific ranges in live Ethereum runtime code. */
 function normalizeEthereumRuntimeCode(
   code: string,
-  linkReferences: readonly EthereumRuntimeLinkReference[]
+  runtimeReferences: readonly EthereumRuntimeReference[]
 ): Uint8Array {
   const runtimeCode = Uint8Array.from(getBytes(code))
   let previousReferenceEnd = 0
 
-  linkReferences.forEach(({ start, length }) => {
+  runtimeReferences.forEach(({ start, length }) => {
     const referenceEnd = start + length
     if (
       !Number.isInteger(start) ||
@@ -39,7 +39,7 @@ function normalizeEthereumRuntimeCode(
       start < previousReferenceEnd ||
       referenceEnd > runtimeCode.length
     ) {
-      throw new Error("Ethereum artifact has invalid runtime link references")
+      throw new Error("Ethereum artifact has invalid runtime references")
     }
     runtimeCode.fill(0, start, referenceEnd)
     previousReferenceEnd = referenceEnd
@@ -54,9 +54,13 @@ export function assertEthereumRuntimeArtifactCompatibility(
   code: string
 ): void {
   const artifact = OutpostArtifactManifests.ethereum.contracts[contractName],
+    runtimeReferences = [
+      ...artifact.runtimeLinkReferences,
+      ...artifact.runtimeImmutableReferences
+    ].sort((left, right) => left.start - right.start),
     normalizedCode = normalizeEthereumRuntimeCode(
       code,
-      artifact.runtimeLinkReferences
+      runtimeReferences
     )
 
   if (normalizedCode.length !== artifact.runtimeBytecodeLength) {
