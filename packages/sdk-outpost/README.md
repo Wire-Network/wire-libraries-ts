@@ -8,11 +8,11 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-Release target: producer package `0.2.1` adds directly importable TypeScript
-libraries and ethers v6 bindings. The first `@wireio/sdk-outpost` npm release
-remains pending until both producer releases are published. The workspace
-version remains `0.0.0` until the repository release workflow performs its
-patch bump.
+Release target: Ethereum artifacts `0.2.2` and Solana artifacts `0.2.1` provide
+directly importable TypeScript libraries, including ethers v6 bindings. The
+first `@wireio/sdk-outpost` release remains pending until their runtime manifests
+pass deployment verification. The workspace version remains `0.0.0` until the
+repository release workflow performs its patch bump.
 
 ## Install after the first SDK release
 

@@ -31,8 +31,7 @@
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2",
-    "typescript-eslint": "^8.64.0",
-    "zx": "^8.8.5"
+    "typescript-eslint": "^8.64.0"
   },
   "packageManager": "pnpm@10.34.5",
   "engines": {
@@ -43,21 +42,10 @@
     "@wireio/opp-typescript-models": "^1.0.26"
   },
   "resolutions": {
-    "@3fv/prelude-ts": "^0.8.41",
     "@aws-sdk/client-firehose": "3.1102.0",
     "@aws-sdk/client-kms": "3.1102.0",
     "@aws-sdk/client-sns": "3.1102.0",
     "@aws-sdk/client-ssm": "3.1102.0",
-    "@aws-sdk/client-sts": "3.1102.0",
-    "bluebird": "3.7.2",
-    "debug": "4.3.4",
-    "lodash": "4.18.1",
-    "prettier": "3.8.1",
-    "tracer": "1.3.0",
-    "typechain>prettier": "2.8.8",
-    "webpack": "5.104.1",
-    "webpack-cli": "6.0.1",
-    "webpack-dev-server": "6.0.0",
-    "ws": "8.21.0"
+    "@aws-sdk/client-sts": "3.1102.0"
   }
 }
