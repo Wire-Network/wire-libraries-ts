@@ -31,6 +31,9 @@ tsconfig.tsbuildinfo
 out/
 build
 dist
+/packages/sdk-outpost/src/artifacts/generated/
+/packages/sdk-outpost/src/contracts/ethereum/generated/
+/packages/sdk-outpost/src/programs/solana/generated/
 
 
 # Debug
@@ -44,6 +47,7 @@ yarn-error.log*
 
 # JUnit test-result output (CI artifact)
 /reports/
+/junit.xml
 
 # oh-my-claudecode runtime state (operational artifacts, never committed)
 .omc/

@@ -122,7 +122,22 @@ await reserves.pushMatchReserve({
   matcher: "alice",
   wireAmount: pending[0].requestedWireAmount
 })
+
+// Several pending rows can be activated atomically in one signed transaction.
+await reserves.pushMatchReserves({
+  matches: pending.map(reserve => ({
+    chainCode: reserve.chainCode,
+    tokenCode: reserve.tokenCode,
+    reserveCode: reserve.reserveCode,
+    matcher: "alice",
+    wireAmount: reserve.requestedWireAmount
+  }))
+})
 ```
+
+`pushMatchReserves` preserves the supplied action order and rejects an empty
+match list. The Wire transaction is atomic: either every `matchreserve` action
+is accepted or none is applied.
 
 ## Reserve swaps
 

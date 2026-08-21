@@ -1,0 +1,98 @@
+import type { Program } from "@coral-xyz/anchor"
+import {
+  OPP__factory,
+  OperatorRegistry__factory,
+  ReserveManager__factory
+} from "@wireio/outpost-ethereum-artifacts"
+import {
+  liqsolCoreIdl,
+  type LiqsolCore
+} from "@wireio/outpost-solana-artifacts"
+
+import {
+  EthereumContractName,
+  OutpostArtifactManifests,
+  OutpostChainFamily,
+  SolanaProgramName,
+  assertOutpostArtifactCompatibility
+} from "@wireio/sdk-outpost"
+
+import { createOutpostDeploymentProfileFixture } from "../Fixtures.js"
+
+describe("source-owned outpost artifacts", () => {
+  it("records exact producer package identity", () => {
+    expect(OutpostArtifactManifests.ethereum.package.name).toBe(
+      "@wireio/outpost-ethereum-artifacts"
+    )
+    expect(OutpostArtifactManifests.solana.package.name).toBe(
+      "@wireio/outpost-solana-artifacts"
+    )
+  })
+
+  it.each(Object.values(OutpostChainFamily))(
+    "accepts a runtime deployment aligned with %s artifacts",
+    family => {
+      expect(() =>
+        assertOutpostArtifactCompatibility(
+          createOutpostDeploymentProfileFixture(),
+          family
+        )
+      ).not.toThrow()
+    }
+  )
+
+  it("rejects a runtime deployment with an incompatible Ethereum ABI", () => {
+    const profile = createOutpostDeploymentProfileFixture()
+    profile.ethereum.contracts[EthereumContractName.ReserveManager].abiSha256 =
+      "f".repeat(64)
+
+    expect(() =>
+      assertOutpostArtifactCompatibility(profile, OutpostChainFamily.ethereum)
+    ).toThrow("Ethereum ReserveManager ABI interface mismatch")
+  })
+
+  it("rejects a runtime deployment with an incompatible Solana IDL", () => {
+    const profile = createOutpostDeploymentProfileFixture()
+    profile.solana.programs[SolanaProgramName.liqsolCore].idlSha256 =
+      "f".repeat(64)
+
+    expect(() =>
+      assertOutpostArtifactCompatibility(profile, OutpostChainFamily.solana)
+    ).toThrow("Solana liqsolCore IDL interface mismatch")
+  })
+
+  it("generates the callable swap and collateral surfaces", () => {
+    const accountNames: Array<keyof Program<LiqsolCore>["account"]> = [
+      "outpostConfig",
+      "reserve"
+    ]
+    expect(OPP__factory.abi.length).toBeGreaterThan(0)
+    expect(
+      OPP__factory.createInterface().getFunction("addAttestation")
+    ).toBeDefined()
+    expect(
+      ReserveManager__factory.createInterface().getFunction("requestSwap")
+    ).toBeDefined()
+    expect(
+      ReserveManager__factory.createInterface().getFunction(
+        "requestSwapErc20WithApproval"
+      )
+    ).toBeDefined()
+    expect(
+      OperatorRegistry__factory.createInterface().getFunction("deposit")
+    ).toBeDefined()
+    expect(
+      OperatorRegistry__factory.createInterface().getFunction("commit")
+    ).toBeDefined()
+    expect(
+      liqsolCoreIdl.instructions.map(instruction => instruction.name)
+    ).toEqual(
+      expect.arrayContaining([
+        "requestSwap",
+        "requestSwapSpl",
+        "commitUnderwrite"
+      ])
+    )
+    expect(accountNames).toEqual(["outpostConfig", "reserve"])
+  })
+})

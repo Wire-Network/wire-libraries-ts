@@ -1,0 +1,10 @@
+{
+  "extends": "../../etc/tsconfig/tsconfig.base.esm.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/esm",
+    "strict": true,
+    "noImplicitAny": true
+  },
+  "include": ["src"]
+}
