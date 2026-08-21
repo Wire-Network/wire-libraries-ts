@@ -8,11 +8,12 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-Release target: Ethereum artifacts `0.2.2` and Solana artifacts `0.2.1` provide
-directly importable TypeScript libraries, including ethers v6 bindings. The
-first `@wireio/sdk-outpost` release remains pending until their runtime manifests
-pass deployment verification. The workspace version remains `0.0.0` until the
-repository release workflow performs its patch bump.
+Release target: Ethereum and Solana artifacts `0.3.0` will provide directly
+importable TypeScript libraries assembled from one verified deployment handoff,
+including ethers v6 bindings. The dependency pins remain on the current public
+versions until both `0.3.0` packages can be installed from npm and their runtime
+manifests pass deployment verification. The workspace version remains `0.0.0`
+until the repository release workflow performs its patch bump.
 
 ## Install after the first SDK release
 
@@ -251,9 +252,10 @@ including `Program<LiqsolCore>["account"]["outpostConfig"]` and
 
 `@wireio/outpost-ethereum-artifacts` and `@wireio/outpost-solana-artifacts` are
 normal runtime dependencies. Their producers verify and publish the ABIs, IDL,
-runtime bytes, manifests, ethers v6 factories, and Anchor types together.
-`sdk-outpost` imports those published libraries directly and only composes their
-manifests for live deployment verification; it does not regenerate chain code.
+runtime bytes, manifests, ethers v6 factories, and Anchor types together from a
+checksummed deployment artifact handoff. `sdk-outpost` imports those published
+libraries directly and only composes their manifests for live deployment
+verification; it does not download handoffs or regenerate chain code.
 
 ## Consumer boundaries
 
