@@ -1,21 +1,19 @@
-import { KeyType } from "@wireio/sdk-core/chain/KeyType"
-import type { Name } from "@wireio/sdk-core/chain/Name"
-import type { PublicKey } from "@wireio/sdk-core/chain/PublicKey"
+import type { BAR, IERC1155 } from "@wireio/outpost-ethereum-artifacts"
+import { IERC1155__factory } from "@wireio/outpost-ethereum-artifacts"
+import { KeyType, Name, PublicKey } from "@wireio/sdk-core"
 import {
-  BigNumber,
+  JsonRpcProvider,
   Wallet,
-  constants as ethersConstants,
-  providers,
-  utils as ethersUtils,
-  type Event
+  ZeroAddress,
+  getBytes,
+  type EventLog,
+  type TransactionReceipt,
+  type TransactionResponse
 } from "ethers"
 
 import {
   EthereumNodeOwnerClient,
-  EthereumNodeOwnerTier,
-  IERC1155__factory,
-  type BAR,
-  type IERC1155
+  EthereumNodeOwnerTier
 } from "@wireio/sdk-outpost"
 
 const BarAddress = "0x18E317A7D70d8fBf8e6E893616b52390EbBdb629",
@@ -24,50 +22,51 @@ const BarAddress = "0x18E317A7D70d8fBf8e6E893616b52390EbBdb629",
   ApprovalTransactionHash = `0x${"22".repeat(32)}`,
   TestPrivateKey = `0x${"33".repeat(32)}`,
   WireAccountName = "nodeowner",
-  WireAccount = {
-    toString: () => WireAccountName
-  } as Name,
-  TransactionReceipt = {
-    blockNumber: 10,
+  WireAccount = Name.from(WireAccountName),
+  TransactionReceiptFixture = {
     logs: [],
     status: 1
-  } as unknown as providers.TransactionReceipt
+  } as unknown as TransactionReceipt
 
-/** Create a confirmed transaction fixture with an optional parsed event. */
+/** Create a confirmed transaction fixture with optional parsed logs. */
 function transactionFixture(
   hash: string,
-  events: readonly Event[] = []
-): providers.TransactionResponse {
+  logs: readonly EventLog[] = []
+): TransactionResponse {
   return {
     hash,
-    wait: jest.fn(async () => ({ ...TransactionReceipt, events }))
-  } as unknown as providers.TransactionResponse
+    wait: jest.fn(async () => ({ ...TransactionReceiptFixture, logs }))
+  } as unknown as TransactionResponse
 }
 
 /** Create generated BAR and IERC-1155 fixtures for one node-owner flow. */
-function contractFixtures(approved = true) {
+function contractFixtures(
+  approved = true,
+  tokenContractAddress = TokenContractAddress
+) {
   const wallet = new Wallet(TestPrivateKey),
     committedEvent = {
-      event: "NodeCommitted",
-      args: {
-        owner: wallet.address,
-        tokenId: BigNumber.from(EthereumNodeOwnerTier.T2),
-        nftAddress: TokenContractAddress,
-        wireAccountName: WireAccountName
-      }
-    },
+      eventName: "NodeCommitted",
+      args: [
+        wallet.address,
+        BigInt(EthereumNodeOwnerTier.T2),
+        TokenContractAddress,
+        WireAccountName
+      ]
+    } as unknown as EventLog,
     commitTransaction = transactionFixture(CommitTransactionHash, [
-      committedEvent as never
+      committedEvent
     ]),
     approvalTransaction = transactionFixture(ApprovalTransactionHash),
     bar = {
-      address: BarAddress,
-      wireNodesContract: jest.fn(async () => TokenContractAddress),
+      target: BarAddress,
+      getAddress: jest.fn(async () => BarAddress),
+      wireNodesContract: jest.fn(async () => tokenContractAddress),
       commitNode: jest.fn(async () => commitTransaction)
     } as unknown as BAR,
     token = {
       balanceOf: jest.fn(async (_owner: string, tokenId: number) =>
-        BigNumber.from(tokenId === EthereumNodeOwnerTier.T2 ? 1 : 0)
+        BigInt(tokenId === EthereumNodeOwnerTier.T2 ? 1 : 0)
       ),
       isApprovedForAll: jest.fn(async () => approved),
       setApprovalForAll: jest.fn(async () => approvalTransaction)
@@ -79,12 +78,10 @@ function contractFixtures(approved = true) {
 
 /** Return an sdk-core public-key input aligned with the EVM test signer. */
 function wirePublicKey(wallet: Wallet): PublicKey {
-  return {
+  return PublicKey.from({
     type: KeyType.K1,
-    data: {
-      array: ethersUtils.arrayify(wallet._signingKey().compressedPublicKey)
-    }
-  } as PublicKey
+    compressed: getBytes(wallet.signingKey.compressedPublicKey)
+  })
 }
 
 afterEach(() => jest.restoreAllMocks())
@@ -111,7 +108,7 @@ describe("EthereumNodeOwnerClient", () => {
         tokenId: EthereumNodeOwnerTier.T2,
         wireAccountName: WireAccount,
         wirePublicKey: wirePublicKey(wallet),
-        depositorPublicKey: wallet._signingKey().publicKey
+        depositorPublicKey: wallet.signingKey.publicKey
       })
 
     expect(submission).toEqual({
@@ -129,7 +126,7 @@ describe("EthereumNodeOwnerClient", () => {
       EthereumNodeOwnerTier.T2,
       WireAccountName,
       expect.objectContaining({ keyType: 1 }),
-      ethersUtils.arrayify(wallet._signingKey().publicKey)
+      getBytes(wallet.signingKey.publicKey)
     )
     expect(commitTransaction.wait).toHaveBeenCalledWith(1)
   })
@@ -143,7 +140,7 @@ describe("EthereumNodeOwnerClient", () => {
         tokenId: EthereumNodeOwnerTier.T2,
         wireAccountName: WireAccount,
         wirePublicKey: wirePublicKey(wallet),
-        depositorPublicKey: wallet._signingKey().publicKey
+        depositorPublicKey: wallet.signingKey.publicKey
       })
     ).resolves.toEqual(
       expect.objectContaining({
@@ -158,7 +155,7 @@ describe("EthereumNodeOwnerClient", () => {
     const { wallet, bar } = contractFixtures(),
       providerClient = new EthereumNodeOwnerClient(
         bar,
-        new providers.JsonRpcProvider()
+        new JsonRpcProvider()
       ),
       signerClient = new EthereumNodeOwnerClient(bar, wallet),
       otherWallet = Wallet.createRandom(),
@@ -166,7 +163,7 @@ describe("EthereumNodeOwnerClient", () => {
         tokenId: EthereumNodeOwnerTier.T2,
         wireAccountName: WireAccount,
         wirePublicKey: wirePublicKey(wallet),
-        depositorPublicKey: wallet._signingKey().publicKey
+        depositorPublicKey: wallet.signingKey.publicKey
       }
 
     await expect(providerClient.commit(request)).rejects.toThrow(
@@ -175,15 +172,14 @@ describe("EthereumNodeOwnerClient", () => {
     await expect(
       signerClient.commit({
         ...request,
-        depositorPublicKey: otherWallet._signingKey().publicKey
+        depositorPublicKey: otherWallet.signingKey.publicKey
       })
     ).rejects.toThrow("does not belong to the EVM signer")
     expect(bar.commitNode).not.toHaveBeenCalled()
   })
 
   it("fails closed when BAR has no canonical WireNodes contract", async () => {
-    const { wallet, bar } = contractFixtures()
-    bar.wireNodesContract = jest.fn(async () => ethersConstants.AddressZero)
+    const { wallet, bar } = contractFixtures(true, ZeroAddress)
 
     await expect(
       new EthereumNodeOwnerClient(bar, wallet).canonicalTokenContractAddress()

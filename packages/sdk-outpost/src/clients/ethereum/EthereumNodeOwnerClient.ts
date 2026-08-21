@@ -1,20 +1,23 @@
-import { KeyType } from "@wireio/sdk-core/chain/KeyType"
-import type { Name } from "@wireio/sdk-core/chain/Name"
-import type { PublicKey } from "@wireio/sdk-core/chain/PublicKey"
+import type { BAR } from "@wireio/outpost-ethereum-artifacts"
+import { IERC1155__factory } from "@wireio/outpost-ethereum-artifacts"
+import { KeyType, type Name, type PublicKey } from "@wireio/sdk-core"
 import {
-  Signer,
-  constants as ethersConstants,
-  utils as ethersUtils,
+  ZeroAddress,
+  computeAddress,
+  getAddress,
+  getBigInt,
+  getBytes,
+  hexlify,
   type BigNumberish,
   type BytesLike,
-  type Event,
-  type providers
+  type EventLog,
+  type Log,
+  type Provider,
+  type Signer
 } from "ethers"
 import { match } from "ts-pattern"
 
-import { IERC1155__factory, type BAR } from "../../contracts/ethereum/index.js"
-import type { WireKeyStruct } from "../../contracts/ethereum/generated/BAR.js"
-import type { NodeCommittedEvent } from "../../contracts/ethereum/generated/BAR.js"
+import { assertEthereumSigner } from "./Connection.js"
 
 const ConfirmationCount = 1,
   NodeCommittedEventName = "NodeCommitted",
@@ -91,13 +94,13 @@ export class EthereumNodeOwnerClient {
   /** Bind node-owner operations to a generated BAR contract. */
   constructor(
     private readonly bar: BAR,
-    private readonly connection: providers.Provider | Signer
+    private readonly connection: Provider | Signer
   ) {}
 
   /** Resolve the governance-configured canonical WireNodes contract. */
   async canonicalTokenContractAddress(): Promise<string> {
-    const address = ethersUtils.getAddress(await this.bar.wireNodesContract())
-    if (address === ethersConstants.AddressZero) {
+    const address = getAddress(await this.bar.wireNodesContract())
+    if (address === ZeroAddress) {
       throw new Error("BAR has no canonical WireNodes contract configured.")
     }
     return address
@@ -108,13 +111,13 @@ export class EthereumNodeOwnerClient {
     owner: string,
     tokenIds: readonly EthereumNodeOwnerTier[] = DefaultNodeOwnerTiers
   ): Promise<EthereumNodeOwnerSlotBalance[]> {
-    const normalizedOwner = ethersUtils.getAddress(owner),
+    const normalizedOwner = getAddress(owner),
       tokenContractAddress = await this.canonicalTokenContractAddress(),
       token = IERC1155__factory.connect(tokenContractAddress, this.connection),
       balances = await Promise.all(
         tokenIds.map(async tokenId => ({
           tokenId,
-          balance: (await token.balanceOf(normalizedOwner, tokenId)).toBigInt(),
+          balance: getBigInt(await token.balanceOf(normalizedOwner, tokenId)),
           tokenContractAddress
         }))
       )
@@ -127,7 +130,7 @@ export class EthereumNodeOwnerClient {
     request: EthereumNodeOwnerCommitRequest
   ): Promise<EthereumNodeOwnerCommitSubmission> {
     const signer = this.assertSigner(),
-      owner = ethersUtils.getAddress(await signer.getAddress()),
+      owner = getAddress(await signer.getAddress()),
       depositorPublicKey = this.assertDepositorPublicKey(
         request.depositorPublicKey,
         owner
@@ -137,11 +140,12 @@ export class EthereumNodeOwnerClient {
       ),
       tokenContractAddress = await this.canonicalTokenContractAddress(),
       token = IERC1155__factory.connect(tokenContractAddress, signer),
-      approved = await token.isApprovedForAll(owner, this.bar.address)
+      barAddress = await this.bar.getAddress(),
+      approved = await token.isApprovedForAll(owner, barAddress)
 
     let approvalTransactionId: string | undefined
     if (!approved) {
-      const approval = await token.setApprovalForAll(this.bar.address, true)
+      const approval = await token.setApprovalForAll(barAddress, true)
       approvalTransactionId = approval.hash
       await approval.wait(ConfirmationCount)
     }
@@ -157,43 +161,44 @@ export class EthereumNodeOwnerClient {
     return {
       transactionId: transaction.hash,
       approvalTransactionId,
-      committed: EthereumNodeOwnerClient.committedEvent(receipt.events)
+      committed: EthereumNodeOwnerClient.committedEvent(receipt?.logs)
     }
   }
 
   /** Normalize the canonical `NodeCommitted` event from a BAR receipt. */
   static committedEvent(
-    events: readonly Event[] | undefined
+    events: readonly (EventLog | Log)[] | undefined
   ): EthereumNodeCommittedEvent {
     const event = events?.find(
-        ({ event: name }) => name === NodeCommittedEventName
+        candidate =>
+          "eventName" in candidate &&
+          candidate.eventName === NodeCommittedEventName
       ),
-      committedEvent = event as NodeCommittedEvent | undefined,
-      { owner, tokenId, nftAddress, wireAccountName } =
-        committedEvent?.args ?? {}
+      arguments_ = event != null && "args" in event ? event.args : undefined,
+      owner = arguments_?.[0],
+      tokenId = arguments_?.[1],
+      tokenContractAddress = arguments_?.[2],
+      wireAccountName = arguments_?.[3]
 
     if (
       owner == null ||
       tokenId == null ||
-      nftAddress == null ||
+      tokenContractAddress == null ||
       wireAccountName == null
     ) {
       throw new Error("Confirmed BAR transaction did not emit NodeCommitted.")
     }
     return {
-      owner: ethersUtils.getAddress(owner),
+      owner: getAddress(owner),
       tokenId: EthereumNodeOwnerClient.nodeOwnerTier(tokenId),
-      tokenContractAddress: ethersUtils.getAddress(nftAddress),
+      tokenContractAddress: getAddress(tokenContractAddress),
       wireAccountName
     }
   }
 
   /** Require a connected EVM signer for node-owner writes. */
   private assertSigner(): Signer {
-    if (!Signer.isSigner(this.connection)) {
-      throw new Error("Ethereum node-owner commit requires a connected signer.")
-    }
-    return this.connection
+    return assertEthereumSigner(this.connection, "Ethereum node-owner commit")
   }
 
   /** Validate the depositor key shape and its relationship to the signer. */
@@ -201,7 +206,7 @@ export class EthereumNodeOwnerClient {
     value: BytesLike,
     owner: string
   ): Uint8Array {
-    const publicKey = ethersUtils.arrayify(value)
+    const publicKey = getBytes(value)
     if (
       publicKey.length !== UncompressedPublicKeyByteLength ||
       publicKey[0] !== UncompressedPublicKeyPrefix
@@ -210,10 +215,7 @@ export class EthereumNodeOwnerClient {
         "depositorPublicKey must be a 65-byte uncompressed SEC1 key."
       )
     }
-    const derivedOwner = ethersUtils.getAddress(
-      ethersUtils.computeAddress(publicKey)
-    )
-    if (derivedOwner !== owner) {
+    if (getAddress(computeAddress(hexlify(publicKey))) !== owner) {
       throw new Error("depositorPublicKey does not belong to the EVM signer.")
     }
     return publicKey
@@ -228,7 +230,7 @@ export class EthereumNodeOwnerClient {
   }
 
   /** Convert an sdk-core public key into BAR's generated WireKey structure. */
-  private wireKey(publicKey: PublicKey): WireKeyStruct {
+  private wireKey(publicKey: PublicKey) {
     const keyType = match(publicKey.type)
       .with(KeyType.K1, () => NodeOwnerWireKeyType.K1)
       .with(KeyType.R1, () => NodeOwnerWireKeyType.R1)

@@ -46,6 +46,7 @@
     "@solana/web3.js": "^1.98.4",
     "@wireio/outpost-ethereum-artifacts": "0.2.2",
     "@wireio/outpost-solana-artifacts": "0.2.1",
+    "@wireio/sdk-core": "workspace:*",
     "ethers": "^6.15.0",
     "ts-pattern": "^5.9.0",
     "zod": "^4.4.3"
