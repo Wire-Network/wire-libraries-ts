@@ -6,6 +6,7 @@ export enum OutpostChainFamily {
 
 /** Ethereum contracts owned by the current outpost deployment. */
 export enum EthereumContractName {
+  BAR = "BAR",
   OPP = "OPP",
   OPPInbound = "OPPInbound",
   OperatorRegistry = "OperatorRegistry",

@@ -77,8 +77,9 @@ async function verifyEthereum(
 
   await Promise.all(
     Object.values(EthereumContractName).map(async contractName => {
-      const contract = profile.ethereum.contracts[contractName],
-        proxyCode = await provider.getCode(contract.address)
+      const contract = profile.ethereum.contracts[contractName]
+      if (contract == null) return
+      const proxyCode = await provider.getCode(contract.address)
 
       if (proxyCode === EmptyEthereumCode) {
         throw new Error(

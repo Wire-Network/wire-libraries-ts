@@ -1,4 +1,5 @@
 import type {
+  BAR,
   OPP,
   OPPInbound,
   OperatorRegistry,
@@ -19,6 +20,8 @@ export interface EthereumOutpostClientOptions {
 
 /** Generated contract clients keyed by their deployment identity. */
 export interface EthereumContractMap {
+  /** Bond and node-owner registration contract. */
+  [EthereumContractName.BAR]: BAR
   /** Outbound OPP endpoint. */
   [EthereumContractName.OPP]: OPP
   /** Inbound OPP endpoint. */

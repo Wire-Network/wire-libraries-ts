@@ -121,8 +121,10 @@ export function assertOutpostArtifactCompatibility(
   match(family)
     .with(OutpostChainFamily.ethereum, () => {
       Object.values(EthereumContractName).forEach(contractName => {
+        const contract = profile.ethereum.contracts[contractName]
+        if (contract == null) return
         assertInterfaceDigest(
-          profile.ethereum.contracts[contractName].abiSha256,
+          contract.abiSha256,
           OutpostArtifactManifests.ethereum.contracts[contractName].abiSha256,
           `Ethereum ${contractName} ABI`
         )

@@ -142,6 +142,33 @@ Ethereum also exposes `requestErc20WithApproval`, `nativeBalance`, and
 `erc20Balance`. Solana exposes `requestNative`, `requestSpl`, `nativeBalance`,
 and `splBalance` through the same `client.swaps` ownership boundary.
 
+## Ethereum node owners
+
+The verified Ethereum client exposes `nodeOwners` for the external half of the
+node-owner flow. It resolves the canonical WireNodes ERC-1155 contract from
+BAR, reads owned tiers, obtains approval only when needed, and submits
+`BAR.commitNode`. Wire account authority parsing reuses `@wireio/sdk-core`; the
+SDK validates that the uncompressed depositor key belongs to the EVM signer.
+BAR is an optional deployment capability: schema-v1 profiles without a BAR
+identity continue to support the existing reserve and swap clients, while
+accessing `nodeOwners` fails closed with an explicit availability error.
+
+```ts
+const slots = await ethereum.nodeOwners.ownedSlots(ownerAddress)
+const submission = await ethereum.nodeOwners.commit({
+  tokenId: slots[0].tokenId,
+  wireAccountName: Name.from(wireAccountName),
+  wirePublicKey: PublicKey.from(wirePublicKey),
+  depositorPublicKey
+})
+```
+
+This surface does not mint test tokens, guess a fallback contract, create the
+Wire account directly, or infer protocol completion from the EVM receipt. Hub
+must keep the action disabled unless deployment and capability evidence both
+advertise the complete node-owner flow, then follow the resulting Wire-side
+registration state separately.
+
 ## Reserve lifecycle
 
 Wallet-connected clients expose the external half of the post-bootstrap

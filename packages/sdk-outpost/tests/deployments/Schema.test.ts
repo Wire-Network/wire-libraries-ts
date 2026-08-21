@@ -31,6 +31,17 @@ describe("OutpostDeploymentProfileSchema", () => {
     )
   })
 
+  it("preserves schema-v1 profiles when BAR is not deployed", () => {
+    const profile = createOutpostDeploymentProfileFixture()
+    delete profile.ethereum.contracts[EthereumContractName.BAR]
+
+    expect(
+      parseOutpostDeploymentProfile(profile).ethereum.contracts[
+        EthereumContractName.BAR
+      ]
+    ).toBeUndefined()
+  })
+
   it("rejects an invalid Solana ProgramData address", () => {
     const fixture = createOutpostDeploymentProfileFixture()
     fixture.solana.programs.liqsolCore.programDataAddress =
