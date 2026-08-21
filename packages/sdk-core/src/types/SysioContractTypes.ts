@@ -3344,6 +3344,7 @@ export enum SysioUwritUnderwritestatus {
 
 /** sysio.uwrit::chklocks (action) */
 export interface SysioUwritChklocksAction {
+  max_rows: number
 }
 
 /** sysio.uwrit::commit_entry (type) */
@@ -3426,6 +3427,21 @@ export interface SysioUwritLockEntryType {
 /** sysio.uwrit::lock_key (type) */
 export interface SysioUwritLockKeyType {
   lock_id: number | string
+}
+
+/** sysio.uwrit::lock_sum (type) */
+export interface SysioUwritLockSumType {
+  underwriter: string
+  chain_code: SysioUwritSlugNameType
+  token_code: SysioUwritSlugNameType
+  amount: number | string
+}
+
+/** sysio.uwrit::lock_sum_key (type) */
+export interface SysioUwritLockSumKeyType {
+  underwriter: string
+  chain_code: SysioUwritSlugNameType
+  token_code: SysioUwritSlugNameType
 }
 
 /** sysio.uwrit::pruneuwreqs (action) */
@@ -3546,6 +3562,7 @@ export interface SysioUwritContract {
   tables: {
     fwqueue: SysioUwritFromwireQType
     locks: SysioUwritLockEntryType
+    locksums: SysioUwritLockSumType
     uwconfig: SysioUwritUwConfigType
     uwcounters: SysioUwritUwCountersType
     uwreqs: SysioUwritUwRequestTType
@@ -3696,7 +3713,7 @@ export const SysioContractDefinitions: {
   [SysioContractName.system]: { name: SysioContractName.system, account: "sysio", actions: ["accrueepoch", "actfinkey", "activate", "addnodeowner", "claimnodedis", "claimpay", "deleteauth", "delfinkey", "delsnapprov", "fundclaim", "getsnaphash", "init", "initt5", "limitauthchg", "linkauth", "newaccount", "onblock", "payepoch", "regfinkey", "regproducer", "regproducer2", "regsnapprov", "rmvproducer", "setabi", "setacctcpu", "setacctnet", "setacctram", "setalimits", "setcode", "setemitcfg", "setinittime", "setparams", "setpriv", "setprodkeys", "setprods", "setram", "setrank", "setsnpcfg", "unlinkauth", "unregprod", "updateauth", "viewemitcfg", "viewepoch", "viewnodedist", "votesnaphash", "wasmcfg", "delpeerkey", "getpeerkeys", "regpeerkey", "addtrxp", "deltrxp"], tables: ["abihash", "blockinfo", "emissionmngr", "emitcfg", "epochlog", "finalizers", "finkeyidgen", "finkeys", "global", "lastpropfins", "nodecount", "nodedist", "payclaims", "payclaimtot", "producers", "snapconfig", "snapprovs", "snaprecords", "snapvotes", "t5state", "limitauthchg", "peerkeys", "trxpglobal", "trxpriority"] },
   [SysioContractName.token]: { name: SysioContractName.token, account: "sysio.token", actions: ["close", "create", "issue", "open", "retire", "transfer"], tables: ["accounts", "stat"] },
   [SysioContractName.tokens]: { name: SysioContractName.tokens, account: "sysio.tokens", actions: ["activctok", "activtoken", "regctok", "regtoken"], tables: ["chaintokens", "tokens"] },
-  [SysioContractName.uwrit]: { name: SysioContractName.uwrit, account: "sysio.uwrit", actions: ["chklocks", "createuwreq", "drainfwq", "freelocks", "holdlocks", "pruneuwreqs", "rcrdcommit", "setconfig", "sumlocks", "swapfromwire", "sweeplocks"], tables: ["fwqueue", "locks", "uwconfig", "uwcounters", "uwreqs"] },
+  [SysioContractName.uwrit]: { name: SysioContractName.uwrit, account: "sysio.uwrit", actions: ["chklocks", "createuwreq", "drainfwq", "freelocks", "holdlocks", "pruneuwreqs", "rcrdcommit", "setconfig", "sumlocks", "swapfromwire", "sweeplocks"], tables: ["fwqueue", "locks", "locksums", "uwconfig", "uwcounters", "uwreqs"] },
   [SysioContractName.wrap]: { name: SysioContractName.wrap, account: "sysio.wrap", actions: ["exec"], tables: [] },
 }
 
