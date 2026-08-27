@@ -4,9 +4,9 @@
  * pnpm hook to resolve @wireio packages from the local wire-libraries-ts monorepo.
  *
  * Usage:
- *   1. Add packages you want to link to the `localOverrides` map below.
- *   2. Run `pnpm install` — pnpm will use these local paths instead of the registry.
- *   3. Comment out or remove entries to revert to registry versions.
+ *   1. Build the wire-sysio and outpost producer outputs in the sibling repos.
+ *   2. Run `pnpm install --lockfile=false` to consume available local outputs.
+ *   3. Remove the sibling outputs to exercise registry-only release resolution.
  *
  * Docs: https://pnpm.io/pnpmfile
  */
@@ -28,10 +28,7 @@ function isDirectory(dirPath) {
   }
 }
 
-/**
- * Map of package names to their local directory in wire-libraries-ts.
- * Uncomment the entries you want to link locally.
- */
+/** Map of locally available producer packages keyed by package name. */
 const localOverrides = {}
 
 // AS THE PROTOBUF LIBS HAVE BEEN RELOCATED TO SYSIO
@@ -43,15 +40,26 @@ const wireOPPPkgPaths = ["typescript", "solidity"].map(target => [
   Path.resolve(__dirname, "..", "wire-sysio", "build", "opp", target)
 ])
 
+const outpostArtifactPkgPaths = [
+  [
+    "@wireio/outpost-ethereum-artifacts",
+    Path.resolve(__dirname, "..", "wire-ethereum", "build", "sdk-artifacts")
+  ],
+  [
+    "@wireio/outpost-solana-artifacts",
+    Path.resolve(__dirname, "..", "wire-solana", "build", "sdk-artifacts")
+  ]
+]
+
 wireOPPPkgPaths
+  .concat(outpostArtifactPkgPaths)
   .filter(([, path]) => isDirectory(path))
   .forEach(([pkgName, path]) => {
     localOverrides[pkgName] = path
   })
 
 /**
- * `readPackage` hook, which links locally available versions of
- * shared libraries and models.
+ * `readPackage` hook, which links locally available producer packages.
  *
  * @param pkg
  * @param context

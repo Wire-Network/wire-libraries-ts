@@ -21,6 +21,13 @@ inside this monorepo. An internal compile-time artifact-suite registry selects
 compatible producer bindings from caller-supplied deployment profiles without
 owning endpoints or environment configuration.
 
+Within `wire-platform`, `.pnpmfile.cjs` automatically links producer packages
+that exist at `wire-ethereum/build/sdk-artifacts` and
+`wire-solana/build/sdk-artifacts`, matching the existing local OPP-model flow.
+Run `pnpm install --lockfile=false` after building those sibling outputs. When
+the outputs are absent, installs continue to resolve the exact registry versions
+declared by `sdk-outpost`.
+
 ## Examples
 
 | Example | Description |
