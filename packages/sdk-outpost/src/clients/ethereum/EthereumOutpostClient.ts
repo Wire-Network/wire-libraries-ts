@@ -1,13 +1,10 @@
-import {
-  BAR__factory,
-  OPPInbound__factory,
-  OPP__factory,
-  OperatorRegistry__factory,
-  ReserveManager__factory
-} from "@wireio/outpost-ethereum-artifacts"
 import type { Provider } from "ethers"
 import { match } from "ts-pattern"
 
+import {
+  OutpostArtifactRegistry,
+  type OutpostArtifactSuite
+} from "../../artifacts/Registry.js"
 import {
   EthereumContractName,
   OutpostChainFamily
@@ -33,13 +30,18 @@ export class EthereumOutpostClient {
       profile,
       provider
     })
-    return new EthereumOutpostClient(options, provider)
+    return new EthereumOutpostClient(
+      options,
+      provider,
+      OutpostArtifactRegistry.resolve(profile)
+    )
   }
 
   private constructor(
     private readonly options: EthereumOutpostClientOptions,
     /** Provider verified against the configured Ethereum chain. */
-    readonly provider: Provider
+    readonly provider: Provider,
+    private readonly artifactSuite: OutpostArtifactSuite
   ) {
     this.reserves = new EthereumReserveClient(
       this.contract(EthereumContractName.ReserveManager),
@@ -83,6 +85,7 @@ export class EthereumOutpostClient {
   /** Connect a generated contract client by its typed deployment name. */
   contract<T extends EthereumContractName>(name: T): EthereumContractMap[T] {
     const { connection, profile } = this.options,
+      factories = this.artifactSuite.ethereum.factories,
       contract = match(name as EthereumContractName)
         .with(EthereumContractName.BAR, () => {
           const bar = profile.ethereum.contracts[EthereumContractName.BAR]
@@ -91,29 +94,32 @@ export class EthereumOutpostClient {
               "Ethereum node owners are unavailable because this deployment profile has no BAR identity."
             )
           }
-          return BAR__factory.connect(bar.address, connection)
+          return factories[EthereumContractName.BAR].connect(
+            bar.address,
+            connection
+          )
         })
         .with(EthereumContractName.OPP, () =>
-          OPP__factory.connect(
+          factories[EthereumContractName.OPP].connect(
             profile.ethereum.contracts[EthereumContractName.OPP].address,
             connection
           )
         )
         .with(EthereumContractName.OPPInbound, () =>
-          OPPInbound__factory.connect(
+          factories[EthereumContractName.OPPInbound].connect(
             profile.ethereum.contracts[EthereumContractName.OPPInbound].address,
             connection
           )
         )
         .with(EthereumContractName.OperatorRegistry, () =>
-          OperatorRegistry__factory.connect(
+          factories[EthereumContractName.OperatorRegistry].connect(
             profile.ethereum.contracts[EthereumContractName.OperatorRegistry]
               .address,
             connection
           )
         )
         .with(EthereumContractName.ReserveManager, () =>
-          ReserveManager__factory.connect(
+          factories[EthereumContractName.ReserveManager].connect(
             profile.ethereum.contracts[EthereumContractName.ReserveManager]
               .address,
             connection

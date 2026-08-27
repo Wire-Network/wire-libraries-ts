@@ -8,12 +8,11 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-Release target: Ethereum and Solana artifacts `0.3.0` will provide directly
-importable TypeScript libraries assembled from one verified deployment handoff,
-including ethers v6 bindings. The dependency pins remain on the current public
-versions until both `0.3.0` packages can be installed from npm and their runtime
-manifests pass deployment verification. The workspace version remains `0.0.0`
-until the repository release workflow performs its patch bump.
+The current source pins Ethereum and Solana artifacts `0.3.0`, directly
+importable TypeScript libraries assembled from the same verified deployment
+handoff. Their published manifests identify the exact producer commits, runtime
+artifacts, and ethers v6/Anchor bindings used by the SDK. The workspace version
+remains `0.0.0` until the repository release workflow performs its patch bump.
 
 ## Install after the first SDK release
 
@@ -21,15 +20,15 @@ until the repository release workflow performs its patch bump.
 npm install @wireio/sdk-outpost
 ```
 
-Before using the registry command, verify that `@wireio/sdk-outpost` resolves
-through `npm view`. The SDK consumes exact registry versions of
+Before installing, verify that `@wireio/sdk-outpost` resolves through `npm view`.
+The SDK consumes exact npm versions of
 [`@wireio/outpost-ethereum-artifacts`](https://www.npmjs.com/package/@wireio/outpost-ethereum-artifacts)
 and
 [`@wireio/outpost-solana-artifacts`](https://www.npmjs.com/package/@wireio/outpost-solana-artifacts);
 do not replace them with committed machine-local links.
 
 Node.js 22 or newer and ethers v6 are supported. The package publishes CommonJS
-and native ES module entrypoints with TypeScript declarations.
+and ES module entrypoints with TypeScript declarations.
 
 ## Supported surfaces
 
@@ -91,6 +90,21 @@ new profile without requiring a producer-artifact or SDK release.
 | ABI or IDL change                                       | Yes                       | Yes                   | New                                       |
 | Asset/reserve onboarding without code/interface changes | No                        | No                    | Update operational configuration/evidence |
 | RPC or explorer rotation                                | No                        | No                    | Update endpoint catalog only              |
+
+## Artifact suite selection
+
+The SDK keeps an internal, compile-time registry of supported Ethereum and
+Solana producer package pairs. Client creation selects compatible bindings from
+the deployment profile's ABI or IDL digests, then verifies the selected
+candidate against the exact live Ethereum runtime or Solana ProgramData before
+returning a client.
+
+This registry is not a network, endpoint, or environment catalog. It contains no
+RPC URLs, does not download code, and is not keyed by names such as sandbox or
+devnet. A new deployment profile that uses an already-registered artifact suite
+works without an SDK release. A deployable code or interface change requires a
+producer artifact release, a corresponding internal suite entry, and an SDK
+release; consumers continue to use the same `OutpostClient.create` facade.
 
 ## Usage
 
@@ -254,8 +268,9 @@ including `Program<LiqsolCore>["account"]["outpostConfig"]` and
 normal runtime dependencies. Their producers verify and publish the ABIs, IDL,
 runtime bytes, manifests, ethers v6 factories, and Anchor types together from a
 checksummed deployment artifact handoff. `sdk-outpost` imports those published
-libraries directly and only composes their manifests for live deployment
-verification; it does not download handoffs or regenerate chain code.
+libraries directly, registers their generated bindings as one internal artifact
+suite, and uses their manifests for live deployment verification; it does not
+download handoffs or regenerate chain code.
 
 ## Consumer boundaries
 
@@ -276,6 +291,10 @@ verification; it does not download handoffs or regenerate chain code.
 pnpm --dir packages/sdk-outpost run build
 pnpm --dir packages/sdk-outpost run test
 ```
+
+The artifact tests read the installed producer-package payloads, verify their
+published runtime checksums and required generated bindings, and assert that the
+internal registry accepts only the exact paired Ethereum and Solana suite.
 
 Release versions are managed by the monorepo-wide patch workflow. See the
 [repository release guide](https://github.com/Wire-Network/wire-libraries-ts/blob/master/RELEASING.md)

@@ -31,9 +31,6 @@ tsconfig.tsbuildinfo
 out/
 build
 dist
-/packages/sdk-outpost/src/artifacts/generated/
-/packages/sdk-outpost/src/contracts/ethereum/generated/
-/packages/sdk-outpost/src/programs/solana/generated/
 
 
 # Debug

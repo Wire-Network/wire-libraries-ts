@@ -5,10 +5,15 @@ import { dataSlice, getAddress, sha256 as ethersSha256 } from "ethers"
 import { match } from "ts-pattern"
 
 import {
-  assertEthereumRuntimeArtifactCompatibility,
-  assertOutpostArtifactCompatibility,
-  assertSolanaProgramArtifactCompatibility
-} from "../artifacts/index.js"
+  CurrentOutpostArtifactSuite,
+  OutpostArtifactRegistry,
+  type OutpostArtifactSuite
+} from "../artifacts/Registry.js"
+import {
+  assertEthereumRuntimeSuiteCompatibility,
+  assertOutpostArtifactSuiteCompatibility,
+  assertSolanaProgramSuiteCompatibility
+} from "../artifacts/SuiteCompatibility.js"
 import {
   EthereumContractName,
   OutpostChainFamily,
@@ -64,9 +69,14 @@ function assertSolanaUpgradeableLoaderAccount(
 
 async function verifyEthereum(
   profile: OutpostDeploymentProfile,
-  provider: Provider
+  provider: Provider,
+  suite: OutpostArtifactSuite
 ): Promise<void> {
-  assertOutpostArtifactCompatibility(profile, OutpostChainFamily.ethereum)
+  assertOutpostArtifactSuiteCompatibility(
+    profile,
+    OutpostChainFamily.ethereum,
+    suite
+  )
 
   const network = await provider.getNetwork()
   if (network.chainId !== BigInt(profile.ethereum.chainId)) {
@@ -114,9 +124,10 @@ async function verifyEthereum(
           `Ethereum ${contractName} implementation code mismatch: expected ${contract.implementationCodeSha256}, received ${implementationCodeSha256}`
         )
       }
-      assertEthereumRuntimeArtifactCompatibility(
+      assertEthereumRuntimeSuiteCompatibility(
         contractName,
-        implementationCode
+        implementationCode,
+        suite
       )
     })
   )
@@ -124,9 +135,14 @@ async function verifyEthereum(
 
 async function verifySolana(
   profile: OutpostDeploymentProfile,
-  connection: Connection
+  connection: Connection,
+  suite: OutpostArtifactSuite
 ): Promise<void> {
-  assertOutpostArtifactCompatibility(profile, OutpostChainFamily.solana)
+  assertOutpostArtifactSuiteCompatibility(
+    profile,
+    OutpostChainFamily.solana,
+    suite
+  )
 
   const genesisHash = await connection.getGenesisHash()
   if (genesisHash !== profile.solana.genesisHash) {
@@ -209,12 +225,54 @@ async function verifySolana(
           `Solana ${programName} ProgramData mismatch: expected ${program.programDataSha256}, received ${programDataSha256}`
         )
       }
-      assertSolanaProgramArtifactCompatibility(
+      assertSolanaProgramSuiteCompatibility(
         programName,
-        programDataAccount.data
+        programDataAccount.data,
+        suite
       )
     })
   )
+}
+
+/** Verify one candidate artifact suite against its live external chain. */
+async function verifyOutpostArtifactSuite(
+  input: OutpostDeploymentVerificationInput,
+  suite: OutpostArtifactSuite
+): Promise<void> {
+  await match(input)
+    .with({ family: OutpostChainFamily.ethereum }, value =>
+      verifyEthereum(value.profile, value.provider, suite)
+    )
+    .with({ family: OutpostChainFamily.solana }, value =>
+      verifySolana(value.profile, value.connection, suite)
+    )
+    .exhaustive()
+}
+
+/** Verify compatible suites in registration order until one matches live code. */
+async function verifyOutpostArtifactSuiteCandidates(
+  input: OutpostDeploymentVerificationInput,
+  suites: readonly OutpostArtifactSuite[],
+  index = 0
+): Promise<void> {
+  const suite = suites[index]
+  if (suite == null) {
+    assertOutpostArtifactSuiteCompatibility(
+      input.profile,
+      input.family,
+      CurrentOutpostArtifactSuite
+    )
+    throw new Error(
+      `No registered artifact suite matches deployment profile ${input.profile.id}`
+    )
+  }
+
+  try {
+    await verifyOutpostArtifactSuite(input, suite)
+  } catch (error: unknown) {
+    if (index + 1 >= suites.length) throw error
+    await verifyOutpostArtifactSuiteCandidates(input, suites, index + 1)
+  }
 }
 
 /** Cross-chain facade for exact outpost deployment-profile verification. */
@@ -223,13 +281,9 @@ export namespace OutpostDeploymentVerifier {
   export async function verify(
     input: OutpostDeploymentVerificationInput
   ): Promise<void> {
-    await match(input)
-      .with({ family: OutpostChainFamily.ethereum }, value =>
-        verifyEthereum(value.profile, value.provider)
-      )
-      .with({ family: OutpostChainFamily.solana }, value =>
-        verifySolana(value.profile, value.connection)
-      )
-      .exhaustive()
+    await verifyOutpostArtifactSuiteCandidates(
+      input,
+      OutpostArtifactRegistry.candidates(input.profile)
+    )
   }
 }

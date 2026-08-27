@@ -6,11 +6,12 @@ directory outside this process.
 
 ## Current first-release state
 
-Producer package `0.2.1` is the prerequisite release for directly importable
-TypeScript libraries and ethers v6 bindings. The first `@wireio/sdk-outpost`
-release remains pending until both producer packages publish that version. Its
-workspace version remains `0.0.0` until the existing repository-wide patch
-workflow bumps and publishes it.
+Ethereum and Solana producer packages `0.3.0` are the exact prerequisites for
+the first SDK release. Both are publicly installable and provide directly
+importable TypeScript libraries, ethers v6 factories, Anchor types, manifests,
+and runtime artifacts. The first `@wireio/sdk-outpost` release remains pending
+platform review. Its workspace version remains `0.0.0` until the existing
+repository-wide patch workflow bumps and publishes it.
 
 ## Artifact prerequisites
 
@@ -71,7 +72,7 @@ trees must not be published by `sdk-outpost`.
 
 The first successful publish creates the npm package page. Release sequence:
 
-1. Confirm both exact `0.2.1` producer artifact versions are publicly
+1. Confirm both exact `0.3.0` producer artifact versions are publicly
    installable.
 2. Confirm the `wireio` organization exists on npm and the release owner can
    publish public packages in that scope.

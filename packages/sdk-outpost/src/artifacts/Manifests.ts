@@ -1,8 +1,7 @@
-import { EthereumOutpostArtifactManifest } from "@wireio/outpost-ethereum-artifacts"
-import { SolanaOutpostArtifactManifest } from "@wireio/outpost-solana-artifacts"
+import { CurrentOutpostArtifactSuite } from "./Registry.js"
 
 /** Exact producer manifests compiled into this SDK release. */
 export const OutpostArtifactManifests = {
-  ethereum: EthereumOutpostArtifactManifest,
-  solana: SolanaOutpostArtifactManifest
+  ethereum: CurrentOutpostArtifactSuite.ethereum.manifest,
+  solana: CurrentOutpostArtifactSuite.solana.manifest
 } as const

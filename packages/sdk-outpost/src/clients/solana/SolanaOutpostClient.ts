@@ -1,14 +1,15 @@
 import { Program } from "@coral-xyz/anchor"
+import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
 import { match } from "ts-pattern"
 
+import {
+  OutpostArtifactRegistry,
+  type OutpostArtifactSuite
+} from "../../artifacts/Registry.js"
 import {
   OutpostChainFamily,
   SolanaProgramName
 } from "../../deployments/index.js"
-import {
-  liqsolCoreIdl,
-  type LiqsolCore
-} from "@wireio/outpost-solana-artifacts"
 import { OutpostDeploymentVerifier } from "../../verification/index.js"
 import { SolanaOutpostClientOptions, SolanaProgramMap } from "./Types.js"
 import { SolanaReserveClient } from "./SolanaReserveClient.js"
@@ -27,17 +28,26 @@ export class SolanaOutpostClient {
       profile,
       connection: provider.connection
     })
-    return new SolanaOutpostClient(options)
+    return new SolanaOutpostClient(
+      options,
+      OutpostArtifactRegistry.resolve(profile)
+    )
   }
 
   private readonly liqsolCore: Program<LiqsolCore>
 
-  private constructor(private readonly options: SolanaOutpostClientOptions) {
+  private constructor(
+    private readonly options: SolanaOutpostClientOptions,
+    artifactSuite: OutpostArtifactSuite
+  ) {
     const address =
       options.profile.solana.programs[SolanaProgramName.liqsolCore].address
 
     this.liqsolCore = new Program<LiqsolCore>(
-      { ...liqsolCoreIdl, address },
+      {
+        ...artifactSuite.solana.idls[SolanaProgramName.liqsolCore],
+        address
+      },
       options.provider
     )
     this.reserves = new SolanaReserveClient(options.provider, this.liqsolCore)

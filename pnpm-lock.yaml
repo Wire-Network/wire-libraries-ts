@@ -197,11 +197,11 @@ importers:
         specifier: ^1.98.4
         version: 1.98.4(bufferutil@4.1.0)(typescript@6.0.2)(utf-8-validate@6.0.6)
       '@wireio/outpost-ethereum-artifacts':
-        specifier: 0.2.2
-        version: 0.2.2(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))
+        specifier: 0.3.0
+        version: 0.3.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))
       '@wireio/outpost-solana-artifacts':
-        specifier: 0.2.1
-        version: 0.2.1
+        specifier: 0.3.0
+        version: 0.3.0
       '@wireio/sdk-core':
         specifier: workspace:*
         version: link:../sdk-core
@@ -1675,13 +1675,13 @@ packages:
       webpack-dev-server:
         optional: true
 
-  '@wireio/outpost-ethereum-artifacts@0.2.2':
-    resolution: {integrity: sha512-Gt1X09byNuuTCVJuAsj27Co+0WHUFo1W+p8fNfDYpKUfGKJA+hWoJDMpIiuYO5CoEf2OtlBH1kmSufY5Ej50pg==}
+  '@wireio/outpost-ethereum-artifacts@0.3.0':
+    resolution: {integrity: sha512-z//qpsX/OLOBBl/TRP854WbhZy79P/PuP2gfME7tN1kwChIoytrniXyVJ3tMvuMb9rvtjb5JuYfejG0lp5cEWA==}
     peerDependencies:
       ethers: ^6.15.0
 
-  '@wireio/outpost-solana-artifacts@0.2.1':
-    resolution: {integrity: sha512-Q6aeQxXiwoXDifDwubswTy/qg2hTpElzQihNV5OwTX9HpBm1Y6/yKbpN5wNjk4RRbeuhm6X2Tfcu2MPu0mo5Uw==}
+  '@wireio/outpost-solana-artifacts@0.3.0':
+    resolution: {integrity: sha512-zAiH9cI5pp2gSKFTsQp9qqjvlAGL49XK+oZjjOeQ41SW9gwXXWatMc10GuvmwpolfBeRyrIqiTfP7s0W9fNjjw==}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -5992,11 +5992,11 @@ snapshots:
       webpack: 5.104.1(postcss@8.5.16)(webpack-cli@6.0.1)
       webpack-cli: 6.0.1(webpack@5.104.1)
 
-  '@wireio/outpost-ethereum-artifacts@0.2.2(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
+  '@wireio/outpost-ethereum-artifacts@0.3.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
     dependencies:
       ethers: 6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
-  '@wireio/outpost-solana-artifacts@0.2.1': {}
+  '@wireio/outpost-solana-artifacts@0.3.0': {}
 
   '@xtuc/ieee754@1.2.0': {}
 

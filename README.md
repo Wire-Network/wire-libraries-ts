@@ -17,7 +17,9 @@ A monorepo containing shared TypeScript libraries for Wire applications, providi
 The sdk-outpost package consumes exact published versions of the Ethereum and
 Solana artifact libraries, including their ethers v6 factories and Anchor
 types. Chain bindings are generated and verified by those producer repos, not
-inside this monorepo.
+inside this monorepo. An internal compile-time artifact-suite registry selects
+compatible producer bindings from caller-supplied deployment profiles without
+owning endpoints or environment configuration.
 
 ## Examples
 

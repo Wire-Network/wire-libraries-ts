@@ -424,9 +424,6 @@ export default tseslint.config(
       "**/node_modules/**",
       "**/coverage/**",
       "**/*.d.ts",
-      "packages/sdk-outpost/src/artifacts/generated/**",
-      "packages/sdk-outpost/src/contracts/ethereum/generated/**",
-      "packages/sdk-outpost/src/programs/solana/generated/**",
       // TypeScript is the enforcement target: the style laws + tsconfig
       // govern .ts/.tsx. Plain JS (configs, .pnpmfile.cjs, Node CLI scripts —
       // whose console IS their user interface per the use-logging-framework.md
