@@ -35,24 +35,18 @@ const localOverrides = {}
 // WE CAN NOW USE THE MODELS WITHOUT ISSUE.
 // CIRCULAR DEP REMOVED
 
-const wireOPPPkgPaths = ["typescript", "solidity"].map(target => [
-  `@wireio/opp-${target}-models`,
-  Path.resolve(__dirname, "..", "wire-sysio", "build", "opp", target)
-])
-
-const outpostArtifactPkgPaths = [
-  [
-    "@wireio/outpost-ethereum-artifacts",
-    Path.resolve(__dirname, "..", "wire-ethereum", "build", "sdk-artifacts")
-  ],
-  [
-    "@wireio/outpost-solana-artifacts",
-    Path.resolve(__dirname, "..", "wire-solana", "build", "sdk-artifacts")
-  ]
+const wirePkgPaths = [
+  ...["typescript", "solidity"].map(target => [
+    `@wireio/opp-${target}-models`,
+    Path.resolve(__dirname, "..", "wire-sysio", "build", "opp", target)
+  ]),
+  ...["ethereum","solana"].map(target => [
+      `@wireio/outpost-${target}-artifacts`,
+      Path.resolve(__dirname, "..", `wire-${target}`, "build", "sdk-artifacts")
+  ])
 ]
 
-wireOPPPkgPaths
-  .concat(outpostArtifactPkgPaths)
+wirePkgPaths
   .filter(([, path]) => isDirectory(path))
   .forEach(([pkgName, path]) => {
     localOverrides[pkgName] = path
