@@ -1,0 +1,58 @@
+{
+  "name": "@wireio/sdk-outpost",
+  "description": "Strictly typed Ethereum and Solana clients for Wire outposts.",
+  "version": "0.0.0",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Wire-Network/wire-libraries-ts",
+    "directory": "packages/sdk-outpost"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/Wire-Network/wire-libraries-ts/tree/master/packages/sdk-outpost",
+  "bugs": {
+    "url": "https://github.com/Wire-Network/wire-libraries-ts/issues"
+  },
+  "keywords": ["wire", "ethereum", "solana", "outpost", "sdk"],
+  "engines": {
+    "node": ">=22"
+  },
+  "sideEffects": false,
+  "files": ["lib/cjs", "lib/esm", "README.md"],
+  "types": "lib/esm/index.d.ts",
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.js",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.js",
+      "types": "./lib/esm/index.d.ts"
+    }
+  },
+  "access": "public",
+  "license": "FSL-1.1-Apache-2.0",
+  "scripts": {
+    "compile": "tsc -b tsconfig.json",
+    "compile:watch": "tsc -b tsconfig.json -w",
+    "build": "pnpm run compile && pnpm run fix:hybrid:exports",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "fix:hybrid:exports": "node ../../scripts/fix-hybrid-output.mjs ."
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@solana/spl-token": "^0.3.11",
+    "@solana/web3.js": "^1.98.4",
+    "@wireio/outpost-ethereum-artifacts": "0.3.0",
+    "@wireio/outpost-solana-artifacts": "0.3.0",
+    "@wireio/sdk-core": "workspace:*",
+    "ethers": "^6.15.0",
+    "ts-pattern": "^5.9.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "rpc-websockets": "9.3.8",
+    "typescript": "6.0.2"
+  }
+}

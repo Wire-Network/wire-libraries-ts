@@ -4,9 +4,9 @@
  * pnpm hook to resolve @wireio packages from the local wire-libraries-ts monorepo.
  *
  * Usage:
- *   1. Add packages you want to link to the `localOverrides` map below.
- *   2. Run `pnpm install` — pnpm will use these local paths instead of the registry.
- *   3. Comment out or remove entries to revert to registry versions.
+ *   1. Build any supported sibling package outputs you want to use locally.
+ *   2. Run `pnpm install --lockfile=false` to consume available local packages.
+ *   3. Remove those outputs to resolve packages from the registry again.
  *
  * Docs: https://pnpm.io/pnpmfile
  */
@@ -28,30 +28,32 @@ function isDirectory(dirPath) {
   }
 }
 
-/**
- * Map of package names to their local directory in wire-libraries-ts.
- * Uncomment the entries you want to link locally.
- */
+/** Map of locally available packages keyed by package name. */
 const localOverrides = {}
 
 // AS THE PROTOBUF LIBS HAVE BEEN RELOCATED TO SYSIO
 // WE CAN NOW USE THE MODELS WITHOUT ISSUE.
 // CIRCULAR DEP REMOVED
 
-const wireOPPPkgPaths = ["typescript", "solidity"].map(target => [
-  `@wireio/opp-${target}-models`,
-  Path.resolve(__dirname, "..", "wire-sysio", "build", "opp", target)
-])
+const wirePkgPaths = [
+  ...["typescript", "solidity"].map(target => [
+    `@wireio/opp-${target}-models`,
+    Path.resolve(__dirname, "..", "wire-sysio", "build", "opp", target)
+  ]),
+  ...["ethereum","solana"].map(target => [
+      `@wireio/outpost-${target}-artifacts`,
+      Path.resolve(__dirname, "..", `wire-${target}`, "build", "sdk-artifacts")
+  ])
+]
 
-wireOPPPkgPaths
+wirePkgPaths
   .filter(([, path]) => isDirectory(path))
   .forEach(([pkgName, path]) => {
     localOverrides[pkgName] = path
   })
 
 /**
- * `readPackage` hook, which links locally available versions of
- * shared libraries and models.
+ * `readPackage` hook, which links locally available packages.
  *
  * @param pkg
  * @param context

@@ -59,6 +59,12 @@
       "@wireio/sdk-core/*": [
         "./packages/sdk-core/src/*"
       ],
+      "@wireio/sdk-outpost": [
+        "./packages/sdk-outpost/src"
+      ],
+      "@wireio/sdk-outpost/*": [
+        "./packages/sdk-outpost/src/*"
+      ],
       "@wireio/wallet-ext-sdk": [
         "./packages/wallet-ext-sdk/src"
       ],
