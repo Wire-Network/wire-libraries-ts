@@ -4,9 +4,9 @@
  * pnpm hook to resolve @wireio packages from the local wire-libraries-ts monorepo.
  *
  * Usage:
- *   1. Build the wire-sysio and outpost producer outputs in the sibling repos.
- *   2. Run `pnpm install --lockfile=false` to consume available local outputs.
- *   3. Remove the sibling outputs to exercise registry-only release resolution.
+ *   1. Build any supported sibling package outputs you want to use locally.
+ *   2. Run `pnpm install --lockfile=false` to consume available local packages.
+ *   3. Remove those outputs to resolve packages from the registry again.
  *
  * Docs: https://pnpm.io/pnpmfile
  */
@@ -28,7 +28,7 @@ function isDirectory(dirPath) {
   }
 }
 
-/** Map of locally available producer packages keyed by package name. */
+/** Map of locally available packages keyed by package name. */
 const localOverrides = {}
 
 // AS THE PROTOBUF LIBS HAVE BEEN RELOCATED TO SYSIO
@@ -59,7 +59,7 @@ wireOPPPkgPaths
   })
 
 /**
- * `readPackage` hook, which links locally available producer packages.
+ * `readPackage` hook, which links locally available packages.
  *
  * @param pkg
  * @param context

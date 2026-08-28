@@ -30,6 +30,10 @@ do not replace them with committed machine-local links.
 Node.js 22 or newer and ethers v6 are supported. The package publishes CommonJS
 and ES module entrypoints with TypeScript declarations.
 
+For local `wire-platform` development, the repository pnpm hook links available
+sibling artifact-package outputs automatically. Run `pnpm install --lockfile=false`
+after building those outputs; otherwise the exact registry versions remain in use.
+
 ## Supported surfaces
 
 | Family   | Generated clients and workflows                                          |
