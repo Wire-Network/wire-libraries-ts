@@ -1,7 +1,7 @@
 {
   "name": "@wireio/sdk-outpost",
   "description": "Strictly typed Ethereum and Solana clients for Wire outposts.",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": false,
   "repository": {
     "type": "git",
@@ -15,12 +15,22 @@
   "bugs": {
     "url": "https://github.com/Wire-Network/wire-libraries-ts/issues"
   },
-  "keywords": ["wire", "ethereum", "solana", "outpost", "sdk"],
+  "keywords": [
+    "wire",
+    "ethereum",
+    "solana",
+    "outpost",
+    "sdk"
+  ],
   "engines": {
     "node": ">=22"
   },
   "sideEffects": false,
-  "files": ["lib/cjs", "lib/esm", "README.md"],
+  "files": [
+    "lib/cjs",
+    "lib/esm",
+    "README.md"
+  ],
   "types": "lib/esm/index.d.ts",
   "main": "lib/cjs/index.js",
   "module": "lib/esm/index.js",
