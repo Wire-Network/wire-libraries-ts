@@ -43,7 +43,7 @@
     "@3fv/prelude-ts": "^0.8.41",
     "@noble/curves": "1.9.7",
     "@wireio/shared": "workspace:*",
-    "@wireio/opp-typescript-models": "^1.0.26",
+    "@wireio/opp-typescript-models": "^1.0.48",
     "@ethersproject/bignumber": "^5.8.0",
     "@ethersproject/bytes": "^5.8.0",
     "@ethersproject/hash": "^5.8.0",
