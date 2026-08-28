@@ -192,19 +192,29 @@ Every new/modified symbol ships unit tests in the same change. Tests never assum
 
 ## CI/CD
 
-GitHub Actions uses a two-gate release flow:
-- `prepare-release.yaml` is manually dispatched with a bump type. It bumps each
-  package on its own version track and opens a release-preparation PR; it never
-  pushes directly to `master` or publishes.
-- After that PR is reviewed and merged, `tag-release.yaml` is manually
-  dispatched and pauses for approval in the `release` environment.
-- The approved job installs the workspace, builds and tests, publishes all
-  non-private packages in dependency order, creates the annotated tag, and
-  creates the GitHub release.
-- `workspace:*` dependencies become concrete current workspace versions at
-  publish time. Published package manifests must keep `repository.url` set to
-  `https://github.com/Wire-Network/wire-libraries-ts` so npm provenance matches
-  GitHub Actions source metadata.
+GitHub Actions:
+- `ci.yaml` — build + test gate on every PR and push to `master`.
+- Releases use the two-gate flow (ported from wire-sysio / wire-cdt "Strategy C"):
+  1. `prepare-release.yaml` (workflow_dispatch; bump = patch/minor/major/prerelease)
+     bumps every package on its own track and opens a `release/prep-v<version>` PR —
+     and REFUSES to run while a previous release PR is still open. Nothing publishes
+     until a human merges the PR.
+  2. `tag-release.yaml` — auto-triggered when a release PR merges (workflow_dispatch
+     remains the manual path; the `release` Environment's required reviewers are the
+     second gate). It reads the merged version from master, runs the build/test
+     gate, publishes all non-private packages to npm on the channel dist-tag (the
+     version suffix IS the channel; no suffix = `latest`), tags master, and
+     publishes the GitHub release. On stable releases it then mints a 1-hour
+     `wire-release-bot` App token (the App's ONE sanctioned use — see the manifest
+     rule) and fires a `repository_dispatch` to Wire-Network/wire-tools-ts, whose
+     `update-wireio-deps.yaml` opens a PR updating every `@wireio/*` range.
+- `update-wireio-deps.yaml` (manual dispatch, optional `reason` input) — updates
+  every `@wireio/*` dependency THIS repo declares (e.g. `opp-typescript-models`,
+  `outpost-*-artifacts`) to its own npm latest via
+  `scripts/update-wireio-deps.mjs`, refreshes `pnpm-lock.yaml`, gates the result
+  with install+build+test, and opens a reviewed PR.
+- Published package manifests must keep `repository.url` set to
+  `https://github.com/Wire-Network/wire-libraries-ts` — npm provenance matches it.
 
 ## Documentation Comments
 
