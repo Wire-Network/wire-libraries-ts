@@ -8,11 +8,11 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-The current source pins Ethereum and Solana artifacts `0.3.0`, directly
-importable TypeScript libraries assembled from the same verified deployment
-handoff. Their published manifests identify the exact producer commits, runtime
-artifacts, and ethers v6/Anchor bindings used by the SDK. The workspace version
-remains `0.0.0` until the repository release workflow performs its patch bump.
+The current source pins Ethereum artifacts `0.3.0` and Solana artifacts `0.3.1`
+as one verified compatible artifact suite. Their published manifests identify
+the exact producer commits, runtime artifacts, and ethers v6/Anchor bindings
+used by the SDK. The workspace version remains `0.0.0` until the repository
+release workflow performs its patch bump.
 
 ## Install after the first SDK release
 

@@ -55,7 +55,7 @@
     "@solana/spl-token": "^0.3.11",
     "@solana/web3.js": "^1.98.4",
     "@wireio/outpost-ethereum-artifacts": "0.3.0",
-    "@wireio/outpost-solana-artifacts": "0.3.0",
+    "@wireio/outpost-solana-artifacts": "0.3.1",
     "@wireio/sdk-core": "workspace:*",
     "ethers": "^6.15.0",
     "ts-pattern": "^5.9.0",
