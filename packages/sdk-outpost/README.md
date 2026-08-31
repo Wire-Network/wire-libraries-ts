@@ -110,6 +110,15 @@ works without an SDK release. A deployable code or interface change requires a
 producer artifact release, a corresponding internal suite entry, and an SDK
 release; consumers continue to use the same `OutpostClient.create` facade.
 
+### Current Sandbox validation
+
+The Ethereum `0.3.0` and Solana `0.3.1` pair was validated on the current
+Sandbox deployment, optionally described as **Bearbox** when distinguishing
+that specific chain from other local sandboxes. Bearbox is validation
+provenance, not an SDK environment key: any sandbox or other deployment with a
+matching authenticated profile selects the same artifact suite. A later
+same-code sandbox respin needs a new profile but no artifact or SDK release.
+
 ## Usage
 
 Validate caller-owned deployment data and provide the matching external-chain
