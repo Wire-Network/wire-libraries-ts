@@ -207,8 +207,8 @@ importers:
         specifier: 0.3.0
         version: 0.3.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))
       '@wireio/outpost-solana-artifacts':
-        specifier: 0.3.0
-        version: 0.3.0
+        specifier: 0.3.1
+        version: 0.3.1
       '@wireio/sdk-core':
         specifier: workspace:*
         version: link:../sdk-core
@@ -1693,8 +1693,8 @@ packages:
     peerDependencies:
       ethers: ^6.15.0
 
-  '@wireio/outpost-solana-artifacts@0.3.0':
-    resolution: {integrity: sha512-zAiH9cI5pp2gSKFTsQp9qqjvlAGL49XK+oZjjOeQ41SW9gwXXWatMc10GuvmwpolfBeRyrIqiTfP7s0W9fNjjw==}
+  '@wireio/outpost-solana-artifacts@0.3.1':
+    resolution: {integrity: sha512-gRq36L2fxS+J47qsjMprIXP5StZiK3xuQ0WUyhC6LZKZEdQkntiHg/4VDV3WVc8iewXPY1K75aTkChvNnhE+RA==}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -6015,7 +6015,7 @@ snapshots:
     dependencies:
       ethers: 6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
-  '@wireio/outpost-solana-artifacts@0.3.0': {}
+  '@wireio/outpost-solana-artifacts@0.3.1': {}
 
   '@xtuc/ieee754@1.2.0': {}
 
