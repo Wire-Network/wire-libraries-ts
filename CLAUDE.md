@@ -34,7 +34,7 @@ pnpm workspaces with TypeScript composite project references. No Lerna/Nx.
 | `@wireio/shared-web` | Web-specific utilities | No | ESM |
 | `@wireio/shared-node` | Node.js utilities | Yes | Hybrid ESM+CJS |
 | `@wireio/sdk-core` | Wire blockchain SDK types/primitives | Yes | Hybrid ESM+CJS |
-| `@wireio/sdk-outpost` | Typed, verified external-chain outpost clients | No — first release pending | Hybrid ESM+CJS |
+| `@wireio/sdk-outpost` | Typed, verified external-chain outpost clients | Yes | Hybrid ESM+CJS |
 | `@wireio/wallet-ext-sdk` | Wallet extension client SDK | Yes | ESM |
 | `@wireio/wallet-browser-ext` | Chrome extension developer wallet | No | Webpack bundle |
 

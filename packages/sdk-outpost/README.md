@@ -11,16 +11,17 @@ deployment profiles remain caller-supplied.
 The current source pins Ethereum artifacts `0.3.0` and Solana artifacts `0.3.1`
 as one verified compatible artifact suite. Their published manifests identify
 the exact producer commits, runtime artifacts, and ethers v6/Anchor bindings
-used by the SDK. The workspace version remains `0.0.0` until the repository
-release workflow performs its patch bump.
+used by the SDK. Package versions are managed and published only through the
+repository release workflow.
 
-## Install after the first SDK release
+## Install
 
 ```sh
 npm install @wireio/sdk-outpost
 ```
 
-Before installing, verify that `@wireio/sdk-outpost` resolves through `npm view`.
+Before installing, verify the desired `@wireio/sdk-outpost` release through
+`npm view`.
 The SDK consumes exact npm versions of
 [`@wireio/outpost-ethereum-artifacts`](https://www.npmjs.com/package/@wireio/outpost-ethereum-artifacts)
 and
