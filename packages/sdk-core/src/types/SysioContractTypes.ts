@@ -53,6 +53,7 @@ export interface SysioAuthexRecordlinkAction {
   account: string
   chain_kind: SysioAuthexChainkind | keyof typeof SysioAuthexChainkind
   pub_key: string
+  native_address?: string
 }
 
 /** sysio.authex - action + table surface for the typed contract client. */
@@ -2190,6 +2191,7 @@ export interface SysioRoaNodeownregAction {
   tier: number
   eth_pub_key: string
   wire_pub_key: string
+  eth_address?: string
 }
 
 /** sysio.roa::policies (type) */
@@ -3737,4 +3739,3 @@ export const SysioContractDefinitions: {
   [SysioContractName.uwrit]: { name: SysioContractName.uwrit, account: "sysio.uwrit", actions: ["chklocks", "createuwreq", "drainfwq", "freelocks", "holdlocks", "pruneuwreqs", "rcrdcommit", "setconfig", "sumlocks", "swapfromwire", "sweeplocks"], tables: ["fwqueue", "locks", "locksums", "uwconfig", "uwcounters", "uwreqs"] },
   [SysioContractName.wrap]: { name: SysioContractName.wrap, account: "sysio.wrap", actions: ["exec"], tables: [] },
 }
-
