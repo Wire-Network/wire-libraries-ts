@@ -2456,6 +2456,7 @@ export interface SysioSystemEmissionConfigType {
   producer_bps: number
   batch_op_bps: number
   standby_end_rank: number
+  standby_bps: number
   epoch_log_retention_count: number
   pay_cadence_epochs: number
 }
@@ -2685,9 +2686,6 @@ export interface SysioSystemProducerInfoType {
   last_claim_time: string
   location: number
   producer_authority: unknown
-  last_block_num: number
-  current_round_blocks: number
-  eligible_rounds: number
   consecutive_missed_rounds: number
   is_demoted: boolean
   snapshot_attestations: number
@@ -2893,11 +2891,10 @@ export interface SysioSystemSysioGlobalStateType {
   total_ram_bytes_reserved: number | string
   last_producer_schedule_update: string
   last_pervote_bucket_fill: string
-  total_unpaid_blocks: number
   last_producer_schedule_size: number
   last_producer: string
   rescore_cursor: number | string
-  rescore_generation: number
+  rescore_pending: boolean
   scored_collateral_stamp: number | string
 }
 
