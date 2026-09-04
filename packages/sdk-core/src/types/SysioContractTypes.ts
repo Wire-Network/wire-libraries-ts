@@ -2895,7 +2895,6 @@ export interface SysioSystemSysioGlobalStateType {
   last_producer: string
   rescore_cursor: number | string
   rescore_pending: boolean
-  scored_collateral_stamp: number | string
 }
 
 /** sysio.system::t5_state (type) */
