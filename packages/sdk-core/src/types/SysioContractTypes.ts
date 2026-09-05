@@ -2359,6 +2359,17 @@ export interface SysioSystemAuthorityType {
   accounts: SysioSystemPermissionLevelWeightType[]
 }
 
+/** sysio.system::batch_epoch (type) */
+export interface SysioSystemBatchEpochType {
+  sysio_epoch_index: number
+  members: string[]
+}
+
+/** sysio.system::batch_epoch_key (type) */
+export interface SysioSystemBatchEpochKeyType {
+  sysio_epoch_index: number
+}
+
 /** sysio.system::block_header (type) */
 export interface SysioSystemBlockHeaderType {
   timestamp: number
@@ -2435,11 +2446,6 @@ export interface SysioSystemDelfinkeyAction {
   finalizer_key: string
 }
 
-/** sysio.system::delsnapprov (action) */
-export interface SysioSystemDelsnapprovAction {
-  account: string
-}
-
 /** sysio.system::emission_config (type) */
 export interface SysioSystemEmissionConfigType {
   t1_allocation: number | string
@@ -2461,6 +2467,7 @@ export interface SysioSystemEmissionConfigType {
   producer_bps: number
   batch_op_bps: number
   standby_end_rank: number
+  standby_bps: number
   epoch_log_retention_count: number
   pay_cadence_epochs: number
 }
@@ -2492,6 +2499,9 @@ export interface SysioSystemEpochLogType {
   capex_amount: number | string
   governance_amount: number | string
   fee_distributed: number | string
+  batch_history_complete: boolean
+  batch_emission_retained: number | string
+  batch_fee_retained: number | string
 }
 
 /** sysio.system::epochlog_key (type) */
@@ -2627,6 +2637,11 @@ export interface SysioSystemNodedistKeyType {
   account_name: number | string
 }
 
+/** sysio.system::observed_schedule (type) */
+export interface SysioSystemObservedScheduleType {
+  producers: string[]
+}
+
 /** sysio.system::onblock (action) */
 export interface SysioSystemOnblockAction {
   header: SysioSystemBlockHeaderType
@@ -2678,16 +2693,19 @@ export interface SysioSystemProducerAuthorityType {
 export interface SysioSystemProducerInfoType {
   owner: string
   producer_key: string
-  rank: number
+  rank_score: number | string
   is_active: boolean
   url: string
   unpaid_blocks: number
   last_claim_time: string
   location: number
   producer_authority: unknown
-  last_block_num: number
-  current_round_blocks: number
-  eligible_rounds: number
+  consecutive_missed_rounds: number
+  is_demoted: boolean
+  snapshot_attestations: number
+  rounds_in_window: number
+  missed_rounds_in_window: number
+  miss_window_open_ms: number | string
 }
 
 /** sysio.system::producer_key (type) */
@@ -2705,6 +2723,26 @@ export interface SysioSystemProducerKeyTType {
 export interface SysioSystemProducerScheduleType {
   version: number
   producers: SysioSystemProducerKeyType[]
+}
+
+/** sysio.system::producer_score_config (type) */
+export interface SysioSystemProducerScoreConfigType {
+  collateral_weight: number
+  participation_weight: number
+  snapshot_weight: number
+  relay_weight: number
+  api_weight: number
+  benchmark_weight: number
+  max_consecutive_missed_rounds: number
+  snapshot_target_attestations: number
+  missed_round_window_ms: number | string
+  max_pct_missed_rounds_in_window: number
+}
+
+/** sysio.system::rcrdbatch (action) */
+export interface SysioSystemRcrdbatchAction {
+  epoch_index: number
+  members: string[]
 }
 
 /** sysio.system::regfinkey (action) */
@@ -2819,22 +2857,19 @@ export interface SysioSystemSetramAction {
   max_ram_size: number | string
 }
 
-/** sysio.system::setrank (action) */
-export interface SysioSystemSetrankAction {
-  producer: string
-  rank: number
+/** sysio.system::setscorecfg (action) */
+export interface SysioSystemSetscorecfgAction {
+  weights: SysioSystemProducerScoreConfigType
 }
 
 /** sysio.system::setsnpcfg (action) */
 export interface SysioSystemSetsnpcfgAction {
   min_providers: number
-  threshold_pct: number
 }
 
 /** sysio.system::snap_config (type) */
 export interface SysioSystemSnapConfigType {
   min_providers: number
-  threshold_pct: number
 }
 
 /** sysio.system::snap_provider (type) */
@@ -2881,8 +2916,10 @@ export interface SysioSystemSysioGlobalStateType {
   total_ram_bytes_reserved: number | string
   last_producer_schedule_update: string
   last_pervote_bucket_fill: string
-  total_unpaid_blocks: number
   last_producer_schedule_size: number
+  last_producer: string
+  rescore_cursor: number | string
+  rescore_pending: boolean
 }
 
 /** sysio.system::t5_state (type) */
@@ -3039,7 +3076,6 @@ export interface SysioSystemContract {
     claimpay: SysioSystemClaimpayAction
     deleteauth: SysioSystemDeleteauthAction
     delfinkey: SysioSystemDelfinkeyAction
-    delsnapprov: SysioSystemDelsnapprovAction
     fundclaim: SysioSystemFundclaimAction
     getsnaphash: SysioSystemGetsnaphashAction
     init: SysioSystemInitAction
@@ -3049,6 +3085,7 @@ export interface SysioSystemContract {
     newaccount: SysioSystemNewaccountAction
     onblock: SysioSystemOnblockAction
     payepoch: SysioSystemPayepochAction
+    rcrdbatch: SysioSystemRcrdbatchAction
     regfinkey: SysioSystemRegfinkeyAction
     regproducer: SysioSystemRegproducerAction
     regproducer2: SysioSystemRegproducer2Action
@@ -3067,7 +3104,7 @@ export interface SysioSystemContract {
     setprodkeys: SysioSystemSetprodkeysAction
     setprods: SysioSystemSetprodsAction
     setram: SysioSystemSetramAction
-    setrank: SysioSystemSetrankAction
+    setscorecfg: SysioSystemSetscorecfgAction
     setsnpcfg: SysioSystemSetsnpcfgAction
     unlinkauth: SysioSystemUnlinkauthAction
     unregprod: SysioSystemUnregprodAction
@@ -3085,6 +3122,7 @@ export interface SysioSystemContract {
   }
   tables: {
     abihash: SysioSystemAbiHashType
+    batchepochs: SysioSystemBatchEpochType
     blockinfo: SysioSystemBlockInfoRecordType
     emissionmngr: SysioSystemEmissionStateType
     emitcfg: SysioSystemEmissionConfigType
@@ -3098,6 +3136,8 @@ export interface SysioSystemContract {
     nodedist: SysioSystemNodeOwnerDistributionType
     payclaims: SysioSystemPayClaimType
     payclaimtot: SysioSystemPayClaimTotalType
+    prodsched: SysioSystemObservedScheduleType
+    prodscorecfg: SysioSystemProducerScoreConfigType
     producers: SysioSystemProducerInfoType
     snapconfig: SysioSystemSnapConfigType
     snapprovs: SysioSystemSnapProviderType
@@ -3731,7 +3771,7 @@ export const SysioContractDefinitions: {
   [SysioContractName.opreg]: { name: SysioContractName.opreg, account: "sysio.opreg", actions: ["available", "cancelwtdw", "claimremit", "deposit", "depositinle", "flushwtdw", "processbatch", "processprod", "processuw", "prune", "recorddel", "regoperator", "releaselock", "setconfig", "slash", "termcheck", "terminate", "withdraw", "withdrawinle"], tables: ["dellog", "opconfig", "opcounters", "operators", "remitclaims", "wtdwqueue"] },
   [SysioContractName.reserv]: { name: SysioContractName.reserv, account: "sysio.reserv", actions: ["applyfromwire", "applyswap", "claimrsvfee", "claimuwfee", "claimwire", "debit", "drainrewards", "matchreserve", "oncnclrsv", "oncrtreserve", "paywire", "refundwire", "regreserve", "rewardbal", "rsvfeebal", "setconfig", "setrsvfee", "swapquote", "sweepclaims", "uwfeebal"], tables: ["reservcfg", "reserves", "rewardbkt", "uwfees", "wireclaims"] },
   [SysioContractName.roa]: { name: SysioContractName.roa, account: "sysio.roa", actions: ["activateroa", "addpolicy", "expandpolicy", "extendpolicy", "forcereg", "giftram", "newnameduser", "newuser", "nodeownreg", "reducepolicy", "setbyteprice", "setsysabi", "setsyscode"], tables: ["nodeownerreg", "nodeowners", "policies", "reslimit", "roastate", "sponsorcount", "sponsors"] },
-  [SysioContractName.system]: { name: SysioContractName.system, account: "sysio", actions: ["accrueepoch", "actfinkey", "activate", "addnodeowner", "claimnodedis", "claimpay", "deleteauth", "delfinkey", "delsnapprov", "fundclaim", "getsnaphash", "init", "initt5", "limitauthchg", "linkauth", "newaccount", "onblock", "payepoch", "regfinkey", "regproducer", "regproducer2", "regsnapprov", "rmvproducer", "setabi", "setacctcpu", "setacctnet", "setacctram", "setalimits", "setcode", "setemitcfg", "setinittime", "setparams", "setpriv", "setprodkeys", "setprods", "setram", "setrank", "setsnpcfg", "unlinkauth", "unregprod", "updateauth", "viewemitcfg", "viewepoch", "viewnodedist", "votesnaphash", "wasmcfg", "delpeerkey", "getpeerkeys", "regpeerkey", "addtrxp", "deltrxp"], tables: ["abihash", "blockinfo", "emissionmngr", "emitcfg", "epochlog", "finalizers", "finkeyidgen", "finkeys", "global", "lastpropfins", "nodecount", "nodedist", "payclaims", "payclaimtot", "producers", "snapconfig", "snapprovs", "snaprecords", "snapvotes", "t5state", "limitauthchg", "peerkeys", "trxpglobal", "trxpriority"] },
+  [SysioContractName.system]: { name: SysioContractName.system, account: "sysio", actions: ["accrueepoch", "actfinkey", "activate", "addnodeowner", "claimnodedis", "claimpay", "deleteauth", "delfinkey", "fundclaim", "getsnaphash", "init", "initt5", "limitauthchg", "linkauth", "newaccount", "onblock", "payepoch", "rcrdbatch", "regfinkey", "regproducer", "regproducer2", "regsnapprov", "rmvproducer", "setabi", "setacctcpu", "setacctnet", "setacctram", "setalimits", "setcode", "setemitcfg", "setinittime", "setparams", "setpriv", "setprodkeys", "setprods", "setram", "setscorecfg", "setsnpcfg", "unlinkauth", "unregprod", "updateauth", "viewemitcfg", "viewepoch", "viewnodedist", "votesnaphash", "wasmcfg", "delpeerkey", "getpeerkeys", "regpeerkey", "addtrxp", "deltrxp"], tables: ["abihash", "batchepochs", "blockinfo", "emissionmngr", "emitcfg", "epochlog", "finalizers", "finkeyidgen", "finkeys", "global", "lastpropfins", "nodecount", "nodedist", "payclaims", "payclaimtot", "prodsched", "prodscorecfg", "producers", "snapconfig", "snapprovs", "snaprecords", "snapvotes", "t5state", "limitauthchg", "peerkeys", "trxpglobal", "trxpriority"] },
   [SysioContractName.token]: { name: SysioContractName.token, account: "sysio.token", actions: ["close", "create", "issue", "open", "retire", "transfer"], tables: ["accounts", "stat"] },
   [SysioContractName.tokens]: { name: SysioContractName.tokens, account: "sysio.tokens", actions: ["activctok", "activtoken", "regctok", "regtoken"], tables: ["chaintokens", "tokens"] },
   [SysioContractName.uwrit]: { name: SysioContractName.uwrit, account: "sysio.uwrit", actions: ["chklocks", "createuwreq", "drainfwq", "freelocks", "holdlocks", "pruneuwreqs", "rcrdcommit", "setconfig", "sumlocks", "swapfromwire", "sweeplocks"], tables: ["fwqueue", "locks", "locksums", "uwconfig", "uwcounters", "uwreqs"] },
