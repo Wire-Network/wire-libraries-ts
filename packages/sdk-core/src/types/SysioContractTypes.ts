@@ -2737,6 +2737,7 @@ export interface SysioSystemProducerScoreConfigType {
   snapshot_target_attestations: number
   missed_round_window_ms: number | string
   max_pct_missed_rounds_in_window: number
+  min_blocks_per_round: number
 }
 
 /** sysio.system::rcrdbatch (action) */
@@ -2920,6 +2921,7 @@ export interface SysioSystemSysioGlobalStateType {
   last_producer: string
   rescore_cursor: number | string
   rescore_pending: boolean
+  round_start_block: number
 }
 
 /** sysio.system::t5_state (type) */
