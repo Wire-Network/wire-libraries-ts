@@ -2706,6 +2706,8 @@ export interface SysioSystemProducerInfoType {
   rounds_in_window: number
   missed_rounds_in_window: number
   miss_window_open_ms: number | string
+  prev_rounds_in_window: number
+  prev_missed_rounds_in_window: number
 }
 
 /** sysio.system::producer_key (type) */
