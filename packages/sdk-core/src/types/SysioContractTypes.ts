@@ -2936,6 +2936,7 @@ export interface SysioSystemT5StateType {
   period_start_epoch: number
   batch_group_epochs: number[]
   capital_shortfall_total: number | string
+  pending_nominal_slots: number | string
 }
 
 /** sysio.system::unlinkauth (action) */
