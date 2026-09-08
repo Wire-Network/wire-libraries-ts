@@ -2703,11 +2703,7 @@ export interface SysioSystemProducerInfoType {
   consecutive_missed_rounds: number
   is_demoted: boolean
   snapshot_attestations: number
-  rounds_in_window: number
-  missed_rounds_in_window: number
-  miss_window_open_ms: number | string
-  prev_rounds_in_window: number
-  prev_missed_rounds_in_window: number
+  snapshot_period: number
 }
 
 /** sysio.system::producer_key (type) */
@@ -2737,8 +2733,6 @@ export interface SysioSystemProducerScoreConfigType {
   benchmark_weight: number
   max_consecutive_missed_rounds: number
   snapshot_target_attestations: number
-  missed_round_window_ms: number | string
-  max_pct_missed_rounds_in_window: number
   min_blocks_per_round: number
 }
 
