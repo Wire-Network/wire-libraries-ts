@@ -8,19 +8,20 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-The current source pins Ethereum and Solana artifacts `0.3.0`, directly
-importable TypeScript libraries assembled from the same verified deployment
-handoff. Their published manifests identify the exact producer commits, runtime
-artifacts, and ethers v6/Anchor bindings used by the SDK. The workspace version
-remains `0.0.0` until the repository release workflow performs its patch bump.
+The current source pins Ethereum artifacts `0.3.0` and Solana artifacts `0.3.1`
+as one verified compatible artifact suite. Their published manifests identify
+the exact producer commits, runtime artifacts, and ethers v6/Anchor bindings
+used by the SDK. Package versions are managed and published only through the
+repository release workflow.
 
-## Install after the first SDK release
+## Install
 
 ```sh
 npm install @wireio/sdk-outpost
 ```
 
-Before installing, verify that `@wireio/sdk-outpost` resolves through `npm view`.
+Before installing, verify the desired `@wireio/sdk-outpost` release through
+`npm view`.
 The SDK consumes exact npm versions of
 [`@wireio/outpost-ethereum-artifacts`](https://www.npmjs.com/package/@wireio/outpost-ethereum-artifacts)
 and
@@ -109,6 +110,15 @@ devnet. A new deployment profile that uses an already-registered artifact suite
 works without an SDK release. A deployable code or interface change requires a
 producer artifact release, a corresponding internal suite entry, and an SDK
 release; consumers continue to use the same `OutpostClient.create` facade.
+
+### Current Sandbox validation
+
+The Ethereum `0.3.0` and Solana `0.3.1` pair was validated on the current
+Sandbox deployment, optionally described as **Bearbox** when distinguishing
+that specific chain from other local sandboxes. Bearbox is validation
+provenance, not an SDK environment key: any sandbox or other deployment with a
+matching authenticated profile selects the same artifact suite. A later
+same-code sandbox respin needs a new profile but no artifact or SDK release.
 
 ## Usage
 

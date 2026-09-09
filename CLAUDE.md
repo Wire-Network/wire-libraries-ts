@@ -34,7 +34,7 @@ pnpm workspaces with TypeScript composite project references. No Lerna/Nx.
 | `@wireio/shared-web` | Web-specific utilities | No | ESM |
 | `@wireio/shared-node` | Node.js utilities | Yes | Hybrid ESM+CJS |
 | `@wireio/sdk-core` | Wire blockchain SDK types/primitives | Yes | Hybrid ESM+CJS |
-| `@wireio/sdk-outpost` | Typed, verified external-chain outpost clients | No — first release pending | Hybrid ESM+CJS |
+| `@wireio/sdk-outpost` | Typed, verified external-chain outpost clients | Yes | Hybrid ESM+CJS |
 | `@wireio/wallet-ext-sdk` | Wallet extension client SDK | Yes | ESM |
 | `@wireio/wallet-browser-ext` | Chrome extension developer wallet | No | Webpack bundle |
 
@@ -237,6 +237,8 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - `packages/sdk-outpost` owns typed Ethereum/Solana clients and validates caller-supplied immutable deployment profiles. Canonical ABIs, IDLs, runtime templates, program binaries, ethers v6 factories, and Anchor types come from exact packages owned by `wire-ethereum` and `wire-solana`. For local platform development, the root pnpm hook links available sibling artifact outputs; never commit `file:`/`link:` specs to package manifests or the lockfile.
 - Producer repositories assemble those npm packages from checksummed deployment handoffs. `sdk-outpost` never downloads the handoff or owns producer publication inputs.
 - `sdk-outpost` registers exact producer package pairs in an internal compile-time artifact-suite registry. Select suites from deployment-profile ABI/IDL identity and verify exact live runtime identity; never key suite selection by environment names or turn it into an endpoint catalog/runtime package loader.
+- Name the reusable deployment class `Sandbox` in documentation. Use a chain label such as `Bearbox` only as an optional descriptor for one specific Sandbox deployment and its validation provenance; never make that label an SDK key.
+- Advance the exact Ethereum and Solana producer pins independently as one verified compatible pair; do not publish or bump an unchanged producer merely because a deployment profile was respun.
 - `OutpostClient.create` is sdk-outpost's only published client-construction facade. It delegates family selection to an internal factory; concrete Ethereum/Solana instance types remain available for typing, but their backend factories and module paths are not package entrypoints.
 - `packages/sdk-outpost` owns external reserve lifecycle, swap execution, and BAR-backed Ethereum node-owner registration. BAR is an optional deployment capability: profiles without it preserve reserve and swap behavior, while node-owner access fails closed. Node-owner registration must use BAR's canonical WireNodes address and is not staking; staking remains outside this package until its dedicated migration.
 - `sdk-outpost` accepts caller-owned providers and deployment profiles, verifies exact Ethereum implementations and Solana ProgramData against source-owned runtime artifacts, and never owns mutable endpoint catalogs. A same-code cluster respin requires a new profile, not an artifact or SDK release; any deployable binary change requires both a producer artifact and SDK release.
