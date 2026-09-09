@@ -53,7 +53,7 @@ export interface SysioAuthexRecordlinkAction {
   account: string
   chain_kind: SysioAuthexChainkind | keyof typeof SysioAuthexChainkind
   pub_key: string
-  native_address?: string
+  native_address: string
 }
 
 /** sysio.authex - action + table surface for the typed contract client. */
@@ -2191,7 +2191,7 @@ export interface SysioRoaNodeownregAction {
   tier: number
   eth_pub_key: string
   wire_pub_key: string
-  eth_address?: string
+  eth_address: string
 }
 
 /** sysio.roa::policies (type) */
