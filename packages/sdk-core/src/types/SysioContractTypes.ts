@@ -991,6 +991,7 @@ export interface SysioEpochEpochStateType {
   next_epoch_start: string
   current_batch_op_group: number
   batch_op_groups: string[][]
+  next_batch_op_groups: string[][]
   last_consensus_hash: string
   is_paused: boolean
 }
