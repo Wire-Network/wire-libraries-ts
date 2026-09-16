@@ -4,7 +4,7 @@ import { buildContractAction } from "../../Contract.js"
 
 import { DEFAULT_CHAINS_CONTRACT, MAX_EXTERNAL_CHAIN_ID } from "./Constants.js"
 import { descriptor } from "./Descriptor.js"
-import { chainSlugData } from "./Slug.js"
+import { chainSlugString } from "./Slug.js"
 import type {
   ChainOutpostAddresses,
   ChainRegistration,
@@ -44,7 +44,7 @@ export function createRegisterChainActionData(
 ): SysioContracts.SysioChainsRegchainAction {
   return {
     kind: registration.kind,
-    code: chainSlugData(registration.code),
+    code: chainSlugString(registration.code),
     external_chain_id: assertExternalChainId(registration.externalChainId),
     name: registration.name,
     description: registration.description,
@@ -69,7 +69,7 @@ export function createSetOutpostActionData(
   code: CreateSetOutpostActionOptions["code"],
   outpost: CreateSetOutpostActionOptions["outpost"]
 ): SysioContracts.SysioChainsSetoutpostAction {
-  return { code: chainSlugData(code), outpost: outpostAddressData(outpost) }
+  return { code: chainSlugString(code), outpost: outpostAddressData(outpost) }
 }
 
 /** Creates an unsigned privileged `sysio.chains::setoutpost` action. */
@@ -88,7 +88,7 @@ export function createSetOutpostAction(
 export function createActivateChainActionData(
   code: CreateActivateChainActionOptions["code"]
 ): SysioContracts.SysioChainsActivchainAction {
-  return { code: chainSlugData(code) }
+  return { code: chainSlugString(code) }
 }
 
 /** Creates an unsigned privileged `sysio.chains::activchain` action. */

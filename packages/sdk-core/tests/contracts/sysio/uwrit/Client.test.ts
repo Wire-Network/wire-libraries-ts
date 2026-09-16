@@ -1,4 +1,4 @@
-import { contracts, SlugName } from "@wireio/sdk-core"
+import { contracts } from "@wireio/sdk-core"
 import {
   SysioUwritChainkind,
   SysioUwritUnderwriterequeststatus
@@ -16,20 +16,18 @@ interface TableQuery {
   table: string
 }
 
-const slug = (value: string) => ({ value: String(SlugName.from(value)) })
-
 function requestRow(overrides: Record<string, unknown> = {}) {
   return {
     id: "7",
     type: "ATTESTATION_TYPE_SWAP_REQUEST",
     status: "UNDERWRITE_REQUEST_STATUS_PENDING",
-    src_chain_code: slug("ETHEREUM"),
-    src_token_code: slug("ETH"),
-    src_reserve_code: slug("PRIMARY"),
+    src_chain_code: "ETHEREUM",
+    src_token_code: "ETH",
+    src_reserve_code: "PRIMARY",
     src_amount: "100",
-    dst_chain_code: slug("SOLANA"),
-    dst_token_code: slug("SOL"),
-    dst_reserve_code: slug("PRIMARY"),
+    dst_chain_code: "SOLANA",
+    dst_token_code: "SOL",
+    dst_reserve_code: "PRIMARY",
     dst_amount: "90",
     variance_tolerance_bps: 500,
     source_tx_id: "000000000000002a",
@@ -50,9 +48,9 @@ function queueRow(overrides: Record<string, unknown> = {}) {
     id: "8",
     user: "alice",
     wire_amount: "5000000000",
-    dst_chain_code: slug("SOLANA"),
-    dst_token_code: slug("SOL"),
-    dst_reserve_code: slug("PRIMARY"),
+    dst_chain_code: "SOLANA",
+    dst_token_code: "SOL",
+    dst_reserve_code: "PRIMARY",
     target_amount: "80",
     variance_tolerance_bps: 500,
     recipient_kind: "CHAIN_KIND_SVM",
@@ -135,9 +133,9 @@ describe("UnderwritingClient", () => {
 
   test("decodes the synthetic WIRE request id and depositor account", () => {
     const row = requestRow({
-      src_chain_code: slug("WIRE"),
-      src_token_code: slug("WIRE"),
-      src_reserve_code: slug("WIRE"),
+      src_chain_code: "WIRE",
+      src_token_code: "WIRE",
+      src_reserve_code: "WIRE",
       source_tx_id: "0700000000000080",
       depositor: "776972656e6f2e616263"
     })

@@ -298,17 +298,17 @@ export enum SysioChainsChainkind {
 
 /** sysio.chains::activchain (action) */
 export interface SysioChainsActivchainAction {
-  code: SysioChainsSlugNameType
+  code: string
 }
 
 /** sysio.chains::chain_key (type) */
 export interface SysioChainsChainKeyType {
-  code: SysioChainsSlugNameType
+  code: string
 }
 
 /** sysio.chains::chain_row (type) */
 export interface SysioChainsChainRowType {
-  code: SysioChainsSlugNameType
+  code: string
   kind: SysioChainsChainkind | keyof typeof SysioChainsChainkind
   external_chain_id: number
   name: string
@@ -331,7 +331,7 @@ export interface SysioChainsOutpostAddrsType {
 /** sysio.chains::regchain (action) */
 export interface SysioChainsRegchainAction {
   kind: SysioChainsChainkind | keyof typeof SysioChainsChainkind
-  code: SysioChainsSlugNameType
+  code: string
   external_chain_id: number
   name: string
   description: string
@@ -340,7 +340,7 @@ export interface SysioChainsRegchainAction {
 
 /** sysio.chains::setoutpost (action) */
 export interface SysioChainsSetoutpostAction {
-  code: SysioChainsSlugNameType
+  code: string
   outpost: SysioChainsOutpostAddrsType
 }
 
@@ -1786,14 +1786,14 @@ export interface SysioOpregTokenamountType {
 /** sysio.opreg::available (action) */
 export interface SysioOpregAvailableAction {
   account: string
-  chain_code: SysioOpregSlugNameType
-  token_code: SysioOpregSlugNameType
+  chain_code: string
+  token_code: string
 }
 
 /** sysio.opreg::balance_entry (type) */
 export interface SysioOpregBalanceEntryType {
-  chain_code: SysioOpregSlugNameType
-  token_code: SysioOpregSlugNameType
+  chain_code: string
+  token_code: string
   balance: number | string
   last_updated_ms: number | string
 }
@@ -1806,8 +1806,8 @@ export interface SysioOpregCancelwtdwAction {
 
 /** sysio.opreg::chain_min_bond (type) */
 export interface SysioOpregChainMinBondType {
-  chain_code: SysioOpregSlugNameType
-  token_code: SysioOpregSlugNameType
+  chain_code: string
+  token_code: string
   min_bond: number | string
   config_timestamp_ms: number | string
 }
@@ -1840,8 +1840,8 @@ export interface SysioOpregDepositAction {
 /** sysio.opreg::depositinle (action) */
 export interface SysioOpregDepositinleAction {
   account: string
-  chain_code: SysioOpregSlugNameType
-  token_code: SysioOpregSlugNameType
+  chain_code: string
+  token_code: string
   amount: number | string
   actor_chain: SysioOpregChainkind | keyof typeof SysioOpregChainkind
   actor_address: string
@@ -1935,8 +1935,8 @@ export interface SysioOpregRegoperatorAction {
 /** sysio.opreg::releaselock (action) */
 export interface SysioOpregReleaselockAction {
   account: string
-  chain_code: SysioOpregSlugNameType
-  token_code: SysioOpregSlugNameType
+  chain_code: string
+  token_code: string
   amount: number | string
 }
 
@@ -2013,8 +2013,8 @@ export interface SysioOpregWithdrawKeyType {
 export interface SysioOpregWithdrawRequestType {
   request_id: number | string
   account: string
-  chain_code: SysioOpregSlugNameType
-  token_code: SysioOpregSlugNameType
+  chain_code: string
+  token_code: string
   amount: number | string
   eligible_at_epoch: number
   requested_at_epoch: number
@@ -2023,8 +2023,8 @@ export interface SysioOpregWithdrawRequestType {
 /** sysio.opreg::withdrawinle (action) */
 export interface SysioOpregWithdrawinleAction {
   account: string
-  chain_code: SysioOpregSlugNameType
-  token_code: SysioOpregSlugNameType
+  chain_code: string
+  token_code: string
   amount: number | string
 }
 
@@ -2087,9 +2087,9 @@ export interface SysioReservChainaddressType {
 
 /** sysio.reserv::applyfromwire (action) */
 export interface SysioReservApplyfromwireAction {
-  dst_chain_code: SysioReservSlugNameType
-  dst_token_code: SysioReservSlugNameType
-  dst_reserve_code: SysioReservSlugNameType
+  dst_chain_code: string
+  dst_token_code: string
+  dst_reserve_code: string
   wire_in: number | string
   dst_amount: number | string
   underwriter: string
@@ -2097,22 +2097,22 @@ export interface SysioReservApplyfromwireAction {
 
 /** sysio.reserv::applyswap (action) */
 export interface SysioReservApplyswapAction {
-  src_chain_code: SysioReservSlugNameType
-  src_token_code: SysioReservSlugNameType
-  src_reserve_code: SysioReservSlugNameType
+  src_chain_code: string
+  src_token_code: string
+  src_reserve_code: string
   src_amount: number | string
-  dst_chain_code: SysioReservSlugNameType
-  dst_token_code: SysioReservSlugNameType
-  dst_reserve_code: SysioReservSlugNameType
+  dst_chain_code: string
+  dst_token_code: string
+  dst_reserve_code: string
   dst_amount: number | string
   underwriter: string
 }
 
 /** sysio.reserv::claimrsvfee (action) */
 export interface SysioReservClaimrsvfeeAction {
-  chain_code: SysioReservSlugNameType
-  token_code: SysioReservSlugNameType
-  reserve_code: SysioReservSlugNameType
+  chain_code: string
+  token_code: string
+  reserve_code: string
 }
 
 /** sysio.reserv::claimuwfee (action) */
@@ -2127,9 +2127,9 @@ export interface SysioReservClaimwireAction {
 
 /** sysio.reserv::debit (action) */
 export interface SysioReservDebitAction {
-  chain_code: SysioReservSlugNameType
-  token_code: SysioReservSlugNameType
-  reserve_code: SysioReservSlugNameType
+  chain_code: string
+  token_code: string
+  reserve_code: string
   amount: number | string
 }
 
@@ -2140,27 +2140,27 @@ export interface SysioReservDrainrewardsAction {
 
 /** sysio.reserv::matchreserve (action) */
 export interface SysioReservMatchreserveAction {
-  chain_code: SysioReservSlugNameType
-  token_code: SysioReservSlugNameType
-  reserve_code: SysioReservSlugNameType
+  chain_code: string
+  token_code: string
+  reserve_code: string
   matcher: string
   wire_amount: number | string
 }
 
 /** sysio.reserv::oncnclrsv (action) */
 export interface SysioReservOncnclrsvAction {
-  chain_code: SysioReservSlugNameType
-  token_code: SysioReservSlugNameType
-  reserve_code: SysioReservSlugNameType
+  chain_code: string
+  token_code: string
+  reserve_code: string
   creator_chain_kind: SysioReservChainkind | keyof typeof SysioReservChainkind
   creator_chain_addr: string
 }
 
 /** sysio.reserv::oncrtreserve (action) */
 export interface SysioReservOncrtreserveAction {
-  chain_code: SysioReservSlugNameType
-  token_code: SysioReservSlugNameType
-  reserve_code: SysioReservSlugNameType
+  chain_code: string
+  token_code: string
+  reserve_code: string
   name: string
   description: string
   external_token_amount: number | string
@@ -2175,9 +2175,9 @@ export interface SysioReservOncrtreserveAction {
 
 /** sysio.reserv::paywire (action) */
 export interface SysioReservPaywireAction {
-  src_chain_code: SysioReservSlugNameType
-  src_token_code: SysioReservSlugNameType
-  src_reserve_code: SysioReservSlugNameType
+  src_chain_code: string
+  src_token_code: string
+  src_reserve_code: string
   src_amount: number | string
   recipient: string
   wire_out: number | string
@@ -2193,9 +2193,9 @@ export interface SysioReservRefundwireAction {
 
 /** sysio.reserv::regreserve (action) */
 export interface SysioReservRegreserveAction {
-  chain_code: SysioReservSlugNameType
-  token_code: SysioReservSlugNameType
-  reserve_code: SysioReservSlugNameType
+  chain_code: string
+  token_code: string
+  reserve_code: string
   name: string
   description: string
   initial_chain_amount: number | string
@@ -2213,16 +2213,16 @@ export interface SysioReservReserveConfigType {
 
 /** sysio.reserv::reserve_key (type) */
 export interface SysioReservReserveKeyType {
-  chain_code: SysioReservSlugNameType
-  token_code: SysioReservSlugNameType
-  reserve_code: SysioReservSlugNameType
+  chain_code: string
+  token_code: string
+  reserve_code: string
 }
 
 /** sysio.reserv::reserve_row (type) */
 export interface SysioReservReserveRowType {
-  chain_code: SysioReservSlugNameType
-  token_code: SysioReservSlugNameType
-  reserve_code: SysioReservSlugNameType
+  chain_code: string
+  token_code: string
+  reserve_code: string
   name: string
   description: string
   status: SysioReservReservestatus | keyof typeof SysioReservReservestatus
@@ -2256,9 +2256,9 @@ export interface SysioReservRewardsBucketType {
 
 /** sysio.reserv::rsvfeebal (action) */
 export interface SysioReservRsvfeebalAction {
-  chain_code: SysioReservSlugNameType
-  token_code: SysioReservSlugNameType
-  reserve_code: SysioReservSlugNameType
+  chain_code: string
+  token_code: string
+  reserve_code: string
 }
 
 /** sysio.reserv::setconfig (action) */
@@ -2268,9 +2268,9 @@ export interface SysioReservSetconfigAction {
 
 /** sysio.reserv::setrsvfee (action) */
 export interface SysioReservSetrsvfeeAction {
-  chain_code: SysioReservSlugNameType
-  token_code: SysioReservSlugNameType
-  reserve_code: SysioReservSlugNameType
+  chain_code: string
+  token_code: string
+  reserve_code: string
   owner_fee_bps: number
 }
 
@@ -2281,13 +2281,13 @@ export interface SysioReservSlugNameType {
 
 /** sysio.reserv::swapquote (action) */
 export interface SysioReservSwapquoteAction {
-  from_chain_code: SysioReservSlugNameType
-  from_token_code: SysioReservSlugNameType
-  from_reserve_code: SysioReservSlugNameType
+  from_chain_code: string
+  from_token_code: string
+  from_reserve_code: string
   from_amount: number | string
-  to_chain_code: SysioReservSlugNameType
-  to_token_code: SysioReservSlugNameType
-  to_reserve_code: SysioReservSlugNameType
+  to_chain_code: string
+  to_token_code: string
+  to_reserve_code: string
 }
 
 /** sysio.reserv::sweepclaims (action) */
@@ -3806,25 +3806,25 @@ export interface SysioTokensChainaddressType {
 
 /** sysio.tokens::activctok (action) */
 export interface SysioTokensActivctokAction {
-  chain_code: SysioTokensSlugNameType
-  token_code: SysioTokensSlugNameType
+  chain_code: string
+  token_code: string
 }
 
 /** sysio.tokens::activtoken (action) */
 export interface SysioTokensActivtokenAction {
-  code: SysioTokensSlugNameType
+  code: string
 }
 
 /** sysio.tokens::chain_token_key (type) */
 export interface SysioTokensChainTokenKeyType {
-  chain_code: SysioTokensSlugNameType
-  token_code: SysioTokensSlugNameType
+  chain_code: string
+  token_code: string
 }
 
 /** sysio.tokens::chain_token_row (type) */
 export interface SysioTokensChainTokenRowType {
-  chain_code: SysioTokensSlugNameType
-  token_code: SysioTokensSlugNameType
+  chain_code: string
+  token_code: string
   contract_addr: string
   is_native: boolean
   active: boolean
@@ -3834,8 +3834,8 @@ export interface SysioTokensChainTokenRowType {
 
 /** sysio.tokens::regctok (action) */
 export interface SysioTokensRegctokAction {
-  chain_code: SysioTokensSlugNameType
-  token_code: SysioTokensSlugNameType
+  chain_code: string
+  token_code: string
   contract_addr: string
   is_native: boolean
 }
@@ -3843,7 +3843,7 @@ export interface SysioTokensRegctokAction {
 /** sysio.tokens::regtoken (action) */
 export interface SysioTokensRegtokenAction {
   kind: SysioTokensTokenkind | keyof typeof SysioTokensTokenkind
-  code: SysioTokensSlugNameType
+  code: string
   symbol_name: string
   description: string
   precision: number
@@ -3857,12 +3857,12 @@ export interface SysioTokensSlugNameType {
 
 /** sysio.tokens::token_key (type) */
 export interface SysioTokensTokenKeyType {
-  code: SysioTokensSlugNameType
+  code: string
 }
 
 /** sysio.tokens::token_row (type) */
 export interface SysioTokensTokenRowType {
-  code: SysioTokensSlugNameType
+  code: string
   kind: SysioTokensTokenkind | keyof typeof SysioTokensTokenkind
   symbol_name: string
   description: string
@@ -3992,9 +3992,9 @@ export interface SysioUwritFromwireQType {
   id: number | string
   user: string
   wire_amount: number | string
-  dst_chain_code: SysioUwritSlugNameType
-  dst_token_code: SysioUwritSlugNameType
-  dst_reserve_code: SysioUwritSlugNameType
+  dst_chain_code: string
+  dst_token_code: string
+  dst_reserve_code: string
   target_amount: number | string
   variance_tolerance_bps: number
   recipient_kind: SysioUwritChainkind | keyof typeof SysioUwritChainkind
@@ -4024,9 +4024,9 @@ export interface SysioUwritLockEntryType {
   lock_id: number | string
   uwreq_id: number | string
   underwriter: string
-  chain_code: SysioUwritSlugNameType
-  token_code: SysioUwritSlugNameType
-  reserve_code: SysioUwritSlugNameType
+  chain_code: string
+  token_code: string
+  reserve_code: string
   amount: number | string
   created_at_ms: number | string
   expires_at_ms: number | string
@@ -4041,16 +4041,16 @@ export interface SysioUwritLockKeyType {
 /** sysio.uwrit::lock_sum (type) */
 export interface SysioUwritLockSumType {
   underwriter: string
-  chain_code: SysioUwritSlugNameType
-  token_code: SysioUwritSlugNameType
+  chain_code: string
+  token_code: string
   amount: number | string
 }
 
 /** sysio.uwrit::lock_sum_key (type) */
 export interface SysioUwritLockSumKeyType {
   underwriter: string
-  chain_code: SysioUwritSlugNameType
-  token_code: SysioUwritSlugNameType
+  chain_code: string
+  token_code: string
 }
 
 /** sysio.uwrit::pruneuwreqs (action) */
@@ -4063,9 +4063,9 @@ export interface SysioUwritRcrdcommitAction {
   uwreq_id: number | string
   underwriter: string
   chain_code: number | string
-  from_chain_code: SysioUwritSlugNameType
-  from_token_code: SysioUwritSlugNameType
-  reserve_code: SysioUwritSlugNameType
+  from_chain_code: string
+  from_token_code: string
+  reserve_code: string
   uic_bytes: string
 }
 
@@ -4087,17 +4087,17 @@ export interface SysioUwritSlugNameType {
 /** sysio.uwrit::sumlocks (action) */
 export interface SysioUwritSumlocksAction {
   underwriter: string
-  chain_code: SysioUwritSlugNameType
-  token_code: SysioUwritSlugNameType
+  chain_code: string
+  token_code: string
 }
 
 /** sysio.uwrit::swapfromwire (action) */
 export interface SysioUwritSwapfromwireAction {
   user: string
   wire_amount: number | string
-  dst_chain_code: SysioUwritSlugNameType
-  dst_token_code: SysioUwritSlugNameType
-  dst_reserve_code: SysioUwritSlugNameType
+  dst_chain_code: string
+  dst_token_code: string
+  dst_reserve_code: string
   target_amount: number | string
   target_tolerance_bps: number
   recipient_kind: SysioUwritChainkind | keyof typeof SysioUwritChainkind
@@ -4131,13 +4131,13 @@ export interface SysioUwritUwRequestTType {
   id: number | string
   type: SysioUwritAttestationtype | keyof typeof SysioUwritAttestationtype
   status: SysioUwritUnderwriterequeststatus | keyof typeof SysioUwritUnderwriterequeststatus
-  src_chain_code: SysioUwritSlugNameType
-  src_token_code: SysioUwritSlugNameType
-  src_reserve_code: SysioUwritSlugNameType
+  src_chain_code: string
+  src_token_code: string
+  src_reserve_code: string
   src_amount: number | string
-  dst_chain_code: SysioUwritSlugNameType
-  dst_token_code: SysioUwritSlugNameType
-  dst_reserve_code: SysioUwritSlugNameType
+  dst_chain_code: string
+  dst_token_code: string
+  dst_reserve_code: string
   dst_amount: number | string
   target_amount: number | string
   variance_tolerance_bps: number

@@ -1,6 +1,6 @@
 import { Name } from "../../../chain/Name.js"
 import type * as SysioContracts from "../../../types/SysioContractTypes.js"
-import { reserveSlugData } from "../reserv/Slug.js"
+import { reserveSlugString } from "../reserv/Slug.js"
 
 import type { SwapFromWireOptions } from "./Types.js"
 
@@ -11,9 +11,9 @@ export function swapFromWireActionData(
   return {
     user: Name.from(options.user).toString(),
     wire_amount: options.wireAmount.toString(),
-    dst_chain_code: reserveSlugData(options.destination.chainCode),
-    dst_token_code: reserveSlugData(options.destination.tokenCode),
-    dst_reserve_code: reserveSlugData(options.destination.reserveCode),
+    dst_chain_code: reserveSlugString(options.destination.chainCode),
+    dst_token_code: reserveSlugString(options.destination.tokenCode),
+    dst_reserve_code: reserveSlugString(options.destination.reserveCode),
     target_amount: options.targetAmount.toString(),
     target_tolerance_bps: options.targetToleranceBps,
     recipient_kind: options.recipientKind,

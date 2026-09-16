@@ -1,9 +1,14 @@
 import { SlugName } from "../../../SlugName.js"
-import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 
 import type { ReserveSlugName } from "./Types.js"
 
-/** Converts a friendly slug string or packed value to its safe numeric form. */
+/**
+ * Converts a friendly slug string or packed value to its safe numeric form.
+ *
+ * A string is ALWAYS parsed as a slug, never as a decimal: the slug alphabet
+ * contains digits, so `"12345678"` is a legitimate code whose packed value is
+ * nothing like 12345678. Pass a `number` to supply an already-packed value.
+ */
 export function reserveSlugValue(value: ReserveSlugName): number {
   const packed =
     typeof value === "string" ? SlugName.from(value) : Number(value)
@@ -15,23 +20,6 @@ export function reserveSlugValue(value: ReserveSlugName): number {
   }
 
   return packed
-}
-
-/** Converts a generated row slug, including JSON-serialized uint64 strings. */
-export function reserveRowSlugValue(
-  value: SysioContracts.SysioReservSlugNameType
-): number {
-  const packed = value.value
-  return typeof packed === "string" && /^[0-9]+$/.test(packed)
-    ? reserveSlugValue(Number(packed))
-    : reserveSlugValue(packed)
-}
-
-/** Converts a friendly reserve slug to generated `slug_name` action data. */
-export function reserveSlugData(
-  value: ReserveSlugName
-): SysioContracts.SysioReservSlugNameType {
-  return { value: reserveSlugValue(value) }
 }
 
 /** Returns the display form of a packed reserve slug. */
