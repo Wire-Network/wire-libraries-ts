@@ -5,9 +5,9 @@ import type { ReserveSlugName } from "./Types.js"
 /**
  * Converts a friendly slug string or packed value to its safe numeric form.
  *
- * A string is ALWAYS parsed as a slug, never as a decimal: the slug alphabet
- * contains digits, so `"12345678"` is a legitimate code whose packed value is
- * nothing like 12345678. Pass a `number` to supply an already-packed value.
+ * A string is ALWAYS parsed as a slug, never as a decimal — and that is
+ * unambiguous because a code must start with a letter, so no legal spelling can
+ * be read as a number. Pass a `number` to supply an already-packed value.
  */
 export function reserveSlugValue(value: ReserveSlugName): number {
   const packed =

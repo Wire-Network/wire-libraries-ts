@@ -14,12 +14,12 @@ describe("SlugName", () => {
       expect(SlugName.from("Z")).toBe(26 * SLOT0)
     })
 
-    it("encodes digit '0' to slot 27", () => {
-      expect(SlugName.from("0")).toBe(27 * SLOT0)
+    it("encodes digit '0' to slot 27, behind a leading letter", () => {
+      expect(SlugName.from("A0")).toBe(1 * SLOT0 + 27 * SLOT1)
     })
 
-    it("encodes '_' to slot 37", () => {
-      expect(SlugName.from("_")).toBe(37 * SLOT0)
+    it("encodes '_' to slot 37, behind a leading letter", () => {
+      expect(SlugName.from("A_")).toBe(1 * SLOT0 + 37 * SLOT1)
     })
 
     it("encodes a multi-char string with 6-bit MSB-first packing", () => {
@@ -54,6 +54,28 @@ describe("SlugName", () => {
       expect(() => SlugName.from("ETH!")).toThrow(/outside/)
       expect(() => SlugName.from("E-T")).toThrow(/outside/)
     })
+
+    it("rejects a code that does not start with a letter", () => {
+      // The rule that makes the chain's string carrier unambiguous: no legal
+      // code can be spelled like a number. Mirrors
+      // `fc::slug_name_traits::leading_alphabet`.
+      const leadingLetter = /must start with a letter/
+      expect(() => SlugName.from("0")).toThrow(leadingLetter)
+      expect(() => SlugName.from("7")).toThrow(leadingLetter)
+      expect(() => SlugName.from("101")).toThrow(leadingLetter)
+      expect(() => SlugName.from("1E3")).toThrow(leadingLetter)
+      expect(() => SlugName.from("0X10")).toThrow(leadingLetter)
+      expect(() => SlugName.from("12345678")).toThrow(leadingLetter)
+      expect(() => SlugName.from("_")).toThrow(leadingLetter)
+      expect(() => SlugName.from("_LEAD")).toThrow(leadingLetter)
+    })
+
+    it("keeps digits and '_' legal after the first character", () => {
+      expect(SlugName.toString(SlugName.from("V1"))).toBe("V1")
+      expect(SlugName.toString(SlugName.from("TRAIL_"))).toBe("TRAIL_")
+      expect(SlugName.toString(SlugName.from("Z1234567"))).toBe("Z1234567")
+      expect(SlugName.toString(SlugName.from("Z_______"))).toBe("Z_______")
+    })
   })
 
   describe("toString", () => {
@@ -68,7 +90,10 @@ describe("SlugName", () => {
       expect(SlugName.toString(26 * SLOT0)).toBe("Z")
     })
 
-    it("decodes digit slots", () => {
+    // `toString` stays TOTAL on purpose: it is a READER. A throwing renderer in
+    // a scan loop is what stalls a consumer (wire-sysio #619 thread 3), so the
+    // leading rule is enforced on the WRITE path (`from`) only.
+    it("decodes digit slots even though such a value is not a writable code", () => {
       expect(SlugName.toString(27 * SLOT0)).toBe("0")
       expect(SlugName.toString(36 * SLOT0)).toBe("9")
     })
@@ -84,7 +109,7 @@ describe("SlugName", () => {
   })
 
   describe("round-trip", () => {
-    const inputs = ["ETH", "WIRE", "SOL", "USDC", "LIQETH", "LIQSOL", "PRIMARY", "ETHEREUM", "SOLANA", "0", "_", "A", "Z9_"]
+    const inputs = ["ETH", "WIRE", "SOL", "USDC", "LIQETH", "LIQSOL", "PRIMARY", "ETHEREUM", "SOLANA", "A0", "A_", "A", "Z9_"]
     inputs.forEach(s => {
       it(`round-trips '${s}'`, () => {
         const encoded = SlugName.from(s)

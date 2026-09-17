@@ -12,16 +12,17 @@ describe("sysio.chains slug helpers", () => {
     expect(chainSlugString(packed)).toBe("ETHEREUM")
   })
 
-  test("reads a digit-only code as a slug, never as its own decimal", () => {
-    // The slug alphabet contains digits, so "12345678" is a legitimate code
-    // whose packed value is nothing like 12345678. A decimal string is
-    // therefore not a second spelling of a packed value — it is a slug, or it
-    // is invalid. The packed form is passed as a number.
-    expect(chainSlugValue("12345678")).toBe(SlugName.from("12345678"))
-    expect(chainSlugValue("12345678")).not.toBe(12345678)
+  test("refuses a digit-leading string, so a decimal is never read as a slug", () => {
+    // A code must start with a letter, which is what makes the string carrier
+    // unambiguous: a decimal spelling can never also be a code. The packed form
+    // is passed as a number, never as its decimal string.
+    expect(() => chainSlugValue("12345678")).toThrow("must start with a letter")
+    expect(() => chainSlugValue("7")).toThrow("must start with a letter")
     expect(() => chainSlugValue(String(SlugName.from("ETHEREUM")))).toThrow(
       "longer than 8"
     )
+    // Digits after the leading letter are ordinary.
+    expect(chainSlugValue("Z1234567")).toBe(SlugName.from("Z1234567"))
   })
 
   test("rejects empty, invalid, and unsafe values", () => {

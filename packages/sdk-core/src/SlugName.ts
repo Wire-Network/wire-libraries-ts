@@ -1,3 +1,12 @@
+/** Every character a slug_name may contain — `slug_name_traits::alphabet`. */
+const SlugAlphabetPattern = /^[A-Z0-9_]+$/
+
+/**
+ * The characters a slug_name may START with —
+ * `slug_name_traits::leading_alphabet`.
+ */
+const SlugLeadingAlphabetPattern = /^[A-Z]/
+
 /**
  * SlugName — TypeScript counterpart to the `sysio::slug_name` (contract) /
  * `fc::slug_name` (host) packed 8-byte type used as the primary key for
@@ -12,7 +21,14 @@
  * `A..Z`, slots 27..36 hold `0..9`, slot 37 holds `_`. Characters outside the
  * alphabet are a parse error. Inputs longer than 8 chars are a parse error.
  *
- * Mirrors the encoding in `wire-sysio/contracts/sysio.opp.common/include/sysio.opp.common/slug_name.hpp`.
+ * A code must START with a letter. That is what makes the chain's string
+ * carrier unambiguous — no legal code can be spelled like a number, so a bare
+ * JSON string is always a code and never a decimal. Digits and `_` stay legal
+ * in every position after the first (`V1`, `USDC`, `TRAIL_`).
+ *
+ * Mirrors the encoding in `wire-sysio/contracts/sysio.opp.common/include/sysio.opp.common/slug_name.hpp`,
+ * and the leading rule in `fc::slug_name_traits::leading_alphabet` (host) /
+ * `sysio::slug_name_traits::leading_alphabet` (CDT).
  */
 export class SlugName {
   /**
@@ -23,8 +39,10 @@ export class SlugName {
    * slug_name occupies 48 bits, well above the 32-bit boundary but safely
    * under `Number.MAX_SAFE_INTEGER` (53 bits) — arithmetic stays exact.
    *
-   * @param s   uppercase letters, digits, and underscore; ≤8 chars
-   * @throws   on empty input, length > 8, or any out-of-alphabet character
+   * @param s   uppercase letters, digits, and underscore; ≤8 chars, and the
+   *            first character must be a letter ([A-Z])
+   * @throws   on empty input, length > 8, any out-of-alphabet character, or a
+   *           first character that is not a letter
    */
   static from(s: string): number {
     if (s.length === 0) {
@@ -33,8 +51,11 @@ export class SlugName {
     if (s.length > 8) {
       throw new Error(`SlugName.from: '${s}' is longer than 8 chars`)
     }
-    if (!/^[A-Z0-9_]+$/.test(s)) {
+    if (!SlugAlphabetPattern.test(s)) {
       throw new Error(`SlugName.from: '${s}' has chars outside [A-Z0-9_]`)
+    }
+    if (!SlugLeadingAlphabetPattern.test(s)) {
+      throw new Error(`SlugName.from: '${s}' must start with a letter ([A-Z])`)
     }
     let v = 0
     for (let i = 0; i < s.length; ++i) {
