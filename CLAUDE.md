@@ -5,9 +5,7 @@
 ## Build & Development
 
 ```bash
-pnpm install                # Install registry deps (pnpm 10.34.5, Node >=22)
-# Link local OPP models from wire-sysio:
-WIRE_LINK_LOCAL_OPP_MODELS=1 pnpm install --lockfile=false
+pnpm install                # Install deps (pnpm 10.34.5, Node >=22); available sibling OPP models link automatically
 pnpm build                  # Build all packages via tsc -b
 pnpm build:dev              # Watch mode (incremental)
 pnpm test                   # Build + jest (all packages)
@@ -36,6 +34,7 @@ pnpm workspaces with TypeScript composite project references. No Lerna/Nx.
 | `@wireio/shared-web` | Web-specific utilities | No | ESM |
 | `@wireio/shared-node` | Node.js utilities | Yes | Hybrid ESM+CJS |
 | `@wireio/sdk-core` | Wire blockchain SDK types/primitives | Yes | Hybrid ESM+CJS |
+| `@wireio/sdk-outpost` | Typed, verified external-chain outpost clients | Yes | Hybrid ESM+CJS |
 | `@wireio/wallet-ext-sdk` | Wallet extension client SDK | Yes | ESM |
 | `@wireio/wallet-browser-ext` | Chrome extension developer wallet | No | Webpack bundle |
 
@@ -46,6 +45,8 @@ shared ──→ shared-web
        ──→ shared-node
 
 sdk-core ──→ wallet-ext-sdk ──→ wallet-browser-ext
+
+source artifact libraries ──→ sdk-outpost external-chain clients
 ```
 
 Protoc plugins and bundler are standalone (no internal deps).
@@ -68,7 +69,7 @@ Root `tsconfig.json` has project references to all packages. Build order is reso
 
 ## Hybrid ESM/CJS Build Pattern
 
-Packages that publish both ESM and CJS (`shared`, `sdk-core`, `shared-node`) use:
+Packages that publish both ESM and CJS (`shared`, `sdk-core`, `sdk-outpost`, `shared-node`) use:
 
 1. Two tsconfig files: one for `lib/esm/`, one for `lib/cjs/`
 2. Post-build: `scripts/fix-hybrid-output.mjs` patches relative imports with `.js` extensions and creates `lib/cjs/package.json` with `{"type":"commonjs"}`
@@ -191,12 +192,29 @@ Every new/modified symbol ships unit tests in the same change. Tests never assum
 
 ## CI/CD
 
-GitHub Actions (`.github/workflows/publish-npm.yaml`):
-- Triggers on push to `master` (skips if `[skip release]` in commit message)
-- Bumps all packages patch version (`pnpm -r exec -- pnpm version patch`)
-- Auto-commits `chore(release): bump patch [skip release]`
-- Publishes all non-private packages to npm with provenance (`pnpm -r publish --access public --provenance`)
-- Published package manifests must keep `repository.url` set to `https://github.com/Wire-Network/wire-libraries-ts` so npm provenance matches GitHub Actions source metadata.
+GitHub Actions:
+- `ci.yaml` — build + test gate on every PR and push to `master`.
+- Releases use the two-gate flow (ported from wire-sysio / wire-cdt "Strategy C"):
+  1. `prepare-release.yaml` (workflow_dispatch; bump = patch/minor/major/prerelease)
+     bumps every package on its own track and opens a `release/prep-v<version>` PR —
+     and REFUSES to run while a previous release PR is still open. Nothing publishes
+     until a human merges the PR.
+  2. `tag-release.yaml` — auto-triggered when a release PR merges (workflow_dispatch
+     remains the manual path; the `release` Environment's required reviewers are the
+     second gate). It reads the merged version from master, runs the build/test
+     gate, publishes all non-private packages to npm on the channel dist-tag (the
+     version suffix IS the channel; no suffix = `latest`), tags master, and
+     publishes the GitHub release. On stable releases it then mints a 1-hour
+     `wire-release-bot` App token (the App's ONE sanctioned use — see the manifest
+     rule) and fires a `repository_dispatch` to Wire-Network/wire-tools-ts, whose
+     `update-wireio-deps.yaml` opens a PR updating every `@wireio/*` range.
+- `update-wireio-deps.yaml` (manual dispatch, optional `reason` input) — updates
+  every `@wireio/*` dependency THIS repo declares (e.g. `opp-typescript-models`,
+  `outpost-*-artifacts`) to its own npm latest via
+  `scripts/update-wireio-deps.mjs`, refreshes `pnpm-lock.yaml`, gates the result
+  with install+build+test, and opens a reviewed PR.
+- Published package manifests must keep `repository.url` set to
+  `https://github.com/Wire-Network/wire-libraries-ts` — npm provenance matches it.
 
 ## Documentation Comments
 
@@ -216,6 +234,17 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - System-contract `prepare` prefers synchronous ABI encoding but must retain a typed `AnyAction` fallback so `APIClient` can resolve the deployed ABI. Never invent a default write authorization in the public SDK.
 - `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
 - `packages/sdk-core/src/contracts/sysio/uwrit` preserves raw request bytes and exposes `sourceRequestId` for swap correlation. External outpost ids are big-endian; synthetic WIRE queue ids are little-endian and high-bit tagged.
+- `packages/sdk-outpost` owns typed Ethereum/Solana clients and validates caller-supplied immutable deployment profiles. Canonical ABIs, IDLs, runtime templates, program binaries, ethers v6 factories, and Anchor types come from exact packages owned by `wire-ethereum` and `wire-solana`. For local platform development, the root pnpm hook links available sibling artifact outputs; never commit `file:`/`link:` specs to package manifests or the lockfile.
+- Producer repositories assemble those npm packages from checksummed deployment handoffs. `sdk-outpost` never downloads the handoff or owns producer publication inputs.
+- `sdk-outpost` registers exact producer package pairs in an internal compile-time artifact-suite registry. Select suites from deployment-profile ABI/IDL identity and verify exact live runtime identity; never key suite selection by environment names or turn it into an endpoint catalog/runtime package loader.
+- Name the reusable deployment class `Sandbox` in documentation. Use a chain label such as `Bearbox` only as an optional descriptor for one specific Sandbox deployment and its validation provenance; never make that label an SDK key.
+- Advance the exact Ethereum and Solana producer pins independently as one verified compatible pair; do not publish or bump an unchanged producer merely because a deployment profile was respun.
+- `OutpostClient.create` is sdk-outpost's only published client-construction facade. It delegates family selection to an internal factory; concrete Ethereum/Solana instance types remain available for typing, but their backend factories and module paths are not package entrypoints.
+- `packages/sdk-outpost` owns external reserve lifecycle, swap execution, and BAR-backed Ethereum node-owner registration. BAR is an optional deployment capability: profiles without it preserve reserve and swap behavior, while node-owner access fails closed. Node-owner registration must use BAR's canonical WireNodes address and is not staking; staking remains outside this package until its dedicated migration.
+- `sdk-outpost` accepts caller-owned providers and deployment profiles, verifies exact Ethereum implementations and Solana ProgramData against source-owned runtime artifacts, and never owns mutable endpoint catalogs. A same-code cluster respin requires a new profile, not an artifact or SDK release; any deployable binary change requires both a producer artifact and SDK release.
+- A connected outpost client proves deployment compatibility, not swap or stake readiness. Wire-chain orchestration remains in `sdk-core`, and consumers must retain flow-specific capability gates.
+- Publish `sdk-outpost` only through the repository release workflow after its normal build and tests pass.
+- Do not describe `sdk-outpost` as npm-available until `npm view` succeeds for both exact producer artifact versions and `@wireio/sdk-outpost`, and a clean platform-compatible install passes without sibling artifact links.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
 - Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch
 - Node >=22 required (package.json says >=22, README says >=24 — actual CI uses v24)

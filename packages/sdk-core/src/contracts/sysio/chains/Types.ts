@@ -14,6 +14,25 @@ export interface ChainsClientOptions {
   contract?: NameType
 }
 
+/**
+ * Remote outpost contract identities for one chain.
+ *
+ * An EVM outpost deploys a distinct contract per role. An SVM outpost is a
+ * single program named by `oppAddress`; the protocol requires the role fields
+ * to be empty there, and readers fall back to `oppAddress` for every role. Every
+ * field may be empty while the remote contracts are not deployed yet.
+ */
+export interface ChainOutpostAddresses {
+  /** EVM: the OPP contract. SVM: the outpost program id. */
+  oppAddress: string
+  /** EVM: the OPPInbound contract. Must be empty for SVM. */
+  oppInboundAddress: string
+  /** EVM: the OperatorRegistry contract. Must be empty for SVM. */
+  operatorRegistryAddress: string
+  /** EVM: the source swap-deposit contract. Must be empty for SVM. */
+  sourceDepositAddress: string
+}
+
 /** User-facing chain registration data. */
 export interface ChainRegistration {
   /** VM/signing family used by the registered chain. */
@@ -26,12 +45,30 @@ export interface ChainRegistration {
   name: string
   /** Human-readable chain description. */
   description: string
+  /**
+   * Remote outpost contract identities. Omit to register the chain before its
+   * remote contracts exist, then supply them later with `setoutpost`.
+   */
+  outpost?: Partial<ChainOutpostAddresses>
 }
 
 /** Options for creating an unsigned `regchain` action. */
 export interface CreateRegisterChainActionOptions {
   /** Chain registration written by the privileged action. */
   registration: ChainRegistration
+  /** Permission levels authorizing the action. */
+  authorization: ContractPermissionLevel[]
+  /** Chain registry contract account override. */
+  contract?: NameType
+}
+
+/** Options for creating an unsigned `setoutpost` action. */
+export interface CreateSetOutpostActionOptions {
+  /** Stable protocol chain code whose deployment is being replaced. */
+  code: ChainSlugName
+  /** Replacement contract identities. The whole set is replaced, so a caller
+   * updating one address must resend the others. */
+  outpost: Partial<ChainOutpostAddresses>
   /** Permission levels authorizing the action. */
   authorization: ContractPermissionLevel[]
   /** Chain registry contract account override. */
@@ -82,6 +119,8 @@ export interface ChainRecord {
   registeredAtMs: bigint
   /** Activation time in Unix milliseconds, or zero before activation. */
   activatedAtMs: bigint
+  /** Remote outpost contract identities recorded for this chain. */
+  outpost: ChainOutpostAddresses
   /** Original generated registry row. */
   raw: SysioContracts.SysioChainsChainRowType
 }

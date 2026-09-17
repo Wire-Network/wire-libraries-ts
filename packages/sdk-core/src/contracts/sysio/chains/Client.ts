@@ -66,6 +66,12 @@ export function normalizeChainRow(
     active: row.active,
     registeredAtMs: BigInt(row.registered_at_ms.toString()),
     activatedAtMs: BigInt(row.activated_at_ms.toString()),
+    outpost: {
+      oppAddress: row.outpost?.opp_addr ?? "",
+      oppInboundAddress: row.outpost?.opp_inbound_addr ?? "",
+      operatorRegistryAddress: row.outpost?.operator_registry_addr ?? "",
+      sourceDepositAddress: row.outpost?.source_deposit_addr ?? ""
+    },
     raw: row
   }
 }

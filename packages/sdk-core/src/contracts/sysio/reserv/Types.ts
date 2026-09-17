@@ -59,6 +59,14 @@ export interface PushMatchReserveOptions extends MatchReserveOptions {
   pushOptions?: TransactionExtraOptions
 }
 
+/** Options for atomically matching several pending reserves on Wire. */
+export interface PushMatchReservesOptions {
+  /** Ordered reserve matches included in one Wire transaction. */
+  matches: readonly MatchReserveOptions[]
+  /** Optional push behavior such as finality waiting. */
+  pushOptions?: TransactionExtraOptions
+}
+
 /** Options for a read-only reserve-to-reserve quote. */
 export interface ReserveQuoteOptions {
   /** Source reserve identity. */

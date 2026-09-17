@@ -27,6 +27,9 @@
       "path": "./packages/sdk-core/tsconfig.json"
     },
     {
+      "path": "./packages/sdk-outpost/tsconfig.json"
+    },
+    {
       "path": "./packages/wallet-ext-sdk/tsconfig.json"
     },
     {

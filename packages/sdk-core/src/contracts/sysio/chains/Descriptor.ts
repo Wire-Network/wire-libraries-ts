@@ -2,7 +2,11 @@ import type { ContractDescriptor } from "../../Contract.js"
 import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 
 import { DEFAULT_CHAINS_CONTRACT } from "./Constants.js"
-import { ChainsActivateChain, ChainsRegisterChain } from "./Structs.js"
+import {
+  ChainsActivateChain,
+  ChainsRegisterChain,
+  ChainsSetOutpost
+} from "./Structs.js"
 
 /** Generated `sysio.chains` action data keyed by ABI action name. */
 export interface SysioChainsActionData {
@@ -10,6 +14,8 @@ export interface SysioChainsActionData {
   regchain: SysioContracts.SysioChainsRegchainAction
   /** `sysio.chains::activchain` action data. */
   activchain: SysioContracts.SysioChainsActivchainAction
+  /** `sysio.chains::setoutpost` action data. */
+  setoutpost: SysioContracts.SysioChainsSetoutpostAction
 }
 
 /** Generated `sysio.chains` table rows keyed by ABI table name. */
@@ -32,6 +38,10 @@ export const descriptor: ContractDescriptor<
     activchain: {
       name: "activchain",
       serialize: data => ChainsActivateChain.from(data)
+    },
+    setoutpost: {
+      name: "setoutpost",
+      serialize: data => ChainsSetOutpost.from(data)
     }
   },
   tables: {
