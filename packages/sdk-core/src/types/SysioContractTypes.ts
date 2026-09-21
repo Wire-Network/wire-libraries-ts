@@ -1071,6 +1071,9 @@ export enum SysioMsgchAttestationtype {
   ATTESTATION_TYPE_RESERVE_CREATE_CANCELLED = 60960,
   ATTESTATION_TYPE_RESERVE_READY = 60961,
   ATTESTATION_TYPE_EMISSIONS_BLOCKED = 60962,
+  ATTESTATION_TYPE_SYNDICATE_LIQ = 60963,
+  ATTESTATION_TYPE_LIQ_YIELD = 60964,
+  ATTESTATION_TYPE_DESYNDICATE_LIQ = 60965,
 }
 
 /** sysio.msgch::ChainKind (enum, int32) */
@@ -2448,6 +2451,11 @@ export interface SysioSystemDelfinkeyAction {
   finalizer_key: string
 }
 
+/** sysio.system::delsnapprov (action) */
+export interface SysioSystemDelsnapprovAction {
+  producer: string
+}
+
 /** sysio.system::emission_config (type) */
 export interface SysioSystemEmissionConfigType {
   t1_allocation: number | string
@@ -3077,6 +3085,7 @@ export interface SysioSystemContract {
     claimpay: SysioSystemClaimpayAction
     deleteauth: SysioSystemDeleteauthAction
     delfinkey: SysioSystemDelfinkeyAction
+    delsnapprov: SysioSystemDelsnapprovAction
     fundclaim: SysioSystemFundclaimAction
     getsnaphash: SysioSystemGetsnaphashAction
     init: SysioSystemInitAction
@@ -3374,6 +3383,9 @@ export enum SysioUwritAttestationtype {
   ATTESTATION_TYPE_RESERVE_CREATE_CANCELLED = 60960,
   ATTESTATION_TYPE_RESERVE_READY = 60961,
   ATTESTATION_TYPE_EMISSIONS_BLOCKED = 60962,
+  ATTESTATION_TYPE_SYNDICATE_LIQ = 60963,
+  ATTESTATION_TYPE_LIQ_YIELD = 60964,
+  ATTESTATION_TYPE_DESYNDICATE_LIQ = 60965,
 }
 
 /** sysio.uwrit::ChainKind (enum, int32) */
@@ -3772,7 +3784,7 @@ export const SysioContractDefinitions: {
   [SysioContractName.opreg]: { name: SysioContractName.opreg, account: "sysio.opreg", actions: ["available", "cancelwtdw", "claimremit", "deposit", "depositinle", "flushwtdw", "processbatch", "processprod", "processuw", "prune", "recorddel", "regoperator", "releaselock", "setconfig", "slash", "termcheck", "terminate", "withdraw", "withdrawinle"], tables: ["dellog", "opconfig", "opcounters", "operators", "remitclaims", "wtdwqueue"] },
   [SysioContractName.reserv]: { name: SysioContractName.reserv, account: "sysio.reserv", actions: ["applyfromwire", "applyswap", "claimrsvfee", "claimuwfee", "claimwire", "debit", "drainrewards", "matchreserve", "oncnclrsv", "oncrtreserve", "paywire", "refundwire", "regreserve", "rewardbal", "rsvfeebal", "setconfig", "setrsvfee", "swapquote", "sweepclaims", "uwfeebal"], tables: ["reservcfg", "reserves", "rewardbkt", "uwfees", "wireclaims"] },
   [SysioContractName.roa]: { name: SysioContractName.roa, account: "sysio.roa", actions: ["activateroa", "addpolicy", "expandpolicy", "extendpolicy", "forcereg", "giftram", "newnameduser", "newuser", "nodeownreg", "reducepolicy", "setbyteprice", "setsysabi", "setsyscode"], tables: ["nodeownerreg", "nodeowners", "policies", "reslimit", "roastate", "sponsorcount", "sponsors"] },
-  [SysioContractName.system]: { name: SysioContractName.system, account: "sysio", actions: ["accrueepoch", "actfinkey", "activate", "addnodeowner", "claimnodedis", "claimpay", "deleteauth", "delfinkey", "fundclaim", "getsnaphash", "init", "initt5", "limitauthchg", "linkauth", "newaccount", "onblock", "payepoch", "rcrdbatch", "regfinkey", "regproducer", "regproducer2", "regsnapprov", "rmvproducer", "setabi", "setacctcpu", "setacctnet", "setacctram", "setalimits", "setcode", "setemitcfg", "setinittime", "setparams", "setpriv", "setprodkeys", "setprods", "setram", "setscorecfg", "setsnpcfg", "unlinkauth", "unregprod", "updateauth", "viewemitcfg", "viewepoch", "viewnodedist", "votesnaphash", "wasmcfg", "delpeerkey", "getpeerkeys", "regpeerkey", "addtrxp", "deltrxp"], tables: ["abihash", "batchepochs", "blockinfo", "emissionmngr", "emitcfg", "epochlog", "finalizers", "finkeyidgen", "finkeys", "global", "lastpropfins", "nodecount", "nodedist", "payclaims", "payclaimtot", "prodsched", "prodscorecfg", "producers", "snapconfig", "snapprovs", "snaprecords", "snapvotes", "t5state", "limitauthchg", "peerkeys", "trxpglobal", "trxpriority"] },
+  [SysioContractName.system]: { name: SysioContractName.system, account: "sysio", actions: ["accrueepoch", "actfinkey", "activate", "addnodeowner", "claimnodedis", "claimpay", "deleteauth", "delfinkey", "delsnapprov", "fundclaim", "getsnaphash", "init", "initt5", "limitauthchg", "linkauth", "newaccount", "onblock", "payepoch", "rcrdbatch", "regfinkey", "regproducer", "regproducer2", "regsnapprov", "rmvproducer", "setabi", "setacctcpu", "setacctnet", "setacctram", "setalimits", "setcode", "setemitcfg", "setinittime", "setparams", "setpriv", "setprodkeys", "setprods", "setram", "setscorecfg", "setsnpcfg", "unlinkauth", "unregprod", "updateauth", "viewemitcfg", "viewepoch", "viewnodedist", "votesnaphash", "wasmcfg", "delpeerkey", "getpeerkeys", "regpeerkey", "addtrxp", "deltrxp"], tables: ["abihash", "batchepochs", "blockinfo", "emissionmngr", "emitcfg", "epochlog", "finalizers", "finkeyidgen", "finkeys", "global", "lastpropfins", "nodecount", "nodedist", "payclaims", "payclaimtot", "prodsched", "prodscorecfg", "producers", "snapconfig", "snapprovs", "snaprecords", "snapvotes", "t5state", "limitauthchg", "peerkeys", "trxpglobal", "trxpriority"] },
   [SysioContractName.token]: { name: SysioContractName.token, account: "sysio.token", actions: ["close", "create", "issue", "open", "retire", "transfer"], tables: ["accounts", "stat"] },
   [SysioContractName.tokens]: { name: SysioContractName.tokens, account: "sysio.tokens", actions: ["activctok", "activtoken", "regctok", "regtoken"], tables: ["chaintokens", "tokens"] },
   [SysioContractName.uwrit]: { name: SysioContractName.uwrit, account: "sysio.uwrit", actions: ["chklocks", "createuwreq", "drainfwq", "freelocks", "holdlocks", "pruneuwreqs", "rcrdcommit", "setconfig", "sumlocks", "swapfromwire", "sweeplocks"], tables: ["fwqueue", "locks", "locksums", "uwconfig", "uwcounters", "uwreqs"] },
