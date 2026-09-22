@@ -1,4 +1,4 @@
-import { SlugName } from "@wireio/sdk-core/SlugName"
+import { SlugName, slugValue } from "@wireio/sdk-core/SlugName"
 
 describe("SlugName", () => {
   describe("from", () => {
@@ -124,6 +124,49 @@ describe("SlugName", () => {
 
     it("encodes 'WIRE' and 'ETH' as distinct values", () => {
       expect(SlugName.from("WIRE")).not.toBe(SlugName.from("ETH"))
+    })
+  })
+
+  describe("slugValue", () => {
+    const packedEthereum = SlugName.from("ETHEREUM")
+
+    it("parses a bare string as a SPELLING, never a decimal", () => {
+      expect(slugValue("ETHEREUM", "Chain")).toBe(packedEthereum)
+    })
+
+    it("passes an already-packed number through", () => {
+      expect(slugValue(packedEthereum, "Chain")).toBe(packedEthereum)
+    })
+
+    it("accepts a bigint, since a generated field may carry one", () => {
+      expect(slugValue(BigInt(packedEthereum), "Chain")).toBe(packedEthereum)
+    })
+
+    it("accepts the transitional { value } object carrier", () => {
+      // The shape a pre-builtin depot emits: FC_REFLECT_TEMPLATE makes the
+      // reflected struct object-only, so a reader must take both carriers.
+      expect(slugValue({ value: packedEthereum }, "Chain")).toBe(packedEthereum)
+    })
+
+    it("accepts the object carrier quoted, as fc::json emits it above 0xffffffff", () => {
+      expect(slugValue({ value: String(packedEthereum) }, "Chain")).toBe(
+        packedEthereum
+      )
+    })
+
+    it("rejects a spelling that does not lead with a letter", () => {
+      expect(() => slugValue("7", "Chain")).toThrow(/must start with a letter/)
+    })
+
+    it("names the slug in the failure, so the caller knows which one", () => {
+      expect(() => slugValue(0, "Reserve")).toThrow(/^Reserve slug must be/)
+      expect(() => slugValue(0, "Chain")).toThrow(/^Chain slug must be/)
+    })
+
+    it("rejects an object carrying a non-numeric value", () => {
+      expect(() => slugValue({ value: "not-a-number" }, "Chain")).toThrow(
+        /must be a non-zero safe integer/
+      )
     })
   })
 })

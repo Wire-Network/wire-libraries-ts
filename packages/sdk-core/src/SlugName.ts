@@ -1,3 +1,5 @@
+import { match, P } from "ts-pattern"
+
 /** Every character a slug_name may contain — `slug_name_traits::alphabet`. */
 const SlugAlphabetPattern = /^[A-Z0-9_]+$/
 
@@ -115,4 +117,55 @@ export class SlugName {
     }
     return out
   }
+}
+
+/**
+ * The transitional object carrier for a packed slug_name.
+ *
+ * With the ABI builtin absent, a slug converts through
+ * `FC_REFLECT_TEMPLATE(basic_name<Traits>, (value))` and is therefore
+ * object-only, so a pre-builtin depot emits this shape. The depot still
+ * ACCEPTS it (`fc::slug_name::from_variant`), which is what lets a READER
+ * straddle the landing window — a JSON writer cannot, since no value both
+ * spellings accept.
+ *
+ * Delete this once no depot emits the object form; the bare string is the one
+ * canonical carrier.
+ */
+export interface SlugNameObject {
+  /** The packed uint64. `fc::json` quotes it once it exceeds `0xffffffff`. */
+  value: number | string
+}
+
+/** Every carrier a slug_name cell can arrive in. */
+export type SlugNameValue = string | number | bigint | SlugNameObject
+
+/**
+ * The packed numeric value of a slug cell, whatever carrier it arrived in.
+ *
+ * A bare string is ALWAYS parsed as a slug, never as a decimal — unambiguous
+ * because a code must start with a letter, so no legal spelling can be read as
+ * a number. A number or bigint is an already-packed value. An object is the
+ * transitional {@link SlugNameObject} carrier.
+ *
+ * @param value  the cell, in any carrier
+ * @param label  names the slug in the failure message (`Chain`, `Reserve`)
+ * @throws if the result is not a non-zero safe integer, or a string is not a
+ *         valid slug_name spelling
+ */
+export function slugValue(value: SlugNameValue, label: string): number {
+  const packed = match(value)
+    .with(P.string, spelling => SlugName.from(spelling))
+    .with({ value: P.union(P.string, P.number) }, wrapped =>
+      Number(wrapped.value)
+    )
+    .otherwise(alreadyPacked => Number(alreadyPacked))
+
+  if (!Number.isSafeInteger(packed) || packed <= 0) {
+    throw new Error(
+      `${label} slug must be a non-zero safe integer or valid slug_name string.`
+    )
+  }
+
+  return packed
 }
