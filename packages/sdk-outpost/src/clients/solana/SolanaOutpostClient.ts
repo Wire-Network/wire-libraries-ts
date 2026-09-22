@@ -10,6 +10,7 @@ import {
   OutpostChainFamily,
   SolanaProgramName
 } from "../../deployments/index.js"
+import { SolanaCollateralClient } from "./SolanaCollateralClient.js"
 import { OutpostDeploymentVerifier } from "../../verification/index.js"
 import { SolanaOutpostClientOptions, SolanaProgramMap } from "./Types.js"
 import { SolanaReserveClient } from "./SolanaReserveClient.js"
@@ -50,9 +51,13 @@ export class SolanaOutpostClient {
       },
       options.provider
     )
+    this.collateral = new SolanaCollateralClient(options.provider, this.liqsolCore)
     this.reserves = new SolanaReserveClient(options.provider, this.liqsolCore)
     this.swaps = new SolanaReserveSwapClient(options.provider, this.liqsolCore)
   }
+
+  /** Native operator collateral for the selected verified artifact suite. */
+  readonly collateral: SolanaCollateralClient
 
   /** Reserve creation, cancellation, and reads for this verified outpost. */
   readonly reserves: SolanaReserveClient
