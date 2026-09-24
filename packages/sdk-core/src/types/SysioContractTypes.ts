@@ -1683,7 +1683,6 @@ export interface SysioOpregReleaselockAction {
 export interface SysioOpregRemitClaimType {
   account: string
   balance: number | string
-  expires_at_sec: number
 }
 
 /** sysio.opreg::remitclaim_key (type) */
@@ -2661,7 +2660,6 @@ export interface SysioSystemOnblockAction {
 export interface SysioSystemPayClaimType {
   account_name: string
   balance: number | string
-  expires_at_sec: number
 }
 
 /** sysio.system::pay_claim_total (type) */
