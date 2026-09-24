@@ -820,7 +820,6 @@ export enum SysioDclaimChainkind {
 /** sysio.dclaim::cap_config (type) */
 export interface SysioDclaimCapConfigType {
   imported_complete: boolean
-  claim_window_sec: number
 }
 
 /** sysio.dclaim::cap_counters (type) */
@@ -832,11 +831,6 @@ export interface SysioDclaimCapCountersType {
 /** sysio.dclaim::claim (action) */
 export interface SysioDclaimClaimAction {
   wire_account: string
-}
-
-/** sysio.dclaim::flushexpired (action) */
-export interface SysioDclaimFlushexpiredAction {
-  max_rows: number
 }
 
 /** sysio.dclaim::import_credit (type) */
@@ -883,7 +877,6 @@ export interface SysioDclaimPclaimKeyType {
 export interface SysioDclaimPendingClaimType {
   wire_account: string
   balance: string
-  expires_at_sec: number
 }
 
 /** sysio.dclaim::reward_cursor (type) */
@@ -898,11 +891,6 @@ export interface SysioDclaimRewardCursorType {
 /** sysio.dclaim::rwdcur_key (type) */
 export interface SysioDclaimRwdcurKeyType {
   id: number | string
-}
-
-/** sysio.dclaim::setclmwindow (action) */
-export interface SysioDclaimSetclmwindowAction {
-  window_sec: number
 }
 
 /** sysio.dclaim::setconfig (action) */
@@ -920,19 +908,16 @@ export interface SysioDclaimUnmappedTokenType {
   chain_kind: SysioDclaimChainkind | keyof typeof SysioDclaimChainkind
   native_pubkey: string
   balance: string
-  expires_at_sec: number
 }
 
 /** sysio.dclaim - action + table surface for the typed contract client. */
 export interface SysioDclaimContract {
   actions: {
     claim: SysioDclaimClaimAction
-    flushexpired: SysioDclaimFlushexpiredAction
     importdone: SysioDclaimImportdoneAction
     importseed: SysioDclaimImportseedAction
     linkswept: SysioDclaimLinksweptAction
     onreward: SysioDclaimOnrewardAction
-    setclmwindow: SysioDclaimSetclmwindowAction
     setconfig: SysioDclaimSetconfigAction
   }
   tables: {
@@ -4316,7 +4301,7 @@ export const SysioContractDefinitions: {
   [SysioContractName.chains]: { name: SysioContractName.chains, account: "sysio.chains", actions: ["activchain", "regchain", "setoutpost"], tables: ["chains"] },
   [SysioContractName.chalg]: { name: SysioContractName.chalg, account: "sysio.chalg", actions: ["chkdispute", "chkuwchal", "claimbond", "opendispute", "openuwchal", "slashop", "uwchalbond", "votedispute", "voteuwchal"], tables: ["bondcredits", "chalgstate", "disputes", "disputevote", "uwchals", "uwchalvote"] },
   [SysioContractName.councl]: { name: SysioContractName.councl, account: "sysio.councl", actions: ["addcandidate", "finalizeinit", "forceassign", "forceback", "loadtier", "purge", "repcandidate", "reset", "rmcandidate", "settle", "startinit", "stir", "vote"], tables: ["candidates", "config", "council", "roster", "state", "tier2", "tier3", "tier3remap"] },
-  [SysioContractName.dclaim]: { name: SysioContractName.dclaim, account: "sysio.dclaim", actions: ["claim", "flushexpired", "importdone", "importseed", "linkswept", "onreward", "setclmwindow", "setconfig"], tables: ["capcfg", "capcounters", "pclaims", "rwdcursors", "unmapped"] },
+  [SysioContractName.dclaim]: { name: SysioContractName.dclaim, account: "sysio.dclaim", actions: ["claim", "importdone", "importseed", "linkswept", "onreward", "setconfig"], tables: ["capcfg", "capcounters", "pclaims", "rwdcursors", "unmapped"] },
   [SysioContractName.epoch]: { name: SysioContractName.epoch, account: "sysio.epoch", actions: ["advance", "pause", "schbatchgps", "setconfig", "unpause"], tables: ["blocklog", "epochcfg", "epochstate"] },
   [SysioContractName.liq]: { name: SysioContractName.liq, account: "sysio.liq", actions: ["addkicker", "addyield", "claim", "close", "create", "desyndicate", "importdone", "importsynd", "linkswept", "mintsynd", "mintyield", "open", "park", "queueyield", "recredit", "regliqpool", "setkicker", "sweep", "transfer"], tables: ["accounts", "liqconfig", "liqcounters", "liqcursors", "liqpending", "parked", "stat", "yieldidx"] },
   [SysioContractName.msgch]: { name: SysioContractName.msgch, account: "sysio.msgch", actions: ["bootstrap", "buildenv", "chkcons", "deliver", "evalcons", "queueout", "resolvedisp"], tables: ["attestations", "attseq", "envelopes", "envlog", "messages", "outenvelopes", "outpcons"] },
