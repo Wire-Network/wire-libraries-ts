@@ -2,14 +2,6 @@
 
 A monorepo containing shared TypeScript libraries for Wire applications, providing cross-platform utilities for logging, type guards, async helpers, blockchain SDK primitives, and protobuf code-generation tooling.
 
-The operator collateral addition in `sdk-outpost` exposes native Ethereum
-deposit/withdraw-request and native Solana deposit through verified clients.
-It validates exact custody units and depot capacity, and retains source receipts
-before confirmation. Solana collateral confirms through bounded HTTP polling,
-including RPC gateways without WebSockets. See [the SDK collateral contract](packages/sdk-outpost/README.md#operator-collateral).
-This source addition requires the normal release workflow before npm consumers
-can use it; it does not add Solana withdrawal or change deployed contracts.
-
 ## Packages
 
 | Package | Description | npm |
@@ -21,13 +13,6 @@ can use it; it does not add Solana withdrawal or change deployed contracts.
 | [`@wireio/sdk-outpost`](packages/sdk-outpost/) | Strictly typed Ethereum and Solana outpost clients consuming source-owned artifact libraries | [![npm](https://img.shields.io/npm/v/@wireio/sdk-outpost)](https://www.npmjs.com/package/@wireio/sdk-outpost) |
 | [`@wireio/wallet-ext-sdk`](packages/wallet-ext-sdk/) | Client SDK for the Wire Wallet browser extension | [![npm](https://img.shields.io/npm/v/@wireio/wallet-ext-sdk)](https://www.npmjs.com/package/@wireio/wallet-ext-sdk) |
 | [`@wireio/wallet-browser-ext`](packages/wallet-browser-ext/) | Chrome extension developer wallet for Wire | *private* |
-
-The sdk-outpost package consumes exact published versions of the Ethereum and
-Solana artifact libraries, including their ethers v6 factories and Anchor
-types. Chain bindings are generated and verified by those producer repos, not
-inside this monorepo. An internal compile-time artifact-suite registry selects
-compatible producer bindings from caller-supplied deployment profiles without
-owning endpoints or environment configuration.
 
 ## Examples
 
