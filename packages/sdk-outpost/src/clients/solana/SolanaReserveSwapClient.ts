@@ -21,12 +21,12 @@ import {
 } from "../../reserves/index.js"
 import { SolanaReserveAddresses } from "./SolanaReserveAddresses.js"
 
-const ConfirmationCommitment = "confirmed",
-  ConfirmationPollIntervalMs = 1_500,
-  SolanaConfirmationStatus = {
-    confirmed: "confirmed",
-    finalized: "finalized"
-  } as const,
+import {
+  isSolanaTransactionConfirmed,
+  SolanaConfirmationCommitment
+} from "../../util/SolanaConfirmation.js"
+
+const ConfirmationPollIntervalMs = 1_500,
   SwapDepositLog = /opp_outpost: SwapDeposit id=(\d+)\b/
 
 /** Reserve-swap writes and balance reads for one verified Solana outpost. */
@@ -117,7 +117,7 @@ export class SolanaReserveSwapClient {
     return BigInt(
       await this.provider.connection.getBalance(
         owner,
-        ConfirmationCommitment
+        SolanaConfirmationCommitment
       )
     )
   }
@@ -135,12 +135,12 @@ export class SolanaReserveSwapClient {
       ),
       account = await this.provider.connection.getAccountInfo(
         tokenAccount,
-        ConfirmationCommitment
+        SolanaConfirmationCommitment
       )
     if (account == null) return 0n
     const balance = await this.provider.connection.getTokenAccountBalance(
       tokenAccount,
-      ConfirmationCommitment
+      SolanaConfirmationCommitment
     )
     return BigInt(balance.value.amount)
   }
@@ -179,19 +179,18 @@ export class SolanaReserveSwapClient {
   ): Promise<ReserveSwapSubmission> {
     const connection = this.provider.connection,
       latestBlockhash = await connection.getLatestBlockhash(
-        ConfirmationCommitment
+        SolanaConfirmationCommitment
       ),
       transaction = new Transaction({
         feePayer: this.assertWallet(),
         blockhash: latestBlockhash.blockhash,
         lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
       }).add(instruction),
-      signedTransaction = await this.provider.wallet.signTransaction(
-        transaction
-      ),
+      signedTransaction =
+        await this.provider.wallet.signTransaction(transaction),
       transactionId = await connection.sendRawTransaction(
         signedTransaction.serialize(),
-        { preflightCommitment: ConfirmationCommitment }
+        { preflightCommitment: SolanaConfirmationCommitment }
       ),
       confirmedTransaction = await this.waitForConfirmedTransaction(
         transactionId,
@@ -209,43 +208,26 @@ export class SolanaReserveSwapClient {
     lastValidBlockHeight: number
   ): Promise<VersionedTransactionResponse> {
     const connection = this.provider.connection,
-      [statusResponse, blockHeight] = await Promise.all([
-        connection.getSignatureStatuses([transactionId], {
-          searchTransactionHistory: true
-        }),
-        connection.getBlockHeight(ConfirmationCommitment)
-      ]),
-      status = statusResponse.value[0]
-
-    if (status?.err != null) {
-      throw new Error(
-        `Solana reserve swap ${transactionId} failed: ${JSON.stringify(status.err)}`
+      confirmed = await isSolanaTransactionConfirmed(
+        connection,
+        transactionId,
+        lastValidBlockHeight
       )
-    }
-
-    const confirmed =
-      status?.confirmationStatus === SolanaConfirmationStatus.confirmed ||
-      status?.confirmationStatus === SolanaConfirmationStatus.finalized
     if (confirmed) {
       const confirmedTransaction = await connection.getTransaction(
         transactionId,
         {
-          commitment: ConfirmationCommitment,
+          commitment: SolanaConfirmationCommitment,
           maxSupportedTransactionVersion: 0
         }
       )
       if (confirmedTransaction != null) return confirmedTransaction
-    } else if (status == null && blockHeight > lastValidBlockHeight) {
-      throw new Error(
-        `Solana reserve swap ${transactionId} expired before it was recorded on chain.`
-      )
     }
 
-    await new Promise(resolve => setTimeout(resolve, ConfirmationPollIntervalMs))
-    return this.waitForConfirmedTransaction(
-      transactionId,
-      lastValidBlockHeight
+    await new Promise(resolve =>
+      setTimeout(resolve, ConfirmationPollIntervalMs)
     )
+    return this.waitForConfirmedTransaction(transactionId, lastValidBlockHeight)
   }
 
   /** Parse the canonical deposit id logged by `request_swap*`. */

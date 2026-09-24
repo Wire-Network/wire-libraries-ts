@@ -1,6 +1,5 @@
 import { BN, type AnchorProvider, type Program } from "@coral-xyz/anchor"
 import {
-  PublicKey,
   SystemProgram,
   Transaction,
   type TransactionInstruction
@@ -8,34 +7,38 @@ import {
 import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
 import {
   assertOperatorCollateralRequest,
+  type OperatorCollateralCapabilities,
   type OperatorCollateralRequest,
   type OperatorCollateralSubmission,
   type OperatorCollateralSubmissionOptions
 } from "../../collateral/index.js"
 
-const Seeds = {
-    config: "outpost_config",
-    registry: "operator_registry",
-    outbound: "outbound_message_buffer",
-    vault: "outpost_vault",
-    position: "collateral_position"
-  } as const,
-  TokenCodeBytes = 8,
-  Commitment = "confirmed"
+import {
+  isSolanaTransactionConfirmed,
+  SolanaConfirmationCommitment
+} from "../../util/SolanaConfirmation.js"
+import { SolanaCollateralAddresses } from "./SolanaCollateralAddresses.js"
+
+const ConfirmationPollIntervalMs = 1_000,
+  ConfirmationTimeoutMs = 120_000
 
 /** Native operator collateral, deliberately separate from liquid-staking withdrawals. */
 export class SolanaCollateralClient {
+  private readonly addresses: SolanaCollateralAddresses
+
   /** Bind to the program created from the verified producer artifact suite. */
   constructor(
     private readonly provider: AnchorProvider,
     private readonly program: Program<LiqsolCore>
-  ) {}
+  ) {
+    this.addresses = new SolanaCollateralAddresses(program.programId)
+  }
 
   /** No public operator collateral withdrawal instruction exists in this suite. */
   readonly capabilities = Object.freeze({
     nativeDeposit: true,
     nativeWithdrawal: false
-  })
+  } satisfies OperatorCollateralCapabilities)
 
   /** Build the producer-defined native deposit instruction without exposing PDA work to consumers. */
   async createNativeDepositInstruction(
@@ -45,9 +48,7 @@ export class SolanaCollateralClient {
     const depositor = this.provider.wallet.publicKey
     if (!depositor)
       throw new Error("Operator collateral requires a connected Solana wallet.")
-    const tokenCode = new BN(request.tokenCode.toString()),
-      derive = (seeds: Buffer[]) =>
-        PublicKey.findProgramAddressSync(seeds, this.program.programId)[0]
+    const tokenCode = new BN(request.tokenCode.toString())
     return this.program.methods
       .deposit(
         request.operatorType,
@@ -56,15 +57,14 @@ export class SolanaCollateralClient {
       )
       .accounts({
         depositor,
-        config: derive([Buffer.from(Seeds.config)]),
-        operatorRegistry: derive([Buffer.from(Seeds.registry)]),
-        outboundMessageBuffer: derive([Buffer.from(Seeds.outbound)]),
-        vault: derive([Buffer.from(Seeds.vault)]),
-        collateralPosition: derive([
-          Buffer.from(Seeds.position),
-          depositor.toBuffer(),
-          tokenCode.toArrayLike(Buffer, "le", TokenCodeBytes)
-        ]),
+        config: this.addresses.outpostConfig(),
+        operatorRegistry: this.addresses.operatorRegistry(),
+        outboundMessageBuffer: this.addresses.outboundMessageBuffer(),
+        vault: this.addresses.vault(),
+        collateralPosition: this.addresses.position(
+          depositor,
+          request.tokenCode
+        ),
         systemProgram: SystemProgram.programId
       })
       .instruction()
@@ -76,7 +76,9 @@ export class SolanaCollateralClient {
     options: OperatorCollateralSubmissionOptions = {}
   ): Promise<OperatorCollateralSubmission> {
     const instruction = await this.createNativeDepositInstruction(request),
-      latest = await this.provider.connection.getLatestBlockhash(Commitment),
+      latest = await this.provider.connection.getLatestBlockhash(
+        SolanaConfirmationCommitment
+      ),
       transaction = new Transaction({
         ...latest,
         feePayer: this.provider.wallet.publicKey
@@ -84,18 +86,46 @@ export class SolanaCollateralClient {
       signed = await this.provider.wallet.signTransaction(transaction),
       transactionId = await this.provider.connection.sendRawTransaction(
         signed.serialize(),
-        { preflightCommitment: Commitment }
+        { preflightCommitment: SolanaConfirmationCommitment }
       ),
       submission = { transactionId }
     options.onSubmitted?.(submission)
-    const confirmation = await this.provider.connection.confirmTransaction(
-      { ...latest, signature: transactionId },
-      Commitment
-    )
-    if (confirmation.value.err)
-      throw new Error(
-        `Solana collateral submission failed: ${JSON.stringify(confirmation.value.err)}`
-      )
+    await this.waitForConfirmation(transactionId, latest.lastValidBlockHeight)
     return submission
+  }
+
+  /** HTTP confirmation also works through RPC gateways without a WebSocket endpoint. */
+  private async waitForConfirmation(
+    transactionId: string,
+    lastValidBlockHeight: number
+  ): Promise<void> {
+    const deadline = Date.now() + ConfirmationTimeoutMs,
+      timeoutError = new Error(
+        `Solana collateral confirmation timed out for ${transactionId}. Check the signature and depot before resubmitting.`
+      )
+    while (Date.now() < deadline) {
+      let timer: ReturnType<typeof setTimeout>
+      const confirmed = await Promise.race([
+        isSolanaTransactionConfirmed(
+          this.provider.connection,
+          transactionId,
+          lastValidBlockHeight
+        ),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(timeoutError), deadline - Date.now())
+        })
+      ]).finally(() => clearTimeout(timer))
+      if (confirmed) return
+      await new Promise(resolve =>
+        setTimeout(
+          resolve,
+          Math.min(
+            ConfirmationPollIntervalMs,
+            Math.max(0, deadline - Date.now())
+          )
+        )
+      )
+    }
+    throw timeoutError
   }
 }

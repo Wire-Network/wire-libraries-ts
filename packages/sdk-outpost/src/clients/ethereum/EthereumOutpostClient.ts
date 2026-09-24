@@ -44,7 +44,10 @@ export class EthereumOutpostClient {
     readonly provider: Provider,
     private readonly artifactSuite: OutpostArtifactSuite
   ) {
-    this.collateral = new EthereumCollateralClient(this.contract(EthereumContractName.OperatorRegistry), options.connection)
+    this.collateral = new EthereumCollateralClient(
+      this.contract(EthereumContractName.OperatorRegistry),
+      options.connection
+    )
     this.reserves = new EthereumReserveClient(
       this.contract(EthereumContractName.ReserveManager),
       options.connection

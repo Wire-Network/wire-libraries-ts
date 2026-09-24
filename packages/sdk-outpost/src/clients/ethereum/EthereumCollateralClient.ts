@@ -8,6 +8,7 @@ import {
 } from "ethers"
 import {
   assertOperatorCollateralRequest,
+  type OperatorCollateralCapabilities,
   type OperatorCollateralRequest,
   type OperatorCollateralSubmission,
   type OperatorCollateralSubmissionOptions
@@ -28,7 +29,7 @@ export class EthereumCollateralClient {
   readonly capabilities = Object.freeze({
     nativeDeposit: true,
     nativeWithdrawal: true
-  })
+  } satisfies OperatorCollateralCapabilities)
 
   /** Read the registry's configured native code instead of guessing a token identity. */
   async nativeTokenCode(): Promise<bigint> {

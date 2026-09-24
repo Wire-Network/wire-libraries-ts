@@ -5,7 +5,8 @@ A monorepo containing shared TypeScript libraries for Wire applications, providi
 The operator collateral addition in `sdk-outpost` exposes native Ethereum
 deposit/withdraw-request and native Solana deposit through verified clients.
 It validates exact custody units and depot capacity, and retains source receipts
-before confirmation. See [the SDK collateral contract](packages/sdk-outpost/README.md#operator-collateral).
+before confirmation. Solana collateral confirms through bounded HTTP polling,
+including RPC gateways without WebSockets. See [the SDK collateral contract](packages/sdk-outpost/README.md#operator-collateral).
 This source addition requires the normal release workflow before npm consumers
 can use it; it does not add Solana withdrawal or change deployed contracts.
 

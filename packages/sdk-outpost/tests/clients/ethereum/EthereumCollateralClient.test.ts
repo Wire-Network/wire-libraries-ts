@@ -7,18 +7,18 @@ import {
 } from "@wireio/sdk-outpost"
 
 /** Observe custody writes without making network requests. */
-function fixture() {
+function createCollateralFixture() {
   const signer = Wallet.createRandom(),
     wait = jest.fn(async () => ({ status: 1 })),
-    method = () =>
+    createMethod = () =>
       Object.assign(
         jest.fn(async () => ({ hash: "0x1234", wait })),
         { staticCall: jest.fn(async (): Promise<void> => undefined) }
       ),
     registry = {
       nativeTokenCode: jest.fn(async () => 1n),
-      deposit: method(),
-      withdraw: method()
+      deposit: createMethod(),
+      withdraw: createMethod()
     },
     client = new EthereumCollateralClient(
       registry as unknown as OperatorRegistry,
@@ -37,7 +37,8 @@ function fixture() {
 
 describe("EthereumCollateralClient", () => {
   it("preserves raw wei, compresses the signer's key and records submission before confirmation", async () => {
-    const { client, registry, request, wait, signer } = fixture(),
+    const { client, registry, request, wait, signer } =
+        createCollateralFixture(),
       onSubmitted = jest.fn(() => expect(wait).not.toHaveBeenCalled())
     await expect(
       client.depositNative(request, { onSubmitted })
@@ -55,7 +56,7 @@ describe("EthereumCollateralClient", () => {
   })
 
   it("rejects token/key mismatches and aggregate overflow before custody moves", async () => {
-    const { client, registry, request } = fixture()
+    const { client, registry, request } = createCollateralFixture()
     await expect(
       client.depositNative({ ...request, tokenCode: 2n })
     ).rejects.toThrow("native collateral")
@@ -75,7 +76,7 @@ describe("EthereumCollateralClient", () => {
   })
 
   it("sends a withdrawal request without presenting the source hash as a queue id", async () => {
-    const { client, registry, request, signer } = fixture()
+    const { client, registry, request, signer } = createCollateralFixture()
     await expect(
       client.requestNativeWithdrawal({
         ...request,
@@ -93,12 +94,40 @@ describe("EthereumCollateralClient", () => {
   })
 
   it("retains the submitted hash even when confirmation fails", async () => {
-    const { client, request, wait } = fixture(),
+    const { client, request, wait } = createCollateralFixture(),
       onSubmitted = jest.fn()
-    wait.mockRejectedValueOnce(new Error("RPC lost") as never)
+    wait.mockRejectedValueOnce(new Error("RPC lost"))
     await expect(
       client.depositNative(request, { onSubmitted })
     ).rejects.toThrow("RPC lost")
     expect(onSubmitted).toHaveBeenCalledWith({ transactionId: "0x1234" })
+  })
+
+  it("does not broadcast or report submission when preflight fails", async () => {
+    const { client, registry, request } = createCollateralFixture(),
+      onSubmitted = jest.fn()
+    registry.deposit.staticCall.mockRejectedValueOnce(
+      new Error("Route disabled")
+    )
+    await expect(
+      client.depositNative(request, { onSubmitted })
+    ).rejects.toThrow("Route disabled")
+    expect(registry.deposit).not.toHaveBeenCalled()
+    expect(onSubmitted).not.toHaveBeenCalled()
+  })
+
+  it("retains a withdrawal receipt when confirmation fails without duplicating the request", async () => {
+    const { client, registry, request, wait } = createCollateralFixture(),
+      onSubmitted = jest.fn()
+    wait.mockRejectedValueOnce(new Error("RPC lost"))
+    await expect(
+      client.requestNativeWithdrawal(
+        { ...request, depotBalance: request.amount },
+        { onSubmitted }
+      )
+    ).rejects.toThrow("RPC lost")
+    expect(onSubmitted).toHaveBeenCalledWith({ transactionId: "0x1234" })
+    expect(registry.withdraw.staticCall).toHaveBeenCalledTimes(1)
+    expect(registry.withdraw).toHaveBeenCalledTimes(1)
   })
 })

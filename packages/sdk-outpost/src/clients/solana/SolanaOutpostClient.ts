@@ -51,7 +51,10 @@ export class SolanaOutpostClient {
       },
       options.provider
     )
-    this.collateral = new SolanaCollateralClient(options.provider, this.liqsolCore)
+    this.collateral = new SolanaCollateralClient(
+      options.provider,
+      this.liqsolCore
+    )
     this.reserves = new SolanaReserveClient(options.provider, this.liqsolCore)
     this.swaps = new SolanaReserveSwapClient(options.provider, this.liqsolCore)
   }

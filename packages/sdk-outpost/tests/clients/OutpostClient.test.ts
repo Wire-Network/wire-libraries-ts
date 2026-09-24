@@ -24,6 +24,10 @@ describe("OutpostClient", () => {
 
     expect(typedClient.profile).toBe(profile)
     expect(typedClient.reserves).toBeDefined()
+    expect(typedClient.collateral.capabilities).toEqual({
+      nativeDeposit: true,
+      nativeWithdrawal: true
+    })
   })
 
   it("preserves the precise Solana client type", async () => {
@@ -39,5 +43,9 @@ describe("OutpostClient", () => {
 
     expect(typedClient.profile).toBe(profile)
     expect(typedClient.reserves).toBeDefined()
+    expect(typedClient.collateral.capabilities).toEqual({
+      nativeDeposit: true,
+      nativeWithdrawal: false
+    })
   })
 })

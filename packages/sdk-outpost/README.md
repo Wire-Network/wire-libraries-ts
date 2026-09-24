@@ -18,7 +18,7 @@ repository release workflow.
 
 The source API adds `ethereum.collateral` and `solana.collateral` to verified
 outpost clients. Consumers must wait for a release containing this addition;
-the earlier published `0.0.3` release does not contain it.
+a version bump alone does not publish the API.
 
 | Client | Supported | Explicitly unavailable |
 | --- | --- | --- |
@@ -39,6 +39,11 @@ so the caller can persist a non-secret receipt even when confirmation times out.
 The returned identifier proves only a source submission. Independently observe
 depot acceptance/rejection, queue request ID and eventual refund or payout.
 An Ethereum withdrawal event's placeholder ID is not the depot queue ID.
+
+Solana collateral confirmation polls HTTP signature status for up to two minutes;
+it does not require a WebSocket endpoint. RPC failures, blockhash expiry and
+timeouts retain the submitted signature through `onSubmitted`. Inspect that
+signature and depot state before retrying a deposit.
 
 Callers still own Wire registration, AuthEx identity checks, live free-capacity
 checks, one-pending-request policy, network selection and readiness gates. A
