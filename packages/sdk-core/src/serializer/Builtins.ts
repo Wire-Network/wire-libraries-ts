@@ -97,7 +97,7 @@ const SlugNameType = {
 }
 
 /** True for an already-typed ABI value, e.g. a `ChainsSlugName` passed to the generic encoder. */
-function isSerializable(value: unknown): value is ABISerializableObject {
+function isSerializable(value: unknown): value is Required<ABISerializableObject> {
   return (
     typeof value === "object" &&
     value !== null &&
