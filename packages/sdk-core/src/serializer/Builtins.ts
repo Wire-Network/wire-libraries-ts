@@ -1,8 +1,15 @@
 import { identity } from "lodash"
+import { match } from "ts-pattern"
 
 import { ABIDecoder } from "./Decoder.js"
 import { ABIEncoder } from "./Encoder.js"
-import { ABIField, ABISerializableConstructor } from "./Serializable.js"
+import {
+  ABIField,
+  ABISerializableConstructor,
+  ABISerializableObject
+} from "./Serializable.js"
+
+import { SlugName, slugValue, SlugNameValue } from "../SlugName.js"
 
 import { Asset, ExtendedAsset } from "../chain/Asset.js"
 import { BlockTimestamp, TimePoint, TimePointSec } from "../chain/Time.js"
@@ -55,11 +62,58 @@ const BoolType = {
   }
 }
 
+/** A slug_name's zero value: the empty spelling, which packs to 0. */
+const SLUG_NAME_ZERO = ""
+
+/**
+ * `slug_name` — represented as its canonical spelling (`"ETHEREUM"`), the same
+ * string carrier the chain emits in JSON and the generated contract types
+ * declare. Accepts every {@link SlugNameValue} carrier on the way in, and
+ * writes the packed `uint64`.
+ */
+const SlugNameType = {
+  abiName: "slug_name",
+  abiDefault: () => SLUG_NAME_ZERO,
+  fromABI: (decoder: ABIDecoder) => {
+    return SlugName.toString(UInt64.fromABI(decoder).toNumber())
+  },
+  from: (value: SlugNameValue) =>
+    value === SLUG_NAME_ZERO
+      ? SLUG_NAME_ZERO
+      : SlugName.toString(slugValue(value, SlugNameType.abiName)),
+  toABI: (
+    value: SlugNameValue | ABISerializableObject,
+    encoder: ABIEncoder
+  ) => {
+    match(value)
+      .when(isSerializable, serializable => serializable.toABI(encoder))
+      .with(SLUG_NAME_ZERO, () => UInt64.from(0).toABI(encoder))
+      .otherwise(carrier =>
+        UInt64.from(
+          slugValue(carrier as SlugNameValue, SlugNameType.abiName)
+        ).toABI(encoder)
+      )
+  }
+}
+
+/** True for an already-typed ABI value, e.g. a `ChainsSlugName` passed to the generic encoder. */
+function isSerializable(value: unknown): value is Required<ABISerializableObject> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as ABISerializableObject).toABI === "function"
+  )
+}
+
 export interface BuiltinTypes {
   string: string
   "string?"?: string
   "string[]": string[]
   "string[]?"?: string[]
+  slug_name: string
+  "slug_name?"?: string
+  "slug_name[]": string[]
+  "slug_name[]?"?: string[]
   bool: boolean
   "bool?"?: boolean
   "bool[]": boolean[]
@@ -187,6 +241,7 @@ function getBuiltins(): ABISerializableConstructor[] {
     // types represented by JavaScript builtins
     BoolType as ABISerializableConstructor,
     StringType as ABISerializableConstructor,
+    SlugNameType as ABISerializableConstructor,
     // types represented by Classes
     Asset,
     Asset.Symbol,
