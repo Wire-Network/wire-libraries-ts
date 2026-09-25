@@ -1,4 +1,4 @@
-import { contracts, SlugName } from "@wireio/sdk-core"
+import { contracts } from "@wireio/sdk-core"
 import {
   SysioTokensChainkind,
   SysioTokensTokenkind
@@ -13,7 +13,7 @@ interface TableQuery {
 
 function tokenRow(overrides: Record<string, unknown> = {}) {
   return {
-    code: { value: SlugName.from("ETH") },
+    code: "ETH",
     kind: "TOKEN_KIND_NATIVE",
     symbol_name: "ETH",
     description: "Ether",
@@ -28,8 +28,8 @@ function tokenRow(overrides: Record<string, unknown> = {}) {
 
 function chainTokenRow(overrides: Record<string, unknown> = {}) {
   return {
-    chain_code: { value: SlugName.from("ETHEREUM") },
-    token_code: { value: SlugName.from("ETH") },
+    chain_code: "ETHEREUM",
+    token_code: "ETH",
     contract_addr: "0x",
     is_native: true,
     active: true,
@@ -70,14 +70,14 @@ describe("TokenRegistryClient", () => {
   test("normalizes packed slugs serialized as uint64 strings", () => {
     expect(
       normalizeTokenRow(
-        tokenRow({ code: { value: String(SlugName.from("ETH")) } }) as any
+        tokenRow({ code: "ETH" }) as any
       )
     ).toMatchObject({ code: "ETH" })
     expect(
       normalizeChainTokenRow(
         chainTokenRow({
-          chain_code: { value: String(SlugName.from("ETHEREUM")) },
-          token_code: { value: String(SlugName.from("ETH")) }
+          chain_code: "ETHEREUM",
+          token_code: "ETH"
         }) as any
       )
     ).toMatchObject({ chainCode: "ETHEREUM", tokenCode: "ETH" })

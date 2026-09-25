@@ -1,15 +1,15 @@
 import { UInt64 } from "@wireio/sdk-core/chain/Integer"
 import { Serializer } from "@wireio/sdk-core/serializer"
-import { contracts, SlugName } from "@wireio/sdk-core"
+import { contracts } from "@wireio/sdk-core"
 import { SysioReservReservestatus } from "@wireio/sdk-core/types/SysioContractTypes"
 
 const { ReserveClient } = contracts.sysio.reserv
 
 function reserveRow(overrides: Record<string, unknown> = {}) {
   return {
-    chain_code: { value: String(SlugName.from("ETHEREUM")) },
-    token_code: { value: SlugName.from("ETH") },
-    reserve_code: { value: SlugName.from("PRIMARY") },
+    chain_code: "ETHEREUM",
+    token_code: "ETH",
+    reserve_code: "PRIMARY",
     name: "Primary ETH",
     description: "Public ETH liquidity",
     status: "RESERVE_STATUS_PENDING",
@@ -125,9 +125,7 @@ describe("ReserveClient", () => {
     getTableRows.mockImplementation(async (params: any) => ({
       rows: [
         reserveRow({
-          reserve_code: {
-            value: SlugName.from(params.lower_bound ? "PRIMARY" : "OTHER")
-          }
+          reserve_code: params.lower_bound ? "PRIMARY" : "OTHER"
         })
       ],
       more: !params.lower_bound,

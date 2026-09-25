@@ -6,7 +6,7 @@ import { SysioContractName } from "../../../types/SysioContractTypes.js"
 import { assertEncodedAction, getSysioContract } from "../Client.js"
 
 import { DEFAULT_RESERV_CONTRACT } from "./Constants.js"
-import { reserveSlugData } from "./Slug.js"
+import { reserveSlugString } from "./Slug.js"
 import type { MatchReserveOptions, ReserveQuoteOptions } from "./Types.js"
 
 /** Any value with a string form — an amount as a number, string, bigint, or a BN/Decimal-like object. */
@@ -23,9 +23,9 @@ export function matchReserveActionData(
   options: MatchReserveOptions
 ): SysioContracts.SysioReservMatchreserveAction {
   return {
-    chain_code: reserveSlugData(options.chainCode),
-    token_code: reserveSlugData(options.tokenCode),
-    reserve_code: reserveSlugData(options.reserveCode),
+    chain_code: reserveSlugString(options.chainCode),
+    token_code: reserveSlugString(options.tokenCode),
+    reserve_code: reserveSlugString(options.reserveCode),
     matcher: Name.from(options.matcher).toString(),
     wire_amount: amountString(options.wireAmount)
   }
@@ -54,13 +54,13 @@ export function swapQuoteActionData(
   options: ReserveQuoteOptions
 ): SysioContracts.SysioReservSwapquoteAction {
   return {
-    from_chain_code: reserveSlugData(options.from.chainCode),
-    from_token_code: reserveSlugData(options.from.tokenCode),
-    from_reserve_code: reserveSlugData(options.from.reserveCode),
+    from_chain_code: reserveSlugString(options.from.chainCode),
+    from_token_code: reserveSlugString(options.from.tokenCode),
+    from_reserve_code: reserveSlugString(options.from.reserveCode),
     from_amount: amountString(options.fromAmount),
-    to_chain_code: reserveSlugData(options.to.chainCode),
-    to_token_code: reserveSlugData(options.to.tokenCode),
-    to_reserve_code: reserveSlugData(options.to.reserveCode)
+    to_chain_code: reserveSlugString(options.to.chainCode),
+    to_token_code: reserveSlugString(options.to.tokenCode),
+    to_reserve_code: reserveSlugString(options.to.reserveCode)
   }
 }
 
