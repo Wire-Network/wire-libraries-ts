@@ -1,31 +1,13 @@
-import { SlugName } from "../../../SlugName.js"
-import type * as SysioContracts from "../../../types/SysioContractTypes.js"
+import { SlugName, slugValue } from "../../../SlugName.js"
 
 import type { ChainSlugName } from "./Types.js"
 
-/** Converts a friendly chain slug or packed value to its safe numeric form. */
+/**
+ * Converts a chain slug cell to its safe numeric form, in any carrier —
+ * see {@link slugValue} for how each one is read.
+ */
 export function chainSlugValue(value: ChainSlugName): number {
-  const numericString = typeof value === "string" && /^[0-9]+$/.test(value),
-    packed = numericString
-      ? Number(value)
-      : typeof value === "string"
-        ? SlugName.from(value)
-        : Number(value)
-
-  if (!Number.isSafeInteger(packed) || packed <= 0) {
-    throw new Error(
-      "Chain slug must be a non-zero safe integer or valid slug_name string."
-    )
-  }
-
-  return packed
-}
-
-/** Converts a friendly chain slug to generated `slug_name` action data. */
-export function chainSlugData(
-  value: ChainSlugName
-): SysioContracts.SysioChainsSlugNameType {
-  return { value: chainSlugValue(value) }
+  return slugValue(value, "Chain")
 }
 
 /** Returns the display form of a packed chain slug. */

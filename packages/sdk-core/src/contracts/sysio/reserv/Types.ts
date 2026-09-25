@@ -3,9 +3,10 @@ import type { TransactionExtraOptions } from "../../../api/Types.js"
 import type { UInt64Type } from "../../../chain/Integer.js"
 import type { NameType } from "../../../chain/Name.js"
 import type * as SysioContracts from "../../../types/SysioContractTypes.js"
+import type { SlugNameValue } from "../../../SlugName.js"
 
-/** Friendly string or packed numeric `slug_name` accepted by reserve helpers. */
-export type ReserveSlugName = string | number | bigint
+/** Every carrier a reserve `slug_name` may arrive in — see {@link SlugNameValue}. */
+export type ReserveSlugName = SlugNameValue
 
 /** Three-part identity that uniquely addresses one reserve. */
 export interface ReserveIdentity {
