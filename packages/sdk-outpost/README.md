@@ -14,6 +14,43 @@ the exact producer commits, runtime artifacts, and ethers v6/Anchor bindings
 used by the SDK. Package versions are managed and published only through the
 repository release workflow.
 
+## Operator collateral
+
+The source API adds `ethereum.collateral` and `solana.collateral` to verified
+outpost clients. Consumers must wait for a release containing this addition;
+a version bump alone does not publish the API.
+
+| Client | Supported | Explicitly unavailable |
+| --- | --- | --- |
+| Ethereum | `depositNative`, `requestNativeWithdrawal`, `nativeTokenCode` | Generic ERC20 ingress / incomplete generic-token exit |
+| Solana | `createNativeDepositInstruction`, `depositNative` | Public operator withdrawal request, SPL collateral ingress |
+
+Use generated `SystemContracts.SysioOpregOperatortype` roles, bigint token code
+and amount, plus the latest **entire** depot bucket balance (including locked
+and queued funds). Amounts are raw custody units: wei or lamports, never reserve
+normalization. The shared validator enforces the depot's `2^62 - 1` aggregate
+ceiling. Ethereum verifies that the requested code is the configured native
+asset and that the supplied SEC1 public key belongs to the connected signer.
+Solana uses generated IDL instructions and canonical custody accounts; the
+program's native-route check runs during transaction preflight.
+
+`onSubmitted({ transactionId })` runs after broadcast but before confirmation,
+so the caller can persist a non-secret receipt even when confirmation times out.
+The returned identifier proves only a source submission. Independently observe
+depot acceptance/rejection, queue request ID and eventual refund or payout.
+An Ethereum withdrawal event's placeholder ID is not the depot queue ID.
+
+Solana collateral confirmation polls HTTP signature status for up to two minutes;
+it does not require a WebSocket endpoint. RPC failures, blockhash expiry and
+timeouts retain the submitted signature through `onSubmitted`. Inspect that
+signature and depot state before retrying a deposit.
+
+Callers still own Wire registration, AuthEx identity checks, live free-capacity
+checks, one-pending-request policy, network selection and readiness gates. A
+validated source receipt never proves those downstream states. Previously
+credited rewards use Wire `claimpay` / `claimuwfee`, not these custody clients.
+Private keys and mutable endpoint catalogs remain caller-owned.
+
 ## Install
 
 ```sh

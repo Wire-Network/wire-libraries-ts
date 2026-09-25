@@ -9,6 +9,7 @@ import {
   EthereumContractName,
   OutpostChainFamily
 } from "../../deployments/index.js"
+import { EthereumCollateralClient } from "./EthereumCollateralClient.js"
 import { OutpostDeploymentVerifier } from "../../verification/index.js"
 import { ethereumProvider } from "./Connection.js"
 import { EthereumContractMap, EthereumOutpostClientOptions } from "./Types.js"
@@ -43,6 +44,10 @@ export class EthereumOutpostClient {
     readonly provider: Provider,
     private readonly artifactSuite: OutpostArtifactSuite
   ) {
+    this.collateral = new EthereumCollateralClient(
+      this.contract(EthereumContractName.OperatorRegistry),
+      options.connection
+    )
     this.reserves = new EthereumReserveClient(
       this.contract(EthereumContractName.ReserveManager),
       options.connection
@@ -58,6 +63,9 @@ export class EthereumOutpostClient {
       )
     }
   }
+
+  /** Native operator collateral for the selected verified artifact suite. */
+  readonly collateral: EthereumCollateralClient
 
   /** Reserve creation, cancellation, and reads for this verified outpost. */
   readonly reserves: EthereumReserveClient

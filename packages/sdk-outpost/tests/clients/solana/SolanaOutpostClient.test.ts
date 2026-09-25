@@ -173,7 +173,7 @@ describe("SolanaOutpostClient", () => {
     jest.spyOn(provider.connection, "getBlockHeight").mockResolvedValue(10)
 
     await expect(client.swaps.requestNative(reserveSwapRequest)).rejects.toThrow(
-      `Solana reserve swap ${SubmittedSignature} failed`
+      `Solana transaction ${SubmittedSignature} failed`
     )
   })
 
