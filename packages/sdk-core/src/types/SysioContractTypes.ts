@@ -344,11 +344,6 @@ export interface SysioChainsSetoutpostAction {
   outpost: SysioChainsOutpostAddrsType
 }
 
-/** sysio.chains::slug_name (type) */
-export interface SysioChainsSlugNameType {
-  value: number | string
-}
-
 /** sysio.chains - action + table surface for the typed contract client. */
 export interface SysioChainsContract {
   actions: {
@@ -1079,15 +1074,15 @@ export interface SysioLiqCloseAction {
 /** sysio.liq::create (action) */
 export interface SysioLiqCreateAction {
   sym: string
-  chain_code: SysioLiqSlugNameType
-  token_code: SysioLiqSlugNameType
+  chain_code: string
+  token_code: string
 }
 
 /** sysio.liq::currency_stats (type) */
 export interface SysioLiqCurrencyStatsType {
   supply: string
-  chain_code: SysioLiqSlugNameType
-  token_code: SysioLiqSlugNameType
+  chain_code: string
+  token_code: string
   pair_symbol: string
 }
 
@@ -1114,8 +1109,8 @@ export interface SysioLiqImportdoneAction {
 
 /** sysio.liq::importsynd (action) */
 export interface SysioLiqImportsyndAction {
-  chain_code: SysioLiqSlugNameType
-  token_code: SysioLiqSlugNameType
+  chain_code: string
+  token_code: string
   credits: SysioLiqImportCreditType[]
 }
 
@@ -1139,26 +1134,26 @@ export interface SysioLiqLiqCountersType {
 
 /** sysio.liq::liq_cursor (type) */
 export interface SysioLiqLiqCursorType {
-  chain_code: SysioLiqSlugNameType
+  chain_code: string
   last_sequence: number | string
   last_epoch: number | string
 }
 
 /** sysio.liq::mintsynd (action) */
 export interface SysioLiqMintsyndAction {
-  chain_code: SysioLiqSlugNameType
+  chain_code: string
   sequence: number | string
   account: string
-  token_code: SysioLiqSlugNameType
+  token_code: string
   amount: number | string
 }
 
 /** sysio.liq::mintyield (action) */
 export interface SysioLiqMintyieldAction {
-  chain_code: SysioLiqSlugNameType
+  chain_code: string
   sequence: number | string
   epoch: number | string
-  token_code: SysioLiqSlugNameType
+  token_code: string
   amount: number | string
 }
 
@@ -1171,11 +1166,11 @@ export interface SysioLiqOpenAction {
 
 /** sysio.liq::park (action) */
 export interface SysioLiqParkAction {
-  chain_code: SysioLiqSlugNameType
+  chain_code: string
   sequence: number | string
   chain_kind: SysioLiqChainkind | keyof typeof SysioLiqChainkind
   pubkey: string
-  token_code: SysioLiqSlugNameType
+  token_code: string
   amount: number | string
 }
 
@@ -1211,8 +1206,8 @@ export interface SysioLiqRecreditAction {
 
 /** sysio.liq::regliqpool (action) */
 export interface SysioLiqRegliqpoolAction {
-  chain_code: SysioLiqSlugNameType
-  token_code: SysioLiqSlugNameType
+  chain_code: string
+  token_code: string
   pair_symbol: string
   initial_chain_amount: number | string
   initial_wire_amount: number | string
@@ -1226,11 +1221,6 @@ export interface SysioLiqRegliqpoolAction {
 /** sysio.liq::setkicker (action) */
 export interface SysioLiqSetkickerAction {
   bps: number
-}
-
-/** sysio.liq::slug_name (type) */
-export interface SysioLiqSlugNameType {
-  value: number | string
 }
 
 /** sysio.liq::sweep (action) */
@@ -1972,11 +1962,6 @@ export interface SysioOpregSlashAction {
   reason: string
 }
 
-/** sysio.opreg::slug_name (type) */
-export interface SysioOpregSlugNameType {
-  value: number | string
-}
-
 /** sysio.opreg::termcheck (action) */
 export interface SysioOpregTermcheckAction {
   account: string
@@ -2272,11 +2257,6 @@ export interface SysioReservSetrsvfeeAction {
   token_code: string
   reserve_code: string
   owner_fee_bps: number
-}
-
-/** sysio.reserv::slug_name (type) */
-export interface SysioReservSlugNameType {
-  value: number | string
 }
 
 /** sysio.reserv::swapquote (action) */
@@ -3850,11 +3830,6 @@ export interface SysioTokensRegtokenAction {
   address: SysioTokensChainaddressType
 }
 
-/** sysio.tokens::slug_name (type) */
-export interface SysioTokensSlugNameType {
-  value: number | string
-}
-
 /** sysio.tokens::token_key (type) */
 export interface SysioTokensTokenKeyType {
   code: string
@@ -4077,11 +4052,6 @@ export interface SysioUwritSetconfigAction {
   fromwire_revert_fee_bps: number
   uwreq_pending_timeout_epochs: number
   uwreq_retention_epochs: number
-}
-
-/** sysio.uwrit::slug_name (type) */
-export interface SysioUwritSlugNameType {
-  value: number | string
 }
 
 /** sysio.uwrit::sumlocks (action) */
