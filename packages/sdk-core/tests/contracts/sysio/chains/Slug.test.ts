@@ -1,6 +1,6 @@
-import { contracts, SlugName } from "@wireio/sdk-core"
+import { contracts, SlugName, UInt64 } from "@wireio/sdk-core"
 
-const { chainSlugString, chainSlugValue } = contracts.sysio.chains
+const { ChainsSlugName, chainSlugString, chainSlugValue } = contracts.sysio.chains
 
 describe("sysio.chains slug helpers", () => {
   test("round-trips friendly and packed chain codes", () => {
@@ -31,5 +31,13 @@ describe("sysio.chains slug helpers", () => {
     expect(() => chainSlugValue(Number.MAX_SAFE_INTEGER + 1)).toThrow(
       "non-zero safe integer"
     )
+  })
+
+  test("ChainsSlugName renders its canonical spelling and refuses an unsafe value", () => {
+    expect(ChainsSlugName.from("ETHEREUM").toString()).toBe("ETHEREUM")
+    expect(ChainsSlugName.abiDefault().toString()).toBe("")
+    // Past 53 bits the packed value cannot be a canonical slug; converting it
+    // throws instead of silently rounding to a different code.
+    expect(() => ChainsSlugName.from(UInt64.from("18446744073709551615")).toString()).toThrow()
   })
 })

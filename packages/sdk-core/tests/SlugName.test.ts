@@ -168,5 +168,23 @@ describe("SlugName", () => {
         /must be a non-zero safe integer/
       )
     })
+
+    it.each(["", " 12 ", "0x10", "1e3", "12abc", "-5", "1.5"])(
+      "rejects the loosely numeric carrier %j instead of coercing it",
+      loose => {
+        expect(() => slugValue({ value: loose }, "Chain")).toThrow(
+          /must be a non-zero safe integer/
+        )
+      }
+    )
+
+    it("rejects a packed value past 53 bits rather than rounding it", () => {
+      expect(() =>
+        slugValue({ value: "18446744073709551615" }, "Chain")
+      ).toThrow(/must be a non-zero safe integer/)
+      expect(() => slugValue(BigInt(2) ** BigInt(60), "Chain")).toThrow(
+        /must be a non-zero safe integer/
+      )
+    })
   })
 })

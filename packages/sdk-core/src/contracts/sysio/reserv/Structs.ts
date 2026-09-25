@@ -53,7 +53,7 @@ export class ReservSlugName implements ABISerializableObject {
 
   /** The canonical spelling — `""` for the zero sentinel. */
   toString(): string {
-    return SlugName.toString(Number(this.value))
+    return SlugName.toString(this.value.toNumber())
   }
 
   toABI(encoder: ABIEncoder) {

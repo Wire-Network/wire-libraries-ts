@@ -1,4 +1,9 @@
+import { Either } from "@3fv/prelude-ts"
 import { match, P } from "ts-pattern"
+
+import { NestedError } from "@wireio/shared"
+
+import { UInt64 } from "./chain/Integer.js"
 
 /** Every character a slug_name may contain — `slug_name_traits::alphabet`. */
 const SlugAlphabetPattern = /^[A-Z0-9_]+$/
@@ -157,15 +162,35 @@ export function slugValue(value: SlugNameValue, label: string): number {
   const packed = match(value)
     .with(P.string, spelling => SlugName.from(spelling))
     .with({ value: P.union(P.string, P.number) }, wrapped =>
-      Number(wrapped.value)
+      packedValue(wrapped.value, label)
     )
-    .otherwise(alreadyPacked => Number(alreadyPacked))
+    .otherwise(alreadyPacked => packedValue(alreadyPacked, label))
 
-  if (!Number.isSafeInteger(packed) || packed <= 0) {
-    throw new Error(
-      `${label} slug must be a non-zero safe integer or valid slug_name string.`
-    )
+  if (packed <= 0) {
+    throw new Error(slugValueMessage(label))
   }
 
   return packed
+}
+
+/** The failure message every rejected slug carrier shares. */
+function slugValueMessage(label: string): string {
+  return `${label} slug must be a non-zero safe integer or valid slug_name string.`
+}
+
+/**
+ * An already-packed slug value, parsed strictly. `UInt64.from` accepts only a
+ * base-10 integer string or a safe integer, so `""`, `" 12 "`, `"0x10"`,
+ * `"1e3"` and `"12abc"` are rejected rather than coerced the way `Number()` or
+ * `parseInt()` would; `toNumber()` rejects anything past 53 bits.
+ */
+function packedValue(packed: string | number | bigint, label: string): number {
+  return Either.try(() => UInt64.from(packed).toNumber())
+    .ifLeft(cause => {
+      throw new NestedError(slugValueMessage(label), {
+        cause,
+        context: { packed: String(packed) }
+      })
+    })
+    .getOrThrow()
 }
