@@ -45,15 +45,11 @@ function chainKindValue(
   return Number(mapped) as SysioContracts.SysioChainsChainkind
 }
 
-function rowSlugValue(value: SysioContracts.SysioChainsSlugNameType): number {
-  return chainSlugValue(value.value)
-}
-
 /** Normalizes a generated chain registry row into application-friendly values. */
 export function normalizeChainRow(
   row: SysioContracts.SysioChainsChainRowType
 ): ChainRecord {
-  const codeValue = rowSlugValue(row.code)
+  const codeValue = chainSlugValue(row.code)
 
   return {
     code: chainSlugString(codeValue),
@@ -156,7 +152,7 @@ export class ChainsClient {
   async getChain(code: ChainSlugName): Promise<ChainRecord> {
     const codeValue = chainSlugValue(code),
       rows = await this.listChainRows({ limit: Number.MAX_SAFE_INTEGER }),
-      row = rows.find(candidate => rowSlugValue(candidate.code) === codeValue)
+      row = rows.find(candidate => chainSlugValue(candidate.code) === codeValue)
 
     return row ? normalizeChainRow(row) : null
   }

@@ -37,7 +37,7 @@ describe("sysio.chains action helpers", () => {
   test("creates generated register and activation action data", () => {
     expect(createRegisterChainActionData(REGISTRATION)).toEqual({
       kind: SysioChainsChainkind.CHAIN_KIND_EVM,
-      code: { value: SlugName.from("POLYGON") },
+      code: "POLYGON",
       external_chain_id: 137,
       name: "Polygon",
       description: "Polygon EVM outpost",
@@ -46,7 +46,7 @@ describe("sysio.chains action helpers", () => {
       outpost: EMPTY_OUTPOST
     })
     expect(createActivateChainActionData("POLYGON")).toEqual({
-      code: { value: SlugName.from("POLYGON") }
+      code: "POLYGON"
     })
   })
 
@@ -66,12 +66,16 @@ describe("sysio.chains action helpers", () => {
     expect(register.name.toString()).toBe("regchain")
     expect(register.authorization.map(String)).toEqual(["sysio.chains@active"])
     expect(Number(registerData.kind)).toBe(SysioChainsChainkind.CHAIN_KIND_EVM)
+    // Both forms of the one type: the packed wire value, and the canonical
+    // spelling that is its only JSON carrier.
     expect(Number(registerData.code.value)).toBe(SlugName.from("POLYGON"))
+    expect(registerData.code.toJSON()).toBe("POLYGON")
     expect(Number(registerData.external_chain_id)).toBe(137)
     expect(registerData.name).toBe("Polygon")
     expect(registerData.description).toBe("Polygon EVM outpost")
     expect(registerData.outpost.opp_addr).toBe("")
     expect(Number(activateData.code.value)).toBe(SlugName.from("POLYGON"))
+    expect(activateData.code.toJSON()).toBe("POLYGON")
   })
 
   test("carries every EVM contract role through regchain", () => {
@@ -99,7 +103,7 @@ describe("sysio.chains action helpers", () => {
     expect(
       createSetOutpostActionData("SOLANA", { oppAddress: SVM_PROGRAM })
     ).toEqual({
-      code: { value: SlugName.from("SOLANA") },
+      code: "SOLANA",
       outpost: { ...EMPTY_OUTPOST, opp_addr: SVM_PROGRAM }
     })
   })
@@ -120,6 +124,7 @@ describe("sysio.chains action helpers", () => {
     expect(action.account.toString()).toBe("sysio.chains")
     expect(action.name.toString()).toBe("setoutpost")
     expect(Number(data.code.value)).toBe(SlugName.from("POLYGON"))
+    expect(data.code.toJSON()).toBe("POLYGON")
     expect(data.outpost.opp_addr).toBe(EVM_OPP)
     expect(data.outpost.opp_inbound_addr).toBe(EVM_INBOUND)
     expect(data.outpost.operator_registry_addr).toBe(EVM_OPREG)

@@ -5,7 +5,7 @@ const { ChainsClient } = contracts.sysio.chains
 
 const CHAIN_ROWS = [
   {
-    code: { value: String(SlugName.from("ETHEREUM")) },
+    code: "ETHEREUM",
     kind: "CHAIN_KIND_EVM",
     external_chain_id: 31337,
     name: "Ethereum (anvil)",
@@ -16,7 +16,7 @@ const CHAIN_ROWS = [
     activated_at_ms: "1784345978000"
   },
   {
-    code: { value: SlugName.from("SOLANA") },
+    code: "SOLANA",
     kind: SysioChainsChainkind.CHAIN_KIND_SVM,
     external_chain_id: 0,
     name: "Solana",
@@ -27,7 +27,7 @@ const CHAIN_ROWS = [
     activated_at_ms: "0"
   },
   {
-    code: { value: SlugName.from("WIRE") },
+    code: "WIRE",
     kind: "CHAIN_KIND_WIRE",
     external_chain_id: 0,
     name: "Wire",

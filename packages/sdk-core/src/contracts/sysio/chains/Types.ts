@@ -2,9 +2,10 @@ import type { NameType } from "../../../chain/Name.js"
 import type { ContractPermissionLevel } from "../../Contract.js"
 import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 import type { APIClient } from "../../../api/Client.js"
+import type { SlugNameValue } from "../../../SlugName.js"
 
-/** Friendly string or packed numeric `slug_name` accepted by chain helpers. */
-export type ChainSlugName = string | number | bigint
+/** Every carrier a chain `slug_name` may arrive in — see {@link SlugNameValue}. */
+export type ChainSlugName = SlugNameValue
 
 /** Configuration for `ChainsClient`. */
 export interface ChainsClientOptions {

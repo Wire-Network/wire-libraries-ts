@@ -23,11 +23,7 @@ import {
   DEFAULT_RESERV_CONTRACT,
   DEFAULT_RESERVE_QUERY_LIMIT
 } from "./Constants.js"
-import {
-  reserveRowSlugValue,
-  reserveSlugString,
-  reserveSlugValue
-} from "./Slug.js"
+import { reserveSlugString, reserveSlugValue } from "./Slug.js"
 import type {
   ListReservesOptions,
   PushMatchReserveOptions,
@@ -74,9 +70,9 @@ function optionalAccountString(value: NameType): string {
 export function normalizeReserveRow(
   row: SysioContracts.SysioReservReserveRowType
 ): ReserveRecord {
-  const chainCodeValue = reserveRowSlugValue(row.chain_code),
-    tokenCodeValue = reserveRowSlugValue(row.token_code),
-    reserveCodeValue = reserveRowSlugValue(row.reserve_code)
+  const chainCodeValue = reserveSlugValue(row.chain_code),
+    tokenCodeValue = reserveSlugValue(row.token_code),
+    reserveCodeValue = reserveSlugValue(row.reserve_code)
 
   return {
     chainCode: reserveSlugString(chainCodeValue),
@@ -186,11 +182,11 @@ export class ReserveClient {
           const status = enumValue(SysioReservReservestatus, row.status),
             chainMatches =
               options.chainCode == null ||
-              reserveRowSlugValue(row.chain_code) ===
+              reserveSlugValue(row.chain_code) ===
                 reserveSlugValue(options.chainCode),
             tokenMatches =
               options.tokenCode == null ||
-              reserveRowSlugValue(row.token_code) ===
+              reserveSlugValue(row.token_code) ===
                 reserveSlugValue(options.tokenCode),
             statusMatches = options.status == null || status === options.status,
             ownerMatches = !owner || optionalAccountString(row.owner) === owner,
@@ -235,7 +231,7 @@ export class ReserveClient {
         limit: Number.MAX_SAFE_INTEGER
       }),
       row = rows.find(
-        candidate => reserveRowSlugValue(candidate.reserve_code) === reserveCode
+        candidate => reserveSlugValue(candidate.reserve_code) === reserveCode
       )
 
     return row ? normalizeReserveRow(row) : null

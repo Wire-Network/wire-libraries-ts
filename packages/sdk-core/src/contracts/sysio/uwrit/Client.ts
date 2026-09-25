@@ -8,11 +8,7 @@ import {
 } from "../../../types/SysioContractTypes.js"
 import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 import { getSysioContract, type SysioContractClient } from "../Client.js"
-import {
-  reserveRowSlugValue,
-  reserveSlugString,
-  reserveSlugValue
-} from "../reserv/Slug.js"
+import { reserveSlugString, reserveSlugValue } from "../reserv/Slug.js"
 
 import { swapFromWireActionData } from "./Actions.js"
 import {
@@ -30,10 +26,14 @@ import type {
   UnderwritingRequestRecord
 } from "./Types.js"
 
+/**
+ * The three slug fields that identify a reserve leg on a `uwreqs` row. Typed by
+ * indexed access off the generated row so a codegen change propagates here.
+ */
 interface ReserveIdentitySlugs {
-  chain: SysioContracts.SysioUwritSlugNameType
-  token: SysioContracts.SysioUwritSlugNameType
-  reserve: SysioContracts.SysioUwritSlugNameType
+  chain: SysioContracts.SysioUwritUwRequestTType["src_chain_code"]
+  token: SysioContracts.SysioUwritUwRequestTType["src_token_code"]
+  reserve: SysioContracts.SysioUwritUwRequestTType["src_reserve_code"]
 }
 
 function bigintValue(value: number | string): bigint {
@@ -58,9 +58,9 @@ function identity(
   reserve: ReserveIdentitySlugs["reserve"]
 ) {
   return {
-    chainCode: reserveSlugString(reserveRowSlugValue(chain)),
-    tokenCode: reserveSlugString(reserveRowSlugValue(token)),
-    reserveCode: reserveSlugString(reserveRowSlugValue(reserve))
+    chainCode: reserveSlugString(chain),
+    tokenCode: reserveSlugString(token),
+    reserveCode: reserveSlugString(reserve)
   }
 }
 
