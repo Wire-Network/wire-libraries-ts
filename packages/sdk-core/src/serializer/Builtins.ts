@@ -81,12 +81,9 @@ const SlugNameType = {
     value === SLUG_NAME_ZERO
       ? SLUG_NAME_ZERO
       : SlugName.toString(slugValue(value, SlugNameType.abiName)),
-  toABI: (
-    value: SlugNameValue | ABISerializableObject,
-    encoder: ABIEncoder
-  ) => {
+  toABI: (value: SlugNameValue | SelfEncodingValue, encoder: ABIEncoder) => {
     match(value)
-      .when(isSerializable, serializable => serializable.toABI(encoder))
+      .when(isSelfEncoding, selfEncoding => selfEncoding.toABI(encoder))
       .with(SLUG_NAME_ZERO, () => UInt64.from(0).toABI(encoder))
       .otherwise(carrier =>
         UInt64.from(
@@ -96,8 +93,13 @@ const SlugNameType = {
   }
 }
 
-/** True for an already-typed ABI value, e.g. a `ChainsSlugName` passed to the generic encoder. */
-function isSerializable(value: unknown): value is ABISerializableObject {
+/** An already-typed ABI value that encodes itself, e.g. a `ChainsSlugName`. */
+interface SelfEncodingValue {
+  toABI(encoder: ABIEncoder): void
+}
+
+/** True for a value whose `toABI` is present — `ABISerializableObject` declares it optional. */
+function isSelfEncoding(value: unknown): value is SelfEncodingValue {
   return (
     typeof value === "object" &&
     value !== null &&
