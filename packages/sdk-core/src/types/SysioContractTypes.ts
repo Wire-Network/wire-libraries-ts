@@ -1786,6 +1786,7 @@ export interface SysioOpregBalanceEntryType {
   token_code: string
   balance: number | string
   last_updated_ms: number | string
+  shadow_yield: SysioOpregPositionType
 }
 
 /** sysio.opreg::cancelwtdw (action) */
@@ -1805,6 +1806,13 @@ export interface SysioOpregChainMinBondType {
 /** sysio.opreg::claimremit (action) */
 export interface SysioOpregClaimremitAction {
   account: string
+  token_code: string
+}
+
+/** sysio.opreg::claimyield (action) */
+export interface SysioOpregClaimyieldAction {
+  account: string
+  token_code: string
 }
 
 /** sysio.opreg::delivery_key (type) */
@@ -1824,6 +1832,7 @@ export interface SysioOpregDeliveryLogEntryType {
 /** sysio.opreg::deposit (action) */
 export interface SysioOpregDepositAction {
   account: string
+  token_code: string
   amount: number | string
 }
 
@@ -1883,6 +1892,12 @@ export interface SysioOpregOperatorKeyType {
   account: number | string
 }
 
+/** sysio.opreg::position (type) */
+export interface SysioOpregPositionType {
+  index_checkpoint: string
+  owed_wire: number | string
+}
+
 /** sysio.opreg::processbatch (action) */
 export interface SysioOpregProcessbatchAction {
   account: string
@@ -1933,6 +1948,7 @@ export interface SysioOpregReleaselockAction {
 /** sysio.opreg::remit_claim (type) */
 export interface SysioOpregRemitClaimType {
   account: string
+  token_code: string
   balance: number | string
   expires_at_sec: number
 }
@@ -1940,6 +1956,7 @@ export interface SysioOpregRemitClaimType {
 /** sysio.opreg::remitclaim_key (type) */
 export interface SysioOpregRemitclaimKeyType {
   account: number | string
+  token_code: string
 }
 
 /** sysio.opreg::setconfig (action) */
@@ -1960,6 +1977,11 @@ export interface SysioOpregSetconfigAction {
 export interface SysioOpregSlashAction {
   account: string
   reason: string
+}
+
+/** sysio.opreg::sweepyield (action) */
+export interface SysioOpregSweepyieldAction {
+  token_code: string
 }
 
 /** sysio.opreg::termcheck (action) */
@@ -1986,6 +2008,7 @@ export interface SysioOpregVarintUint64Type {
 /** sysio.opreg::withdraw (action) */
 export interface SysioOpregWithdrawAction {
   account: string
+  token_code: string
   amount: number | string
 }
 
@@ -2013,12 +2036,26 @@ export interface SysioOpregWithdrawinleAction {
   amount: number | string
 }
 
+/** sysio.opreg::yield_pool (type) */
+export interface SysioOpregYieldPoolType {
+  received: number | string
+  credited: number | string
+  pulled_index: string
+  pulled_owed: number | string
+}
+
+/** sysio.opreg::yield_pool_key (type) */
+export interface SysioOpregYieldPoolKeyType {
+  token_code: string
+}
+
 /** sysio.opreg - action + table surface for the typed contract client. */
 export interface SysioOpregContract {
   actions: {
     available: SysioOpregAvailableAction
     cancelwtdw: SysioOpregCancelwtdwAction
     claimremit: SysioOpregClaimremitAction
+    claimyield: SysioOpregClaimyieldAction
     deposit: SysioOpregDepositAction
     depositinle: SysioOpregDepositinleAction
     flushwtdw: SysioOpregFlushwtdwAction
@@ -2031,6 +2068,7 @@ export interface SysioOpregContract {
     releaselock: SysioOpregReleaselockAction
     setconfig: SysioOpregSetconfigAction
     slash: SysioOpregSlashAction
+    sweepyield: SysioOpregSweepyieldAction
     termcheck: SysioOpregTermcheckAction
     terminate: SysioOpregTerminateAction
     withdraw: SysioOpregWithdrawAction
@@ -2043,6 +2081,7 @@ export interface SysioOpregContract {
     operators: SysioOpregOperatorEntryType
     remitclaims: SysioOpregRemitClaimType
     wtdwqueue: SysioOpregWithdrawRequestType
+    yieldpool: SysioOpregYieldPoolType
   }
 }
 
@@ -4293,7 +4332,7 @@ export const SysioContractDefinitions: {
   [SysioContractName.liq]: { name: SysioContractName.liq, account: "sysio.liq", actions: ["addkicker", "addyield", "claim", "close", "create", "desyndicate", "importdone", "importsynd", "linkswept", "mintsynd", "mintyield", "open", "park", "queueyield", "recredit", "regliqpool", "setkicker", "sweep", "transfer"], tables: ["accounts", "liqconfig", "liqcounters", "liqcursors", "liqpending", "parked", "stat", "yieldidx"] },
   [SysioContractName.msgch]: { name: SysioContractName.msgch, account: "sysio.msgch", actions: ["bootstrap", "buildenv", "chkcons", "deliver", "evalcons", "queueout", "resolvedisp"], tables: ["attestations", "attseq", "envelopes", "envlog", "messages", "outenvelopes", "outpcons"] },
   [SysioContractName.msig]: { name: SysioContractName.msig, account: "sysio.msig", actions: ["approve", "cancel", "exec", "getproposal", "invalidate", "propose", "unapprove"], tables: ["approvals", "approvals2", "invals", "propchunks", "proposal"] },
-  [SysioContractName.opreg]: { name: SysioContractName.opreg, account: "sysio.opreg", actions: ["available", "cancelwtdw", "claimremit", "deposit", "depositinle", "flushwtdw", "processbatch", "processprod", "processuw", "prune", "recorddel", "regoperator", "releaselock", "setconfig", "slash", "termcheck", "terminate", "withdraw", "withdrawinle"], tables: ["dellog", "opconfig", "opcounters", "operators", "remitclaims", "wtdwqueue"] },
+  [SysioContractName.opreg]: { name: SysioContractName.opreg, account: "sysio.opreg", actions: ["available", "cancelwtdw", "claimremit", "claimyield", "deposit", "depositinle", "flushwtdw", "processbatch", "processprod", "processuw", "prune", "recorddel", "regoperator", "releaselock", "setconfig", "slash", "sweepyield", "termcheck", "terminate", "withdraw", "withdrawinle"], tables: ["dellog", "opconfig", "opcounters", "operators", "remitclaims", "wtdwqueue", "yieldpool"] },
   [SysioContractName.reserv]: { name: SysioContractName.reserv, account: "sysio.reserv", actions: ["applyfromwire", "applyswap", "claimrsvfee", "claimuwfee", "claimwire", "debit", "drainrewards", "matchreserve", "oncnclrsv", "oncrtreserve", "paywire", "refundwire", "regreserve", "rewardbal", "rsvfeebal", "setconfig", "setrsvfee", "swapquote", "sweepclaims", "uwfeebal"], tables: ["reservcfg", "reserves", "rewardbkt", "uwfees", "wireclaims"] },
   [SysioContractName.roa]: { name: SysioContractName.roa, account: "sysio.roa", actions: ["activateroa", "addpolicy", "expandpolicy", "extendpolicy", "forcereg", "giftram", "newnameduser", "newuser", "nodeownreg", "reducepolicy", "setbyteprice", "setsysabi", "setsyscode"], tables: ["nodeownerreg", "nodeowners", "policies", "reslimit", "roastate", "sponsorcount", "sponsors"] },
   [SysioContractName.swap]: { name: SysioContractName.swap, account: "sysio.swap", actions: ["accrueyield", "addliquidity", "cancelyield", "changefee", "close", "closeext", "exchange", "fundyield", "inittoken", "open", "openext", "remliquidity", "setconfig", "setyield", "sync", "tickyield", "transfer", "withdraw"], tables: ["accounts", "evodexacnts", "evoindex", "priceaccum", "reservoirs", "stat", "swapconfig", "yieldfunds", "yieldpayouts"] },
