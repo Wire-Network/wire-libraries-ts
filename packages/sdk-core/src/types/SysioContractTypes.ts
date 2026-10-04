@@ -370,6 +370,11 @@ export interface SysioBondAcceptAction {
   amount: number | string
 }
 
+/** sysio.bond::ack (action) */
+export interface SysioBondAckAction {
+  request_id: number | string
+}
+
 /** sysio.bond::addbounty (action) */
 export interface SysioBondAddbountyAction {
   request_id: number | string
@@ -409,6 +414,11 @@ export interface SysioBondBondRowType {
 /** sysio.bond::claim (action) */
 export interface SysioBondClaimAction {
   request_id: number | string
+  account: string
+}
+
+/** sysio.bond::claimwire (action) */
+export interface SysioBondClaimwireAction {
   account: string
 }
 
@@ -496,6 +506,18 @@ export interface SysioBondRequestRowType {
   resolved_at: string
   resolved_index: string
   forfeit_pending: number | string
+  outcome_acknowledged: boolean
+}
+
+/** sysio.bond::requestkeep (action) */
+export interface SysioBondRequestkeepAction {
+  issuer: string
+  schema: string
+  statement: string
+  token_code: string
+  covered: number | string
+  bounty: number | string
+  window_sec: number
 }
 
 /** sysio.bond::rslvinvalid (action) */
@@ -518,6 +540,17 @@ export interface SysioBondSweepyieldAction {
   token_code: string
 }
 
+/** sysio.bond::wire_claim (type) */
+export interface SysioBondWireClaimType {
+  account: string
+  amount: number | string
+}
+
+/** sysio.bond::wire_key (type) */
+export interface SysioBondWireKeyType {
+  account: string
+}
+
 /** sysio.bond::yield_pool (type) */
 export interface SysioBondYieldPoolType {
   received: number | string
@@ -530,12 +563,15 @@ export interface SysioBondYieldPoolType {
 export interface SysioBondContract {
   actions: {
     accept: SysioBondAcceptAction
+    ack: SysioBondAckAction
     addbounty: SysioBondAddbountyAction
     approve: SysioBondApproveAction
     claim: SysioBondClaimAction
+    claimwire: SysioBondClaimwireAction
     hold: SysioBondHoldAction
     prune: SysioBondPruneAction
     request: SysioBondRequestAction
+    requestkeep: SysioBondRequestkeepAction
     rslvinvalid: SysioBondRslvinvalidAction
     rslvvalid: SysioBondRslvvalidAction
     setconfig: SysioBondSetconfigAction
@@ -547,6 +583,7 @@ export interface SysioBondContract {
     bonds: SysioBondBondRowType
     escrows: SysioBondEscrowRowType
     requests: SysioBondRequestRowType
+    wireclaims: SysioBondWireClaimType
     yieldpool: SysioBondPoolRowType
   }
 }
@@ -1417,6 +1454,13 @@ export interface SysioLiqSetkickerAction {
   bps: number
 }
 
+/** sysio.liq::settle (action) */
+export interface SysioLiqSettleAction {
+  custodian: string
+  beneficiary: string
+  quantity: string
+}
+
 /** sysio.liq::symbol_key (type) */
 export interface SysioLiqSymbolKeyType {
   symbol_code: number | string
@@ -1454,6 +1498,7 @@ export interface SysioLiqContract {
     recredit: SysioLiqRecreditAction
     regliqpool: SysioLiqRegliqpoolAction
     setkicker: SysioLiqSetkickerAction
+    settle: SysioLiqSettleAction
     transfer: SysioLiqTransferAction
   }
   tables: {
@@ -3136,21 +3181,6 @@ export interface SysioSyndCursorKeyType {
   chain_code: number | string
 }
 
-/** sysio.synd::desynd_key (type) */
-export interface SysioSyndDesyndKeyType {
-  request_id: number | string
-}
-
-/** sysio.synd::desynd_row (type) */
-export interface SysioSyndDesyndRowType {
-  request_id: number | string
-  chain_code: string
-  token_code: string
-  amount: number | string
-  desyndicated_sum: number | string
-  total_syndicated: number | string
-}
-
 /** sysio.synd::desyndicate (action) */
 export interface SysioSyndDesyndicateAction {
   holder: string
@@ -3197,6 +3227,11 @@ export interface SysioSyndFeeRowType {
   token_code: string
   balance: number | string
   position: SysioSyndPositionType
+}
+
+/** sysio.synd::finishreturn (action) */
+export interface SysioSyndFinishreturnAction {
+  request_id: number | string
 }
 
 /** sysio.synd::import_credit (type) */
@@ -3248,10 +3283,9 @@ export interface SysioSyndLedgerKeyType {
 export interface SysioSyndLedgerRowType {
   chain_code: string
   token_code: string
-  syndicated_sum: number | string
-  yield_sum: number | string
-  desyndicated_sum: number | string
   queue_epoch: number
+  underwriting_epoch: number
+  retained_from_epoch: number | string
 }
 
 /** sysio.synd::linkswept (action) */
@@ -3264,7 +3298,7 @@ export interface SysioSyndLinksweptAction {
 /** sysio.synd::mismatch_key (type) */
 export interface SysioSyndMismatchKeyType {
   chain_code: number | string
-  sequence: number | string
+  token_code: number | string
 }
 
 /** sysio.synd::mismatch_row (type) */
@@ -3332,6 +3366,41 @@ export interface SysioSyndPositionType {
   owed_wire: number | string
 }
 
+/** sysio.synd::pruneenv (action) */
+export interface SysioSyndPruneenvAction {
+  chain_code: string
+  token_code: string
+  limit: number
+}
+
+/** sysio.synd::reconcile (action) */
+export interface SysioSyndReconcileAction {
+  chain_code: string
+  token_code: string
+  reported: number | string
+}
+
+/** sysio.synd::refundreturn (action) */
+export interface SysioSyndRefundreturnAction {
+  request_id: number | string
+}
+
+/** sysio.synd::return_key (type) */
+export interface SysioSyndReturnKeyType {
+  request_id: number | string
+}
+
+/** sysio.synd::return_row (type) */
+export interface SysioSyndReturnRowType {
+  request_id: number | string
+  holder: string
+  chain_code: string
+  token_code: string
+  chain_kind: SysioSyndChainkind | keyof typeof SysioSyndChainkind
+  pubkey: string
+  amount: number | string
+}
+
 /** sysio.synd::setconfig (action) */
 export interface SysioSyndSetconfigAction {
   chain_code: string
@@ -3356,6 +3425,18 @@ export interface SysioSyndSweepAction {
 /** sysio.synd::sweepyield (action) */
 export interface SysioSyndSweepyieldAction {
   token_code: string
+}
+
+/** sysio.synd::sync (action) */
+export interface SysioSyndSyncAction {
+  limit: number
+}
+
+/** sysio.synd::syncenv (action) */
+export interface SysioSyndSyncenvAction {
+  chain_code: string
+  token_code: string
+  epoch_index: number
 }
 
 /** sysio.synd::synd_config (type) */
@@ -3390,6 +3471,8 @@ export interface SysioSyndSyndCursorType {
 export interface SysioSyndSyndStateType {
   import_complete: boolean
   queue_cursor: number | string
+  underwriting_cursor: number | string
+  sync_cursor: SysioSyndEnvelopeKeyType
 }
 
 /** sysio.synd::token_key (type) */
@@ -3413,24 +3496,30 @@ export interface SysioSyndContract {
     crank: SysioSyndCrankAction
     desyndicate: SysioSyndDesyndicateAction
     dropenv: SysioSyndDropenvAction
+    finishreturn: SysioSyndFinishreturnAction
     importdone: SysioSyndImportdoneAction
     importsynd: SysioSyndImportsyndAction
     linkswept: SysioSyndLinksweptAction
     onsynd: SysioSyndOnsyndAction
     onyield: SysioSyndOnyieldAction
+    pruneenv: SysioSyndPruneenvAction
+    reconcile: SysioSyndReconcileAction
+    refundreturn: SysioSyndRefundreturnAction
     setconfig: SysioSyndSetconfigAction
     sweep: SysioSyndSweepAction
     sweepyield: SysioSyndSweepyieldAction
+    sync: SysioSyndSyncAction
+    syncenv: SysioSyndSyncenvAction
   }
   tables: {
     buckets: SysioSyndBucketRowType
-    desyndlog: SysioSyndDesyndRowType
     envelopes: SysioSyndEnvelopeRowType
     feepot: SysioSyndFeeRowType
     items: SysioSyndItemRowType
     ledger: SysioSyndLedgerRowType
     mismatch: SysioSyndMismatchRowType
     parked: SysioSyndParkedRowType
+    returns: SysioSyndReturnRowType
     syndconfig: SysioSyndSyndConfigType
     syndcounters: SysioSyndSyndCountersType
     syndcursors: SysioSyndSyndCursorType
@@ -4907,20 +4996,20 @@ export const SysioContractDefinitions: {
   [SysioContractName.andon]: { name: SysioContractName.andon, account: "sysio.andon", actions: ["addpuller", "clear", "pull", "setpanic"], tables: ["andonconfig", "cord"] },
   [SysioContractName.authex]: { name: SysioContractName.authex, account: "sysio.authex", actions: ["clearlinks", "createlink", "recordlink"], tables: ["links"] },
   [SysioContractName.bios]: { name: SysioContractName.bios, account: "sysio", actions: ["activate", "deleteauth", "linkauth", "newaccount", "reqactivated", "reqauth", "setabi", "setalimits", "setcode", "setfinalizer", "setparams", "setpriv", "setprodkeys", "setprods", "unlinkauth", "updateauth"], tables: ["abihash"] },
-  [SysioContractName.bond]: { name: SysioContractName.bond, account: "sysio.bond", actions: ["accept", "addbounty", "approve", "claim", "hold", "prune", "request", "rslvinvalid", "rslvvalid", "setconfig", "sweepyield"], tables: ["bondconfig", "bondcounters", "bonds", "escrows", "requests", "yieldpool"] },
+  [SysioContractName.bond]: { name: SysioContractName.bond, account: "sysio.bond", actions: ["accept", "ack", "addbounty", "approve", "claim", "claimwire", "hold", "prune", "request", "requestkeep", "rslvinvalid", "rslvvalid", "setconfig", "sweepyield"], tables: ["bondconfig", "bondcounters", "bonds", "escrows", "requests", "wireclaims", "yieldpool"] },
   [SysioContractName.chains]: { name: SysioContractName.chains, account: "sysio.chains", actions: ["activchain", "regchain", "setoutpost"], tables: ["chains"] },
   [SysioContractName.chalg]: { name: SysioContractName.chalg, account: "sysio.chalg", actions: ["chkdispute", "chkuwchal", "claimbond", "opendispute", "openuwchal", "slashop", "uwchalbond", "votedispute", "voteuwchal"], tables: ["bondcredits", "chalgstate", "disputes", "disputevote", "uwchals", "uwchalvote"] },
   [SysioContractName.councl]: { name: SysioContractName.councl, account: "sysio.councl", actions: ["addcandidate", "finalizeinit", "forceassign", "forceback", "loadtier", "purge", "repcandidate", "reset", "rmcandidate", "settle", "startinit", "stir", "vote"], tables: ["candidates", "config", "council", "roster", "state", "tier2", "tier3", "tier3remap"] },
   [SysioContractName.dclaim]: { name: SysioContractName.dclaim, account: "sysio.dclaim", actions: ["claim", "flushexpired", "importdone", "importseed", "linkswept", "onreward", "setclmwindow", "setconfig"], tables: ["capcfg", "capcounters", "pclaims", "rwdcursors", "unmapped"] },
   [SysioContractName.epoch]: { name: SysioContractName.epoch, account: "sysio.epoch", actions: ["advance", "pause", "schbatchgps", "setconfig", "unpause"], tables: ["blocklog", "epochcfg", "epochstate"] },
-  [SysioContractName.liq]: { name: SysioContractName.liq, account: "sysio.liq", actions: ["addkicker", "addyield", "burn", "claim", "close", "create", "creditowed", "mint", "mintyield", "open", "queueyield", "recredit", "regliqpool", "setkicker", "transfer"], tables: ["accounts", "liqconfig", "liqpending", "stat", "yieldidx"] },
+  [SysioContractName.liq]: { name: SysioContractName.liq, account: "sysio.liq", actions: ["addkicker", "addyield", "burn", "claim", "close", "create", "creditowed", "mint", "mintyield", "open", "queueyield", "recredit", "regliqpool", "setkicker", "settle", "transfer"], tables: ["accounts", "liqconfig", "liqpending", "stat", "yieldidx"] },
   [SysioContractName.msgch]: { name: SysioContractName.msgch, account: "sysio.msgch", actions: ["bootstrap", "buildenv", "chkcons", "deliver", "evalcons", "queueout", "resolvedisp"], tables: ["attestations", "attseq", "envelopes", "envlog", "messages", "outenvelopes", "outpcons"] },
   [SysioContractName.msig]: { name: SysioContractName.msig, account: "sysio.msig", actions: ["approve", "cancel", "exec", "getproposal", "invalidate", "propose", "unapprove"], tables: ["approvals", "approvals2", "invals", "propchunks", "proposal"] },
   [SysioContractName.opreg]: { name: SysioContractName.opreg, account: "sysio.opreg", actions: ["available", "cancelwtdw", "claimremit", "claimyield", "deposit", "depositinle", "flushwtdw", "processbatch", "processprod", "processuw", "prune", "recorddel", "regoperator", "releaselock", "setconfig", "slash", "sweepyield", "termcheck", "terminate", "withdraw", "withdrawinle"], tables: ["dellog", "opconfig", "opcounters", "operators", "remitclaims", "wtdwqueue", "yieldpool"] },
   [SysioContractName.reserv]: { name: SysioContractName.reserv, account: "sysio.reserv", actions: ["applyfromwire", "applyswap", "claimrsvfee", "claimuwfee", "claimwire", "debit", "drainrewards", "matchreserve", "oncnclrsv", "oncrtreserve", "paywire", "refundwire", "regreserve", "rewardbal", "rsvfeebal", "setconfig", "setrsvfee", "swapquote", "sweepclaims", "uwfeebal"], tables: ["reservcfg", "reserves", "rewardbkt", "uwfees", "wireclaims"] },
   [SysioContractName.roa]: { name: SysioContractName.roa, account: "sysio.roa", actions: ["activateroa", "addpolicy", "expandpolicy", "extendpolicy", "forcereg", "giftram", "newnameduser", "newuser", "nodeownreg", "reducepolicy", "setbyteprice", "setsysabi", "setsyscode"], tables: ["nodeownerreg", "nodeowners", "policies", "reslimit", "roastate", "sponsorcount", "sponsors"] },
   [SysioContractName.swap]: { name: SysioContractName.swap, account: "sysio.swap", actions: ["accrueyield", "addliquidity", "cancelyield", "changefee", "close", "closeext", "exchange", "fundyield", "inittoken", "open", "openext", "remliquidity", "setconfig", "setyield", "sync", "tickyield", "transfer", "withdraw"], tables: ["accounts", "evodexacnts", "evoindex", "priceaccum", "reservoirs", "stat", "swapconfig", "yieldfunds", "yieldpayouts"] },
-  [SysioContractName.synd]: { name: SysioContractName.synd, account: "sysio.synd", actions: ["challenge", "closeenv", "crank", "desyndicate", "dropenv", "importdone", "importsynd", "linkswept", "onsynd", "onyield", "setconfig", "sweep", "sweepyield"], tables: ["buckets", "desyndlog", "envelopes", "feepot", "items", "ledger", "mismatch", "parked", "syndconfig", "syndcounters", "syndcursors", "syndstate", "yieldpool"] },
+  [SysioContractName.synd]: { name: SysioContractName.synd, account: "sysio.synd", actions: ["challenge", "closeenv", "crank", "desyndicate", "dropenv", "finishreturn", "importdone", "importsynd", "linkswept", "onsynd", "onyield", "pruneenv", "reconcile", "refundreturn", "setconfig", "sweep", "sweepyield", "sync", "syncenv"], tables: ["buckets", "envelopes", "feepot", "items", "ledger", "mismatch", "parked", "returns", "syndconfig", "syndcounters", "syndcursors", "syndstate", "yieldpool"] },
   [SysioContractName.system]: { name: SysioContractName.system, account: "sysio", actions: ["accrueepoch", "actfinkey", "activate", "addnodeowner", "claimnodedis", "claimpay", "deleteauth", "delfinkey", "delsnapprov", "fundclaim", "getsnaphash", "init", "initt5", "limitauthchg", "linkauth", "newaccount", "onblock", "payepoch", "rcrdbatch", "regfinkey", "regproducer", "regproducer2", "regsnapprov", "rmvproducer", "setabi", "setacctcpu", "setacctnet", "setacctram", "setalimits", "setcode", "setemitcfg", "setinittime", "setparams", "setpriv", "setprodkeys", "setprods", "setram", "setscorecfg", "setsnpcfg", "unlinkauth", "unregprod", "updateauth", "viewemitcfg", "viewepoch", "viewnodedist", "votesnaphash", "wasmcfg", "delpeerkey", "getpeerkeys", "regpeerkey", "addtrxp", "deltrxp"], tables: ["abihash", "batchepochs", "blockinfo", "emissionmngr", "emitcfg", "epochlog", "finalizers", "finkeyidgen", "finkeys", "global", "lastpropfins", "nodecount", "nodedist", "payclaims", "payclaimtot", "prodsched", "prodscorecfg", "producers", "snapconfig", "snapprovs", "snaprecords", "snapvotes", "t5state", "limitauthchg", "peerkeys", "trxpglobal", "trxpriority"] },
   [SysioContractName.token]: { name: SysioContractName.token, account: "sysio.token", actions: ["close", "create", "issue", "open", "retire", "transfer"], tables: ["accounts", "stat"] },
   [SysioContractName.tokens]: { name: SysioContractName.tokens, account: "sysio.tokens", actions: ["activctok", "activtoken", "regctok", "regtoken"], tables: ["chaintokens", "tokens"] },
