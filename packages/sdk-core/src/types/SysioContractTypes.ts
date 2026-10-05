@@ -78,12 +78,11 @@ export enum SysioAuthexChainkind {
   CHAIN_KIND_UNKNOWN = 0,
   CHAIN_KIND_WIRE = 1,
   CHAIN_KIND_EVM = 2,
-  CHAIN_KIND_SVM = 3,
+  CHAIN_KIND_SVM = 3
 }
 
 /** sysio.authex::clearlinks (action) */
-export interface SysioAuthexClearlinksAction {
-}
+export interface SysioAuthexClearlinksAction {}
 
 /** sysio.authex::createlink (action) */
 export interface SysioAuthexCreatelinkAction {
@@ -350,7 +349,7 @@ export interface SysioBiosContract {
 /** sysio.bond::escrow_kind (enum, uint8) */
 export enum SysioBondEscrowKind {
   BOUNTY = 0,
-  HOLD_BOND = 1,
+  HOLD_BOND = 1
 }
 
 /** sysio.bond::request_state (enum, uint8) */
@@ -360,7 +359,7 @@ export enum SysioBondRequestState {
   APPROVED = 2,
   HELD = 3,
   VALID = 4,
-  INVALID = 5,
+  INVALID = 5
 }
 
 /** sysio.bond::accept (action) */
@@ -595,7 +594,7 @@ export enum SysioChainsChainkind {
   CHAIN_KIND_UNKNOWN = 0,
   CHAIN_KIND_WIRE = 1,
   CHAIN_KIND_EVM = 2,
-  CHAIN_KIND_SVM = 3,
+  CHAIN_KIND_SVM = 3
 }
 
 /** sysio.chains::activchain (action) */
@@ -664,41 +663,7 @@ export interface SysioChainsContract {
 export enum SysioChalgDisputestatus {
   DISPUTE_STATUS_UNKNOWN = 0,
   DISPUTE_STATUS_OPEN = 1,
-  DISPUTE_STATUS_RESOLVED = 2,
-}
-
-/** sysio.chalg::underwrite_fault_reason (enum, uint8) */
-export enum SysioChalgUnderwriteFaultReason {
-  SOURCE_DEPOSIT_MISSING = 0,
-  SOURCE_DEPOSIT_MISMATCH = 1,
-  NON_CANONICAL_ENVELOPE = 2,
-}
-
-/** sysio.chalg::uwchal_ballot (enum, uint8) */
-export enum SysioChalgUwchalBallot {
-  UPHOLD = 0,
-  REJECT_REFUND = 1,
-  REJECT_FORFEIT = 2,
-}
-
-/** sysio.chalg::uwchal_verdict (enum, uint8) */
-export enum SysioChalgUwchalVerdict {
-  NONE = 0,
-  UPHELD = 1,
-  REJECTED_REFUND = 2,
-  REJECTED_FORFEIT = 3,
-  LAPSED = 4,
-}
-
-/** sysio.chalg::bond_credit (type) */
-export interface SysioChalgBondCreditType {
-  account: string
-  amount: number | string
-}
-
-/** sysio.chalg::bond_credit_key (type) */
-export interface SysioChalgBondCreditKeyType {
-  account: number | string
+  DISPUTE_STATUS_RESOLVED = 2
 }
 
 /** sysio.chalg::chalg_state (type) */
@@ -709,16 +674,6 @@ export interface SysioChalgChalgStateType {
 /** sysio.chalg::chkdispute (action) */
 export interface SysioChalgChkdisputeAction {
   dispute_id: number | string
-}
-
-/** sysio.chalg::chkuwchal (action) */
-export interface SysioChalgChkuwchalAction {
-  chal_id: number | string
-}
-
-/** sysio.chalg::claimbond (action) */
-export interface SysioChalgClaimbondAction {
-  account: string
 }
 
 /** sysio.chalg::dispute_candidate (type) */
@@ -766,60 +721,10 @@ export interface SysioChalgOpendisputeAction {
   candidates: SysioChalgDisputeCandidateType[]
 }
 
-/** sysio.chalg::openuwchal (action) */
-export interface SysioChalgOpenuwchalAction {
-  challenger: string
-  uwreq_id: number | string
-  underwriter: string
-  reason: number
-  detail: string
-}
-
 /** sysio.chalg::slashop (action) */
 export interface SysioChalgSlashopAction {
   operator_acct: string
   reason: string
-}
-
-/** sysio.chalg::uwchal_entry (type) */
-export interface SysioChalgUwchalEntryType {
-  id: number | string
-  uwreq_id: number | string
-  underwriter: string
-  challenger: string
-  reason: SysioChalgUnderwriteFaultReason | keyof typeof SysioChalgUnderwriteFaultReason
-  detail: string
-  status: SysioChalgDisputestatus | keyof typeof SysioChalgDisputestatus
-  verdict: SysioChalgUwchalVerdict | keyof typeof SysioChalgUwchalVerdict
-  bond_amount: number | string
-  deadline_ms: number | string
-  opened_at: string
-  network_gen: number
-  electorate: string[]
-  quorum: number
-}
-
-/** sysio.chalg::uwchal_key (type) */
-export interface SysioChalgUwchalKeyType {
-  id: number | string
-}
-
-/** sysio.chalg::uwchal_vote (type) */
-export interface SysioChalgUwchalVoteType {
-  owner: string
-  ballot: SysioChalgUwchalBallot | keyof typeof SysioChalgUwchalBallot
-  voted_at: string
-}
-
-/** sysio.chalg::uwchal_vote_key (type) */
-export interface SysioChalgUwchalVoteKeyType {
-  owner: number | string
-}
-
-/** sysio.chalg::uwchalbond (action) */
-export interface SysioChalgUwchalbondAction {
-  uwreq_id: number | string
-  underwriter: string
 }
 
 /** sysio.chalg::votedispute (action) */
@@ -829,33 +734,18 @@ export interface SysioChalgVotedisputeAction {
   chosen_checksum: string
 }
 
-/** sysio.chalg::voteuwchal (action) */
-export interface SysioChalgVoteuwchalAction {
-  owner: string
-  chal_id: number | string
-  ballot: number
-}
-
 /** sysio.chalg - action + table surface for the typed contract client. */
 export interface SysioChalgContract {
   actions: {
     chkdispute: SysioChalgChkdisputeAction
-    chkuwchal: SysioChalgChkuwchalAction
-    claimbond: SysioChalgClaimbondAction
     opendispute: SysioChalgOpendisputeAction
-    openuwchal: SysioChalgOpenuwchalAction
     slashop: SysioChalgSlashopAction
-    uwchalbond: SysioChalgUwchalbondAction
     votedispute: SysioChalgVotedisputeAction
-    voteuwchal: SysioChalgVoteuwchalAction
   }
   tables: {
-    bondcredits: SysioChalgBondCreditType
     chalgstate: SysioChalgChalgStateType
     disputes: SysioChalgDisputeEntryType
     disputevote: SysioChalgDisputeVoteType
-    uwchals: SysioChalgUwchalEntryType
-    uwchalvote: SysioChalgUwchalVoteType
   }
 }
 
@@ -866,7 +756,7 @@ export enum SysioCounclCleanupMode {
   NONE = 0,
   INIT_ABORT = 1,
   ACTIVE_ABORT = 2,
-  COMPLETED = 3,
+  COMPLETED = 3
 }
 
 /** sysio.councl::cleanup_stage (enum, uint8) */
@@ -877,7 +767,7 @@ export enum SysioCounclCleanupStage {
   TIER3 = 3,
   REMAP = 4,
   COUNCIL = 5,
-  COMPLETE = 6,
+  COMPLETE = 6
 }
 
 /** sysio.councl::election_phase (enum, uint8) */
@@ -885,7 +775,7 @@ export enum SysioCounclElectionPhase {
   AWAIT_REP = 0,
   VOTING = 1,
   BACKSTOP = 2,
-  DONE = 3,
+  DONE = 3
 }
 
 /** sysio.councl::election_tier (enum, uint8) */
@@ -893,7 +783,7 @@ export enum SysioCounclElectionTier {
   GOVERNANCE = 0,
   T1 = 1,
   T2 = 2,
-  T3 = 3,
+  T3 = 3
 }
 
 /** sysio.councl::init_phase (enum, uint8) */
@@ -901,7 +791,7 @@ export enum SysioCounclInitPhase {
   REG = 0,
   LOADING = 1,
   READY = 2,
-  CLEANING = 3,
+  CLEANING = 3
 }
 
 /** sysio.councl::addcandidate (action) */
@@ -980,8 +870,7 @@ export interface SysioCounclElectionStateType {
 }
 
 /** sysio.councl::finalizeinit (action) */
-export interface SysioCounclFinalizeinitAction {
-}
+export interface SysioCounclFinalizeinitAction {}
 
 /** sysio.councl::forceassign (action) */
 export interface SysioCounclForceassignAction {
@@ -989,8 +878,7 @@ export interface SysioCounclForceassignAction {
 }
 
 /** sysio.councl::forceback (action) */
-export interface SysioCounclForcebackAction {
-}
+export interface SysioCounclForcebackAction {}
 
 /** sysio.councl::index_key (type) */
 export interface SysioCounclIndexKeyType {
@@ -1024,8 +912,7 @@ export interface SysioCounclRepcandidateAction {
 }
 
 /** sysio.councl::reset (action) */
-export interface SysioCounclResetAction {
-}
+export interface SysioCounclResetAction {}
 
 /** sysio.councl::rmcandidate (action) */
 export interface SysioCounclRmcandidateAction {
@@ -1111,7 +998,7 @@ export enum SysioDclaimChainkind {
   CHAIN_KIND_UNKNOWN = 0,
   CHAIN_KIND_WIRE = 1,
   CHAIN_KIND_EVM = 2,
-  CHAIN_KIND_SVM = 3,
+  CHAIN_KIND_SVM = 3
 }
 
 /** sysio.dclaim::cap_config (type) */
@@ -1143,8 +1030,7 @@ export interface SysioDclaimImportCreditType {
 }
 
 /** sysio.dclaim::importdone (action) */
-export interface SysioDclaimImportdoneAction {
-}
+export interface SysioDclaimImportdoneAction {}
 
 /** sysio.dclaim::importseed (action) */
 export interface SysioDclaimImportseedAction {
@@ -1203,8 +1089,7 @@ export interface SysioDclaimSetclmwindowAction {
 }
 
 /** sysio.dclaim::setconfig (action) */
-export interface SysioDclaimSetconfigAction {
-}
+export interface SysioDclaimSetconfigAction {}
 
 /** sysio.dclaim::unmapped_key (type) */
 export interface SysioDclaimUnmappedKeyType {
@@ -1249,17 +1134,18 @@ export enum SysioEpochEmissionsblockreason {
   EMISSIONS_BLOCK_REASON_CONFIG_MISSING = 1,
   EMISSIONS_BLOCK_REASON_STATE_UNINITIALIZED = 2,
   EMISSIONS_BLOCK_REASON_TREASURY_EXHAUSTED = 3,
-  EMISSIONS_BLOCK_REASON_BALANCE_INSUFFICIENT = 4,
+  EMISSIONS_BLOCK_REASON_BALANCE_INSUFFICIENT = 4
 }
 
 /** sysio.epoch::advance (action) */
-export interface SysioEpochAdvanceAction {
-}
+export interface SysioEpochAdvanceAction {}
 
 /** sysio.epoch::blocklog_entry (type) */
 export interface SysioEpochBlocklogEntryType {
   epoch_index: number
-  reason: SysioEpochEmissionsblockreason | keyof typeof SysioEpochEmissionsblockreason
+  reason:
+    | SysioEpochEmissionsblockreason
+    | keyof typeof SysioEpochEmissionsblockreason
   attempted_emission: number | string
   treasury_remaining: number | string
   sysio_balance: number | string
@@ -1294,12 +1180,10 @@ export interface SysioEpochEpochStateType {
 }
 
 /** sysio.epoch::pause (action) */
-export interface SysioEpochPauseAction {
-}
+export interface SysioEpochPauseAction {}
 
 /** sysio.epoch::schbatchgps (action) */
-export interface SysioEpochSchbatchgpsAction {
-}
+export interface SysioEpochSchbatchgpsAction {}
 
 /** sysio.epoch::setconfig (action) */
 export interface SysioEpochSetconfigAction {
@@ -1311,8 +1195,7 @@ export interface SysioEpochSetconfigAction {
 }
 
 /** sysio.epoch::unpause (action) */
-export interface SysioEpochUnpauseAction {
-}
+export interface SysioEpochUnpauseAction {}
 
 /** sysio.epoch - action + table surface for the typed contract client. */
 export interface SysioEpochContract {
@@ -1516,7 +1399,7 @@ export interface SysioLiqContract {
 export enum SysioMsgchAttestationstatus {
   ATTESTATION_STATUS_PENDING = 0,
   ATTESTATION_STATUS_READY = 1,
-  ATTESTATION_STATUS_PROCESSED = 2,
+  ATTESTATION_STATUS_PROCESSED = 2
 }
 
 /** sysio.msgch::AttestationType (enum, int32) */
@@ -1550,7 +1433,7 @@ export enum SysioMsgchAttestationtype {
   ATTESTATION_TYPE_EMISSIONS_BLOCKED = 60962,
   ATTESTATION_TYPE_SYNDICATE_LIQ = 60963,
   ATTESTATION_TYPE_LIQ_YIELD = 60964,
-  ATTESTATION_TYPE_DESYNDICATE_LIQ = 60965,
+  ATTESTATION_TYPE_DESYNDICATE_LIQ = 60965
 }
 
 /** sysio.msgch::ChainKind (enum, int32) */
@@ -1558,20 +1441,20 @@ export enum SysioMsgchChainkind {
   CHAIN_KIND_UNKNOWN = 0,
   CHAIN_KIND_WIRE = 1,
   CHAIN_KIND_EVM = 2,
-  CHAIN_KIND_SVM = 3,
+  CHAIN_KIND_SVM = 3
 }
 
 /** sysio.msgch::EnvelopeStatus (enum, int32) */
 export enum SysioMsgchEnvelopestatus {
   ENVELOPE_STATUS_PENDING_DELIVERY = 0,
   ENVELOPE_STATUS_DELIVERED = 1,
-  ENVELOPE_STATUS_CONFIRMED = 2,
+  ENVELOPE_STATUS_CONFIRMED = 2
 }
 
 /** sysio.msgch::MessageDirection (enum, int32) */
 export enum SysioMsgchMessagedirection {
   MESSAGE_DIRECTION_INBOUND = 0,
-  MESSAGE_DIRECTION_OUTBOUND = 1,
+  MESSAGE_DIRECTION_OUTBOUND = 1
 }
 
 /** sysio.msgch::MessageStatus (enum, int32) */
@@ -1579,7 +1462,7 @@ export enum SysioMsgchMessagestatus {
   MESSAGE_STATUS_PENDING = 0,
   MESSAGE_STATUS_READY = 1,
   MESSAGE_STATUS_PROCESSED = 2,
-  MESSAGE_STATUS_CANCELLED = 3,
+  MESSAGE_STATUS_CANCELLED = 3
 }
 
 /** sysio.msgch::ChainId (type) */
@@ -1619,8 +1502,7 @@ export interface SysioMsgchAttestationEntryType {
 }
 
 /** sysio.msgch::bootstrap (action) */
-export interface SysioMsgchBootstrapAction {
-}
+export interface SysioMsgchBootstrapAction {}
 
 /** sysio.msgch::buildenv (action) */
 export interface SysioMsgchBuildenvAction {
@@ -1628,8 +1510,7 @@ export interface SysioMsgchBuildenvAction {
 }
 
 /** sysio.msgch::chkcons (action) */
-export interface SysioMsgchChkconsAction {
-}
+export interface SysioMsgchChkconsAction {}
 
 /** sysio.msgch::deliver (action) */
 export interface SysioMsgchDeliverAction {
@@ -1677,7 +1558,9 @@ export interface SysioMsgchMessageEntryType {
   epoch_index: number
   message_id: string
   previous_message_id: string
-  direction: SysioMsgchMessagedirection | keyof typeof SysioMsgchMessagedirection
+  direction:
+    | SysioMsgchMessagedirection
+    | keyof typeof SysioMsgchMessagedirection
   status: SysioMsgchMessagestatus | keyof typeof SysioMsgchMessagestatus
   raw_payload: string
   received_at: string
@@ -1713,7 +1596,9 @@ export interface SysioMsgchOutpostConsensusKeyType {
 /** sysio.msgch::queueout (action) */
 export interface SysioMsgchQueueoutAction {
   chain_code: number | string
-  attest_type: SysioMsgchAttestationtype | keyof typeof SysioMsgchAttestationtype
+  attest_type:
+    | SysioMsgchAttestationtype
+    | keyof typeof SysioMsgchAttestationtype
   data: string
 }
 
@@ -1936,7 +1821,7 @@ export enum SysioOpregActiontype {
   ACTION_TYPE_DEPOSIT_REQUEST = 1,
   ACTION_TYPE_WITHDRAW_REQUEST = 2,
   ACTION_TYPE_WITHDRAW_REMIT = 3,
-  ACTION_TYPE_SLASH = 4,
+  ACTION_TYPE_SLASH = 4
 }
 
 /** sysio.opreg::ChainKind (enum, int32) */
@@ -1944,7 +1829,7 @@ export enum SysioOpregChainkind {
   CHAIN_KIND_UNKNOWN = 0,
   CHAIN_KIND_WIRE = 1,
   CHAIN_KIND_EVM = 2,
-  CHAIN_KIND_SVM = 3,
+  CHAIN_KIND_SVM = 3
 }
 
 /** sysio.opreg::OperatorStatus (enum, int32) */
@@ -1954,7 +1839,7 @@ export enum SysioOpregOperatorstatus {
   OPERATOR_STATUS_COOLDOWN = 2,
   OPERATOR_STATUS_ACTIVE = 3,
   OPERATOR_STATUS_TERMINATED = 240,
-  OPERATOR_STATUS_SLASHED = 241,
+  OPERATOR_STATUS_SLASHED = 241
 }
 
 /** sysio.opreg::OperatorType (enum, int32) */
@@ -1963,7 +1848,7 @@ export enum SysioOpregOperatortype {
   OPERATOR_TYPE_PRODUCER = 1,
   OPERATOR_TYPE_BATCH = 2,
   OPERATOR_TYPE_UNDERWRITER = 3,
-  OPERATOR_TYPE_CHALLENGER = 4,
+  OPERATOR_TYPE_CHALLENGER = 4
 }
 
 /** sysio.opreg::ChainAddress (type) */
@@ -2062,17 +1947,6 @@ export interface SysioOpregDepositAction {
   amount: number | string
 }
 
-/** sysio.opreg::depositinle (action) */
-export interface SysioOpregDepositinleAction {
-  account: string
-  chain_code: string
-  token_code: string
-  amount: number | string
-  actor_chain: SysioOpregChainkind | keyof typeof SysioOpregChainkind
-  actor_address: string
-  original_message_id: string
-}
-
 /** sysio.opreg::flushwtdw (action) */
 export interface SysioOpregFlushwtdwAction {
   current_epoch: number
@@ -2146,8 +2020,7 @@ export interface SysioOpregProcessuwAction {
 }
 
 /** sysio.opreg::prune (action) */
-export interface SysioOpregPruneAction {
-}
+export interface SysioOpregPruneAction {}
 
 /** sysio.opreg::recorddel (action) */
 export interface SysioOpregRecorddelAction {
@@ -2161,14 +2034,6 @@ export interface SysioOpregRegoperatorAction {
   account: string
   type: SysioOpregOperatortype | keyof typeof SysioOpregOperatortype
   is_bootstrapped: boolean
-}
-
-/** sysio.opreg::releaselock (action) */
-export interface SysioOpregReleaselockAction {
-  account: string
-  chain_code: string
-  token_code: string
-  amount: number | string
 }
 
 /** sysio.opreg::remit_claim (type) */
@@ -2254,14 +2119,6 @@ export interface SysioOpregWithdrawRequestType {
   requested_at_epoch: number
 }
 
-/** sysio.opreg::withdrawinle (action) */
-export interface SysioOpregWithdrawinleAction {
-  account: string
-  chain_code: string
-  token_code: string
-  amount: number | string
-}
-
 /** sysio.opreg::yield_pool (type) */
 export interface SysioOpregYieldPoolType {
   received: number | string
@@ -2283,7 +2140,6 @@ export interface SysioOpregContract {
     claimremit: SysioOpregClaimremitAction
     claimyield: SysioOpregClaimyieldAction
     deposit: SysioOpregDepositAction
-    depositinle: SysioOpregDepositinleAction
     flushwtdw: SysioOpregFlushwtdwAction
     processbatch: SysioOpregProcessbatchAction
     processprod: SysioOpregProcessprodAction
@@ -2291,14 +2147,12 @@ export interface SysioOpregContract {
     prune: SysioOpregPruneAction
     recorddel: SysioOpregRecorddelAction
     regoperator: SysioOpregRegoperatorAction
-    releaselock: SysioOpregReleaselockAction
     setconfig: SysioOpregSetconfigAction
     slash: SysioOpregSlashAction
     sweepyield: SysioOpregSweepyieldAction
     termcheck: SysioOpregTermcheckAction
     terminate: SysioOpregTerminateAction
     withdraw: SysioOpregWithdrawAction
-    withdrawinle: SysioOpregWithdrawinleAction
   }
   tables: {
     dellog: SysioOpregDeliveryLogEntryType
@@ -2308,298 +2162,6 @@ export interface SysioOpregContract {
     remitclaims: SysioOpregRemitClaimType
     wtdwqueue: SysioOpregWithdrawRequestType
     yieldpool: SysioOpregYieldPoolType
-  }
-}
-
-// ── sysio.reserv ──
-
-/** sysio.reserv::ChainKind (enum, int32) */
-export enum SysioReservChainkind {
-  CHAIN_KIND_UNKNOWN = 0,
-  CHAIN_KIND_WIRE = 1,
-  CHAIN_KIND_EVM = 2,
-  CHAIN_KIND_SVM = 3,
-}
-
-/** sysio.reserv::ReserveStatus (enum, int32) */
-export enum SysioReservReservestatus {
-  RESERVE_STATUS_UNKNOWN = 0,
-  RESERVE_STATUS_PENDING = 1,
-  RESERVE_STATUS_ACTIVE = 2,
-  RESERVE_STATUS_CANCELLED = 3,
-}
-
-/** sysio.reserv::ChainAddress (type) */
-export interface SysioReservChainaddressType {
-  kind: SysioReservChainkind | keyof typeof SysioReservChainkind
-  address: string
-}
-
-/** sysio.reserv::applyfromwire (action) */
-export interface SysioReservApplyfromwireAction {
-  dst_chain_code: string
-  dst_token_code: string
-  dst_reserve_code: string
-  wire_in: number | string
-  dst_amount: number | string
-  underwriter: string
-}
-
-/** sysio.reserv::applyswap (action) */
-export interface SysioReservApplyswapAction {
-  src_chain_code: string
-  src_token_code: string
-  src_reserve_code: string
-  src_amount: number | string
-  dst_chain_code: string
-  dst_token_code: string
-  dst_reserve_code: string
-  dst_amount: number | string
-  underwriter: string
-}
-
-/** sysio.reserv::claimrsvfee (action) */
-export interface SysioReservClaimrsvfeeAction {
-  chain_code: string
-  token_code: string
-  reserve_code: string
-}
-
-/** sysio.reserv::claimuwfee (action) */
-export interface SysioReservClaimuwfeeAction {
-  underwriter: string
-}
-
-/** sysio.reserv::claimwire (action) */
-export interface SysioReservClaimwireAction {
-  account: string
-}
-
-/** sysio.reserv::debit (action) */
-export interface SysioReservDebitAction {
-  chain_code: string
-  token_code: string
-  reserve_code: string
-  amount: number | string
-}
-
-/** sysio.reserv::drainrewards (action) */
-export interface SysioReservDrainrewardsAction {
-  amount: number | string
-}
-
-/** sysio.reserv::matchreserve (action) */
-export interface SysioReservMatchreserveAction {
-  chain_code: string
-  token_code: string
-  reserve_code: string
-  matcher: string
-  wire_amount: number | string
-}
-
-/** sysio.reserv::oncnclrsv (action) */
-export interface SysioReservOncnclrsvAction {
-  chain_code: string
-  token_code: string
-  reserve_code: string
-  creator_chain_kind: SysioReservChainkind | keyof typeof SysioReservChainkind
-  creator_chain_addr: string
-}
-
-/** sysio.reserv::oncrtreserve (action) */
-export interface SysioReservOncrtreserveAction {
-  chain_code: string
-  token_code: string
-  reserve_code: string
-  name: string
-  description: string
-  external_token_amount: number | string
-  requested_wire_amount: number | string
-  source_token_precision: number
-  connector_weight_bps: number
-  creator_chain_kind: SysioReservChainkind | keyof typeof SysioReservChainkind
-  creator_chain_addr: string
-  is_private: boolean
-  creator_pub_key: string
-}
-
-/** sysio.reserv::paywire (action) */
-export interface SysioReservPaywireAction {
-  src_chain_code: string
-  src_token_code: string
-  src_reserve_code: string
-  src_amount: number | string
-  recipient: string
-  wire_out: number | string
-  underwriter: string
-}
-
-/** sysio.reserv::refundwire (action) */
-export interface SysioReservRefundwireAction {
-  recipient: string
-  wire_amount: number | string
-  revert_fee_bps: number
-}
-
-/** sysio.reserv::regreserve (action) */
-export interface SysioReservRegreserveAction {
-  chain_code: string
-  token_code: string
-  reserve_code: string
-  name: string
-  description: string
-  initial_chain_amount: number | string
-  initial_wire_amount: number | string
-  source_token_precision: number
-  connector_weight_bps: number
-  is_private: boolean
-  owner: string
-}
-
-/** sysio.reserv::reserve_config (type) */
-export interface SysioReservReserveConfigType {
-  fee_emissions_share_bps: number
-}
-
-/** sysio.reserv::reserve_key (type) */
-export interface SysioReservReserveKeyType {
-  chain_code: string
-  token_code: string
-  reserve_code: string
-}
-
-/** sysio.reserv::reserve_row (type) */
-export interface SysioReservReserveRowType {
-  chain_code: string
-  token_code: string
-  reserve_code: string
-  name: string
-  description: string
-  status: SysioReservReservestatus | keyof typeof SysioReservReservestatus
-  reserve_chain_amount: number | string
-  reserve_wire_amount: number | string
-  source_token_precision: number
-  connector_weight_bps: number
-  creator_addr: SysioReservChainaddressType
-  requested_wire_amount: number | string
-  external_token_amount: number | string
-  registered_at_ms: number | string
-  activated_at_ms: number | string
-  cancelled_at_ms: number | string
-  is_private: boolean
-  owner: string
-  creator_pub_key: string
-  owner_fee_bps: number
-  owner_fee_accrued: number | string
-  owner_fee_lifetime: number | string
-}
-
-/** sysio.reserv::rewardbal (action) */
-export interface SysioReservRewardbalAction {
-}
-
-/** sysio.reserv::rewards_bucket (type) */
-export interface SysioReservRewardsBucketType {
-  balance: number | string
-  lifetime_accrued: number | string
-}
-
-/** sysio.reserv::rsvfeebal (action) */
-export interface SysioReservRsvfeebalAction {
-  chain_code: string
-  token_code: string
-  reserve_code: string
-}
-
-/** sysio.reserv::setconfig (action) */
-export interface SysioReservSetconfigAction {
-  fee_emissions_share_bps: number
-}
-
-/** sysio.reserv::setrsvfee (action) */
-export interface SysioReservSetrsvfeeAction {
-  chain_code: string
-  token_code: string
-  reserve_code: string
-  owner_fee_bps: number
-}
-
-/** sysio.reserv::swapquote (action) */
-export interface SysioReservSwapquoteAction {
-  from_chain_code: string
-  from_token_code: string
-  from_reserve_code: string
-  from_amount: number | string
-  to_chain_code: string
-  to_token_code: string
-  to_reserve_code: string
-}
-
-/** sysio.reserv::sweepclaims (action) */
-export interface SysioReservSweepclaimsAction {
-  max_rows: number
-}
-
-/** sysio.reserv::uw_fee_key (type) */
-export interface SysioReservUwFeeKeyType {
-  underwriter: string
-}
-
-/** sysio.reserv::uw_fee_row (type) */
-export interface SysioReservUwFeeRowType {
-  underwriter: string
-  balance: number | string
-  lifetime_accrued: number | string
-  lifetime_claimed: number | string
-}
-
-/** sysio.reserv::uwfeebal (action) */
-export interface SysioReservUwfeebalAction {
-  underwriter: string
-}
-
-/** sysio.reserv::wire_claim (type) */
-export interface SysioReservWireClaimType {
-  account: string
-  balance: number | string
-  expires_at_sec: number
-}
-
-/** sysio.reserv::wireclaim_key (type) */
-export interface SysioReservWireclaimKeyType {
-  account: number | string
-}
-
-/** sysio.reserv - action + table surface for the typed contract client. */
-export interface SysioReservContract {
-  actions: {
-    applyfromwire: SysioReservApplyfromwireAction
-    applyswap: SysioReservApplyswapAction
-    claimrsvfee: SysioReservClaimrsvfeeAction
-    claimuwfee: SysioReservClaimuwfeeAction
-    claimwire: SysioReservClaimwireAction
-    debit: SysioReservDebitAction
-    drainrewards: SysioReservDrainrewardsAction
-    matchreserve: SysioReservMatchreserveAction
-    oncnclrsv: SysioReservOncnclrsvAction
-    oncrtreserve: SysioReservOncrtreserveAction
-    paywire: SysioReservPaywireAction
-    refundwire: SysioReservRefundwireAction
-    regreserve: SysioReservRegreserveAction
-    rewardbal: SysioReservRewardbalAction
-    rsvfeebal: SysioReservRsvfeebalAction
-    setconfig: SysioReservSetconfigAction
-    setrsvfee: SysioReservSetrsvfeeAction
-    swapquote: SysioReservSwapquoteAction
-    sweepclaims: SysioReservSweepclaimsAction
-    uwfeebal: SysioReservUwfeebalAction
-  }
-  tables: {
-    reservcfg: SysioReservReserveConfigType
-    reserves: SysioReservReserveRowType
-    rewardbkt: SysioReservRewardsBucketType
-    uwfees: SysioReservUwFeeRowType
-    wireclaims: SysioReservWireClaimType
   }
 }
 
@@ -3099,13 +2661,13 @@ export enum SysioSyndChainkind {
   CHAIN_KIND_UNKNOWN = 0,
   CHAIN_KIND_WIRE = 1,
   CHAIN_KIND_EVM = 2,
-  CHAIN_KIND_SVM = 3,
+  CHAIN_KIND_SVM = 3
 }
 
 /** sysio.synd::bucket_direction (enum, uint8) */
 export enum SysioSyndBucketDirection {
   SYNDICATION = 0,
-  DESYNDICATION = 1,
+  DESYNDICATION = 1
 }
 
 /** sysio.synd::envelope_state (enum, uint8) */
@@ -3116,13 +2678,13 @@ export enum SysioSyndEnvelopeState {
   RELEASABLE = 3,
   HELD = 4,
   INVALID = 5,
-  DONE = 6,
+  DONE = 6
 }
 
 /** sysio.synd::item_kind (enum, uint8) */
 export enum SysioSyndItemKind {
   SYNDICATION = 0,
-  YIELD = 1,
+  YIELD = 1
 }
 
 /** sysio.synd::request_outcome (enum, uint8) */
@@ -3130,7 +2692,7 @@ export enum SysioSyndRequestOutcome {
   PENDING = 0,
   APPROVED = 1,
   VALID = 2,
-  INVALID = 3,
+  INVALID = 3
 }
 
 /** sysio.synd::bucket_key (type) */
@@ -3241,8 +2803,7 @@ export interface SysioSyndImportCreditType {
 }
 
 /** sysio.synd::importdone (action) */
-export interface SysioSyndImportdoneAction {
-}
+export interface SysioSyndImportdoneAction {}
 
 /** sysio.synd::importsynd (action) */
 export interface SysioSyndImportsyndAction {
@@ -3534,7 +3095,7 @@ export interface SysioSyndContract {
 export enum SysioSystemTrxMatchType {
   only = 0,
   first = 1,
-  any = 2,
+  any = 2
 }
 
 /** sysio.system::abi_hash (type) */
@@ -4184,12 +3745,10 @@ export interface SysioSystemUpdateauthAction {
 }
 
 /** sysio.system::viewemitcfg (action) */
-export interface SysioSystemViewemitcfgAction {
-}
+export interface SysioSystemViewemitcfgAction {}
 
 /** sysio.system::viewepoch (action) */
-export interface SysioSystemViewepochAction {
-}
+export interface SysioSystemViewepochAction {}
 
 /** sysio.system::viewnodedist (action) */
 export interface SysioSystemViewnodedistAction {
@@ -4228,8 +3787,7 @@ export interface SysioSystemDelpeerkeyAction {
 }
 
 /** sysio.system::getpeerkeys (action) */
-export interface SysioSystemGetpeerkeysAction {
-}
+export interface SysioSystemGetpeerkeysAction {}
 
 /** sysio.system::peer_key (type) */
 export interface SysioSystemPeerKeyType {
@@ -4464,7 +4022,7 @@ export enum SysioTokensChainkind {
   CHAIN_KIND_UNKNOWN = 0,
   CHAIN_KIND_WIRE = 1,
   CHAIN_KIND_EVM = 2,
-  CHAIN_KIND_SVM = 3,
+  CHAIN_KIND_SVM = 3
 }
 
 /** sysio.tokens::TokenKind (enum, int32) */
@@ -4476,7 +4034,7 @@ export enum SysioTokensTokenkind {
   TOKEN_KIND_ERC1155 = 4,
   TOKEN_KIND_SPL = 5,
   TOKEN_KIND_SPL_NFT = 6,
-  TOKEN_KIND_LIQ = 7,
+  TOKEN_KIND_LIQ = 7
 }
 
 /** sysio.tokens::ChainAddress (type) */
@@ -4563,292 +4121,6 @@ export interface SysioTokensContract {
   }
 }
 
-// ── sysio.uwrit ──
-
-/** sysio.uwrit::AttestationType (enum, int32) */
-export enum SysioUwritAttestationtype {
-  ATTESTATION_TYPE_UNSPECIFIED = 0,
-  ATTESTATION_TYPE_OPERATOR_ACTION = 2001,
-  ATTESTATION_TYPE_STAKE = 3001,
-  ATTESTATION_TYPE_UNSTAKE = 3002,
-  ATTESTATION_TYPE_PRETOKEN_PURCHASE = 3004,
-  ATTESTATION_TYPE_PRETOKEN_YIELD = 3006,
-  ATTESTATION_TYPE_RESERVE_BALANCE_SHEET = 43520,
-  ATTESTATION_TYPE_STAKE_UPDATE = 60928,
-  ATTESTATION_TYPE_WIRE_TOKEN_PURCHASE = 60930,
-  ATTESTATION_TYPE_CHALLENGE_RESPONSE = 60932,
-  ATTESTATION_TYPE_SWAP_REQUEST = 60934,
-  ATTESTATION_TYPE_SWAP_REMIT = 60944,
-  ATTESTATION_TYPE_CHALLENGE_REQUEST = 60945,
-  ATTESTATION_TYPE_OPERATORS = 60947,
-  ATTESTATION_TYPE_BATCH_OPERATOR_GROUPS = 60943,
-  ATTESTATION_TYPE_NODE_OWNER_REG = 60949,
-  ATTESTATION_TYPE_STAKING_REWARD = 60950,
-  ATTESTATION_TYPE_STAKE_RESULT = 60951,
-  ATTESTATION_TYPE_ATTESTATION_PROCESSING_ERROR = 60952,
-  ATTESTATION_TYPE_UNDERWRITE_INTENT_COMMIT = 60953,
-  ATTESTATION_TYPE_SWAP_REVERT = 60955,
-  ATTESTATION_TYPE_DEPOSIT_REVERT = 60956,
-  ATTESTATION_TYPE_RESERVE_CREATE = 60958,
-  ATTESTATION_TYPE_RESERVE_CREATE_CANCEL = 60959,
-  ATTESTATION_TYPE_RESERVE_CREATE_CANCELLED = 60960,
-  ATTESTATION_TYPE_RESERVE_READY = 60961,
-  ATTESTATION_TYPE_EMISSIONS_BLOCKED = 60962,
-  ATTESTATION_TYPE_SYNDICATE_LIQ = 60963,
-  ATTESTATION_TYPE_LIQ_YIELD = 60964,
-  ATTESTATION_TYPE_DESYNDICATE_LIQ = 60965,
-}
-
-/** sysio.uwrit::ChainKind (enum, int32) */
-export enum SysioUwritChainkind {
-  CHAIN_KIND_UNKNOWN = 0,
-  CHAIN_KIND_WIRE = 1,
-  CHAIN_KIND_EVM = 2,
-  CHAIN_KIND_SVM = 3,
-}
-
-/** sysio.uwrit::UnderwriteRequestStatus (enum, int32) */
-export enum SysioUwritUnderwriterequeststatus {
-  UNDERWRITE_REQUEST_STATUS_PENDING = 0,
-  UNDERWRITE_REQUEST_STATUS_CONFIRMED = 1,
-  UNDERWRITE_REQUEST_STATUS_REJECTED = 2,
-  UNDERWRITE_REQUEST_STATUS_COMPLETED = 3,
-  UNDERWRITE_REQUEST_STATUS_EXPIRED = 4,
-}
-
-/** sysio.uwrit::UnderwriteStatus (enum, int32) */
-export enum SysioUwritUnderwritestatus {
-  UNDERWRITE_STATUS_INTENT_CREATED = 0,
-  UNDERWRITE_STATUS_INTENT_SUBMITTED = 1,
-  UNDERWRITE_STATUS_INTENT_CONFIRMED = 2,
-  UNDERWRITE_STATUS_READY = 3,
-  UNDERWRITE_STATUS_RELEASED = 5,
-  UNDERWRITE_STATUS_SLASHED = 10,
-  UNDERWRITE_STATUS_DISQUALIFIED = 11,
-}
-
-/** sysio.uwrit::chklocks (action) */
-export interface SysioUwritChklocksAction {
-  max_rows: number
-}
-
-/** sysio.uwrit::commit_entry (type) */
-export interface SysioUwritCommitEntryType {
-  underwriter: string
-  source_received_at_ms: number | string
-  source_outpost_id: number | string
-  source_uic_bytes: string
-  dest_received_at_ms: number | string
-  dest_outpost_id: number | string
-  dest_uic_bytes: string
-  status: SysioUwritUnderwritestatus | keyof typeof SysioUwritUnderwritestatus
-  reason: string
-}
-
-/** sysio.uwrit::createuwreq (action) */
-export interface SysioUwritCreateuwreqAction {
-  attestation_id: number | string
-  type: SysioUwritAttestationtype | keyof typeof SysioUwritAttestationtype
-  chain_code: number | string
-  data: string
-}
-
-/** sysio.uwrit::drainfwq (action) */
-export interface SysioUwritDrainfwqAction {
-}
-
-/** sysio.uwrit::freelocks (action) */
-export interface SysioUwritFreelocksAction {
-  uwreq_id: number | string
-  underwriter: string
-}
-
-/** sysio.uwrit::fromwire_q (type) */
-export interface SysioUwritFromwireQType {
-  id: number | string
-  user: string
-  wire_amount: number | string
-  dst_chain_code: string
-  dst_token_code: string
-  dst_reserve_code: string
-  target_amount: number | string
-  variance_tolerance_bps: number
-  recipient_kind: SysioUwritChainkind | keyof typeof SysioUwritChainkind
-  recipient_addr: string
-  created_at_epoch: number
-}
-
-/** sysio.uwrit::fw_key (type) */
-export interface SysioUwritFwKeyType {
-  id: number | string
-}
-
-/** sysio.uwrit::holdlocks (action) */
-export interface SysioUwritHoldlocksAction {
-  uwreq_id: number | string
-  underwriter: string
-  chal_id: number | string
-}
-
-/** sysio.uwrit::id_key (type) */
-export interface SysioUwritIdKeyType {
-  id: number | string
-}
-
-/** sysio.uwrit::lock_entry (type) */
-export interface SysioUwritLockEntryType {
-  lock_id: number | string
-  uwreq_id: number | string
-  underwriter: string
-  chain_code: string
-  token_code: string
-  reserve_code: string
-  amount: number | string
-  created_at_ms: number | string
-  expires_at_ms: number | string
-  challenge_id: number | string
-}
-
-/** sysio.uwrit::lock_key (type) */
-export interface SysioUwritLockKeyType {
-  lock_id: number | string
-}
-
-/** sysio.uwrit::lock_sum (type) */
-export interface SysioUwritLockSumType {
-  underwriter: string
-  chain_code: string
-  token_code: string
-  amount: number | string
-}
-
-/** sysio.uwrit::lock_sum_key (type) */
-export interface SysioUwritLockSumKeyType {
-  underwriter: string
-  chain_code: string
-  token_code: string
-}
-
-/** sysio.uwrit::pruneuwreqs (action) */
-export interface SysioUwritPruneuwreqsAction {
-  max_rows: number
-}
-
-/** sysio.uwrit::rcrdcommit (action) */
-export interface SysioUwritRcrdcommitAction {
-  uwreq_id: number | string
-  underwriter: string
-  chain_code: number | string
-  from_chain_code: string
-  from_token_code: string
-  reserve_code: string
-  uic_bytes: string
-}
-
-/** sysio.uwrit::setconfig (action) */
-export interface SysioUwritSetconfigAction {
-  fee_bps: number
-  collateral_lock_duration_ms: number | string
-  min_fromwire_amount: number | string
-  fromwire_revert_fee_bps: number
-  uwreq_pending_timeout_epochs: number
-  uwreq_retention_epochs: number
-}
-
-/** sysio.uwrit::sumlocks (action) */
-export interface SysioUwritSumlocksAction {
-  underwriter: string
-  chain_code: string
-  token_code: string
-}
-
-/** sysio.uwrit::swapfromwire (action) */
-export interface SysioUwritSwapfromwireAction {
-  user: string
-  wire_amount: number | string
-  dst_chain_code: string
-  dst_token_code: string
-  dst_reserve_code: string
-  target_amount: number | string
-  target_tolerance_bps: number
-  recipient_kind: SysioUwritChainkind | keyof typeof SysioUwritChainkind
-  recipient_addr: string
-}
-
-/** sysio.uwrit::sweeplocks (action) */
-export interface SysioUwritSweeplocksAction {
-  uwreq_id: number | string
-  underwriter: string
-}
-
-/** sysio.uwrit::uw_config (type) */
-export interface SysioUwritUwConfigType {
-  fee_bps: number
-  collateral_lock_duration_ms: number | string
-  min_fromwire_amount: number | string
-  fromwire_revert_fee_bps: number
-  uwreq_pending_timeout_epochs: number
-  uwreq_retention_epochs: number
-}
-
-/** sysio.uwrit::uw_counters (type) */
-export interface SysioUwritUwCountersType {
-  next_lock_id: number | string
-  next_fromwire_seq: number | string
-}
-
-/** sysio.uwrit::uw_request_t (type) */
-export interface SysioUwritUwRequestTType {
-  id: number | string
-  type: SysioUwritAttestationtype | keyof typeof SysioUwritAttestationtype
-  status: SysioUwritUnderwriterequeststatus | keyof typeof SysioUwritUnderwriterequeststatus
-  src_chain_code: string
-  src_token_code: string
-  src_reserve_code: string
-  src_amount: number | string
-  dst_chain_code: string
-  dst_token_code: string
-  dst_reserve_code: string
-  dst_amount: number | string
-  target_amount: number | string
-  variance_tolerance_bps: number
-  source_tx_id: string
-  depositor: string
-  commits_by: SysioUwritCommitEntryType[]
-  winner: string
-  committed_at_ms: number | string
-  settled_at_ms: number | string
-  expires_at_epoch: number
-  attestation_inbound_data: string
-  attestation_outbound_data: string
-  challenge_id: number | string
-}
-
-/** sysio.uwrit - action + table surface for the typed contract client. */
-export interface SysioUwritContract {
-  actions: {
-    chklocks: SysioUwritChklocksAction
-    createuwreq: SysioUwritCreateuwreqAction
-    drainfwq: SysioUwritDrainfwqAction
-    freelocks: SysioUwritFreelocksAction
-    holdlocks: SysioUwritHoldlocksAction
-    pruneuwreqs: SysioUwritPruneuwreqsAction
-    rcrdcommit: SysioUwritRcrdcommitAction
-    setconfig: SysioUwritSetconfigAction
-    sumlocks: SysioUwritSumlocksAction
-    swapfromwire: SysioUwritSwapfromwireAction
-    sweeplocks: SysioUwritSweeplocksAction
-  }
-  tables: {
-    fwqueue: SysioUwritFromwireQType
-    locks: SysioUwritLockEntryType
-    locksums: SysioUwritLockSumType
-    uwconfig: SysioUwritUwConfigType
-    uwcounters: SysioUwritUwCountersType
-    uwreqs: SysioUwritUwRequestTType
-  }
-}
-
 // ── sysio.wrap ──
 
 /** sysio.wrap::action (type) */
@@ -4899,8 +4171,7 @@ export interface SysioWrapContract {
   actions: {
     exec: SysioWrapExecAction
   }
-  tables: {
-  }
+  tables: {}
 }
 
 // ── contract registry ──
@@ -4920,15 +4191,13 @@ export enum SysioContractName {
   msgch = "msgch",
   msig = "msig",
   opreg = "opreg",
-  reserv = "reserv",
   roa = "roa",
   swap = "swap",
   synd = "synd",
   system = "system",
   token = "token",
   tokens = "tokens",
-  uwrit = "uwrit",
-  wrap = "wrap",
+  wrap = "wrap"
 }
 
 /** On-chain account per contract (default sysio.<name>; system/bios -> sysio). */
@@ -4946,15 +4215,13 @@ export const SysioContractAccount: Record<SysioContractName, string> = {
   [SysioContractName.msgch]: "sysio.msgch",
   [SysioContractName.msig]: "sysio.msig",
   [SysioContractName.opreg]: "sysio.opreg",
-  [SysioContractName.reserv]: "sysio.reserv",
   [SysioContractName.roa]: "sysio.roa",
   [SysioContractName.swap]: "sysio.swap",
   [SysioContractName.synd]: "sysio.synd",
   [SysioContractName.system]: "sysio",
   [SysioContractName.token]: "sysio.token",
   [SysioContractName.tokens]: "sysio.tokens",
-  [SysioContractName.uwrit]: "sysio.uwrit",
-  [SysioContractName.wrap]: "sysio.wrap",
+  [SysioContractName.wrap]: "sysio.wrap"
 }
 
 /** Each contract -> its action+table surface, for the typed contract client. */
@@ -4972,14 +4239,12 @@ export interface SysioContractMapping {
   [SysioContractName.msgch]: SysioMsgchContract
   [SysioContractName.msig]: SysioMsigContract
   [SysioContractName.opreg]: SysioOpregContract
-  [SysioContractName.reserv]: SysioReservContract
   [SysioContractName.roa]: SysioRoaContract
   [SysioContractName.swap]: SysioSwapContract
   [SysioContractName.synd]: SysioSyndContract
   [SysioContractName.system]: SysioSystemContract
   [SysioContractName.token]: SysioTokenContract
   [SysioContractName.tokens]: SysioTokensContract
-  [SysioContractName.uwrit]: SysioUwritContract
   [SysioContractName.wrap]: SysioWrapContract
 }
 
@@ -4993,26 +4258,430 @@ export interface SysioContractDefinition<Name extends SysioContractName> {
 export const SysioContractDefinitions: {
   readonly [Name in SysioContractName]: SysioContractDefinition<Name>
 } = {
-  [SysioContractName.andon]: { name: SysioContractName.andon, account: "sysio.andon", actions: ["addpuller", "clear", "pull", "setpanic"], tables: ["andonconfig", "cord"] },
-  [SysioContractName.authex]: { name: SysioContractName.authex, account: "sysio.authex", actions: ["clearlinks", "createlink", "recordlink"], tables: ["links"] },
-  [SysioContractName.bios]: { name: SysioContractName.bios, account: "sysio", actions: ["activate", "deleteauth", "linkauth", "newaccount", "reqactivated", "reqauth", "setabi", "setalimits", "setcode", "setfinalizer", "setparams", "setpriv", "setprodkeys", "setprods", "unlinkauth", "updateauth"], tables: ["abihash"] },
-  [SysioContractName.bond]: { name: SysioContractName.bond, account: "sysio.bond", actions: ["accept", "ack", "addbounty", "approve", "claim", "claimwire", "hold", "prune", "request", "requestkeep", "rslvinvalid", "rslvvalid", "setconfig", "sweepyield"], tables: ["bondconfig", "bondcounters", "bonds", "escrows", "requests", "wireclaims", "yieldpool"] },
-  [SysioContractName.chains]: { name: SysioContractName.chains, account: "sysio.chains", actions: ["activchain", "regchain", "setoutpost"], tables: ["chains"] },
-  [SysioContractName.chalg]: { name: SysioContractName.chalg, account: "sysio.chalg", actions: ["chkdispute", "chkuwchal", "claimbond", "opendispute", "openuwchal", "slashop", "uwchalbond", "votedispute", "voteuwchal"], tables: ["bondcredits", "chalgstate", "disputes", "disputevote", "uwchals", "uwchalvote"] },
-  [SysioContractName.councl]: { name: SysioContractName.councl, account: "sysio.councl", actions: ["addcandidate", "finalizeinit", "forceassign", "forceback", "loadtier", "purge", "repcandidate", "reset", "rmcandidate", "settle", "startinit", "stir", "vote"], tables: ["candidates", "config", "council", "roster", "state", "tier2", "tier3", "tier3remap"] },
-  [SysioContractName.dclaim]: { name: SysioContractName.dclaim, account: "sysio.dclaim", actions: ["claim", "flushexpired", "importdone", "importseed", "linkswept", "onreward", "setclmwindow", "setconfig"], tables: ["capcfg", "capcounters", "pclaims", "rwdcursors", "unmapped"] },
-  [SysioContractName.epoch]: { name: SysioContractName.epoch, account: "sysio.epoch", actions: ["advance", "pause", "schbatchgps", "setconfig", "unpause"], tables: ["blocklog", "epochcfg", "epochstate"] },
-  [SysioContractName.liq]: { name: SysioContractName.liq, account: "sysio.liq", actions: ["addkicker", "addyield", "burn", "claim", "close", "create", "creditowed", "mint", "mintyield", "open", "queueyield", "recredit", "regliqpool", "setkicker", "settle", "transfer"], tables: ["accounts", "liqconfig", "liqpending", "stat", "yieldidx"] },
-  [SysioContractName.msgch]: { name: SysioContractName.msgch, account: "sysio.msgch", actions: ["bootstrap", "buildenv", "chkcons", "deliver", "evalcons", "queueout", "resolvedisp"], tables: ["attestations", "attseq", "envelopes", "envlog", "messages", "outenvelopes", "outpcons"] },
-  [SysioContractName.msig]: { name: SysioContractName.msig, account: "sysio.msig", actions: ["approve", "cancel", "exec", "getproposal", "invalidate", "propose", "unapprove"], tables: ["approvals", "approvals2", "invals", "propchunks", "proposal"] },
-  [SysioContractName.opreg]: { name: SysioContractName.opreg, account: "sysio.opreg", actions: ["available", "cancelwtdw", "claimremit", "claimyield", "deposit", "depositinle", "flushwtdw", "processbatch", "processprod", "processuw", "prune", "recorddel", "regoperator", "releaselock", "setconfig", "slash", "sweepyield", "termcheck", "terminate", "withdraw", "withdrawinle"], tables: ["dellog", "opconfig", "opcounters", "operators", "remitclaims", "wtdwqueue", "yieldpool"] },
-  [SysioContractName.reserv]: { name: SysioContractName.reserv, account: "sysio.reserv", actions: ["applyfromwire", "applyswap", "claimrsvfee", "claimuwfee", "claimwire", "debit", "drainrewards", "matchreserve", "oncnclrsv", "oncrtreserve", "paywire", "refundwire", "regreserve", "rewardbal", "rsvfeebal", "setconfig", "setrsvfee", "swapquote", "sweepclaims", "uwfeebal"], tables: ["reservcfg", "reserves", "rewardbkt", "uwfees", "wireclaims"] },
-  [SysioContractName.roa]: { name: SysioContractName.roa, account: "sysio.roa", actions: ["activateroa", "addpolicy", "expandpolicy", "extendpolicy", "forcereg", "giftram", "newnameduser", "newuser", "nodeownreg", "reducepolicy", "setbyteprice", "setsysabi", "setsyscode"], tables: ["nodeownerreg", "nodeowners", "policies", "reslimit", "roastate", "sponsorcount", "sponsors"] },
-  [SysioContractName.swap]: { name: SysioContractName.swap, account: "sysio.swap", actions: ["accrueyield", "addliquidity", "cancelyield", "changefee", "close", "closeext", "exchange", "fundyield", "inittoken", "open", "openext", "remliquidity", "setconfig", "setyield", "sync", "tickyield", "transfer", "withdraw"], tables: ["accounts", "evodexacnts", "evoindex", "priceaccum", "reservoirs", "stat", "swapconfig", "yieldfunds", "yieldpayouts"] },
-  [SysioContractName.synd]: { name: SysioContractName.synd, account: "sysio.synd", actions: ["challenge", "closeenv", "crank", "desyndicate", "dropenv", "finishreturn", "importdone", "importsynd", "linkswept", "onsynd", "onyield", "pruneenv", "reconcile", "refundreturn", "setconfig", "sweep", "sweepyield", "sync", "syncenv"], tables: ["buckets", "envelopes", "feepot", "items", "ledger", "mismatch", "parked", "returns", "syndconfig", "syndcounters", "syndcursors", "syndstate", "yieldpool"] },
-  [SysioContractName.system]: { name: SysioContractName.system, account: "sysio", actions: ["accrueepoch", "actfinkey", "activate", "addnodeowner", "claimnodedis", "claimpay", "deleteauth", "delfinkey", "delsnapprov", "fundclaim", "getsnaphash", "init", "initt5", "limitauthchg", "linkauth", "newaccount", "onblock", "payepoch", "rcrdbatch", "regfinkey", "regproducer", "regproducer2", "regsnapprov", "rmvproducer", "setabi", "setacctcpu", "setacctnet", "setacctram", "setalimits", "setcode", "setemitcfg", "setinittime", "setparams", "setpriv", "setprodkeys", "setprods", "setram", "setscorecfg", "setsnpcfg", "unlinkauth", "unregprod", "updateauth", "viewemitcfg", "viewepoch", "viewnodedist", "votesnaphash", "wasmcfg", "delpeerkey", "getpeerkeys", "regpeerkey", "addtrxp", "deltrxp"], tables: ["abihash", "batchepochs", "blockinfo", "emissionmngr", "emitcfg", "epochlog", "finalizers", "finkeyidgen", "finkeys", "global", "lastpropfins", "nodecount", "nodedist", "payclaims", "payclaimtot", "prodsched", "prodscorecfg", "producers", "snapconfig", "snapprovs", "snaprecords", "snapvotes", "t5state", "limitauthchg", "peerkeys", "trxpglobal", "trxpriority"] },
-  [SysioContractName.token]: { name: SysioContractName.token, account: "sysio.token", actions: ["close", "create", "issue", "open", "retire", "transfer"], tables: ["accounts", "stat"] },
-  [SysioContractName.tokens]: { name: SysioContractName.tokens, account: "sysio.tokens", actions: ["activctok", "activtoken", "regctok", "regtoken"], tables: ["chaintokens", "tokens"] },
-  [SysioContractName.uwrit]: { name: SysioContractName.uwrit, account: "sysio.uwrit", actions: ["chklocks", "createuwreq", "drainfwq", "freelocks", "holdlocks", "pruneuwreqs", "rcrdcommit", "setconfig", "sumlocks", "swapfromwire", "sweeplocks"], tables: ["fwqueue", "locks", "locksums", "uwconfig", "uwcounters", "uwreqs"] },
-  [SysioContractName.wrap]: { name: SysioContractName.wrap, account: "sysio.wrap", actions: ["exec"], tables: [] },
+  [SysioContractName.andon]: {
+    name: SysioContractName.andon,
+    account: "sysio.andon",
+    actions: ["addpuller", "clear", "pull", "setpanic"],
+    tables: ["andonconfig", "cord"]
+  },
+  [SysioContractName.authex]: {
+    name: SysioContractName.authex,
+    account: "sysio.authex",
+    actions: ["clearlinks", "createlink", "recordlink"],
+    tables: ["links"]
+  },
+  [SysioContractName.bios]: {
+    name: SysioContractName.bios,
+    account: "sysio",
+    actions: [
+      "activate",
+      "deleteauth",
+      "linkauth",
+      "newaccount",
+      "reqactivated",
+      "reqauth",
+      "setabi",
+      "setalimits",
+      "setcode",
+      "setfinalizer",
+      "setparams",
+      "setpriv",
+      "setprodkeys",
+      "setprods",
+      "unlinkauth",
+      "updateauth"
+    ],
+    tables: ["abihash"]
+  },
+  [SysioContractName.bond]: {
+    name: SysioContractName.bond,
+    account: "sysio.bond",
+    actions: [
+      "accept",
+      "ack",
+      "addbounty",
+      "approve",
+      "claim",
+      "claimwire",
+      "hold",
+      "prune",
+      "request",
+      "requestkeep",
+      "rslvinvalid",
+      "rslvvalid",
+      "setconfig",
+      "sweepyield"
+    ],
+    tables: [
+      "bondconfig",
+      "bondcounters",
+      "bonds",
+      "escrows",
+      "requests",
+      "wireclaims",
+      "yieldpool"
+    ]
+  },
+  [SysioContractName.chains]: {
+    name: SysioContractName.chains,
+    account: "sysio.chains",
+    actions: ["activchain", "regchain", "setoutpost"],
+    tables: ["chains"]
+  },
+  [SysioContractName.chalg]: {
+    name: SysioContractName.chalg,
+    account: "sysio.chalg",
+    actions: ["chkdispute", "opendispute", "slashop", "votedispute"],
+    tables: ["chalgstate", "disputes", "disputevote"]
+  },
+  [SysioContractName.councl]: {
+    name: SysioContractName.councl,
+    account: "sysio.councl",
+    actions: [
+      "addcandidate",
+      "finalizeinit",
+      "forceassign",
+      "forceback",
+      "loadtier",
+      "purge",
+      "repcandidate",
+      "reset",
+      "rmcandidate",
+      "settle",
+      "startinit",
+      "stir",
+      "vote"
+    ],
+    tables: [
+      "candidates",
+      "config",
+      "council",
+      "roster",
+      "state",
+      "tier2",
+      "tier3",
+      "tier3remap"
+    ]
+  },
+  [SysioContractName.dclaim]: {
+    name: SysioContractName.dclaim,
+    account: "sysio.dclaim",
+    actions: [
+      "claim",
+      "flushexpired",
+      "importdone",
+      "importseed",
+      "linkswept",
+      "onreward",
+      "setclmwindow",
+      "setconfig"
+    ],
+    tables: ["capcfg", "capcounters", "pclaims", "rwdcursors", "unmapped"]
+  },
+  [SysioContractName.epoch]: {
+    name: SysioContractName.epoch,
+    account: "sysio.epoch",
+    actions: ["advance", "pause", "schbatchgps", "setconfig", "unpause"],
+    tables: ["blocklog", "epochcfg", "epochstate"]
+  },
+  [SysioContractName.liq]: {
+    name: SysioContractName.liq,
+    account: "sysio.liq",
+    actions: [
+      "addkicker",
+      "addyield",
+      "burn",
+      "claim",
+      "close",
+      "create",
+      "creditowed",
+      "mint",
+      "mintyield",
+      "open",
+      "queueyield",
+      "recredit",
+      "regliqpool",
+      "setkicker",
+      "settle",
+      "transfer"
+    ],
+    tables: ["accounts", "liqconfig", "liqpending", "stat", "yieldidx"]
+  },
+  [SysioContractName.msgch]: {
+    name: SysioContractName.msgch,
+    account: "sysio.msgch",
+    actions: [
+      "bootstrap",
+      "buildenv",
+      "chkcons",
+      "deliver",
+      "evalcons",
+      "queueout",
+      "resolvedisp"
+    ],
+    tables: [
+      "attestations",
+      "attseq",
+      "envelopes",
+      "envlog",
+      "messages",
+      "outenvelopes",
+      "outpcons"
+    ]
+  },
+  [SysioContractName.msig]: {
+    name: SysioContractName.msig,
+    account: "sysio.msig",
+    actions: [
+      "approve",
+      "cancel",
+      "exec",
+      "getproposal",
+      "invalidate",
+      "propose",
+      "unapprove"
+    ],
+    tables: ["approvals", "approvals2", "invals", "propchunks", "proposal"]
+  },
+  [SysioContractName.opreg]: {
+    name: SysioContractName.opreg,
+    account: "sysio.opreg",
+    actions: [
+      "available",
+      "cancelwtdw",
+      "claimremit",
+      "claimyield",
+      "deposit",
+      "flushwtdw",
+      "processbatch",
+      "processprod",
+      "processuw",
+      "prune",
+      "recorddel",
+      "regoperator",
+      "setconfig",
+      "slash",
+      "sweepyield",
+      "termcheck",
+      "terminate",
+      "withdraw"
+    ],
+    tables: [
+      "dellog",
+      "opconfig",
+      "opcounters",
+      "operators",
+      "remitclaims",
+      "wtdwqueue",
+      "yieldpool"
+    ]
+  },
+  [SysioContractName.roa]: {
+    name: SysioContractName.roa,
+    account: "sysio.roa",
+    actions: [
+      "activateroa",
+      "addpolicy",
+      "expandpolicy",
+      "extendpolicy",
+      "forcereg",
+      "giftram",
+      "newnameduser",
+      "newuser",
+      "nodeownreg",
+      "reducepolicy",
+      "setbyteprice",
+      "setsysabi",
+      "setsyscode"
+    ],
+    tables: [
+      "nodeownerreg",
+      "nodeowners",
+      "policies",
+      "reslimit",
+      "roastate",
+      "sponsorcount",
+      "sponsors"
+    ]
+  },
+  [SysioContractName.swap]: {
+    name: SysioContractName.swap,
+    account: "sysio.swap",
+    actions: [
+      "accrueyield",
+      "addliquidity",
+      "cancelyield",
+      "changefee",
+      "close",
+      "closeext",
+      "exchange",
+      "fundyield",
+      "inittoken",
+      "open",
+      "openext",
+      "remliquidity",
+      "setconfig",
+      "setyield",
+      "sync",
+      "tickyield",
+      "transfer",
+      "withdraw"
+    ],
+    tables: [
+      "accounts",
+      "evodexacnts",
+      "evoindex",
+      "priceaccum",
+      "reservoirs",
+      "stat",
+      "swapconfig",
+      "yieldfunds",
+      "yieldpayouts"
+    ]
+  },
+  [SysioContractName.synd]: {
+    name: SysioContractName.synd,
+    account: "sysio.synd",
+    actions: [
+      "challenge",
+      "closeenv",
+      "crank",
+      "desyndicate",
+      "dropenv",
+      "finishreturn",
+      "importdone",
+      "importsynd",
+      "linkswept",
+      "onsynd",
+      "onyield",
+      "pruneenv",
+      "reconcile",
+      "refundreturn",
+      "setconfig",
+      "sweep",
+      "sweepyield",
+      "sync",
+      "syncenv"
+    ],
+    tables: [
+      "buckets",
+      "envelopes",
+      "feepot",
+      "items",
+      "ledger",
+      "mismatch",
+      "parked",
+      "returns",
+      "syndconfig",
+      "syndcounters",
+      "syndcursors",
+      "syndstate",
+      "yieldpool"
+    ]
+  },
+  [SysioContractName.system]: {
+    name: SysioContractName.system,
+    account: "sysio",
+    actions: [
+      "accrueepoch",
+      "actfinkey",
+      "activate",
+      "addnodeowner",
+      "claimnodedis",
+      "claimpay",
+      "deleteauth",
+      "delfinkey",
+      "delsnapprov",
+      "fundclaim",
+      "getsnaphash",
+      "init",
+      "initt5",
+      "limitauthchg",
+      "linkauth",
+      "newaccount",
+      "onblock",
+      "payepoch",
+      "rcrdbatch",
+      "regfinkey",
+      "regproducer",
+      "regproducer2",
+      "regsnapprov",
+      "rmvproducer",
+      "setabi",
+      "setacctcpu",
+      "setacctnet",
+      "setacctram",
+      "setalimits",
+      "setcode",
+      "setemitcfg",
+      "setinittime",
+      "setparams",
+      "setpriv",
+      "setprodkeys",
+      "setprods",
+      "setram",
+      "setscorecfg",
+      "setsnpcfg",
+      "unlinkauth",
+      "unregprod",
+      "updateauth",
+      "viewemitcfg",
+      "viewepoch",
+      "viewnodedist",
+      "votesnaphash",
+      "wasmcfg",
+      "delpeerkey",
+      "getpeerkeys",
+      "regpeerkey",
+      "addtrxp",
+      "deltrxp"
+    ],
+    tables: [
+      "abihash",
+      "batchepochs",
+      "blockinfo",
+      "emissionmngr",
+      "emitcfg",
+      "epochlog",
+      "finalizers",
+      "finkeyidgen",
+      "finkeys",
+      "global",
+      "lastpropfins",
+      "nodecount",
+      "nodedist",
+      "payclaims",
+      "payclaimtot",
+      "prodsched",
+      "prodscorecfg",
+      "producers",
+      "snapconfig",
+      "snapprovs",
+      "snaprecords",
+      "snapvotes",
+      "t5state",
+      "limitauthchg",
+      "peerkeys",
+      "trxpglobal",
+      "trxpriority"
+    ]
+  },
+  [SysioContractName.token]: {
+    name: SysioContractName.token,
+    account: "sysio.token",
+    actions: ["close", "create", "issue", "open", "retire", "transfer"],
+    tables: ["accounts", "stat"]
+  },
+  [SysioContractName.tokens]: {
+    name: SysioContractName.tokens,
+    account: "sysio.tokens",
+    actions: ["activctok", "activtoken", "regctok", "regtoken"],
+    tables: ["chaintokens", "tokens"]
+  },
+  [SysioContractName.wrap]: {
+    name: SysioContractName.wrap,
+    account: "sysio.wrap",
+    actions: ["exec"],
+    tables: []
+  }
 }
