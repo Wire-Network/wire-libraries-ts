@@ -11,7 +11,10 @@ deployment profiles remain caller-supplied.
 The current source pins Ethereum artifacts `0.3.0` and Solana artifacts `0.3.1`
 as one verified compatible artifact suite. Their published manifests identify
 the exact producer commits, runtime artifacts, and ethers v6/Anchor bindings
-used by the SDK. Package versions are managed and published only through the
+used by the SDK. That suite predates the platform-wide removal of outpost
+reserves, outpost-routed swaps, and outpost operator collateral: the Ethereum
+artifacts still carry `ReserveManager`/`OperatorRegistry` and do not carry
+`SyndicationPool`. See [Retired surfaces](#retired-surfaces). Package versions are managed and published only through the
 repository release workflow.
 
 ## Install
@@ -37,10 +40,10 @@ after building those outputs; otherwise the exact registry versions remain in us
 
 ## Supported surfaces
 
-| Family   | Generated clients and workflows                                          |
-| -------- | ------------------------------------------------------------------------- |
-| Ethereum | `OPP`, `OPPInbound`, `OperatorRegistry`, `ReserveManager`, reserve lifecycle and swaps |
-| Solana   | `liqsol_core`, configured reserve lifecycle, native SOL and classic SPL reserve swaps  |
+| Family   | Live platform surfaces                          | Retained pending removal ([details](#retired-surfaces))          |
+| -------- | ----------------------------------------------- | ----------------------------------------------------------------- |
+| Ethereum | `OPP`, `OPPInbound`, BAR node-owner registration | `OperatorRegistry`, `ReserveManager`, `reserves`, `swaps`        |
+| Solana   | `liqsol_core` program handle                     | `reserves`, `swaps` (reserve lifecycle and reserve swaps)        |
 
 Client creation verifies all four boundaries before returning:
 
@@ -59,8 +62,8 @@ discriminator preserves the precise `EthereumOutpostClient` or
 factory entrypoints or internal module paths.
 
 These checks prove deployment compatibility, not end-to-end feature readiness.
-Applications must still gate swaps, staking, settlement, retry, funding, and
-underwriting using platform capability evidence.
+Applications must still gate syndication, staking, settlement, retry, and
+funding using platform capability evidence.
 
 ## Deployment profiles
 
@@ -93,7 +96,7 @@ new profile without requiring a producer-artifact or SDK release.
 | Same-code chain respin                                  | No                        | No                    | New                                       |
 | Contract/program binary change with unchanged ABI/IDL   | Yes                       | Yes                   | New                                       |
 | ABI or IDL change                                       | Yes                       | Yes                   | New                                       |
-| Asset/reserve onboarding without code/interface changes | No                        | No                    | Update operational configuration/evidence |
+| Asset onboarding without code/interface changes         | No                        | No                    | Update operational configuration/evidence |
 | RPC or explorer rotation                                | No                        | No                    | Update endpoint catalog only              |
 
 ## Artifact suite selection
@@ -143,33 +146,8 @@ const ethereum = await OutpostClient.create({
     connection: new JsonRpcProvider(ethereumRpcUrl)
   }
 })
-const reserves = ethereum.contract(EthereumContractName.ReserveManager)
+const opp = ethereum.contract(EthereumContractName.OPP)
 ```
-
-Wallet-connected clients expose verified reserve-swap workflows without a
-separate deployment address book:
-
-```ts
-const submission = await ethereum.swaps.requestNative({
-  sourceTokenCode,
-  sourceReserveCode,
-  sourceAmount,
-  targetChainCode,
-  targetTokenCode,
-  targetReserveCode,
-  targetRecipient,
-  targetAmount,
-  targetToleranceBps
-})
-
-// Correlate this protocol id with sysio.uwrit; the transaction hash alone is
-// only source-chain submission evidence.
-console.log(submission.sourceRequestId)
-```
-
-Ethereum also exposes `requestErc20WithApproval`, `nativeBalance`, and
-`erc20Balance`. Solana exposes `requestNative`, `requestSpl`, `nativeBalance`,
-and `splBalance` through the same `client.swaps` ownership boundary.
 
 ## Ethereum node owners
 
@@ -179,8 +157,8 @@ BAR, reads owned tiers, obtains approval only when needed, and submits
 `BAR.commitNode`. Wire account authority parsing reuses `@wireio/sdk-core`; the
 SDK validates that the uncompressed depositor key belongs to the EVM signer.
 BAR is an optional deployment capability: schema-v1 profiles without a BAR
-identity continue to support the existing reserve and swap clients, while
-accessing `nodeOwners` fails closed with an explicit availability error.
+identity still construct a client, while accessing `nodeOwners` fails closed
+with an explicit availability error.
 
 ```ts
 const slots = await ethereum.nodeOwners.ownedSlots(ownerAddress)
@@ -197,62 +175,6 @@ Wire account directly, or infer protocol completion from the EVM receipt. Hub
 must keep the action disabled unless deployment and capability evidence both
 advertise the complete node-owner flow, then follow the resulting Wire-side
 registration state separately.
-
-## Reserve lifecycle
-
-Wallet-connected clients expose the external half of the post-bootstrap
-reserve lifecycle. The external create escrows reserve capital and emits the
-attestation that creates a pending `sysio.reserv` row. A signed
-`@wireio/sdk-core` `ReserveClient` then supplies the exact requested WIRE amount
-and activates that row.
-
-```ts
-const ethereumSubmission = await ethereum.reserves.createNative({
-  tokenCode,
-  reserveCode,
-  externalTokenAmount,
-  requestedWireAmount,
-  connectorWeightBps: 5_000,
-  name: "Private ETH reserve",
-  description: "",
-  isPrivate: true,
-  creatorPubKey
-})
-
-const configuredTokens = await solana.reserves.getConfiguredTokens()
-const splToken = configuredTokens.find(token => !token.isNative)
-if (splToken == null) throw new Error("No configured SPL reserve token.")
-
-const solanaSubmission = await solana.reserves.create({
-  tokenCode: splToken.tokenCode,
-  reserveCode,
-  externalTokenAmount: splAmount,
-  requestedWireAmount,
-  connectorWeightBps: 5_000,
-  name: "Private SPL reserve",
-  description: "",
-  isPrivate: true,
-  mint: splToken.mint
-})
-```
-
-Ethereum supports native creation, ERC-20 approval or permit creation, pending
-cancellation, and local reserve reads. Solana supports deployment-configured
-token discovery, instruction assembly, creation, pending cancellation, address
-derivation, and local reserve reads. `cancel` is valid only while creation is
-pending and drives the protocol refund path.
-
-The all-zero mint returned for a configured native SOL route is protocol
-metadata, not an Anchor account. The current `create_reserve` account context
-still requires a real placeholder SPL mint and the creator's token account for
-native SOL creation. Consumers that have not provisioned those accounts should
-select a configured non-native SPL route, as in the example above.
-
-Private is a routing constraint, not access control or confidentiality. Private
-reserves cannot use WIRE as a swap endpoint; when either external route leg is
-private, Wire requires both active reserves to have the same non-empty owner.
-The current protocol exposes no creator withdrawal, close, or redemption after
-activation. This SDK intentionally does not invent an active-reserve exit API.
 
 Solana uses the same facade and returns the precise Anchor program type at the
 runtime program address:
@@ -272,8 +194,7 @@ const liqsol = solana.program(SolanaProgramName.liqsolCore)
 ```
 
 The producer-owned `LiqsolCore` type preserves the IDL's literal account namespace,
-including `Program<LiqsolCore>["account"]["outpostConfig"]` and
-`Program<LiqsolCore>["account"]["reserve"]`. Import it from
+such as `Program<LiqsolCore>["account"]["outpostConfig"]`. Import it from
 `@wireio/outpost-solana-artifacts`; never widen the IDL to the base `Idl` type.
 
 ## Artifact ownership
@@ -288,16 +209,38 @@ download handoffs or regenerate chain code.
 
 ## Consumer boundaries
 
-- Use this package for typed external `ReserveManager`, `OperatorRegistry`,
-  `OPP`, `OPPInbound`, `liqsol_core`, reserve lifecycle, and source reserve-swap
-  execution.
-- Use `@wireio/sdk-core` for Wire transaction construction, reserve and token
-  registries, underwriting state, and settlement correlation.
+- Use this package for verified external `OPP`, `OPPInbound`, and
+  `liqsol_core` handles and for BAR-backed Ethereum node-owner registration.
+- Use `@wireio/sdk-core` for Wire transaction construction, the chain and token
+  registries, and depot-side workflows (syndication, bonds, `sysio.swap`) through
+  the generated `sysio` contract proxy.
 - Recreate external clients whenever the selected deployment profile changes.
 - Combine SDK deployment verification with flow-specific capability gates before
   enabling a product action.
-- Ethereum reserve-swap submissions estimate the live call and add 25% gas
-  headroom for nested OPP execution; unused gas is not charged.
+
+## Retired surfaces
+
+Outpost reserves (`ReserveManager` on Ethereum, reserve PDAs and
+`create_reserve`/`request_swap` instructions on Solana), outpost-routed
+cross-chain swaps settled through `sysio.uwrit`, and outpost-side operator
+collateral escrow (`OperatorRegistry` on Ethereum, collateral positions on
+Solana) have been removed from the platform. Operator collateral now lives on
+the depot in `sysio.opreg`, and swaps are `sysio.swap`, a depot-local AMM with
+no outpost participation.
+
+This package still contains code for those surfaces, retained only pending a
+dedicated removal:
+
+- `EthereumContractName.ReserveManager` and `EthereumContractName.OperatorRegistry`,
+  which the deployment-profile schema still requires as entries;
+- the Ethereum and Solana `reserves` clients (reserve create/cancel/reads);
+- the Ethereum and Solana `swaps` clients (`requestNative`,
+  `requestErc20WithApproval`, `requestSpl`, and balance helpers), whose
+  `sourceRequestId` correlates with the retired `sysio.uwrit` contract.
+
+Do not build new integrations on these members. They do not describe live
+platform behavior, and current outpost deployments do not include the contracts
+and instructions they target.
 
 ## Maintainer commands
 

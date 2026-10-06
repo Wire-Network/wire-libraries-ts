@@ -55,11 +55,22 @@ returns the same generated data as a typed `AnyAction`; `APIClient` resolves the
 deployed ABI when that payload is invoked or pushed. Authorization is empty by
 default and must be supplied explicitly for writes.
 
-The `AuthexClient`, `MsigClient`, and `ReserveClient` classes remain the public
-domain facades for proof creation, proposal compatibility, reserve
-normalization, and other workflow behavior. Each exposes `contractClient` for
-lower-level generated action and table access without duplicating transport
-logic.
+The generated registry (`SysioContractName`) covers every depot contract
+whose ABI the type generator read, including the syndication contract set:
+`sysio.synd` (syndication ledger), `sysio.bond` (underwriting of provable
+statements), `sysio.andon` (emergency stop), `sysio.liq` (shadow LIQ tokens and
+WIRE yield index), `sysio.swap` (depot-local AMM), and `sysio.dclaim` (WIRE
+claim ledger), alongside `sysio.msgch`, `sysio.epoch`, `sysio.opreg`,
+`sysio.chalg`, `sysio.roa`, `sysio.authex`, `sysio.chains`, `sysio.tokens`,
+`sysio.councl`, `sysio.wrap`, `sysio.msig`, `sysio.token`, and the system/bios
+contracts. These contracts are reachable through typed `actions` and `tables`
+on the proxy; most have no hand-written domain client.
+
+The `AuthexClient`, `ChainsClient`, `MsigClient`, and `TokenRegistryClient`
+classes are the hand-written domain facades for proof creation, registry
+normalization, proposal compatibility, and other workflow behavior. Each
+exposes `contractClient` for lower-level generated action and table access
+without duplicating transport logic.
 
 The multisig module supports:
 
@@ -102,84 +113,34 @@ The on-chain registry is authoritative for protocol identity and activation.
 RPC URLs, explorers, icons, wallet adapters, and application capabilities stay
 in the consuming application's runtime configuration.
 
-## Reserves
+## Token registry
 
-`contracts.sysio.reserv` provides normalized reserve registry reads,
-chain/token and status filters, exact reserve lookup, WIRE-side activation, and
-read-only swap quotes. External-chain reserve creation and cancellation remain
-in the chain SDK that owns the deployed ABI or IDL.
-
-```ts
-const reserves = new contracts.sysio.reserv.ReserveClient({ client: api })
-const pending = await reserves.listReserves({
-  status: SysioReservReservestatus.RESERVE_STATUS_PENDING
-})
-
-await reserves.pushMatchReserve({
-  chainCode: "ETHEREUM",
-  tokenCode: "ETH",
-  reserveCode: "PRIMARY",
-  matcher: "alice",
-  wireAmount: pending[0].requestedWireAmount
-})
-
-// Several pending rows can be activated atomically in one signed transaction.
-await reserves.pushMatchReserves({
-  matches: pending.map(reserve => ({
-    chainCode: reserve.chainCode,
-    tokenCode: reserve.tokenCode,
-    reserveCode: reserve.reserveCode,
-    matcher: "alice",
-    wireAmount: reserve.requestedWireAmount
-  }))
-})
-```
-
-`pushMatchReserves` preserves the supplied action order and rejects an empty
-match list. The Wire transaction is atomic: either every `matchreserve` action
-is accepted or none is applied.
-
-## Reserve swaps
-
-Reserve swap integrations compose three on-chain sources instead of carrying a
-parallel token or route catalog:
-
-- `contracts.sysio.tokens.TokenRegistryClient` reads canonical token metadata
-  and active chain deployments.
-- `contracts.sysio.reserv.ReserveClient` discovers active liquidity and returns
-  live `swapquote` output for external or WIRE endpoints.
-- `contracts.sysio.uwrit.UnderwritingClient` reads swap lifecycle state and
-  submits WIRE-origin swaps into the next-epoch queue.
+`contracts.sysio.tokens.TokenRegistryClient` reads canonical `sysio.tokens`
+metadata and active chain deployments without a parallel token catalog.
 
 ```ts
 const tokens = new contracts.sysio.tokens.TokenRegistryClient({ client: api })
-const reserves = new contracts.sysio.reserv.ReserveClient({ client: api })
-const underwriting = new contracts.sysio.uwrit.UnderwritingClient({ client: api })
-
 const assets = await tokens.listAssets()
-const quote = await reserves.getSwapQuote({
-  from: contracts.sysio.uwrit.WIRE_SWAP_ENDPOINT,
-  fromAmount: 10_000_000_000n,
-  to: { chainCode: "SOLANA", tokenCode: "SOL", reserveCode: "PRIMARY" }
-})
-
-await underwriting.pushSwapFromWire({
-  user: "alice",
-  wireAmount: 10_000_000_000n,
-  destination: { chainCode: "SOLANA", tokenCode: "SOL", reserveCode: "PRIMARY" },
-  targetAmount: quote,
-  targetToleranceBps: 500,
-  recipientKind: SysioUwritChainkind.CHAIN_KIND_SVM,
-  recipientAddress: "<solana-public-key-bytes>"
-})
 ```
 
-External-origin swap submission remains in the chain SDK that owns the deployed
-outpost ABI or IDL. A mined source transaction means the swap was submitted;
-`uwreqs` remains the source of truth for relay, underwriting, settlement, and
-revert status. Normalized underwriting rows expose `sourceRequestId` for
-matching the outpost's `SwapDeposit` id; transaction hashes and signatures are
-transport receipts rather than protocol correlation values.
+## Swaps
+
+Swaps on WIRE are served by `sysio.swap`, a depot-local constant-product AMM in
+which every pair's second leg is WIRE. Outposts do not participate and no OPP
+attestation is involved. The SDK has no hand-written swap client; use the
+generated proxy (`sysio.swap.actions.exchange`, `sysio.swap.tables.*`).
+
+## Retired reserve and underwriting clients
+
+`contracts.sysio.reserv` (`ReserveClient`, including `getSwapQuote` and
+`pushMatchReserve(s)`) and `contracts.sysio.uwrit` (`UnderwritingClient`,
+`WIRE_SWAP_ENDPOINT`, `pushSwapFromWire`), together with the `sysio.reserv` and
+`sysio.uwrit` entries in the generated types, target depot contracts that have
+been removed from the platform along with outpost-routed cross-chain swaps,
+reserves, and the underwriter race. They remain exported only pending a
+dedicated removal and do not work against a current depot. Do not build new
+integrations on them. Underwriting of syndication envelopes now happens on
+`sysio.bond`.
 
 ## Install
 
