@@ -7,6 +7,39 @@ optional `created` timestamp.
 
 Available on npm: <https://www.npmjs.com/package/@wireio/sdk-core>
 
+## Depot swap quotes
+
+`contracts.sysio.swap.quoteSwap(options)` estimates one exact-input trade from
+caller-owned `SysioSwapCurrencyStatsType` and `ExtendedAsset` values. Supply an
+explicit `slippageBps` integer in `[0, 9999]`. The result contains gross output,
+output-denominated fee, net output, minimum output and accrued yield as exact
+extended-asset strings. It performs no RPC, signing or action assembly.
+
+For a yield pool, `yield` must include the shadow token's `accounts` row scoped
+to the **whole swap contract**, and its `yieldidx` row for the yield-leg symbol.
+Use `null` only for a verified absent row, never for a failed read. Pending and
+banked WIRE yield is added to the WIRE reserve before the trade is priced.
+Pool balances alone are insufficient: the holder can also own deposited LIQ.
+The issuing contract and complete symbol (including precision) must match.
+
+Read rows through the existing generic contract table facade. Fetch a coherent
+snapshot from one selected depot, refresh before review and enforce the returned
+minimum on-chain. The helper cannot validate block coherence, deployment identity,
+Andon, account authority, custody coverage or output delivery. A dust quote can
+return zero output/minimum; consumers must reject unusable values before review.
+It rejects lossy numeric fields, malformed input and overflow; it does not model
+corrupt uint128 wraparound. Tolerance is a caller policy applied after fees, not a
+fee or a quote-validity guarantee. Multi-hop routing is outside this API.
+
+Arithmetic source: Wire SYSIO
+[`a16738c488e8a821f06e1fa7d3188b98f4e35207`](https://github.com/Wire-Network/wire-sysio/blob/a16738c488e8a821f06e1fa7d3188b98f4e35207/contracts/sysio.swap/sysio.swap.cpp)
+(`process_exch`, `quote_out`, `accrue`) and
+[`shadow_yield.hpp`](https://github.com/Wire-Network/wire-sysio/blob/a16738c488e8a821f06e1fa7d3188b98f4e35207/contracts/sysio.opp.common/include/sysio.opp.common/shadow_yield.hpp).
+Contract rounding is gross floor → fee floor (minimum one output unit for a
+nonzero rate and gross output) → net output. Minimum output is floored after
+applying the caller's tolerance. Unit vectors cover these rules; live contract
+parity and user exchange/withdrawal acceptance remain separate work.
+
 ## Multisig
 
 `contracts.sysio.msig` provides UI-neutral helpers for `sysio.msig` proposal workflows, including action builders, proposal reads, transaction decoding, hash verification, and legacy/chunked contract compatibility.
