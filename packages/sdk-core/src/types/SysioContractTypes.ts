@@ -573,17 +573,20 @@ export enum SysioCounclCleanupStage {
   ROSTER = 1,
   TIER2 = 2,
   TIER3 = 3,
-  REMAP = 4,
-  COUNCIL = 5,
-  COMPLETE = 6,
+  FLIGHTS = 4,
+  BALLOTS = 5,
+  COUNCIL = 6,
+  COMPLETE = 7,
 }
 
 /** sysio.councl::election_phase (enum, uint8) */
 export enum SysioCounclElectionPhase {
-  AWAIT_REP = 0,
-  VOTING = 1,
-  BACKSTOP = 2,
-  DONE = 3,
+  NOMINATING = 0,
+  GENERATING = 1,
+  VOTING = 2,
+  TABULATING = 3,
+  CONTINUING = 4,
+  DONE = 5,
 }
 
 /** sysio.councl::election_tier (enum, uint8) */
@@ -608,6 +611,15 @@ export interface SysioCounclAddcandidateAction {
   handle: string
 }
 
+/** sysio.councl::ballot_row (type) */
+export interface SysioCounclBallotRowType {
+  voter: string
+  round_id: number | string
+  tier: SysioCounclElectionTier | keyof typeof SysioCounclElectionTier
+  flight_hash: string
+  votes: SysioCounclFlightVoteType[]
+}
+
 /** sysio.councl::cand_key (type) */
 export interface SysioCounclCandKeyType {
   account: number | string
@@ -618,6 +630,8 @@ export interface SysioCounclCandidateRowType {
   account: string
   handle: string
   elected: boolean
+  claim_round: number | string
+  positions: string
 }
 
 /** sysio.councl::config_state (type) */
@@ -637,7 +651,6 @@ export interface SysioCounclConfigStateType {
   cand_count: number
   cleanup_mode: SysioCounclCleanupMode | keyof typeof SysioCounclCleanupMode
   cleanup_stage: SysioCounclCleanupStage | keyof typeof SysioCounclCleanupStage
-  cleanup_seat: number
 }
 
 /** sysio.councl::council_row (type) */
@@ -647,32 +660,20 @@ export interface SysioCounclCouncilRowType {
   filled_tier: SysioCounclElectionTier | keyof typeof SysioCounclElectionTier
   proposer: string
   member: string
+  round_id: number | string
 }
 
 /** sysio.councl::election_state (type) */
 export interface SysioCounclElectionStateType {
   phase: SysioCounclElectionPhase | keyof typeof SysioCounclElectionPhase
-  active_seat: number
-  tier: SysioCounclElectionTier | keyof typeof SysioCounclElectionTier
-  proposer: string
   round_id: number | string
   round_open_ts: string
   vote_deadline: string
-  elect_N: number
-  eligible_voters: number
-  votes_cast: number
-  tier3_available: number
+  cursor: number
   seats_filled: number
-  voted_bitmap: string
-  c1: string
-  c2: string
-  c3: string
-  yes1: number
-  yes2: number
-  yes3: number
-  no1: number
-  no2: number
-  no3: number
+  backstop_mask: number
+  flight_hash: string
+  round_seed: string
   acc: string
   stir_count: number | string
 }
@@ -681,13 +682,36 @@ export interface SysioCounclElectionStateType {
 export interface SysioCounclFinalizeinitAction {
 }
 
+/** sysio.councl::flight_row (type) */
+export interface SysioCounclFlightRowType {
+  seat: number | string
+  round_id: number | string
+  candidates: string[]
+  automatic: boolean
+  tallies: SysioCounclTierTallyType[]
+}
+
+/** sysio.councl::flight_vote (type) */
+export interface SysioCounclFlightVoteType {
+  seat: number
+  v1: boolean
+  v2: boolean
+  v3: boolean
+}
+
 /** sysio.councl::forceassign (action) */
 export interface SysioCounclForceassignAction {
+  seat: number
   member: string
+  election_gen: number | string
+  round_id: number | string
 }
 
 /** sysio.councl::forceback (action) */
 export interface SysioCounclForcebackAction {
+  seat: number
+  election_gen: number | string
+  round_id: number | string
 }
 
 /** sysio.councl::index_key (type) */
@@ -706,19 +730,14 @@ export interface SysioCounclPurgeAction {
   max_rows: number
 }
 
-/** sysio.councl::remap_row (type) */
-export interface SysioCounclRemapRowType {
-  virtual_idx: number | string
-  actual_idx: number | string
-}
-
 /** sysio.councl::repcandidate (action) */
 export interface SysioCounclRepcandidateAction {
   proposer: string
   c1: string
   c2: string
   c3: string
-  expected_round?: number | string | null
+  election_gen: number | string
+  round_id: number | string
 }
 
 /** sysio.councl::reset (action) */
@@ -739,6 +758,9 @@ export interface SysioCounclRosterRowType {
 /** sysio.councl::settle (action) */
 export interface SysioCounclSettleAction {
   caller: string
+  election_gen: number | string
+  round_id: number | string
+  max_steps: number
 }
 
 /** sysio.councl::startinit (action) */
@@ -764,13 +786,21 @@ export interface SysioCounclTier3RowType {
   owner: string
 }
 
+/** sysio.councl::tier_tally (type) */
+export interface SysioCounclTierTallyType {
+  votes_cast: number
+  yes1: number
+  yes2: number
+  yes3: number
+}
+
 /** sysio.councl::vote (action) */
 export interface SysioCounclVoteAction {
   voter: string
-  v1: boolean
-  v2: boolean
-  v3: boolean
-  expected_round?: number | string | null
+  election_gen: number | string
+  round_id: number | string
+  flight_hash: string
+  votes: SysioCounclFlightVoteType[]
 }
 
 /** sysio.councl - action + table surface for the typed contract client. */
@@ -791,14 +821,15 @@ export interface SysioCounclContract {
     vote: SysioCounclVoteAction
   }
   tables: {
+    ballots: SysioCounclBallotRowType
     candidates: SysioCounclCandidateRowType
     config: SysioCounclConfigStateType
     council: SysioCounclCouncilRowType
+    flights: SysioCounclFlightRowType
     roster: SysioCounclRosterRowType
     state: SysioCounclElectionStateType
     tier2: SysioCounclTier2RowType
     tier3: SysioCounclTier3RowType
-    tier3remap: SysioCounclRemapRowType
   }
 }
 
@@ -4287,7 +4318,7 @@ export const SysioContractDefinitions: {
   [SysioContractName.bios]: { name: SysioContractName.bios, account: "sysio", actions: ["activate", "deleteauth", "linkauth", "newaccount", "reqactivated", "reqauth", "setabi", "setalimits", "setcode", "setfinalizer", "setparams", "setpriv", "setprodkeys", "setprods", "unlinkauth", "updateauth"], tables: ["abihash"] },
   [SysioContractName.chains]: { name: SysioContractName.chains, account: "sysio.chains", actions: ["activchain", "regchain", "setoutpost"], tables: ["chains"] },
   [SysioContractName.chalg]: { name: SysioContractName.chalg, account: "sysio.chalg", actions: ["chkdispute", "chkuwchal", "claimbond", "opendispute", "openuwchal", "slashop", "uwchalbond", "votedispute", "voteuwchal"], tables: ["bondcredits", "chalgstate", "disputes", "disputevote", "uwchals", "uwchalvote"] },
-  [SysioContractName.councl]: { name: SysioContractName.councl, account: "sysio.councl", actions: ["addcandidate", "finalizeinit", "forceassign", "forceback", "loadtier", "purge", "repcandidate", "reset", "rmcandidate", "settle", "startinit", "stir", "vote"], tables: ["candidates", "config", "council", "roster", "state", "tier2", "tier3", "tier3remap"] },
+  [SysioContractName.councl]: { name: SysioContractName.councl, account: "sysio.councl", actions: ["addcandidate", "finalizeinit", "forceassign", "forceback", "loadtier", "purge", "repcandidate", "reset", "rmcandidate", "settle", "startinit", "stir", "vote"], tables: ["ballots", "candidates", "config", "council", "flights", "roster", "state", "tier2", "tier3"] },
   [SysioContractName.dclaim]: { name: SysioContractName.dclaim, account: "sysio.dclaim", actions: ["claim", "flushexpired", "importdone", "importseed", "linkswept", "onreward", "setclmwindow", "setconfig"], tables: ["capcfg", "capcounters", "pclaims", "rwdcursors", "unmapped"] },
   [SysioContractName.epoch]: { name: SysioContractName.epoch, account: "sysio.epoch", actions: ["advance", "pause", "schbatchgps", "setconfig", "unpause"], tables: ["blocklog", "epochcfg", "epochstate"] },
   [SysioContractName.liq]: { name: SysioContractName.liq, account: "sysio.liq", actions: ["addkicker", "addyield", "claim", "close", "create", "desyndicate", "importdone", "importsynd", "linkswept", "mintsynd", "mintyield", "open", "park", "queueyield", "recredit", "regliqpool", "setkicker", "sweep", "transfer"], tables: ["accounts", "liqconfig", "liqcounters", "liqcursors", "liqpending", "parked", "stat", "yieldidx"] },

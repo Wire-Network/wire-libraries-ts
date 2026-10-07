@@ -1,0 +1,838 @@
+{
+    "____comment": "This file was generated with sysio-abigen. DO NOT EDIT ",
+    "version": "sysio::abi/1.2",
+    "types": [],
+    "structs": [
+        {
+            "name": "addcandidate",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "handle",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "ballot_row",
+            "base": "",
+            "fields": [
+                {
+                    "name": "voter",
+                    "type": "name"
+                },
+                {
+                    "name": "round_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "tier",
+                    "type": "election_tier"
+                },
+                {
+                    "name": "flight_hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "votes",
+                    "type": "flight_vote[]"
+                }
+            ]
+        },
+        {
+            "name": "cand_key",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "candidate_row",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "handle",
+                    "type": "string"
+                },
+                {
+                    "name": "elected",
+                    "type": "bool"
+                },
+                {
+                    "name": "claim_round",
+                    "type": "uint64"
+                },
+                {
+                    "name": "positions",
+                    "type": "bytes"
+                }
+            ]
+        },
+        {
+            "name": "config_state",
+            "base": "",
+            "fields": [
+                {
+                    "name": "init_phase",
+                    "type": "init_phase"
+                },
+                {
+                    "name": "time_slot_sec",
+                    "type": "uint64"
+                },
+                {
+                    "name": "network_gen",
+                    "type": "uint8"
+                },
+                {
+                    "name": "election_gen",
+                    "type": "uint64"
+                },
+                {
+                    "name": "n2",
+                    "type": "uint32"
+                },
+                {
+                    "name": "n3",
+                    "type": "uint32"
+                },
+                {
+                    "name": "t2_loaded",
+                    "type": "uint32"
+                },
+                {
+                    "name": "t3_loaded",
+                    "type": "uint32"
+                },
+                {
+                    "name": "t2_cursor",
+                    "type": "uint64"
+                },
+                {
+                    "name": "t3_cursor",
+                    "type": "uint64"
+                },
+                {
+                    "name": "t2_scan_complete",
+                    "type": "bool"
+                },
+                {
+                    "name": "t3_scan_complete",
+                    "type": "bool"
+                },
+                {
+                    "name": "cand_count",
+                    "type": "uint32"
+                },
+                {
+                    "name": "cleanup_mode",
+                    "type": "cleanup_mode"
+                },
+                {
+                    "name": "cleanup_stage",
+                    "type": "cleanup_stage"
+                }
+            ]
+        },
+        {
+            "name": "council_row",
+            "base": "",
+            "fields": [
+                {
+                    "name": "seat",
+                    "type": "uint64"
+                },
+                {
+                    "name": "seat_owner",
+                    "type": "name"
+                },
+                {
+                    "name": "filled_tier",
+                    "type": "election_tier"
+                },
+                {
+                    "name": "proposer",
+                    "type": "name"
+                },
+                {
+                    "name": "member",
+                    "type": "name"
+                },
+                {
+                    "name": "round_id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "election_state",
+            "base": "",
+            "fields": [
+                {
+                    "name": "phase",
+                    "type": "election_phase"
+                },
+                {
+                    "name": "round_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "round_open_ts",
+                    "type": "time_point"
+                },
+                {
+                    "name": "vote_deadline",
+                    "type": "time_point"
+                },
+                {
+                    "name": "cursor",
+                    "type": "uint8"
+                },
+                {
+                    "name": "seats_filled",
+                    "type": "uint8"
+                },
+                {
+                    "name": "backstop_mask",
+                    "type": "uint32"
+                },
+                {
+                    "name": "flight_hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "round_seed",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "acc",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "stir_count",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "finalizeinit",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "flight_row",
+            "base": "",
+            "fields": [
+                {
+                    "name": "seat",
+                    "type": "uint64"
+                },
+                {
+                    "name": "round_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "candidates",
+                    "type": "name[]"
+                },
+                {
+                    "name": "automatic",
+                    "type": "bool"
+                },
+                {
+                    "name": "tallies",
+                    "type": "tier_tally[]"
+                }
+            ]
+        },
+        {
+            "name": "flight_vote",
+            "base": "",
+            "fields": [
+                {
+                    "name": "seat",
+                    "type": "uint8"
+                },
+                {
+                    "name": "v1",
+                    "type": "bool"
+                },
+                {
+                    "name": "v2",
+                    "type": "bool"
+                },
+                {
+                    "name": "v3",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "forceassign",
+            "base": "",
+            "fields": [
+                {
+                    "name": "seat",
+                    "type": "uint8"
+                },
+                {
+                    "name": "member",
+                    "type": "name"
+                },
+                {
+                    "name": "election_gen",
+                    "type": "uint64"
+                },
+                {
+                    "name": "round_id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "forceback",
+            "base": "",
+            "fields": [
+                {
+                    "name": "seat",
+                    "type": "uint8"
+                },
+                {
+                    "name": "election_gen",
+                    "type": "uint64"
+                },
+                {
+                    "name": "round_id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "index_key",
+            "base": "",
+            "fields": [
+                {
+                    "name": "idx",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "loadtier",
+            "base": "",
+            "fields": [
+                {
+                    "name": "tier",
+                    "type": "uint8"
+                },
+                {
+                    "name": "max_rows",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
+            "name": "purge",
+            "base": "",
+            "fields": [
+                {
+                    "name": "max_rows",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
+            "name": "repcandidate",
+            "base": "",
+            "fields": [
+                {
+                    "name": "proposer",
+                    "type": "name"
+                },
+                {
+                    "name": "c1",
+                    "type": "name"
+                },
+                {
+                    "name": "c2",
+                    "type": "name"
+                },
+                {
+                    "name": "c3",
+                    "type": "name"
+                },
+                {
+                    "name": "election_gen",
+                    "type": "uint64"
+                },
+                {
+                    "name": "round_id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "reset",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "rmcandidate",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "roster_row",
+            "base": "",
+            "fields": [
+                {
+                    "name": "idx",
+                    "type": "uint64"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "settle",
+            "base": "",
+            "fields": [
+                {
+                    "name": "caller",
+                    "type": "name"
+                },
+                {
+                    "name": "election_gen",
+                    "type": "uint64"
+                },
+                {
+                    "name": "round_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "max_steps",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
+            "name": "startinit",
+            "base": "",
+            "fields": [
+                {
+                    "name": "time_slot_sec",
+                    "type": "uint64"
+                },
+                {
+                    "name": "ordered_owners",
+                    "type": "name[]"
+                }
+            ]
+        },
+        {
+            "name": "stir",
+            "base": "",
+            "fields": [
+                {
+                    "name": "caller",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "tier2_row",
+            "base": "",
+            "fields": [
+                {
+                    "name": "idx",
+                    "type": "uint64"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "tier3_row",
+            "base": "",
+            "fields": [
+                {
+                    "name": "idx",
+                    "type": "uint64"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "tier_tally",
+            "base": "",
+            "fields": [
+                {
+                    "name": "votes_cast",
+                    "type": "uint32"
+                },
+                {
+                    "name": "yes1",
+                    "type": "uint32"
+                },
+                {
+                    "name": "yes2",
+                    "type": "uint32"
+                },
+                {
+                    "name": "yes3",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
+            "name": "vote",
+            "base": "",
+            "fields": [
+                {
+                    "name": "voter",
+                    "type": "name"
+                },
+                {
+                    "name": "election_gen",
+                    "type": "uint64"
+                },
+                {
+                    "name": "round_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "flight_hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "votes",
+                    "type": "flight_vote[]"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "addcandidate",
+            "type": "addcandidate",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Add Council Candidate\nsummary: '{{nowrap account}} registers as a council candidate.'\n---\n\n{{account}} registers as a candidate for the council election with the short handle {{handle}} and\npays the RAM for that candidate row. A generation accepts at most 1,000 candidates.\n\n## Preconditions\n- The caller must be authorized as {{account}}.\n- Candidate registration must be open (before the election has started).\n- {{account}} must not already be a candidate.\n- The handle must use the contract's allowed 1–32-byte ASCII character set."
+        },
+        {
+            "name": "finalizeinit",
+            "type": "finalizeinit",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Finalize Election Initialization\nsummary: 'Verify the tier snapshots and open simultaneous nominations.'\n---\n\nThe contract owner finalizes initialization: the tier-2 and tier-3 source scans must be complete,\ntheir snapshot sizes are verified against authoritative generation-scoped sysio.roa rows, and the\nshared nomination window opens for all 21 seats."
+        },
+        {
+            "name": "forceassign",
+            "type": "forceassign",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Assign a Council Recovery Seat\nsummary: 'Assign {{nowrap member}} to reserved council seat {{seat}}.'\n---\n\nThe contract owner assigns registered, unelected candidate {{member}} to the unfilled governance-reserved seat {{seat}} in election {{election_gen}}, round {{round_id}}. Assignment requires contract-owner authorization and cannot occur during an open voting window. The member's elected flag and seat result update atomically; no member can occupy two seats. Other filled seats and frozen snapshots are preserved."
+        },
+        {
+            "name": "forceback",
+            "type": "forceback",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Reserve a Seat for Governance Recovery\nsummary: 'Reserve council seat {{seat}} for manual recovery.'\n---\n\nThe contract owner reserves unfilled seat {{seat}} in election {{election_gen}}, round {{round_id}}, after the applicable nomination or voting window has elapsed. Before voting opens, the withdrawn flight and its position claims are released atomically. Frozen flights remain visible after voting closes. The recovery reservation survives continuation and excludes this seat from ordinary nominations, generation, and tabulation until governance assigns it. Contract-owner authorization is required."
+        },
+        {
+            "name": "loadtier",
+            "type": "loadtier",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Load Tier Snapshot\nsummary: 'Append tier-{{nowrap tier}} node owners into the frozen snapshot.'\n---\n\nThe contract owner inspects at most {{max_rows}} node-owner rows from sysio.roa while appending\ntier-{{tier}} identities into the frozen voting snapshot. A persistent source cursor bounds\nreads as well as writes, and identity deduplication allows a later pass to absorb newly observed\nowners. Called repeatedly until the tier scan is complete."
+        },
+        {
+            "name": "purge",
+            "type": "purge",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Purge Election State\nsummary: 'Delete up to {{max_rows}} ephemeral rows from the completed generation.'\n---\n\nThe contract owner deletes at most {{max_rows}} rows from the mode-specific candidate, roster,\ntier-snapshot, flight, ballot, and optional partial-council cleanup stages. Completion removes live election\nstate and reopens registration. Completed council history is retained; partial results from an\naborted active election are not."
+        },
+        {
+            "name": "repcandidate",
+            "type": "repcandidate",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Nominate or Replace a Council Flight\nsummary: '{{nowrap proposer}} submits an ordered flight for their vacant seat.'\n---\n\n{{proposer}} nominates {{c1}}, {{c2}}, and {{c3}} in priority order for their frozen T1 seat in election {{election_gen}}, round {{round_id}}. Candidates must be distinct, registered, and unelected. Each candidate-position pair can belong to only one flight. During the shared nomination window, a successful replacement releases prior claims and acquires the new claims atomically. A rejected replacement preserves the previous flight. The proposer must authorize this action. Stale identities or elapsed nominations fail; this action never opens voting or acts as a crank."
+        },
+        {
+            "name": "reset",
+            "type": "reset",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Begin Election Reset\nsummary: 'Abort initialization or an election, or clean a completed generation.'\n---\n\nThe contract owner starts cleanup while initialization is loading or while an election is active\nor complete. A loading abort preserves candidate registrations and reopens registration in the\nsame generation. An active-election abort advances the generation and removes partial council\nresults. A completed election advances the generation while retaining its council history. The\ncontract owner must call `purge` until cleanup completes."
+        },
+        {
+            "name": "rmcandidate",
+            "type": "rmcandidate",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Remove Council Candidate\nsummary: 'Remove candidate {{nowrap account}} before the election starts.'\n---\n\nThe contract owner removes {{account}} from the candidate pool. Allowed only while registration is open."
+        },
+        {
+            "name": "settle",
+            "type": "settle",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Advance the Council Round\nsummary: '{{nowrap caller}} advances bounded election work.'\n---\n\nAuthenticated {{caller}} advances election {{election_gen}}, round {{round_id}}, processing at most {{max_steps}} seats (1–21) in the persisted original order. After nominations expire, generation freezes one seed; voting opens only after all flights are finalized. After the shared voting deadline, tabulation processes each seat through T1, T2, T3 and A, B, C, immediately excluding elected members from later seats. A subsequent continuation starts fresh nominations for vacancies while retaining winners and snapshots. Stale identities fail. Exact deadlines do not trigger settlement. This action also contributes public entropy."
+        },
+        {
+            "name": "startinit",
+            "type": "startinit",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Start Election Initialization\nsummary: 'Freeze the tier-1 roster and begin an election.'\n---\n\nThe contract owner begins an election: registration closes, the ordered list of 21 tier-1 node\nowners is frozen as the seat roster, and the roa network generation is captured.\n\n## Preconditions\n- The caller must have contract-owner authorization.\n- At least 23 candidates must be registered.\n- `time_slot_sec` must be between one second and 30 days, inclusive.\n- `ordered_owners` must be a permutation of exactly the 21 tier-1 node owners in sysio.roa."
+        },
+        {
+            "name": "stir",
+            "type": "stir",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Contribute Council Entropy\nsummary: '{{nowrap caller}} contributes to the public entropy accumulator.'\n---\n\nAuthenticated {{caller}} contributes to the election's deterministic public entropy accumulator. This does not change an already frozen automatic-generation seed or advance election phases. Use settle to drive eligible transitions."
+        },
+        {
+            "name": "vote",
+            "type": "vote",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Submit a Council Round Ballot\nsummary: '{{nowrap voter}} submits one immutable ballot for the finalized round.'\n---\n\n{{voter}} submits independent YES/NO decisions in {{votes}} for every eligible flight in ascending seat order. Election {{election_gen}}, round {{round_id}}, and finalized flight commitment {{flight_hash}} must match the active voting window. The voter must authorize the action and belong to a frozen electorate. T1 owners omit their own seat's flight, including automatically generated flights; T2/T3 owners vote on every available flight without implicit YES credit. Ballots cannot be revised or duplicated. Votes and running totals are public. Submissions at the exact deadline are accepted. Results are tabulated only after the shared window closes using fixed electorate thresholds."
+        }
+    ],
+    "tables": [
+        {
+            "name": "ballots",
+            "type": "ballot_row",
+            "index_type": "i64",
+            "key_names": ["scope","account"],
+            "key_types": ["name","uint64"],
+            "table_id": 23362
+        },
+        {
+            "name": "candidates",
+            "type": "candidate_row",
+            "index_type": "i64",
+            "key_names": ["scope","account"],
+            "key_types": ["name","uint64"],
+            "table_id": 37238
+        },
+        {
+            "name": "config",
+            "type": "config_state",
+            "index_type": "i64",
+            "key_names": ["name"],
+            "key_types": ["name"],
+            "table_id": 21143
+        },
+        {
+            "name": "council",
+            "type": "council_row",
+            "index_type": "i64",
+            "key_names": ["scope","idx"],
+            "key_types": ["name","uint64"],
+            "table_id": 39085
+        },
+        {
+            "name": "flights",
+            "type": "flight_row",
+            "index_type": "i64",
+            "key_names": ["scope","idx"],
+            "key_types": ["name","uint64"],
+            "table_id": 10538
+        },
+        {
+            "name": "roster",
+            "type": "roster_row",
+            "index_type": "i64",
+            "key_names": ["scope","idx"],
+            "key_types": ["name","uint64"],
+            "table_id": 35108,
+            "secondary_indexes": [
+                {
+                    "name": "byowner",
+                    "key_type": "uint64",
+                    "table_id": 60639
+                }
+            ]
+        },
+        {
+            "name": "state",
+            "type": "election_state",
+            "index_type": "i64",
+            "key_names": ["name"],
+            "key_types": ["name"],
+            "table_id": 56269
+        },
+        {
+            "name": "tier2",
+            "type": "tier2_row",
+            "index_type": "i64",
+            "key_names": ["scope","idx"],
+            "key_types": ["name","uint64"],
+            "table_id": 25558,
+            "secondary_indexes": [
+                {
+                    "name": "byowner",
+                    "key_type": "uint64",
+                    "table_id": 22929
+                }
+            ]
+        },
+        {
+            "name": "tier3",
+            "type": "tier3_row",
+            "index_type": "i64",
+            "key_names": ["scope","idx"],
+            "key_types": ["name","uint64"],
+            "table_id": 42070,
+            "secondary_indexes": [
+                {
+                    "name": "byowner",
+                    "key_type": "uint64",
+                    "table_id": 6673
+                }
+            ]
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": [],
+    "action_results": [],
+    "enums": [
+        {
+            "name": "cleanup_mode",
+            "type": "uint8",
+            "values": [
+                {
+                    "name": "NONE",
+                    "value": 0
+                },
+                {
+                    "name": "INIT_ABORT",
+                    "value": 1
+                },
+                {
+                    "name": "ACTIVE_ABORT",
+                    "value": 2
+                },
+                {
+                    "name": "COMPLETED",
+                    "value": 3
+                }
+            ]
+        },
+        {
+            "name": "cleanup_stage",
+            "type": "uint8",
+            "values": [
+                {
+                    "name": "CANDIDATES",
+                    "value": 0
+                },
+                {
+                    "name": "ROSTER",
+                    "value": 1
+                },
+                {
+                    "name": "TIER2",
+                    "value": 2
+                },
+                {
+                    "name": "TIER3",
+                    "value": 3
+                },
+                {
+                    "name": "FLIGHTS",
+                    "value": 4
+                },
+                {
+                    "name": "BALLOTS",
+                    "value": 5
+                },
+                {
+                    "name": "COUNCIL",
+                    "value": 6
+                },
+                {
+                    "name": "COMPLETE",
+                    "value": 7
+                }
+            ]
+        },
+        {
+            "name": "election_phase",
+            "type": "uint8",
+            "values": [
+                {
+                    "name": "NOMINATING",
+                    "value": 0
+                },
+                {
+                    "name": "GENERATING",
+                    "value": 1
+                },
+                {
+                    "name": "VOTING",
+                    "value": 2
+                },
+                {
+                    "name": "TABULATING",
+                    "value": 3
+                },
+                {
+                    "name": "CONTINUING",
+                    "value": 4
+                },
+                {
+                    "name": "DONE",
+                    "value": 5
+                }
+            ]
+        },
+        {
+            "name": "election_tier",
+            "type": "uint8",
+            "values": [
+                {
+                    "name": "GOVERNANCE",
+                    "value": 0
+                },
+                {
+                    "name": "T1",
+                    "value": 1
+                },
+                {
+                    "name": "T2",
+                    "value": 2
+                },
+                {
+                    "name": "T3",
+                    "value": 3
+                }
+            ]
+        },
+        {
+            "name": "init_phase",
+            "type": "uint8",
+            "values": [
+                {
+                    "name": "REG",
+                    "value": 0
+                },
+                {
+                    "name": "LOADING",
+                    "value": 1
+                },
+                {
+                    "name": "READY",
+                    "value": 2
+                },
+                {
+                    "name": "CLEANING",
+                    "value": 3
+                }
+            ]
+        }
+    ]
+}
