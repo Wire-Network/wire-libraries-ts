@@ -39,8 +39,8 @@ after building those outputs; otherwise the exact registry versions remain in us
 
 | Family   | Generated clients and workflows                                          |
 | -------- | ------------------------------------------------------------------------- |
-| Ethereum | `OPP`, `OPPInbound`, `OperatorRegistry`, `ReserveManager`, reserve lifecycle and swaps |
-| Solana   | `liqsol_core`, configured reserve lifecycle, native SOL and classic SPL reserve swaps  |
+| Ethereum | `OPP`, `OPPInbound`, `BAR`, node-owner registration |
+| Solana   | `liqsol_core`, OPP transport and LIQ custody  |
 
 Client creation verifies all four boundaries before returning:
 
@@ -59,7 +59,7 @@ discriminator preserves the precise `EthereumOutpostClient` or
 factory entrypoints or internal module paths.
 
 These checks prove deployment compatibility, not end-to-end feature readiness.
-Applications must still gate swaps, staking, settlement, retry, funding, and
+Applications must still gate staking, settlement, retry, funding, and
 underwriting using platform capability evidence.
 
 ## Deployment profiles
@@ -143,33 +143,8 @@ const ethereum = await OutpostClient.create({
     connection: new JsonRpcProvider(ethereumRpcUrl)
   }
 })
-const reserves = ethereum.contract(EthereumContractName.ReserveManager)
+const inbound = ethereum.contract(EthereumContractName.OPPInbound)
 ```
-
-Wallet-connected clients expose verified reserve-swap workflows without a
-separate deployment address book:
-
-```ts
-const submission = await ethereum.swaps.requestNative({
-  sourceTokenCode,
-  sourceReserveCode,
-  sourceAmount,
-  targetChainCode,
-  targetTokenCode,
-  targetReserveCode,
-  targetRecipient,
-  targetAmount,
-  targetToleranceBps
-})
-
-// Correlate this protocol id with sysio.uwrit; the transaction hash alone is
-// only source-chain submission evidence.
-console.log(submission.sourceRequestId)
-```
-
-Ethereum also exposes `requestErc20WithApproval`, `nativeBalance`, and
-`erc20Balance`. Solana exposes `requestNative`, `requestSpl`, `nativeBalance`,
-and `splBalance` through the same `client.swaps` ownership boundary.
 
 ## Ethereum node owners
 
@@ -198,84 +173,6 @@ must keep the action disabled unless deployment and capability evidence both
 advertise the complete node-owner flow, then follow the resulting Wire-side
 registration state separately.
 
-## Reserve lifecycle
-
-Wallet-connected clients expose the external half of the post-bootstrap
-reserve lifecycle. The external create escrows reserve capital and emits the
-attestation that creates a pending `sysio.reserv` row. A signed
-`@wireio/sdk-core` `ReserveClient` then supplies the exact requested WIRE amount
-and activates that row.
-
-```ts
-const ethereumSubmission = await ethereum.reserves.createNative({
-  tokenCode,
-  reserveCode,
-  externalTokenAmount,
-  requestedWireAmount,
-  connectorWeightBps: 5_000,
-  name: "Private ETH reserve",
-  description: "",
-  isPrivate: true,
-  creatorPubKey
-})
-
-const configuredTokens = await solana.reserves.getConfiguredTokens()
-const splToken = configuredTokens.find(token => !token.isNative)
-if (splToken == null) throw new Error("No configured SPL reserve token.")
-
-const solanaSubmission = await solana.reserves.create({
-  tokenCode: splToken.tokenCode,
-  reserveCode,
-  externalTokenAmount: splAmount,
-  requestedWireAmount,
-  connectorWeightBps: 5_000,
-  name: "Private SPL reserve",
-  description: "",
-  isPrivate: true,
-  mint: splToken.mint
-})
-```
-
-Ethereum supports native creation, ERC-20 approval or permit creation, pending
-cancellation, and local reserve reads. Solana supports deployment-configured
-token discovery, instruction assembly, creation, pending cancellation, address
-derivation, and local reserve reads. `cancel` is valid only while creation is
-pending and drives the protocol refund path.
-
-The all-zero mint returned for a configured native SOL route is protocol
-metadata, not an Anchor account. The current `create_reserve` account context
-still requires a real placeholder SPL mint and the creator's token account for
-native SOL creation. Consumers that have not provisioned those accounts should
-select a configured non-native SPL route, as in the example above.
-
-Private is a routing constraint, not access control or confidentiality. Private
-reserves cannot use WIRE as a swap endpoint; when either external route leg is
-private, Wire requires both active reserves to have the same non-empty owner.
-The current protocol exposes no creator withdrawal, close, or redemption after
-activation. This SDK intentionally does not invent an active-reserve exit API.
-
-Solana uses the same facade and returns the precise Anchor program type at the
-runtime program address:
-
-```ts
-import {
-  OutpostChainFamily,
-  OutpostClient,
-  SolanaProgramName
-} from "@wireio/sdk-outpost"
-
-const solana = await OutpostClient.create({
-  family: OutpostChainFamily.solana,
-  options: { profile, provider: anchorProvider }
-})
-const liqsol = solana.program(SolanaProgramName.liqsolCore)
-```
-
-The producer-owned `LiqsolCore` type preserves the IDL's literal account namespace,
-including `Program<LiqsolCore>["account"]["outpostConfig"]` and
-`Program<LiqsolCore>["account"]["reserve"]`. Import it from
-`@wireio/outpost-solana-artifacts`; never widen the IDL to the base `Idl` type.
-
 ## Artifact ownership
 
 `@wireio/outpost-ethereum-artifacts` and `@wireio/outpost-solana-artifacts` are
@@ -288,16 +185,11 @@ download handoffs or regenerate chain code.
 
 ## Consumer boundaries
 
-- Use this package for typed external `ReserveManager`, `OperatorRegistry`,
-  `OPP`, `OPPInbound`, `liqsol_core`, reserve lifecycle, and source reserve-swap
-  execution.
-- Use `@wireio/sdk-core` for Wire transaction construction, reserve and token
-  registries, underwriting state, and settlement correlation.
+- Use this package for verified `OPP`, `OPPInbound`, `BAR` and `liqsol_core` clients.
+- Use `@wireio/sdk-core` for WIRE transactions, token registration, collateral,
+  syndication and bond state.
 - Recreate external clients whenever the selected deployment profile changes.
-- Combine SDK deployment verification with flow-specific capability gates before
-  enabling a product action.
-- Ethereum reserve-swap submissions estimate the live call and add 25% gas
-  headroom for nested OPP execution; unused gas is not charged.
+- Combine deployment verification with flow-specific capability checks.
 
 ## Maintainer commands
 

@@ -3,8 +3,7 @@ import {
   BAR__factory,
   IERC1155__factory,
   OPP__factory,
-  OperatorRegistry__factory,
-  ReserveManager__factory
+  OPPInbound__factory
 } from "@wireio/outpost-ethereum-artifacts"
 import {
   liqsolCoreIdl,
@@ -98,12 +97,12 @@ describe("source-owned outpost artifacts", () => {
 
   it("rejects a runtime deployment with an incompatible Ethereum ABI", () => {
     const profile = createOutpostDeploymentProfileFixture()
-    profile.ethereum.contracts[EthereumContractName.ReserveManager].abiSha256 =
+    profile.ethereum.contracts[EthereumContractName.OPPInbound].abiSha256 =
       "f".repeat(64)
 
     expect(() =>
       assertOutpostArtifactCompatibility(profile, OutpostChainFamily.ethereum)
-    ).toThrow("Ethereum ReserveManager ABI interface mismatch")
+    ).toThrow("Ethereum OPPInbound ABI interface mismatch")
   })
 
   it("rejects a runtime deployment with an incompatible Solana IDL", () => {
@@ -116,28 +115,17 @@ describe("source-owned outpost artifacts", () => {
     ).toThrow("Solana liqsolCore IDL interface mismatch")
   })
 
-  it("generates the callable swap and collateral surfaces", () => {
+  it("generates active transport and node-owner surfaces", () => {
     const accountNames: Array<keyof Program<LiqsolCore>["account"]> = [
       "outpostConfig",
-      "reserve"
+      "operatorRegistry"
     ]
     expect(OPP__factory.abi.length).toBeGreaterThan(0)
     expect(
       OPP__factory.createInterface().getFunction("addAttestation")
     ).toBeDefined()
     expect(
-      ReserveManager__factory.createInterface().getFunction("requestSwap")
-    ).toBeDefined()
-    expect(
-      ReserveManager__factory.createInterface().getFunction(
-        "requestSwapErc20WithApproval"
-      )
-    ).toBeDefined()
-    expect(
-      OperatorRegistry__factory.createInterface().getFunction("deposit")
-    ).toBeDefined()
-    expect(
-      OperatorRegistry__factory.createInterface().getFunction("commit")
+      OPPInbound__factory.createInterface().getFunction("epochIn")
     ).toBeDefined()
     expect(
       BAR__factory.createInterface().getFunction("wireNodesContract")
@@ -160,6 +148,6 @@ describe("source-owned outpost artifacts", () => {
         "commitUnderwrite"
       ])
     )
-    expect(accountNames).toEqual(["outpostConfig", "reserve"])
+    expect(accountNames).toEqual(["outpostConfig", "operatorRegistry"])
   })
 })
