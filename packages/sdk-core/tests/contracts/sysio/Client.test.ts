@@ -22,6 +22,54 @@ function createMockApi(rows: unknown[] = []) {
 }
 
 describe("system contract proxy", () => {
+  test("prepares native-permission Andon actions without legacy actors", () => {
+    const andon = contracts.sysio.getSysioContract(SysioContractName.andon),
+      authorization = ["sysio.andon@panic"],
+      pull = andon.actions.pull.prepare(
+        { reason: "Operator review" },
+        { authorization }
+      ),
+      clear = andon.actions.clear.prepare(
+        { note: "Review complete" },
+        { authorization }
+      )
+
+    expect(pull).toMatchObject({
+      account: "sysio.andon",
+      name: "pull",
+      data: { reason: "Operator review" }
+    })
+    expect(pull.authorization.map(String)).toEqual(authorization)
+    expect(clear).toMatchObject({ data: { note: "Review complete" } })
+    expect(() => Reflect.get(andon.actions, "addpuller")).toThrow()
+    expect(() => Reflect.get(andon.actions, "setpanic")).toThrow()
+    expect(() => Reflect.get(andon.tables, "andonconfig")).toThrow()
+  })
+
+  test("preserves token-qualified collateral and bond amounts beyond safe integers", () => {
+    const opreg = contracts.sysio.getSysioContract(SysioContractName.opreg),
+      bond = contracts.sysio.getSysioContract(SysioContractName.bond),
+      amount = "9007199254740993",
+      collateral = { account: "alice", token_code: "LIQETH", amount },
+      acceptance = { underwriter: "alice", request_id: "7", amount }
+
+    expect(opreg.actions.deposit.prepare(collateral)).toMatchObject({
+      data: collateral
+    })
+    expect(opreg.actions.withdraw.prepare(collateral)).toMatchObject({
+      data: collateral
+    })
+    expect(bond.actions.accept.prepare(acceptance)).toMatchObject({
+      data: acceptance
+    })
+    expect(
+      opreg.actions.claimremit.prepare({ account: "alice", token_code: "WIRE" })
+    ).toMatchObject({ data: { account: "alice", token_code: "WIRE" } })
+    expect(bond.actions.claimwire.prepare({ account: "alice" })).toMatchObject({
+      data: { account: "alice" }
+    })
+  })
+
   test("resolves and caches every generated contract and member", () => {
     const api = createMockApi(),
       sysio = contracts.sysio.createClient({ client: api })

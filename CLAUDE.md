@@ -1,5 +1,14 @@
 # CLAUDE.md
 
+- Launch declarations were regenerated using SYSIO's
+  `contracts/tools/generate-sysio-contract-types.py` and all 20 checked-in
+  system ABIs at `e9ac87c194cfa07a692c013fd826670ba43050c2`, then formatted
+  with this repository's Prettier configuration. Do not hand-edit them.
+- Andon authorization uses native permissions; do not restore actor arguments,
+  `addpuller`, `setpanic`, `andonconfig`, or syndication `frozen_mark` to support
+  an older sandbox. The generic contract facade already supports token-qualified
+  operator collateral and statement-bond actions; no extra client is needed.
+
 > **Opt-in deep reference**: the org-wide TypeScript style guide is at `STYLE.md` (~1000 lines). It is **NOT auto-imported** — pull it in deliberately for tasks that warrant it: `@STYLE.md`. The rules below cover the day-to-day invariants for this repo.
 
 ## Build & Development

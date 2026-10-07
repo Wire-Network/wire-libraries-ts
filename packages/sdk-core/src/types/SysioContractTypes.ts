@@ -14,59 +14,30 @@ export interface ExtendedAsset {
 
 // ── sysio.andon ──
 
-/** sysio.andon::addpuller (action) */
-export interface SysioAndonAddpullerAction {
-  contract: string
-}
-
-/** sysio.andon::andon_config (type) */
-export interface SysioAndonAndonConfigType {
-  panic: string
-  pullers: string[]
-}
-
 /** sysio.andon::clear (action) */
 export interface SysioAndonClearAction {
-  actor: string
   note: string
 }
 
 /** sysio.andon::cord_state (type) */
 export interface SysioAndonCordStateType {
   pulled: boolean
-  pulled_by: string
-  pulled_at: string
+  when: string
   reason: string
-  pulled_at_epoch: number
-  cleared_by: string
-  cleared_at: string
-  note: string
-  cleared_at_epoch: number
-  pull_count: number | string
-  frozen_epochs: number | string
 }
 
 /** sysio.andon::pull (action) */
 export interface SysioAndonPullAction {
-  actor: string
   reason: string
-}
-
-/** sysio.andon::setpanic (action) */
-export interface SysioAndonSetpanicAction {
-  account: string
 }
 
 /** sysio.andon - action + table surface for the typed contract client. */
 export interface SysioAndonContract {
   actions: {
-    addpuller: SysioAndonAddpullerAction
     clear: SysioAndonClearAction
     pull: SysioAndonPullAction
-    setpanic: SysioAndonSetpanicAction
   }
   tables: {
-    andonconfig: SysioAndonAndonConfigType
     cord: SysioAndonCordStateType
   }
 }
@@ -2709,7 +2680,6 @@ export interface SysioSyndBucketRowType {
   direction: SysioSyndBucketDirection | keyof typeof SysioSyndBucketDirection
   level: number | string
   last_epoch: number
-  frozen_mark: number | string
 }
 
 /** sysio.synd::challenge (action) */
@@ -4261,8 +4231,8 @@ export const SysioContractDefinitions: {
   [SysioContractName.andon]: {
     name: SysioContractName.andon,
     account: "sysio.andon",
-    actions: ["addpuller", "clear", "pull", "setpanic"],
-    tables: ["andonconfig", "cord"]
+    actions: ["clear", "pull"],
+    tables: ["cord"]
   },
   [SysioContractName.authex]: {
     name: SysioContractName.authex,

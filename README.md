@@ -1,5 +1,12 @@
 # Wire Libraries TypeScript
 
+The launch contract declarations track SYSIO
+`e9ac87c194cfa07a692c013fd826670ba43050c2` (syndication/underwriting).
+Andon uses native account permissions: `pull({ reason })`, `clear({ note })`,
+and the `cord` table. The retired actor configuration and syndication
+`frozen_mark` field are absent. These declarations describe the proposed
+contract set, not the older deployed sandbox or a published SDK release.
+
 A monorepo containing shared TypeScript libraries for Wire applications, providing cross-platform utilities for logging, type guards, async helpers, blockchain SDK primitives, and protobuf code-generation tooling.
 
 ## Packages
