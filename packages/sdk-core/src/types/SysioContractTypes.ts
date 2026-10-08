@@ -591,7 +591,6 @@ export enum SysioCounclElectionPhase {
 
 /** sysio.councl::election_tier (enum, uint8) */
 export enum SysioCounclElectionTier {
-  GOVERNANCE = 0,
   T1 = 1,
   T2 = 2,
   T3 = 3,
@@ -671,7 +670,9 @@ export interface SysioCounclElectionStateType {
   vote_deadline: string
   cursor: number
   seats_filled: number
-  backstop_mask: number
+  t1_ballots: number
+  t2_ballots: number
+  t3_ballots: number
   flight_hash: string
   round_seed: string
   acc: string
@@ -697,21 +698,6 @@ export interface SysioCounclFlightVoteType {
   v1: boolean
   v2: boolean
   v3: boolean
-}
-
-/** sysio.councl::forceassign (action) */
-export interface SysioCounclForceassignAction {
-  seat: number
-  member: string
-  election_gen: number | string
-  round_id: number | string
-}
-
-/** sysio.councl::forceback (action) */
-export interface SysioCounclForcebackAction {
-  seat: number
-  election_gen: number | string
-  round_id: number | string
 }
 
 /** sysio.councl::index_key (type) */
@@ -808,8 +794,6 @@ export interface SysioCounclContract {
   actions: {
     addcandidate: SysioCounclAddcandidateAction
     finalizeinit: SysioCounclFinalizeinitAction
-    forceassign: SysioCounclForceassignAction
-    forceback: SysioCounclForcebackAction
     loadtier: SysioCounclLoadtierAction
     purge: SysioCounclPurgeAction
     repcandidate: SysioCounclRepcandidateAction
@@ -4318,7 +4302,7 @@ export const SysioContractDefinitions: {
   [SysioContractName.bios]: { name: SysioContractName.bios, account: "sysio", actions: ["activate", "deleteauth", "linkauth", "newaccount", "reqactivated", "reqauth", "setabi", "setalimits", "setcode", "setfinalizer", "setparams", "setpriv", "setprodkeys", "setprods", "unlinkauth", "updateauth"], tables: ["abihash"] },
   [SysioContractName.chains]: { name: SysioContractName.chains, account: "sysio.chains", actions: ["activchain", "regchain", "setoutpost"], tables: ["chains"] },
   [SysioContractName.chalg]: { name: SysioContractName.chalg, account: "sysio.chalg", actions: ["chkdispute", "chkuwchal", "claimbond", "opendispute", "openuwchal", "slashop", "uwchalbond", "votedispute", "voteuwchal"], tables: ["bondcredits", "chalgstate", "disputes", "disputevote", "uwchals", "uwchalvote"] },
-  [SysioContractName.councl]: { name: SysioContractName.councl, account: "sysio.councl", actions: ["addcandidate", "finalizeinit", "forceassign", "forceback", "loadtier", "purge", "repcandidate", "reset", "rmcandidate", "settle", "startinit", "stir", "vote"], tables: ["ballots", "candidates", "config", "council", "flights", "roster", "state", "tier2", "tier3"] },
+  [SysioContractName.councl]: { name: SysioContractName.councl, account: "sysio.councl", actions: ["addcandidate", "finalizeinit", "loadtier", "purge", "repcandidate", "reset", "rmcandidate", "settle", "startinit", "stir", "vote"], tables: ["ballots", "candidates", "config", "council", "flights", "roster", "state", "tier2", "tier3"] },
   [SysioContractName.dclaim]: { name: SysioContractName.dclaim, account: "sysio.dclaim", actions: ["claim", "flushexpired", "importdone", "importseed", "linkswept", "onreward", "setclmwindow", "setconfig"], tables: ["capcfg", "capcounters", "pclaims", "rwdcursors", "unmapped"] },
   [SysioContractName.epoch]: { name: SysioContractName.epoch, account: "sysio.epoch", actions: ["advance", "pause", "schbatchgps", "setconfig", "unpause"], tables: ["blocklog", "epochcfg", "epochstate"] },
   [SysioContractName.liq]: { name: SysioContractName.liq, account: "sysio.liq", actions: ["addkicker", "addyield", "claim", "close", "create", "desyndicate", "importdone", "importsynd", "linkswept", "mintsynd", "mintyield", "open", "park", "queueyield", "recredit", "regliqpool", "setkicker", "sweep", "transfer"], tables: ["accounts", "liqconfig", "liqcounters", "liqcursors", "liqpending", "parked", "stat", "yieldidx"] },

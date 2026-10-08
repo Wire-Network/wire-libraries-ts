@@ -68,7 +68,7 @@ describe("generated council round interface", () => {
     expect(Serializer.objectify(encoded.decodeData(councilAbi))).toEqual(data)
   })
 
-  test("encodes nominations, bounded cranks, and targeted recovery using generated actions", () => {
+  test("encodes nominations and bounded cranks using generated actions", () => {
     const nomination = {
       proposer: voter,
       c1: "bob",
@@ -81,20 +81,10 @@ describe("generated council round interface", () => {
       ...identity,
       max_steps: seatCount
     } satisfies SysioContracts.SysioCounclSettleAction
-    const backstop = {
-      seat: 20,
-      ...identity
-    } satisfies SysioContracts.SysioCounclForcebackAction
-    const assignment = {
-      ...backstop,
-      member: "bob"
-    } satisfies SysioContracts.SysioCounclForceassignAction
     const options = { abi: councilAbi, authorization }
     const prepared = [
       [council.actions.repcandidate.prepare(nomination, options), nomination],
-      [council.actions.settle.prepare(settlement, options), settlement],
-      [council.actions.forceback.prepare(backstop, options), backstop],
-      [council.actions.forceassign.prepare(assignment, options), assignment]
+      [council.actions.settle.prepare(settlement, options), settlement]
     ] as const
 
     prepared.forEach(([action, expected]) => {
@@ -108,5 +98,56 @@ describe("generated council round interface", () => {
         expected
       )
     })
+  })
+
+  test("decodes round ballot counters from the generated state ABI", () => {
+    const state = {
+      phase: SysioContracts.SysioCounclElectionPhase.VOTING,
+      round_id: identity.round_id,
+      round_open_ts: "2026-10-08T00:00:00.000",
+      vote_deadline: "2026-10-08T01:00:00.000",
+      cursor: 0,
+      seats_filled: 16,
+      t1_ballots: 21,
+      t2_ballots: 30,
+      t3_ballots: 100,
+      flight_hash: flightHash,
+      round_seed: flightHash,
+      acc: flightHash,
+      stir_count: "151"
+    } satisfies SysioContracts.SysioCounclElectionStateType
+    const encoded = Serializer.encode({
+      object: state,
+      type: "election_state",
+      abi: councilAbi
+    })
+    const decoded = Serializer.objectify(
+      Serializer.decode({
+        data: encoded,
+        type: "election_state",
+        abi: councilAbi
+      })
+    )
+
+    expect(decoded).toMatchObject({
+      round_id: state.round_id,
+      seats_filled: state.seats_filled,
+      t1_ballots: state.t1_ballots,
+      t2_ballots: state.t2_ballots,
+      t3_ballots: state.t3_ballots
+    })
+    expect(decoded).not.toHaveProperty("backstop_mask")
+  })
+
+  test("exposes only vote-based seating through the generated action surface", () => {
+    const definition =
+      SysioContracts.SysioContractDefinitions[
+        SysioContracts.SysioContractName.councl
+      ]
+    expect(definition.actions).not.toContain("forceback")
+    expect(definition.actions).not.toContain("forceassign")
+    expect(councilAbi.actions.map(action => String(action.name))).toEqual(
+      definition.actions
+    )
   })
 })
