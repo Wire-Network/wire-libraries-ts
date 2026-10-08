@@ -1,5 +1,16 @@
 # Wire Libraries TypeScript
 
+The launch contract declarations track SYSIO
+`517de37142660624904001082ac34cfed9afeccf` (syndication/underwriting).
+Andon uses native account permissions: `pull({ reason })`, `clear({ note })`,
+and the `cord` table. The retired actor configuration and syndication
+`frozen_mark` field are absent. These declarations describe the proposed
+contract set, not the older deployed sandbox or a published SDK release.
+[SYSIO PR #670](https://github.com/Wire-Network/wire-sysio/pull/670) adds required `min_desyndicate` base units and removes the
+retired DClaim reward cursor, LIQ kicker, and `fundclaim` surfaces. Funded
+pre-launch claims, operator collateral, statement bonds, and swap actions
+remain available. This source pin requires the upstream follow-up to land.
+
 A monorepo containing shared TypeScript libraries for Wire applications, providing cross-platform utilities for logging, type guards, async helpers, blockchain SDK primitives, and protobuf code-generation tooling.
 
 ## Packages

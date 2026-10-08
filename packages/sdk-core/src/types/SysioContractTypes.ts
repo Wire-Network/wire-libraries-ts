@@ -14,59 +14,30 @@ export interface ExtendedAsset {
 
 // ── sysio.andon ──
 
-/** sysio.andon::addpuller (action) */
-export interface SysioAndonAddpullerAction {
-  contract: string
-}
-
-/** sysio.andon::andon_config (type) */
-export interface SysioAndonAndonConfigType {
-  panic: string
-  pullers: string[]
-}
-
 /** sysio.andon::clear (action) */
 export interface SysioAndonClearAction {
-  actor: string
   note: string
 }
 
 /** sysio.andon::cord_state (type) */
 export interface SysioAndonCordStateType {
   pulled: boolean
-  pulled_by: string
-  pulled_at: string
+  when: string
   reason: string
-  pulled_at_epoch: number
-  cleared_by: string
-  cleared_at: string
-  note: string
-  cleared_at_epoch: number
-  pull_count: number | string
-  frozen_epochs: number | string
 }
 
 /** sysio.andon::pull (action) */
 export interface SysioAndonPullAction {
-  actor: string
   reason: string
-}
-
-/** sysio.andon::setpanic (action) */
-export interface SysioAndonSetpanicAction {
-  account: string
 }
 
 /** sysio.andon - action + table surface for the typed contract client. */
 export interface SysioAndonContract {
   actions: {
-    addpuller: SysioAndonAddpullerAction
     clear: SysioAndonClearAction
     pull: SysioAndonPullAction
-    setpanic: SysioAndonSetpanicAction
   }
   tables: {
-    andonconfig: SysioAndonAndonConfigType
     cord: SysioAndonCordStateType
   }
 }
@@ -1010,7 +981,6 @@ export interface SysioDclaimCapConfigType {
 /** sysio.dclaim::cap_counters (type) */
 export interface SysioDclaimCapCountersType {
   next_unmapped_id: number | string
-  next_cursor_id: number | string
 }
 
 /** sysio.dclaim::claim (action) */
@@ -1045,18 +1015,6 @@ export interface SysioDclaimLinksweptAction {
   native_pubkey: string
 }
 
-/** sysio.dclaim::onreward (action) */
-export interface SysioDclaimOnrewardAction {
-  chain_code: number | string
-  staker_wire_account: string
-  reward_chain: SysioDclaimChainkind | keyof typeof SysioDclaimChainkind
-  staker_native_addr: string
-  reward_amount: number | string
-  reward_epoch_index: number
-  external_epoch_ref: number | string
-  share_bps: number
-}
-
 /** sysio.dclaim::pclaim_key (type) */
 export interface SysioDclaimPclaimKeyType {
   wire_account: number | string
@@ -1067,20 +1025,6 @@ export interface SysioDclaimPendingClaimType {
   wire_account: string
   balance: string
   expires_at_sec: number
-}
-
-/** sysio.dclaim::reward_cursor (type) */
-export interface SysioDclaimRewardCursorType {
-  id: number | string
-  chain_code: number | string
-  chain: SysioDclaimChainkind | keyof typeof SysioDclaimChainkind
-  native_pubkey: string
-  last_external_epoch_ref: number | string
-}
-
-/** sysio.dclaim::rwdcur_key (type) */
-export interface SysioDclaimRwdcurKeyType {
-  id: number | string
 }
 
 /** sysio.dclaim::setclmwindow (action) */
@@ -1113,7 +1057,6 @@ export interface SysioDclaimContract {
     importdone: SysioDclaimImportdoneAction
     importseed: SysioDclaimImportseedAction
     linkswept: SysioDclaimLinksweptAction
-    onreward: SysioDclaimOnrewardAction
     setclmwindow: SysioDclaimSetclmwindowAction
     setconfig: SysioDclaimSetconfigAction
   }
@@ -1121,7 +1064,6 @@ export interface SysioDclaimContract {
     capcfg: SysioDclaimCapConfigType
     capcounters: SysioDclaimCapCountersType
     pclaims: SysioDclaimPendingClaimType
-    rwdcursors: SysioDclaimRewardCursorType
     unmapped: SysioDclaimUnmappedTokenType
   }
 }
@@ -1222,13 +1164,6 @@ export interface SysioLiqAccountType {
   owed_wire: number | string
 }
 
-/** sysio.liq::addkicker (action) */
-export interface SysioLiqAddkickerAction {
-  sym: string
-  base_balance: number | string
-  requested: number | string
-}
-
 /** sysio.liq::addyield (action) */
 export interface SysioLiqAddyieldAction {
   from: string
@@ -1274,11 +1209,6 @@ export interface SysioLiqCurrencyStatsType {
   chain_code: string
   token_code: string
   pair_symbol: string
-}
-
-/** sysio.liq::liq_config (type) */
-export interface SysioLiqLiqConfigType {
-  kicker_bps: number
 }
 
 /** sysio.liq::mint (action) */
@@ -1332,11 +1262,6 @@ export interface SysioLiqRegliqpoolAction {
   clip_floor: number | string
 }
 
-/** sysio.liq::setkicker (action) */
-export interface SysioLiqSetkickerAction {
-  bps: number
-}
-
 /** sysio.liq::settle (action) */
 export interface SysioLiqSettleAction {
   custodian: string
@@ -1367,7 +1292,6 @@ export interface SysioLiqYieldIndexType {
 /** sysio.liq - action + table surface for the typed contract client. */
 export interface SysioLiqContract {
   actions: {
-    addkicker: SysioLiqAddkickerAction
     addyield: SysioLiqAddyieldAction
     burn: SysioLiqBurnAction
     claim: SysioLiqClaimAction
@@ -1380,13 +1304,11 @@ export interface SysioLiqContract {
     queueyield: SysioLiqQueueyieldAction
     recredit: SysioLiqRecreditAction
     regliqpool: SysioLiqRegliqpoolAction
-    setkicker: SysioLiqSetkickerAction
     settle: SysioLiqSettleAction
     transfer: SysioLiqTransferAction
   }
   tables: {
     accounts: SysioLiqAccountType
-    liqconfig: SysioLiqLiqConfigType
     liqpending: SysioLiqPendingYieldType
     stat: SysioLiqCurrencyStatsType
     yieldidx: SysioLiqYieldIndexType
@@ -1420,7 +1342,6 @@ export enum SysioMsgchAttestationtype {
   ATTESTATION_TYPE_OPERATORS = 60947,
   ATTESTATION_TYPE_BATCH_OPERATOR_GROUPS = 60943,
   ATTESTATION_TYPE_NODE_OWNER_REG = 60949,
-  ATTESTATION_TYPE_STAKING_REWARD = 60950,
   ATTESTATION_TYPE_STAKE_RESULT = 60951,
   ATTESTATION_TYPE_ATTESTATION_PROCESSING_ERROR = 60952,
   ATTESTATION_TYPE_UNDERWRITE_INTENT_COMMIT = 60953,
@@ -2709,7 +2630,6 @@ export interface SysioSyndBucketRowType {
   direction: SysioSyndBucketDirection | keyof typeof SysioSyndBucketDirection
   level: number | string
   last_epoch: number
-  frozen_mark: number | string
 }
 
 /** sysio.synd::challenge (action) */
@@ -2975,6 +2895,7 @@ export interface SysioSyndSetconfigAction {
   window_sec: number
   bounty: number | string
   challenge_extra: number | string
+  min_desyndicate: number | string
 }
 
 /** sysio.synd::sweep (action) */
@@ -3013,6 +2934,7 @@ export interface SysioSyndSyndConfigType {
   window_sec: number
   bounty: number | string
   challenge_extra: number | string
+  min_desyndicate: number | string
 }
 
 /** sysio.synd::synd_counters (type) */
@@ -3337,12 +3259,6 @@ export interface SysioSystemFinalizerKeyTType {
 /** sysio.system::finkey_key_t (type) */
 export interface SysioSystemFinkeyKeyTType {
   id: number | string
-}
-
-/** sysio.system::fundclaim (action) */
-export interface SysioSystemFundclaimAction {
-  recipient: string
-  amount: number | string
 }
 
 /** sysio.system::getsnaphash (action) */
@@ -3718,7 +3634,6 @@ export interface SysioSystemT5StateType {
   pending_emission_amount: number | string
   period_start_epoch: number
   batch_group_epochs: number[]
-  capital_shortfall_total: number | string
   pending_nominal_slots: number | string
 }
 
@@ -3860,7 +3775,6 @@ export interface SysioSystemContract {
     deleteauth: SysioSystemDeleteauthAction
     delfinkey: SysioSystemDelfinkeyAction
     delsnapprov: SysioSystemDelsnapprovAction
-    fundclaim: SysioSystemFundclaimAction
     getsnaphash: SysioSystemGetsnaphashAction
     init: SysioSystemInitAction
     initt5: SysioSystemInitt5Action
@@ -4261,8 +4175,8 @@ export const SysioContractDefinitions: {
   [SysioContractName.andon]: {
     name: SysioContractName.andon,
     account: "sysio.andon",
-    actions: ["addpuller", "clear", "pull", "setpanic"],
-    tables: ["andonconfig", "cord"]
+    actions: ["clear", "pull"],
+    tables: ["cord"]
   },
   [SysioContractName.authex]: {
     name: SysioContractName.authex,
@@ -4372,11 +4286,10 @@ export const SysioContractDefinitions: {
       "importdone",
       "importseed",
       "linkswept",
-      "onreward",
       "setclmwindow",
       "setconfig"
     ],
-    tables: ["capcfg", "capcounters", "pclaims", "rwdcursors", "unmapped"]
+    tables: ["capcfg", "capcounters", "pclaims", "unmapped"]
   },
   [SysioContractName.epoch]: {
     name: SysioContractName.epoch,
@@ -4388,7 +4301,6 @@ export const SysioContractDefinitions: {
     name: SysioContractName.liq,
     account: "sysio.liq",
     actions: [
-      "addkicker",
       "addyield",
       "burn",
       "claim",
@@ -4401,11 +4313,10 @@ export const SysioContractDefinitions: {
       "queueyield",
       "recredit",
       "regliqpool",
-      "setkicker",
       "settle",
       "transfer"
     ],
-    tables: ["accounts", "liqconfig", "liqpending", "stat", "yieldidx"]
+    tables: ["accounts", "liqpending", "stat", "yieldidx"]
   },
   [SysioContractName.msgch]: {
     name: SysioContractName.msgch,
@@ -4592,7 +4503,6 @@ export const SysioContractDefinitions: {
       "deleteauth",
       "delfinkey",
       "delsnapprov",
-      "fundclaim",
       "getsnaphash",
       "init",
       "initt5",
