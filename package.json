@@ -40,7 +40,7 @@
     "browser": "last 5 versions"
   },
   "dependencies": {
-    "@wireio/opp-typescript-models": "^1.0.48"
+    "@wireio/opp-typescript-models": "^1.0.51"
   },
   "resolutions": {
     "@3fv/prelude-ts": "^0.8.41",
