@@ -2,8 +2,11 @@
 
 - Launch declarations were regenerated using SYSIO's
   `contracts/tools/generate-sysio-contract-types.py` and all 20 checked-in
-  system ABIs at `e9ac87c194cfa07a692c013fd826670ba43050c2`, then formatted
+  system ABIs at `517de37142660624904001082ac34cfed9afeccf`, then formatted
   with this repository's Prettier configuration. Do not hand-edit them.
+- The source pin includes pending [SYSIO PR #670](https://github.com/Wire-Network/wire-sysio/pull/670): `min_desyndicate` is required
+  in syndication configuration; do not restore DClaim reward cursors, LIQ kicker
+  actions/configuration, or `fundclaim`. Funded pre-launch claim APIs remain.
 - Andon authorization uses native permissions; do not restore actor arguments,
   `addpuller`, `setpanic`, `andonconfig`, or syndication `frozen_mark` to support
   an older sandbox. The generic contract facade already supports token-qualified
