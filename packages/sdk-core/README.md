@@ -28,6 +28,15 @@ after their first access. Its `actions.<name>.prepare/invoke` and
 `tables.<name>.query` surface mirrors Wire Tools' `getSysioContract`. Use either
 the concise root syntax or `getSysioContract` when the contract name is dynamic.
 
+The non-council declarations are generated from the checked-in system ABIs at
+[wire-sysio #639](https://github.com/Wire-Network/wire-sysio/pull/639), merge
+`f3a887e0ddd76113a128510de72da1ee40c9973c`. Pay, returned collateral, and
+DClaim balances do not expire. Andon exposes `pull({ reason })`,
+`clear({ note })`, and `cord` with `pulled`, `when`, and `reason`. Configure its
+native permissions separately and supply explicit action authorization when
+preparing writes. There is no contract-managed panic/puller registry, and
+syndication buckets no longer expose `frozen_mark`.
+
 ```ts
 import { SysioContracts } from "@wireio/sdk-core"
 
@@ -102,84 +111,12 @@ The on-chain registry is authoritative for protocol identity and activation.
 RPC URLs, explorers, icons, wallet adapters, and application capabilities stay
 in the consuming application's runtime configuration.
 
-## Reserves
+## Depot-native settlement
 
-`contracts.sysio.reserv` provides normalized reserve registry reads,
-chain/token and status filters, exact reserve lookup, WIRE-side activation, and
-read-only swap quotes. External-chain reserve creation and cancellation remain
-in the chain SDK that owns the deployed ABI or IDL.
-
-```ts
-const reserves = new contracts.sysio.reserv.ReserveClient({ client: api })
-const pending = await reserves.listReserves({
-  status: SysioReservReservestatus.RESERVE_STATUS_PENDING
-})
-
-await reserves.pushMatchReserve({
-  chainCode: "ETHEREUM",
-  tokenCode: "ETH",
-  reserveCode: "PRIMARY",
-  matcher: "alice",
-  wireAmount: pending[0].requestedWireAmount
-})
-
-// Several pending rows can be activated atomically in one signed transaction.
-await reserves.pushMatchReserves({
-  matches: pending.map(reserve => ({
-    chainCode: reserve.chainCode,
-    tokenCode: reserve.tokenCode,
-    reserveCode: reserve.reserveCode,
-    matcher: "alice",
-    wireAmount: reserve.requestedWireAmount
-  }))
-})
-```
-
-`pushMatchReserves` preserves the supplied action order and rejects an empty
-match list. The Wire transaction is atomic: either every `matchreserve` action
-is accepted or none is applied.
-
-## Reserve swaps
-
-Reserve swap integrations compose three on-chain sources instead of carrying a
-parallel token or route catalog:
-
-- `contracts.sysio.tokens.TokenRegistryClient` reads canonical token metadata
-  and active chain deployments.
-- `contracts.sysio.reserv.ReserveClient` discovers active liquidity and returns
-  live `swapquote` output for external or WIRE endpoints.
-- `contracts.sysio.uwrit.UnderwritingClient` reads swap lifecycle state and
-  submits WIRE-origin swaps into the next-epoch queue.
-
-```ts
-const tokens = new contracts.sysio.tokens.TokenRegistryClient({ client: api })
-const reserves = new contracts.sysio.reserv.ReserveClient({ client: api })
-const underwriting = new contracts.sysio.uwrit.UnderwritingClient({ client: api })
-
-const assets = await tokens.listAssets()
-const quote = await reserves.getSwapQuote({
-  from: contracts.sysio.uwrit.WIRE_SWAP_ENDPOINT,
-  fromAmount: 10_000_000_000n,
-  to: { chainCode: "SOLANA", tokenCode: "SOL", reserveCode: "PRIMARY" }
-})
-
-await underwriting.pushSwapFromWire({
-  user: "alice",
-  wireAmount: 10_000_000_000n,
-  destination: { chainCode: "SOLANA", tokenCode: "SOL", reserveCode: "PRIMARY" },
-  targetAmount: quote,
-  targetToleranceBps: 500,
-  recipientKind: SysioUwritChainkind.CHAIN_KIND_SVM,
-  recipientAddress: "<solana-public-key-bytes>"
-})
-```
-
-External-origin swap submission remains in the chain SDK that owns the deployed
-outpost ABI or IDL. A mined source transaction means the swap was submitted;
-`uwreqs` remains the source of truth for relay, underwriting, settlement, and
-revert status. Normalized underwriting rows expose `sourceRequestId` for
-matching the outpost's `SwapDeposit` id; transaction hashes and signatures are
-transport receipts rather than protocol correlation values.
+Use generated `sysio.opreg`, `sysio.synd`, `sysio.bond`, `sysio.liq` and
+`sysio.swap` proxies for collateral, syndicated envelopes, bond resolution,
+shadow LIQ and native pools. `TokenRegistryClient` supplies canonical asset
+metadata. The external reserve and swap-underwriter clients have been removed.
 
 ## Install
 
@@ -202,6 +139,10 @@ npm test
 ```
 
 ### Council SDK-to-chain integration
+
+Council declarations and the ABI fixture come from
+[wire-sysio #669](https://github.com/Wire-Network/wire-sysio/pull/669), commit
+`0ab1185ec02be806efc2d03abcc10fec466c2411`, for WIRE-418's simultaneous rounds.
 
 From the Libraries repository root, `scripts/test-council-live.mjs` starts a
 disposable producing Wire node and tests the locally built candidate SDK over

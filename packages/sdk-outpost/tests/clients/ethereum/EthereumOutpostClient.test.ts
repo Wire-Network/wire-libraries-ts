@@ -1,22 +1,11 @@
-import {
-  getBytes,
-  hexlify,
-  Network,
-  sha256,
-  Wallet,
-  zeroPadValue,
-  type EventLog
-} from "ethers"
+import { getBytes, hexlify, Network, sha256, zeroPadValue } from "ethers"
 
 import {
   EthereumContractName,
-  EthereumReserveClient,
-  EthereumReserveSwapClient,
   OutpostChainFamily,
   OutpostClient,
   type EthereumOutpostClient,
-  type EthereumOutpostClientOptions,
-  type ReserveSwapRequest
+  type EthereumOutpostClientOptions
 } from "@wireio/sdk-outpost"
 import {
   createEthereumImplementationCode,
@@ -35,72 +24,6 @@ function createEthereumClient(
 }
 
 describe("EthereumOutpostClient", () => {
-  it("submits native reserve swaps with estimated gas headroom", async () => {
-    const request: ReserveSwapRequest = {
-        sourceTokenCode: 1,
-        sourceReserveCode: 2,
-        sourceAmount: 3,
-        targetChainCode: 4,
-        targetTokenCode: 5,
-        targetReserveCode: 6,
-        targetRecipient: new Uint8Array([7]),
-        targetAmount: 8,
-        targetToleranceBps: 500
-      },
-      wait = jest.fn().mockResolvedValue({
-        logs: [{ eventName: "SwapDeposit", args: [42n] } as unknown as EventLog]
-      }),
-      requestSwap = Object.assign(
-        jest.fn().mockResolvedValue({ hash: "0xabc", wait }),
-        {
-          staticCall: jest.fn().mockResolvedValue(null),
-          estimateGas: jest.fn().mockResolvedValue(100_000n)
-        }
-      ),
-      reserveManager = {
-        requestSwap
-      } as unknown as ConstructorParameters<
-        typeof EthereumReserveSwapClient
-      >[0],
-      client = new EthereumReserveSwapClient(
-        reserveManager,
-        Wallet.createRandom()
-      )
-
-    await expect(client.requestNative(request)).resolves.toEqual({
-      transactionId: "0xabc",
-      sourceRequestId: 42n
-    })
-    expect(requestSwap).toHaveBeenCalledWith(
-      request.sourceTokenCode,
-      request.sourceReserveCode,
-      request.targetChainCode,
-      request.targetTokenCode,
-      request.targetReserveCode,
-      request.targetRecipient,
-      request.targetAmount,
-      request.targetToleranceBps,
-      {
-        value: request.sourceAmount,
-        gasLimit: 125_000n
-      }
-    )
-    expect(wait).toHaveBeenCalledWith(1)
-  })
-
-  it("adds 25% gas headroom to reserve swap submissions", () => {
-    expect(EthereumReserveSwapClient.addSubmissionGasHeadroom(789_767)).toEqual(
-      987_209n
-    )
-    expect(EthereumReserveSwapClient.addSubmissionGasHeadroom(1)).toEqual(2n)
-  })
-
-  it("resets nonzero ERC-20 allowances before increasing them", () => {
-    expect(EthereumReserveSwapClient.approvalAmounts(2, 3)).toEqual([0n, 3n])
-    expect(EthereumReserveSwapClient.approvalAmounts(0, 3)).toEqual([3n])
-    expect(EthereumReserveSwapClient.approvalAmounts(3, 3)).toEqual([])
-  })
-
   it("verifies a profile and returns a generated contract type", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createEthereumProviderFixture(profile),
@@ -108,13 +31,11 @@ describe("EthereumOutpostClient", () => {
         profile,
         connection: provider
       }),
-      reserveManager = client.contract(EthereumContractName.ReserveManager)
+      inbound = client.contract(EthereumContractName.OPPInbound)
 
-    expect(reserveManager.target).toBe(
-      profile.ethereum.contracts[EthereumContractName.ReserveManager].address
+    expect(inbound.target).toBe(
+      profile.ethereum.contracts[EthereumContractName.OPPInbound].address
     )
-    expect(client.reserves).toBeInstanceOf(EthereumReserveClient)
-    expect(client.swaps).toBeInstanceOf(EthereumReserveSwapClient)
     expect(provider.getCode).toHaveBeenCalledTimes(
       Object.values(EthereumContractName).length * 2
     )
@@ -132,22 +53,9 @@ describe("EthereumOutpostClient", () => {
         connection: provider
       })
 
-    expect(client.reserves).toBeInstanceOf(EthereumReserveClient)
-    expect(client.swaps).toBeInstanceOf(EthereumReserveSwapClient)
     expect(() => client.nodeOwners).toThrow("has no BAR identity")
     expect(provider.getCode).toHaveBeenCalledTimes(
       (Object.values(EthereumContractName).length - 1) * 2
-    )
-  })
-
-  it("parses the protocol deposit id from a confirmed receipt", () => {
-    const events = [
-      { eventName: "SwapDeposit", args: [42n] } as unknown as EventLog
-    ]
-
-    expect(EthereumReserveSwapClient.parseSourceRequestId(events)).toBe(42n)
-    expect(() => EthereumReserveSwapClient.parseSourceRequestId([])).toThrow(
-      "did not emit SwapDeposit"
     )
   })
 
@@ -189,7 +97,7 @@ describe("EthereumOutpostClient", () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createEthereumProviderFixture(profile)
     profile.ethereum.contracts[
-      EthereumContractName.ReserveManager
+      EthereumContractName.OPPInbound
     ].implementationCodeSha256 = "f".repeat(64)
 
     await expect(

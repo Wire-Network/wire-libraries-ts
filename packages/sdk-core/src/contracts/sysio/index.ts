@@ -1,7 +1,5 @@
 export * as authex from "./authex/index.js"
 export * as chains from "./chains/index.js"
 export * as msig from "./msig/index.js"
-export * as reserv from "./reserv/index.js"
 export * as tokens from "./tokens/index.js"
-export * as uwrit from "./uwrit/index.js"
 export * from "./Client.js"
