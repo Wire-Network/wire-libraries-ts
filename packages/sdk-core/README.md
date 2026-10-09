@@ -28,6 +28,15 @@ after their first access. Its `actions.<name>.prepare/invoke` and
 `tables.<name>.query` surface mirrors Wire Tools' `getSysioContract`. Use either
 the concise root syntax or `getSysioContract` when the contract name is dynamic.
 
+The declarations are generated from the checked-in system ABIs at
+[wire-sysio #639](https://github.com/Wire-Network/wire-sysio/pull/639), merge
+`f3a887e0ddd76113a128510de72da1ee40c9973c`. Pay, returned collateral, and
+DClaim balances do not expire. Andon exposes `pull({ reason })`,
+`clear({ note })`, and `cord` with `pulled`, `when`, and `reason`. Configure its
+native permissions separately and supply explicit action authorization when
+preparing writes. There is no contract-managed panic/puller registry, and
+syndication buckets no longer expose `frozen_mark`.
+
 ```ts
 import { SysioContracts } from "@wireio/sdk-core"
 
