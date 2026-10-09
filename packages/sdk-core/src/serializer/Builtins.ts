@@ -96,8 +96,11 @@ const SlugNameType = {
   }
 }
 
-/** True for an already-typed ABI value, e.g. a `ChainsSlugName` passed to the generic encoder. */
-function isSerializable(value: unknown): value is Required<ABISerializableObject> {
+/** An object whose binary ABI encoder has been checked at runtime. */
+type ABIEncodableObject = Required<Pick<ABISerializableObject, "toABI">>
+
+/** True for an already-typed ABI value with a callable binary encoder. */
+function isSerializable(value: unknown): value is ABIEncodableObject {
   return (
     typeof value === "object" &&
     value !== null &&
@@ -275,7 +278,10 @@ function getBuiltins(): ABISerializableConstructor[] {
   ]
 }
 
-export type TypeLookup = { [name: string]: ABISerializableConstructor }
+/** ABI constructors indexed by their declared type names. */
+export interface TypeLookup {
+  [name: string]: ABISerializableConstructor
+}
 
 export function buildTypeLookup(
   additional: ABISerializableConstructor[] = []
@@ -314,12 +320,10 @@ export function getTypeName(object: any): string | undefined {
     return type + "[]"
   }
 
-  switch (typeof object) {
-    case "boolean":
-      return "bool"
-    case "string":
-      return "string"
-  }
+  return match(typeof object)
+    .with("boolean", () => BoolType.abiName)
+    .with("string", () => StringType.abiName)
+    .otherwise(() => undefined)
 }
 
 export function getType(
@@ -365,10 +369,8 @@ export function getType(
     }
   }
 
-  switch (objectType) {
-    case "boolean":
-      return BoolType as ABISerializableConstructor
-    case "string":
-      return StringType as ABISerializableConstructor
-  }
+  return match(objectType)
+    .with("boolean", () => BoolType as ABISerializableConstructor)
+    .with("string", () => StringType as ABISerializableConstructor)
+    .otherwise(() => undefined)
 }
