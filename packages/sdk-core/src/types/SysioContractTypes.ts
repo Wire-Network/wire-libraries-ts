@@ -975,7 +975,6 @@ export enum SysioDclaimChainkind {
 /** sysio.dclaim::cap_config (type) */
 export interface SysioDclaimCapConfigType {
   imported_complete: boolean
-  claim_window_sec: number
 }
 
 /** sysio.dclaim::cap_counters (type) */
@@ -987,11 +986,6 @@ export interface SysioDclaimCapCountersType {
 /** sysio.dclaim::claim (action) */
 export interface SysioDclaimClaimAction {
   wire_account: string
-}
-
-/** sysio.dclaim::flushexpired (action) */
-export interface SysioDclaimFlushexpiredAction {
-  max_rows: number
 }
 
 /** sysio.dclaim::import_credit (type) */
@@ -1037,7 +1031,6 @@ export interface SysioDclaimPclaimKeyType {
 export interface SysioDclaimPendingClaimType {
   wire_account: string
   balance: string
-  expires_at_sec: number
 }
 
 /** sysio.dclaim::reward_cursor (type) */
@@ -1054,11 +1047,6 @@ export interface SysioDclaimRwdcurKeyType {
   id: number | string
 }
 
-/** sysio.dclaim::setclmwindow (action) */
-export interface SysioDclaimSetclmwindowAction {
-  window_sec: number
-}
-
 /** sysio.dclaim::setconfig (action) */
 export interface SysioDclaimSetconfigAction {}
 
@@ -1073,19 +1061,16 @@ export interface SysioDclaimUnmappedTokenType {
   chain_kind: SysioDclaimChainkind | keyof typeof SysioDclaimChainkind
   native_pubkey: string
   balance: string
-  expires_at_sec: number
 }
 
 /** sysio.dclaim - action + table surface for the typed contract client. */
 export interface SysioDclaimContract {
   actions: {
     claim: SysioDclaimClaimAction
-    flushexpired: SysioDclaimFlushexpiredAction
     importdone: SysioDclaimImportdoneAction
     importseed: SysioDclaimImportseedAction
     linkswept: SysioDclaimLinksweptAction
     onreward: SysioDclaimOnrewardAction
-    setclmwindow: SysioDclaimSetclmwindowAction
     setconfig: SysioDclaimSetconfigAction
   }
   tables: {
@@ -2012,7 +1997,6 @@ export interface SysioOpregRemitClaimType {
   account: string
   token_code: string
   balance: number | string
-  expires_at_sec: number
 }
 
 /** sysio.opreg::remitclaim_key (type) */
@@ -2090,6 +2074,13 @@ export interface SysioOpregWithdrawRequestType {
   requested_at_epoch: number
 }
 
+/** sysio.opreg::yield_debt (type) */
+export interface SysioOpregYieldDebtType {
+  account: string
+  token_code: string
+  owed_wire: string
+}
+
 /** sysio.opreg::yield_pool (type) */
 export interface SysioOpregYieldPoolType {
   received: number | string
@@ -2132,6 +2123,7 @@ export interface SysioOpregContract {
     operators: SysioOpregOperatorEntryType
     remitclaims: SysioOpregRemitClaimType
     wtdwqueue: SysioOpregWithdrawRequestType
+    yielddebts: SysioOpregYieldDebtType
     yieldpool: SysioOpregYieldPoolType
   }
 }
@@ -3408,7 +3400,6 @@ export interface SysioSystemOnblockAction {
 export interface SysioSystemPayClaimType {
   account_name: string
   balance: number | string
-  expires_at_sec: number
 }
 
 /** sysio.system::pay_claim_total (type) */
@@ -4338,12 +4329,10 @@ export const SysioContractDefinitions: {
     account: "sysio.dclaim",
     actions: [
       "claim",
-      "flushexpired",
       "importdone",
       "importseed",
       "linkswept",
       "onreward",
-      "setclmwindow",
       "setconfig"
     ],
     tables: ["capcfg", "capcounters", "pclaims", "rwdcursors", "unmapped"]
@@ -4443,6 +4432,7 @@ export const SysioContractDefinitions: {
       "operators",
       "remitclaims",
       "wtdwqueue",
+      "yielddebts",
       "yieldpool"
     ]
   },
