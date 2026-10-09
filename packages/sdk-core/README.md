@@ -28,7 +28,7 @@ after their first access. Its `actions.<name>.prepare/invoke` and
 `tables.<name>.query` surface mirrors Wire Tools' `getSysioContract`. Use either
 the concise root syntax or `getSysioContract` when the contract name is dynamic.
 
-The declarations are generated from the checked-in system ABIs at
+The non-council declarations are generated from the checked-in system ABIs at
 [wire-sysio #639](https://github.com/Wire-Network/wire-sysio/pull/639), merge
 `f3a887e0ddd76113a128510de72da1ee40c9973c`. Pay, returned collateral, and
 DClaim balances do not expire. Andon exposes `pull({ reason })`,
@@ -137,6 +137,51 @@ npm install @wireio/sdk-core
 ```sh
 npm test
 ```
+
+### Council SDK-to-chain integration
+
+Council declarations and the ABI fixture come from
+[wire-sysio #669](https://github.com/Wire-Network/wire-sysio/pull/669), commit
+`0ab1185ec02be806efc2d03abcc10fec466c2411`, for WIRE-418's simultaneous rounds.
+
+From the Libraries repository root, `scripts/test-council-live.mjs` starts a
+disposable producing Wire node and tests the locally built candidate SDK over
+HTTP RPC. It reads deployed council state, constructs and signs a generated SDK
+ballot, submits it, and verifies the public ballot, tally, tier ballot counter,
+elected member, and counter reset while preserving the winner in the next round.
+
+Prerequisites are a compatible Linux `nodeop` with `sys-vm-jit`, matching rebuilt
+`sysio.bios`, `sysio.roa`, `sysio.system`, and `sysio.councl` ABI/WASM files, generated
+SDK declarations from the council ABI, and compiled platform
+`BindConfigProvider.js` with its dependencies. Build the SDK and its CommonJS
+exports before running:
+
+```sh
+pnpm --dir packages/sdk-core run compile
+pnpm --dir packages/sdk-core run fix:hybrid:exports
+WIRE_COUNCIL_NODEOP=/absolute/path/to/nodeop \
+WIRE_COUNCIL_CONTRACTS=/absolute/path/to/wire-sysio/contracts \
+WIRE_COUNCIL_BIND_PROVIDER=/absolute/path/to/wire-tools-ts/packages/cluster-tool/lib/cjs/config/BindConfigProvider.js \
+WIRE_COUNCIL_RUN_DIRECTORY=/absolute/path/to/new-council-test-run \
+node scripts/test-council-live.mjs
+```
+
+All four inputs are required; the run directory must not already exist. HTTP and
+P2P ports come from the platform bind registry. The harness generates temporary
+keys and bootstraps its own accounts; it does not accept an existing node endpoint.
+It stops its node and removes the private key configuration on completion or
+failure. The run directory retains `nodeop.log` and, on success, `result.json`
+with the ballot transaction, result, and candidate SDK path. This verifies the
+local contract/SDK boundary; it does not establish npm release availability or a
+working Hub UI.
+
+The current node's JSON table responses represent ABI booleans as `0`/`1`, and
+the SDK's generic JSON table query returns those values without ABI normalization.
+The harness checks those exact integers, then independently reads the binary
+ballot and decodes it with the deployed ABI to verify semantic booleans. It reads
+the complete bounded flight set (at most 21 rows): the generic SDK query's
+composite KV pagination cursor handling is a separate existing limitation and is
+not covered by this check.
 
 ## License
 
