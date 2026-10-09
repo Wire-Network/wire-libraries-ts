@@ -9,7 +9,7 @@ A monorepo containing shared TypeScript libraries for Wire applications, providi
 | [`@wireio/shared`](packages/shared/) | Core shared utilities (logging, guards, helpers) | [![npm](https://img.shields.io/npm/v/@wireio/shared)](https://www.npmjs.com/package/@wireio/shared) |
 | [`@wireio/shared-web`](packages/shared-web/) | Web-specific utilities | *private* |
 | [`@wireio/shared-node`](packages/shared-node/) | Node.js-specific utilities | *private* |
-| [`@wireio/sdk-core`](packages/sdk-core/) | Wire blockchain SDK core types, primitives, signing helpers, generated `sysio` contract proxy, and domain workflows such as multisig and reserves | [![npm](https://img.shields.io/npm/v/@wireio/sdk-core)](https://www.npmjs.com/package/@wireio/sdk-core) |
+| [`@wireio/sdk-core`](packages/sdk-core/) | Wire blockchain SDK core types, primitives, signing helpers, generated `sysio` contract proxy, and domain workflows such as multisig and depot swap quotes | [![npm](https://img.shields.io/npm/v/@wireio/sdk-core)](https://www.npmjs.com/package/@wireio/sdk-core) |
 | [`@wireio/sdk-outpost`](packages/sdk-outpost/) | Strictly typed Ethereum and Solana outpost clients consuming source-owned artifact libraries | [![npm](https://img.shields.io/npm/v/@wireio/sdk-outpost)](https://www.npmjs.com/package/@wireio/sdk-outpost) |
 | [`@wireio/wallet-ext-sdk`](packages/wallet-ext-sdk/) | Client SDK for the Wire Wallet browser extension | [![npm](https://img.shields.io/npm/v/@wireio/wallet-ext-sdk)](https://www.npmjs.com/package/@wireio/wallet-ext-sdk) |
 | [`@wireio/wallet-browser-ext`](packages/wallet-browser-ext/) | Chrome extension developer wallet for Wire | *private* |
@@ -20,6 +20,10 @@ types. Chain bindings are generated and verified by those producer repos, not
 inside this monorepo. An internal compile-time artifact-suite registry selects
 compatible producer bindings from caller-supplied deployment profiles without
 owning endpoints or environment configuration.
+
+The draft `contracts.sysio.swap.quoteSwap` helper estimates a single depot trade
+from caller-supplied pool and shadow-yield rows. It does not fetch state, sign, or
+prove execution readiness. See [the quote contract and source pins](packages/sdk-core/README.md#depot-swap-quotes).
 
 ## Examples
 
