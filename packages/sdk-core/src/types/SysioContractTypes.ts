@@ -1140,6 +1140,80 @@ export interface SysioEpochContract {
   }
 }
 
+// ── sysio.kicker ──
+
+/** sysio.kicker::addpool (action) */
+export interface SysioKickerAddpoolAction {
+  sym: string
+  rate_bps: number
+  min_gift: number | string
+  max_gift_per_day: number | string
+}
+
+/** sysio.kicker::kick (action) */
+export interface SysioKickerKickAction {
+  sym: string
+}
+
+/** sysio.kicker::kick_config (type) */
+export interface SysioKickerKickConfigType {
+  budget_remaining: number | string
+  min_interval_sec: number
+}
+
+/** sysio.kicker::kick_pool (type) */
+export interface SysioKickerKickPoolType {
+  sym: string
+  rate_bps: number
+  min_gift: number | string
+  last_kick: string
+  gifted_total: string
+  shortfall_amount: number | string
+  shortfall_time: string
+  gift_overflow: boolean
+  max_gift_per_day: number | string
+  day: number | string
+  spent_today: string
+}
+
+/** sysio.kicker::pool_key (type) */
+export interface SysioKickerPoolKeyType {
+  symbol_code: number | string
+}
+
+/** sysio.kicker::rmpool (action) */
+export interface SysioKickerRmpoolAction {
+  sym: string
+}
+
+/** sysio.kicker::setconfig (action) */
+export interface SysioKickerSetconfigAction {
+  cfg: SysioKickerKickConfigType
+}
+
+/** sysio.kicker::setpool (action) */
+export interface SysioKickerSetpoolAction {
+  sym: string
+  rate_bps: number
+  min_gift: number | string
+  max_gift_per_day: number | string
+}
+
+/** sysio.kicker - action + table surface for the typed contract client. */
+export interface SysioKickerContract {
+  actions: {
+    addpool: SysioKickerAddpoolAction
+    kick: SysioKickerKickAction
+    rmpool: SysioKickerRmpoolAction
+    setconfig: SysioKickerSetconfigAction
+    setpool: SysioKickerSetpoolAction
+  }
+  tables: {
+    kickcfg: SysioKickerKickConfigType
+    kickpools: SysioKickerKickPoolType
+  }
+}
+
 // ── sysio.liq ──
 
 /** sysio.liq::account (type) */
@@ -4091,6 +4165,7 @@ export enum SysioContractName {
   councl = "councl",
   dclaim = "dclaim",
   epoch = "epoch",
+  kicker = "kicker",
   liq = "liq",
   msgch = "msgch",
   msig = "msig",
@@ -4115,6 +4190,7 @@ export const SysioContractAccount: Record<SysioContractName, string> = {
   [SysioContractName.councl]: "sysio.councl",
   [SysioContractName.dclaim]: "sysio.dclaim",
   [SysioContractName.epoch]: "sysio.epoch",
+  [SysioContractName.kicker]: "sysio.kicker",
   [SysioContractName.liq]: "sysio.liq",
   [SysioContractName.msgch]: "sysio.msgch",
   [SysioContractName.msig]: "sysio.msig",
@@ -4139,6 +4215,7 @@ export interface SysioContractMapping {
   [SysioContractName.councl]: SysioCounclContract
   [SysioContractName.dclaim]: SysioDclaimContract
   [SysioContractName.epoch]: SysioEpochContract
+  [SysioContractName.kicker]: SysioKickerContract
   [SysioContractName.liq]: SysioLiqContract
   [SysioContractName.msgch]: SysioMsgchContract
   [SysioContractName.msig]: SysioMsigContract
@@ -4278,6 +4355,12 @@ export const SysioContractDefinitions: {
     account: "sysio.epoch",
     actions: ["advance", "pause", "schbatchgps", "setconfig", "unpause"],
     tables: ["blocklog", "epochcfg", "epochstate"]
+  },
+  [SysioContractName.kicker]: {
+    name: SysioContractName.kicker,
+    account: "sysio.kicker",
+    actions: ["addpool", "kick", "rmpool", "setconfig", "setpool"],
+    tables: ["kickcfg", "kickpools"]
   },
   [SysioContractName.liq]: {
     name: SysioContractName.liq,
