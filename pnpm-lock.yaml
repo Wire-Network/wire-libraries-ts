@@ -26,10 +26,6 @@ pnpmfileChecksum: sha256-Pwp47mavrVQdghhognPPNAyXDlYjTYSnW8dYP14xMLU=
 importers:
 
   .:
-    dependencies:
-      '@wireio/opp-typescript-models':
-        specifier: ^1.0.51
-        version: 1.0.51
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
