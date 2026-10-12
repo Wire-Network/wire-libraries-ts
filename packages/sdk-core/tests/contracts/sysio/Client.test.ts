@@ -39,6 +39,41 @@ describe("system contract proxy", () => {
     expect(Reflect.get(sysio, "then")).toBeNull()
   })
 
+  test("rejects retired capital actions and preserves the required gross return minimum", () => {
+    const sysio = contracts.sysio.createClient({ client: createMockApi() })
+    for (const [contract, action] of [
+      [sysio.liq, "setkicker"],
+      [sysio.dclaim, "onreward"],
+      [sysio.system, "fundclaim"]
+    ] as const) {
+      expect(() => Reflect.get(contract.actions, action)).toThrow("Unknown")
+    }
+    const data: SysioContracts.SysioSyndSetconfigAction = {
+      chain_code: "SOLANA",
+      token_code: "LIQSOL",
+      synd_fee_bps: 0,
+      desynd_fee_bps: 0,
+      synd_burst: 1_000_000_000,
+      synd_refill: 1_000_000_000,
+      desynd_burst: 1_000_000_000,
+      desynd_refill: 1_000_000_000,
+      window_sec: 60,
+      bounty: 0,
+      challenge_extra: 1_000_000_000,
+      min_desyndicate: 1_000_000
+    }
+    expect(sysio.synd.actions.setconfig.prepare(data)).toMatchObject({
+      name: "setconfig",
+      data: { min_desyndicate: 1_000_000 }
+    })
+  })
+
+  test("does not expose removed reward or reserve-creation wire values", () => {
+    for (const type of [60950, 60958]) {
+      expect(SysioContracts.SysioMsgchAttestationtype[type]).toBeUndefined()
+    }
+  })
+
   test("applies root-level account overrides consistently", () => {
     const sysio = contracts.sysio.createClient({
         client: createMockApi(),
