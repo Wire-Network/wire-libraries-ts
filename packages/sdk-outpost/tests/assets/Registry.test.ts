@@ -1,4 +1,4 @@
-import { ReserveManager__factory } from "@wireio/outpost-ethereum-artifacts"
+import { OPPInbound__factory } from "@wireio/outpost-ethereum-artifacts"
 import { liqsolCoreIdl } from "@wireio/outpost-solana-artifacts"
 
 import {
@@ -18,15 +18,15 @@ describe("OutpostArtifactRegistry", () => {
     )
 
     expect(suite).toBe(CurrentOutpostArtifactSuite)
-    expect(suite.ethereum.factories[EthereumContractName.ReserveManager]).toBe(
-      ReserveManager__factory
+    expect(suite.ethereum.factories[EthereumContractName.OPPInbound]).toBe(
+      OPPInbound__factory
     )
     expect(suite.solana.idls[SolanaProgramName.liqsolCore]).toBe(liqsolCoreIdl)
   })
 
   it("rejects an unregistered Ethereum interface", () => {
     const profile = createOutpostDeploymentProfileFixture()
-    profile.ethereum.contracts[EthereumContractName.ReserveManager].abiSha256 =
+    profile.ethereum.contracts[EthereumContractName.OPPInbound].abiSha256 =
       MismatchedInterfaceDigest
 
     expect(OutpostArtifactRegistry.candidates(profile)).toEqual([])

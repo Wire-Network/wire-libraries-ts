@@ -12,8 +12,6 @@ import {
 import { OutpostDeploymentVerifier } from "../../verification/index.js"
 import { ethereumProvider } from "./Connection.js"
 import { EthereumContractMap, EthereumOutpostClientOptions } from "./Types.js"
-import { EthereumReserveClient } from "./EthereumReserveClient.js"
-import { EthereumReserveSwapClient } from "./EthereumReserveSwapClient.js"
 import { EthereumNodeOwnerClient } from "./EthereumNodeOwnerClient.js"
 
 /** Strictly typed access to one verified Ethereum outpost deployment. */
@@ -43,14 +41,6 @@ export class EthereumOutpostClient {
     readonly provider: Provider,
     private readonly artifactSuite: OutpostArtifactSuite
   ) {
-    this.reserves = new EthereumReserveClient(
-      this.contract(EthereumContractName.ReserveManager),
-      options.connection
-    )
-    this.swaps = new EthereumReserveSwapClient(
-      this.contract(EthereumContractName.ReserveManager),
-      options.connection
-    )
     if (options.profile.ethereum.contracts[EthereumContractName.BAR] != null) {
       this.nodeOwnerClient = new EthereumNodeOwnerClient(
         this.contract(EthereumContractName.BAR),
@@ -58,12 +48,6 @@ export class EthereumOutpostClient {
       )
     }
   }
-
-  /** Reserve creation, cancellation, and reads for this verified outpost. */
-  readonly reserves: EthereumReserveClient
-
-  /** Reserve-swap writes and balance reads for this verified outpost. */
-  readonly swaps: EthereumReserveSwapClient
 
   private readonly nodeOwnerClient?: EthereumNodeOwnerClient
 
@@ -108,20 +92,6 @@ export class EthereumOutpostClient {
         .with(EthereumContractName.OPPInbound, () =>
           factories[EthereumContractName.OPPInbound].connect(
             profile.ethereum.contracts[EthereumContractName.OPPInbound].address,
-            connection
-          )
-        )
-        .with(EthereumContractName.OperatorRegistry, () =>
-          factories[EthereumContractName.OperatorRegistry].connect(
-            profile.ethereum.contracts[EthereumContractName.OperatorRegistry]
-              .address,
-            connection
-          )
-        )
-        .with(EthereumContractName.ReserveManager, () =>
-          factories[EthereumContractName.ReserveManager].connect(
-            profile.ethereum.contracts[EthereumContractName.ReserveManager]
-              .address,
             connection
           )
         )

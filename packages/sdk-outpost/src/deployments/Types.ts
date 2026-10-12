@@ -8,9 +8,7 @@ export enum OutpostChainFamily {
 export enum EthereumContractName {
   BAR = "BAR",
   OPP = "OPP",
-  OPPInbound = "OPPInbound",
-  OperatorRegistry = "OperatorRegistry",
-  ReserveManager = "ReserveManager"
+  OPPInbound = "OPPInbound"
 }
 
 /** Solana programs owned by the current outpost deployment. */

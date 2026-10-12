@@ -14,10 +14,10 @@ describe("OutpostDeploymentProfileSchema", () => {
       `${profile.wire.chainId}-${profile.deploymentChecksum.slice(0, 12)}`
     )
     expect(
-      profile.ethereum.contracts[EthereumContractName.ReserveManager].address
+      profile.ethereum.contracts[EthereumContractName.OPPInbound].address
     ).toBe(
       createOutpostDeploymentProfileFixture().ethereum.contracts[
-        EthereumContractName.ReserveManager
+        EthereumContractName.OPPInbound
       ].address
     )
   })

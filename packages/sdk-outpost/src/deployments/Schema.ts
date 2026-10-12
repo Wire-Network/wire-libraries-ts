@@ -63,10 +63,6 @@ export const OutpostDeploymentProfileSchema = z
           EthereumContractDeploymentProfileSchema.optional(),
         [EthereumContractName.OPP]: EthereumContractDeploymentProfileSchema,
         [EthereumContractName.OPPInbound]:
-          EthereumContractDeploymentProfileSchema,
-        [EthereumContractName.OperatorRegistry]:
-          EthereumContractDeploymentProfileSchema,
-        [EthereumContractName.ReserveManager]:
           EthereumContractDeploymentProfileSchema
       })
     }),

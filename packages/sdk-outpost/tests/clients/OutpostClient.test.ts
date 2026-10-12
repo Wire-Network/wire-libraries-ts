@@ -23,7 +23,7 @@ describe("OutpostClient", () => {
       typedClient: EthereumOutpostClient = client
 
     expect(typedClient.profile).toBe(profile)
-    expect(typedClient.reserves).toBeDefined()
+    expect(typedClient.profile).toEqual(profile)
   })
 
   it("preserves the precise Solana client type", async () => {
@@ -38,6 +38,6 @@ describe("OutpostClient", () => {
       typedClient: SolanaOutpostClient = client
 
     expect(typedClient.profile).toBe(profile)
-    expect(typedClient.reserves).toBeDefined()
+    expect(typedClient.profile).toEqual(profile)
   })
 })

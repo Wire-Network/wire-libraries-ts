@@ -5,7 +5,7 @@ import {
 } from "../../../types/SysioContractTypes.js"
 import type * as SysioContracts from "../../../types/SysioContractTypes.js"
 import { getSysioContract, type SysioContractClient } from "../Client.js"
-import { reserveSlugString, reserveSlugValue } from "../reserv/Slug.js"
+import { SlugName, slugValue } from "../../../SlugName.js"
 
 import {
   DEFAULT_TOKENS_CONTRACT,
@@ -40,10 +40,10 @@ function enumValue<T extends Record<string, string | number>>(
 export function normalizeTokenRow(
   row: SysioContracts.SysioTokensTokenRowType
 ): TokenRecord {
-  const codeValue = reserveSlugValue(row.code)
+  const codeValue = slugValue(row.code, "Token registry")
 
   return {
-    code: reserveSlugString(codeValue),
+    code: SlugName.toString(codeValue),
     codeValue,
     kind: enumValue(SysioTokensTokenkind, row.kind) as SysioTokensTokenkind,
     symbol: row.symbol_name,
@@ -65,13 +65,13 @@ export function normalizeTokenRow(
 export function normalizeChainTokenRow(
   row: SysioContracts.SysioTokensChainTokenRowType
 ): ChainTokenRecord {
-  const chainCodeValue = reserveSlugValue(row.chain_code),
-    tokenCodeValue = reserveSlugValue(row.token_code)
+  const chainCodeValue = slugValue(row.chain_code, "Token registry"),
+    tokenCodeValue = slugValue(row.token_code, "Token registry")
 
   return {
-    chainCode: reserveSlugString(chainCodeValue),
+    chainCode: SlugName.toString(chainCodeValue),
     chainCodeValue,
-    tokenCode: reserveSlugString(tokenCodeValue),
+    tokenCode: SlugName.toString(tokenCodeValue),
     tokenCodeValue,
     contractAddress: row.contract_addr,
     isNative: row.is_native,
@@ -119,9 +119,13 @@ export class TokenRegistryClient {
         )
       }),
       chainCode =
-        options.chainCode == null ? null : reserveSlugValue(options.chainCode),
+        options.chainCode == null
+          ? null
+          : slugValue(options.chainCode, "Token registry"),
       tokenCode =
-        options.tokenCode == null ? null : reserveSlugValue(options.tokenCode)
+        options.tokenCode == null
+          ? null
+          : slugValue(options.tokenCode, "Token registry")
 
     return result.rows
       .map(normalizeChainTokenRow)

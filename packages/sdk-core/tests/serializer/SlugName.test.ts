@@ -1,7 +1,7 @@
 import { ABIDef } from "@wireio/sdk-core/chain/Abi"
 import { Serializer } from "@wireio/sdk-core/serializer"
 import { SlugName } from "@wireio/sdk-core/SlugName"
-import { contracts } from "@wireio/sdk-core"
+import { contracts, UInt64, type ABIEncoder } from "@wireio/sdk-core"
 
 const ACTION_TYPE = "regchain"
 const CODE_FIELD_NAME = "code"
@@ -10,6 +10,14 @@ const SLUG_TYPE_NAME = "slug_name"
 const ETHEREUM = "ETHEREUM"
 const SOLANA = "SOLANA"
 const UINT64_BYTES = 8
+
+/** A packed slug carrier that supplies its own binary encoder. */
+interface SlugEncoderCarrier {
+  /** Packed uint64 slug value. */
+  value: number
+  /** Encodes the carrier into its ABI representation. */
+  toABI(encoder: ABIEncoder): void
+}
 
 /**
  * A deployed-contract ABI as wire-sysio emits it: `slug_name` is a builtin, so
@@ -76,6 +84,29 @@ describe("slug_name ABI builtin", () => {
     expect(
       Array.from(encode(contracts.sysio.chains.ChainsSlugName.from(ETHEREUM)))
     ).toEqual(canonical)
+  })
+
+  it("uses a callable encoder with its original object as the receiver", () => {
+    const carrier = {
+      value: SlugName.from(ETHEREUM),
+      /** Encodes the packed value owned by this carrier. */
+      toABI(this: SlugEncoderCarrier, encoder: ABIEncoder) {
+        UInt64.from(this.value).toABI(encoder)
+      }
+    }
+    const toABI = jest.spyOn(carrier, "toABI")
+
+    expect(Array.from(encode(carrier))).toEqual(Array.from(encode(ETHEREUM)))
+    expect(toABI).toHaveBeenCalledTimes(1)
+  })
+
+  it("uses the packed carrier when its encoder is absent or not callable", () => {
+    const value = SlugName.from(ETHEREUM)
+    const canonical = Array.from(encode(ETHEREUM))
+
+    expect(Array.from(encode({ value }))).toEqual(canonical)
+    expect(Array.from(encode({ value, toABI: null }))).toEqual(canonical)
+    expect(Array.from(encode({ value, toABI: value }))).toEqual(canonical)
   })
 
   it("encodes the empty spelling as the zero value", () => {

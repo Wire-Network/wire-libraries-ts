@@ -2,9 +2,7 @@ import {
   BAR__factory,
   EthereumOutpostArtifactManifest,
   OPPInbound__factory,
-  OPP__factory,
-  OperatorRegistry__factory,
-  ReserveManager__factory
+  OPP__factory
 } from "@wireio/outpost-ethereum-artifacts"
 import {
   SolanaOutpostArtifactManifest,
@@ -24,8 +22,6 @@ export interface EthereumOutpostArtifactFactories {
   readonly [EthereumContractName.BAR]: typeof BAR__factory
   readonly [EthereumContractName.OPP]: typeof OPP__factory
   readonly [EthereumContractName.OPPInbound]: typeof OPPInbound__factory
-  readonly [EthereumContractName.OperatorRegistry]: typeof OperatorRegistry__factory
-  readonly [EthereumContractName.ReserveManager]: typeof ReserveManager__factory
 }
 
 /** Generated Anchor IDLs keyed by deployment identity. */
@@ -74,9 +70,7 @@ export const CurrentOutpostArtifactSuite: OutpostArtifactSuite = {
     factories: {
       [EthereumContractName.BAR]: BAR__factory,
       [EthereumContractName.OPP]: OPP__factory,
-      [EthereumContractName.OPPInbound]: OPPInbound__factory,
-      [EthereumContractName.OperatorRegistry]: OperatorRegistry__factory,
-      [EthereumContractName.ReserveManager]: ReserveManager__factory
+      [EthereumContractName.OPPInbound]: OPPInbound__factory
     }
   },
   solana: {

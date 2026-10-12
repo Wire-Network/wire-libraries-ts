@@ -1,10 +1,4 @@
-import type {
-  BAR,
-  OPP,
-  OPPInbound,
-  OperatorRegistry,
-  ReserveManager
-} from "@wireio/outpost-ethereum-artifacts"
+import type { BAR, OPP, OPPInbound } from "@wireio/outpost-ethereum-artifacts"
 import type { Provider, Signer } from "ethers"
 
 import type { OutpostDeploymentProfile } from "../../deployments/index.js"
@@ -26,8 +20,4 @@ export interface EthereumContractMap {
   [EthereumContractName.OPP]: OPP
   /** Inbound OPP endpoint. */
   [EthereumContractName.OPPInbound]: OPPInbound
-  /** Operator collateral registry. */
-  [EthereumContractName.OperatorRegistry]: OperatorRegistry
-  /** Reserve custody manager. */
-  [EthereumContractName.ReserveManager]: ReserveManager
 }

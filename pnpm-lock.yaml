@@ -28,8 +28,8 @@ importers:
   .:
     dependencies:
       '@wireio/opp-typescript-models':
-        specifier: ^1.0.48
-        version: 1.0.48
+        specifier: ^1.0.51
+        version: 1.0.51
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -153,8 +153,8 @@ importers:
         specifier: 1.9.7
         version: 1.9.7
       '@wireio/opp-typescript-models':
-        specifier: ^1.0.48
-        version: 1.0.48
+        specifier: ^1.0.51
+        version: 1.0.51
       '@wireio/shared':
         specifier: workspace:*
         version: link:../shared
@@ -1698,8 +1698,8 @@ packages:
       webpack-dev-server:
         optional: true
 
-  '@wireio/opp-typescript-models@1.0.48':
-    resolution: {integrity: sha512-3HDC88AohYBBMuVdSqdI5tIRHPZWWTOaS+yQ/Xs1sCvhKuqlpF3KnYLcgIiXX3x6IC87dfo55xBfHPFcWpthmw==}
+  '@wireio/opp-typescript-models@1.0.51':
+    resolution: {integrity: sha512-MgSMRZScCBAvtmxDe7/HHmJADENX0JW9jbt8tL4vmQ3U9Om8IwzzCUYKkmVohTGKClydVmXmncrC8gn1aMENbg==}
 
   '@wireio/outpost-ethereum-artifacts@0.3.0':
     resolution: {integrity: sha512-z//qpsX/OLOBBl/TRP854WbhZy79P/PuP2gfME7tN1kwChIoytrniXyVJ3tMvuMb9rvtjb5JuYfejG0lp5cEWA==}
@@ -5993,7 +5993,7 @@ snapshots:
       webpack: 5.104.1(postcss@8.5.16)(webpack-cli@6.0.1)
       webpack-cli: 6.0.1(webpack@5.104.1)
 
-  '@wireio/opp-typescript-models@1.0.48':
+  '@wireio/opp-typescript-models@1.0.51':
     dependencies:
       '@protobuf-ts/runtime': 2.11.1
 
