@@ -251,3 +251,8 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch
 - Node >=22 required (package.json says >=22, README says >=24 — actual CI uses v24)
 - The `web-logging-example` requires `WIRE_PUSH_URL` env var injected at webpack build time
+
+- The quote companion is based on SDK master including #87, #100 and #102.
+  Superseded #97 is closed; reuse generated token-qualified operator/bond actions
+  rather than adding parallel facades. Local sibling artifact links do not prove
+  published-package identity or fresh-cluster compatibility.
