@@ -1,0 +1,53 @@
+{
+  "name": "@wireio/opp-snapshot",
+  "version": "1.0.0",
+  "description": "The pre-launch Ethereum OPP assertion stream replayed into staker and purchaser balances: the snapshot the depot's launch import is built from",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Wire-Network/wire-libraries-ts",
+    "directory": "packages/opp-snapshot"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "lib",
+    "README.md"
+  ],
+  "types": "lib/esm/index.d.ts",
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.js",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.js",
+      "types": "./lib/esm/index.d.ts"
+    },
+    "./*": {
+      "import": "./lib/esm/*.js",
+      "require": "./lib/cjs/*.js",
+      "types": "./lib/esm/*.d.ts"
+    }
+  },
+  "scripts": {
+    "compile": "tsc -b tsconfig.json",
+    "compile:watch": "tsc -b tsconfig.json -w",
+    "build": "pnpm run compile && pnpm run fix:hybrid:exports",
+    "test": "jest",
+    "fix:hybrid:exports": "node ../../scripts/fix-hybrid-output.mjs ."
+  },
+  "dependencies": {
+    "@3fv/prelude-ts": "^0.8.41",
+    "@wireio/shared": "workspace:*",
+    "ethers": "^6.15.0",
+    "lodash": "^4.18.1",
+    "p-limit": "^3.1.0",
+    "ts-pattern": "^5.9.0"
+  },
+  "devDependencies": {
+    "@types/lodash": "4.17.23",
+    "@types/node": "^22.15.3",
+    "typescript": "6.0.2"
+  }
+}
