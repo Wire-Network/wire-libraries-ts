@@ -31,8 +31,8 @@ export interface AssertionRow {
   txHash: string
   /** The block the message was emitted in. */
   blockNumber: number
-  /** The block's unix timestamp; `null` when it was not fetched. */
-  blockTime: number
+  /** The block's unix timestamp; `null` (a stored column) when it was not fetched. */
+  blockTime: number | null
   /** The message's log position within the block. */
   logIndex: number
   /** The message header's id. */
@@ -119,7 +119,7 @@ export interface StakerOutput {
    * of theirs is in the stream (a contract wallet, for instance). The depot's
    * syndication import is keyed by this, not by the address.
    */
-  pubkey: string
+  pubkey: string | null
 }
 
 /** A purchaser's computed balance. */
@@ -170,8 +170,8 @@ export interface BalanceOutput {
 export interface OppStakerRow {
   /** The staker's lowercase address. */
   address: string
-  /** The recovered compressed public key; `null` when none was recovered. */
-  pubkey: string
+  /** The recovered compressed public key; `null` (a served column) when none was recovered. */
+  pubkey: string | null
   /** liqETH shares staked. */
   totalShares: string
   /** Net principal (the indexer stores net principal here). */

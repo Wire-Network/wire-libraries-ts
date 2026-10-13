@@ -33,7 +33,7 @@ export interface RpcTransaction {
   /** The sender. */
   from: string
   /** The recipient; `null` for a contract creation. */
-  to: string
+  to: string | null
   /** The calldata. */
   input: string
   /** The sender nonce, 0x-hex. */
