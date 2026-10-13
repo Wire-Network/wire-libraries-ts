@@ -21,7 +21,7 @@ inside this monorepo. An internal compile-time artifact-suite registry selects
 compatible producer bindings from caller-supplied deployment profiles without
 owning endpoints or environment configuration. The current source targets the
 `0.4.0` Ethereum/Solana artifact pair; see [SDK Outpost](packages/sdk-outpost/README.md)
-for producer revisions and deployment compatibility.
+for supported bindings and deployment compatibility.
 
 ## Examples
 

@@ -111,22 +111,16 @@ works without an SDK release. A deployable code or interface change requires a
 producer artifact release, a corresponding internal suite entry, and an SDK
 release; consumers continue to use the same `OutpostClient.create` facade.
 
-### Current Sandbox validation
+### Artifact compatibility
 
-This pair targets Ethereum `ad3f30ca` and Solana `994b4df7`, with OPP models
-built from SYSIO `960b0558`. These revisions passed the
-[October 13 platform flow run](https://github.com/Wire-Network/wire-platform-build-system/actions/runs/38396525346).
-The same commits produced the
-[October 13 cluster release](https://github.com/Wire-Network/wire-platform-build-system/releases/tag/cluster-v1.0.0-cluster-2026-10-13).
-Registry-installed artifacts passed the SDK Outpost build and 38 tests, plus
-strict live Ethereum and Solana runtime verification on the October 13 Sandbox
-deployment. The Solana program bytes come from that tagged release.
-The previous `0.3.0`/`0.3.1` pair is not retained in this branch. Older deployments
-must use their matching SDK release; never bypass runtime verification.
+The `0.4.0` Ethereum/Solana pair supplies the depot-collateral, syndication and
+node-registration bindings. The previous `0.3.0`/`0.3.1` pair is not retained;
+older deployments require their matching SDK release. Consumers must provide a
+fresh deployment profile and pass exact live runtime verification before use.
+Artifact compatibility alone does not establish swap or operator readiness.
 
-A matching caller-owned profile selects the suite by ABI/IDL identity, without
-sandbox-name routing. A same-code respin needs a new profile; changed deployable
-bytes require matching producer artifacts and an SDK release.
+A same-code respin needs a new profile; changed deployable bytes require matching
+producer artifacts and an SDK release. The client facade remains unchanged.
 
 ## Usage
 
