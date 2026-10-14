@@ -21,11 +21,8 @@ inside this monorepo. An internal compile-time artifact-suite registry selects
 compatible producer bindings from caller-supplied deployment profiles without
 owning endpoints or environment configuration.
 
-The proposed `contracts.sysio.swap.quoteSwap` helper estimates a single depot trade
-from caller-supplied pool and shadow-yield rows. It does not fetch state, sign, or
-prove execution readiness. The branch includes current SDK master; generated
-operator/Andon updates are upstream, and superseded PR #97 is closed. No second
-operator facade is required. See [the quote contract and source pins](packages/sdk-core/README.md#depot-swap-quotes).
+`contracts.sysio.swap.quoteSwap` estimates a single depot trade from caller-supplied
+pool and shadow-yield rows. See [quote inputs and limits](packages/sdk-core/README.md#depot-swap-quotes).
 
 ## Examples
 
