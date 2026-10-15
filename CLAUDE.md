@@ -216,7 +216,7 @@ GitHub Actions:
 - Published package manifests must keep `repository.url` set to
   `https://github.com/Wire-Network/wire-libraries-ts` — npm provenance matches it.
 
-- `contracts.sysio.swap.quoteSwap` owns pure, exact-input depot quote math. Compose generated pool/LIQ row types; require explicit holder/index reads for yield pools, accrue before pricing, and preserve integer fee/minimum rounding. Use generic system-contract tables for transport. Do not add environment keys, RPC, signing, multi-hop routing or execution-readiness claims to this helper. Source pins and snapshot requirements are in `packages/sdk-core/README.md`.
+- `contracts.sysio.swap.quoteSwap` owns pure, exact-input depot quote math. Compose generated pool/LIQ row types; require explicit holder/index reads for yield pools, accrue before pricing, and preserve integer fee/minimum rounding. Use generic system-contract tables for transport. Do not add environment keys, RPC, signing, multi-hop routing or execution-readiness claims to this helper. Keep source pins, exact-key lookups, verified-absence semantics and state-coherence limits in the [SDK quote guide](packages/sdk-core/README.md#depot-swap-quotes).
 
 ## Documentation Comments
 
