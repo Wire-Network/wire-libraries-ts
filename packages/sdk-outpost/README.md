@@ -64,10 +64,10 @@ underwriting using platform capability evidence.
 
 ## Native deposits and syndication
 
-`client.syndication` keeps external LIQ acquisition separate from Wire settlement:
+`client.syndication`, obtained through `OutpostClient.create`, keeps external LIQ acquisition separate from Wire settlement. Syndication helper types are exported without public constructors:
 
 - Ethereum: `read(owner)`, `quoteDeposit(amount)`, `deposit(amount)`, exact-amount `approve(amount)`, and `syndicate(amount, compressedPublicKey)`. Amounts are base-unit `bigint`. Save the returned transaction hash before waiting for confirmation. Syndication requires allowance and a compressed public key matching the signer. `depositPaused` follows the liquid token; `syndicationPaused` also includes the pool pause.
-- Solana: `read(user)`, `deposit(user, amount, uniqueU32Seed)`, and `syndicate(user, amount)` return exact balances or unsigned transactions. The caller adds a recent blockhash, signs and persists the signature before broadcasting. Syndication requires PostLaunch and a configured LIQSOL mint/precision; it never creates a legacy prelaunch position.
+- Solana: `read(user)`, `quoteDeposit(amount)`, `deposit(user, amount, uniqueU32Seed)`, and `syndicate(user, amount)` return exact balances or unsigned transactions. The quote returns `amount`, `fee` and `totalDebit` in lamports using the current pay-rate history and fee multiplier. The protocol fee is added to the amount; transaction fees and account rent are additional. Deposit rechecks affordability, but the contract does not bind execution to a quoted fee. The caller adds a recent blockhash, signs and persists the signature before broadcasting. Syndication requires PostLaunch and a configured LIQSOL mint/precision; it never creates a legacy prelaunch position.
 - Profiles opt into Ethereum `DepositManager`, `LiqEthToken`, `SyndicationPool` identities and Solana `liqsol.tokenProgramAddress` / `transferHookProgramAddress`. Missing identities disable this capability without changing existing profiles. Solana companion addresses are checked against the derived mint and executable accounts; the existing verifier authenticates the core program binary, not companion binaries.
 
 Source confirmation does not prove shadow LIQ is spendable on Wire. Applications must separately check the linked Wire account, relay/bond release and its `sysio.liq` balance. No administrator bootstrap, automatic approval, faucet or collateral deposit is performed by these helpers.

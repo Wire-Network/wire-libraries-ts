@@ -25,7 +25,21 @@ const DepositComputeUnitLimit = 1_000_000,
   LiquidDecimals = 9,
   EphemeralStakePrefix = "ephemeral_",
   MaximumSeed = 0xffffffff,
+  DepositPayRateCount = 5,
+  DepositFeeScale = 1_000_000_000_000n,
+  MaximumTokenAmount = (1n << 64n) - 1n,
+  MaximumFeeNumerator = (1n << 128n) - 1n,
   LiquidTokenCode = BigInt(SlugName.from("LIQSOL"))
+
+/** Native deposit cost in lamports; transaction fees and account rent are additional. */
+export interface SolanaDepositQuote {
+  /** Requested liqSOL amount, minted one-for-one before share rounding. */
+  amount: bigint
+  /** Protocol fee charged in SOL on top of the requested amount. */
+  fee: bigint
+  /** Requested amount plus the protocol fee. */
+  totalDebit: bigint
+}
 
 /** Deployed companion programs selected alongside the verified core program. */
 export type SolanaLiqsolDeployment = NonNullable<
@@ -84,17 +98,20 @@ export class SolanaSyndicationClient {
     private readonly deployment: SolanaLiqsolDeployment
   ) {}
 
+  private coreAddress(seed: string, ...rest: Buffer[]): PublicKey {
+    return PublicKey.findProgramAddressSync(
+      [Buffer.from(seed), ...rest],
+      this.program.programId
+    )[0]
+  }
+
   /** Derive the canonical Token-2022 and core account set for a wallet. */
   addresses(user: PublicKey) {
     const liqsolProgram = new PublicKey(this.deployment.tokenProgramAddress),
       transferHookProgram = new PublicKey(
         this.deployment.transferHookProgramAddress
       ),
-      core = (seed: string, ...rest: Buffer[]) =>
-        PublicKey.findProgramAddressSync(
-          [Buffer.from(seed), ...rest],
-          this.program.programId
-        )[0],
+      core = this.coreAddress.bind(this),
       liqsolMint = PublicKey.findProgramAddressSync(
         [Buffer.from(Seed.liqsolMint)],
         liqsolProgram
@@ -216,7 +233,49 @@ export class SolanaSyndicationClient {
     }
   }
 
-  /** Build one native deposit. The caller supplies a unique seed and owns signing/confirmation. */
+  /** Quote the current contract fee using its five-entry circular pay-rate average and ceiling rounding. */
+  async quoteDeposit(amount: bigint): Promise<SolanaDepositQuote> {
+    if (amount <= 0n || amount > MaximumTokenAmount)
+      throw new Error("Deposit amount must be a positive u64")
+    const [config, history] = await Promise.all([
+        this.program.account.globalConfig.fetch(
+          this.coreAddress(Seed.globalConfig)
+        ),
+        this.program.account.payRateHistory.fetch(
+          this.coreAddress(Seed.payRateHistory)
+        )
+      ]),
+      initialized = history.totalEntriesAdded.isZero(),
+      count = Math.min(
+        DepositPayRateCount,
+        history.maxEntries,
+        history.entries.length
+      ),
+      rates = Array.from({ length: count }, (_, offset) => {
+        const index = initialized
+          ? offset
+          : (history.currentIndex - 1 - offset + history.maxEntries) %
+            history.maxEntries
+        return BigInt(history.entries[index]?.scaledRate.toString() || "0")
+      }).filter(rate => rate > 0n),
+      average =
+        rates.length === 0
+          ? 0n
+          : (rates.reduce((sum, rate) => sum + rate, 0n) +
+              BigInt(rates.length) -
+              1n) /
+            BigInt(rates.length),
+      numerator = average * BigInt(config.depositFeeMultiplier) * amount,
+      fee = (numerator + DepositFeeScale - 1n) / DepositFeeScale,
+      totalDebit = amount + fee
+    if (numerator > MaximumFeeNumerator || totalDebit > MaximumTokenAmount)
+      throw new Error(
+        "Deposit including the protocol fee exceeds the contract limit"
+      )
+    return { amount, fee, totalDebit }
+  }
+
+  /** Build one native deposit after rechecking its protocol fee; the caller owns signing/confirmation. */
   async deposit(user: PublicKey, amount: bigint, seed: number) {
     const state = await this.read(user)
     if (!state.depositEnabled || state.paused)
@@ -231,6 +290,11 @@ export class SolanaSyndicationClient {
       )
     if (!Number.isInteger(seed) || seed < 0 || seed > MaximumSeed)
       throw new Error("Invalid unique deposit seed")
+    const quote = await this.quoteDeposit(amount)
+    if (quote.totalDebit >= state.nativeBalance)
+      throw new Error(
+        "Deposit plus protocol fee must leave SOL for transaction fees and account rent"
+      )
     const addresses = this.addresses(user),
       ephemeralStake = await PublicKey.createWithSeed(
         user,

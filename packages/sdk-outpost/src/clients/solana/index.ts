@@ -1,2 +1,2 @@
 export * from "./Types.js"
-export * from "./SolanaSyndicationClient.js"
+export type * from "./SolanaSyndicationClient.js"

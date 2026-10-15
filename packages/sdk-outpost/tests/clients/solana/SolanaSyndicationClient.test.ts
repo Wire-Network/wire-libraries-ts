@@ -11,10 +11,8 @@ import {
   type LiqsolCore
 } from "@wireio/outpost-solana-artifacts"
 import { SlugName } from "@wireio/sdk-core"
-import {
-  SolanaSyndicationClient,
-  type SolanaSyndicationState
-} from "@wireio/sdk-outpost"
+import { type SolanaSyndicationState } from "@wireio/sdk-outpost"
+import { SolanaSyndicationClient } from "@wireio/sdk-outpost/clients/solana/SolanaSyndicationClient"
 
 /** Build real producer-IDL instructions against an in-memory readiness fixture. */
 function fixture(mockRead = true) {
@@ -41,10 +39,96 @@ function fixture(mockRead = true) {
       paused: false
     }
   if (mockRead) jest.spyOn(client, "read").mockImplementation(async () => state)
-  return { client, program, user: wallet.publicKey, state }
+  const globalConfig = program.account.globalConfig,
+    payRateHistory = program.account.payRateHistory,
+    config = jest.spyOn(globalConfig, "fetch").mockResolvedValue({
+      depositFeeMultiplier: 2
+    } as Awaited<ReturnType<typeof globalConfig.fetch>>),
+    history = jest.spyOn(payRateHistory, "fetch").mockResolvedValue({
+      currentIndex: 0,
+      totalEntriesAdded: new BN(0),
+      maxEntries: 10,
+      entries: []
+    } as Awaited<ReturnType<typeof payRateHistory.fetch>>)
+  return { client, program, user: wallet.publicKey, state, config, history }
 }
 
 describe("Solana syndication", () => {
+  it.each([
+    [
+      0,
+      0,
+      [191780821, 191780821, 191780821, 191780821, 191780821, 999999999],
+      2_000_000_000n,
+      767124n
+    ],
+    [2, 12, [100, 200, 300, 400, 500, 600], 1_000_000_000_000n, 720n],
+    [0, 0, [1, 2, 0, 0, 0, 999999999], 1_000_000_000_000n, 4n],
+    [0, 0, [0, 0, 0], 2_000_000_000n, 0n],
+    [0, 0, [], 2_000_000_000n, 0n]
+  ])(
+    "quotes circular history %i/%i with contract ceiling rounding",
+    async (currentIndex, totalEntriesAdded, rates, amount, fee) => {
+      const { client, history } = fixture()
+      history.mockResolvedValue({
+        currentIndex,
+        totalEntriesAdded: new BN(totalEntriesAdded),
+        maxEntries: 6,
+        entries: rates.map(rate => ({
+          timestamp: new BN(0),
+          scaledRate: new BN(rate)
+        })),
+        bump: 0
+      })
+      await expect(client.quoteDeposit(amount)).resolves.toEqual({
+        amount,
+        fee,
+        totalDebit: amount + fee
+      })
+    }
+  )
+
+  it("rounds the average up before rounding the fee and propagates unavailable quotes", async () => {
+    const { client, history } = fixture()
+    history.mockResolvedValue({
+      currentIndex: 0,
+      totalEntriesAdded: new BN(0),
+      maxEntries: 2,
+      entries: [1, 2].map(rate => ({
+        timestamp: new BN(0),
+        scaledRate: new BN(rate)
+      })),
+      bump: 0
+    })
+    await expect(client.quoteDeposit(250_000_000_001n)).resolves.toMatchObject({
+      fee: 2n
+    })
+    await expect(client.quoteDeposit(0n)).rejects.toThrow("positive u64")
+    await expect(client.quoteDeposit(1n << 64n)).rejects.toThrow("positive u64")
+    await expect(client.quoteDeposit((1n << 64n) - 1n)).rejects.toThrow(
+      "contract limit"
+    )
+    history.mockRejectedValueOnce(new Error("Pay-rate RPC unavailable"))
+    await expect(client.quoteDeposit(1n)).rejects.toThrow(
+      "Pay-rate RPC unavailable"
+    )
+  })
+
+  it("rejects deposits whose protocol fee consumes the remaining wallet balance", async () => {
+    const { client, user, state, history } = fixture()
+    state.nativeBalance = 2_000_767_124n
+    history.mockResolvedValue({
+      currentIndex: 0,
+      totalEntriesAdded: new BN(0),
+      maxEntries: 1,
+      entries: [{ timestamp: new BN(0), scaledRate: new BN(191780821) }],
+      bump: 0
+    })
+    await expect(client.deposit(user, 2_000_000_000n, 42)).rejects.toThrow(
+      "plus protocol fee"
+    )
+  })
+
   it("reads real admission gates and refuses mismatched mint or companion identities", async () => {
     const { client, program, user } = fixture(false),
       addresses = client.addresses(user),

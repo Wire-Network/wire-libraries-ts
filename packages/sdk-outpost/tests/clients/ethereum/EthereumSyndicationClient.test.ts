@@ -4,7 +4,7 @@ import type {
   SyndicationPool
 } from "@wireio/outpost-ethereum-artifacts"
 import { JsonRpcProvider, Wallet } from "ethers"
-import { EthereumSyndicationClient } from "@wireio/sdk-outpost"
+import { EthereumSyndicationClient } from "@wireio/sdk-outpost/clients/ethereum/EthereumSyndicationClient"
 
 const TokenAddress = "0x0000000000000000000000000000000000000011",
   PoolAddress = "0x0000000000000000000000000000000000000022"
