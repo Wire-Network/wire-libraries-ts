@@ -213,8 +213,8 @@ importers:
         specifier: ^1.98.4
         version: 1.98.4(bufferutil@4.1.0)(typescript@6.0.2)(utf-8-validate@6.0.6)
       '@wireio/outpost-ethereum-artifacts':
-        specifier: 0.4.0
-        version: 0.4.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))
+        specifier: 0.4.1
+        version: 0.4.1(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))
       '@wireio/outpost-solana-artifacts':
         specifier: 0.4.0
         version: 0.4.0
@@ -1697,8 +1697,8 @@ packages:
   '@wireio/opp-typescript-models@1.0.51':
     resolution: {integrity: sha512-MgSMRZScCBAvtmxDe7/HHmJADENX0JW9jbt8tL4vmQ3U9Om8IwzzCUYKkmVohTGKClydVmXmncrC8gn1aMENbg==}
 
-  '@wireio/outpost-ethereum-artifacts@0.4.0':
-    resolution: {integrity: sha512-iioJct1AJRL8zFRD/v/Qf+Cy3xSCwJKXJN5j3DX8jLyZfgIYA9xDvlxziz4HzYOcdvNL2fxJzO3xAh6yZX2lsA==}
+  '@wireio/outpost-ethereum-artifacts@0.4.1':
+    resolution: {integrity: sha512-ToWpQenxpqC0/YwyGU6ccJEuxiKHBBORc9cgS/fnbWCO9Yy3YlBJGvG2RfT8tFssD5MTfF7uJJW4NS8x47gCVg==}
     peerDependencies:
       ethers: ^6.15.0
 
@@ -5993,7 +5993,7 @@ snapshots:
     dependencies:
       '@protobuf-ts/runtime': 2.11.1
 
-  '@wireio/outpost-ethereum-artifacts@0.4.0(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
+  '@wireio/outpost-ethereum-artifacts@0.4.1(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
     dependencies:
       ethers: 6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 

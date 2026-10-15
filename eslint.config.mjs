@@ -160,7 +160,6 @@ const BanBareErrorInHandler = {
 // file → pay its debt → DELETE its entry. Never add an entry. Computed from
 // the 2026-07-18 baseline lint run.
 const SwitchDebtFiles = [
-  "packages/sdk-core/src/api/v1/Chain.ts",
   "packages/sdk-core/src/api/v1/Types.ts",
   "packages/sdk-core/src/chain/Asset.ts",
   "packages/sdk-core/src/chain/Blob.ts",
@@ -199,7 +198,6 @@ const InlineTypeLiteralDebtFiles = [
   "packages/sdk-core/src/api/Client.ts",
   "packages/sdk-core/src/api/Provider.ts",
   "packages/sdk-core/src/api/Types.ts",
-  "packages/sdk-core/src/api/v1/Chain.ts",
   "packages/sdk-core/src/api/v1/History.ts",
   "packages/sdk-core/src/api/v1/Types.ts",
   "packages/sdk-core/src/api/v2/Types.ts",
@@ -230,7 +228,6 @@ const InlineTypeLiteralDebtFiles = [
   "packages/sdk-core/src/signing/SigningRequest.ts",
   "packages/sdk-core/src/types/SysioContractTypes.ts",
   "packages/sdk-core/tests/api/Provider.test.ts",
-  "packages/sdk-core/tests/api/v1/Chain.test.ts",
   "packages/sdk-core/tests/chain/Integer.test.ts",
   "packages/sdk-core/tests/contracts/sysio/msig/Capabilities.test.ts",
   "packages/sdk-core/tests/crypto/crypto.test.ts",

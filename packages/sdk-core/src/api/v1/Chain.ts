@@ -1,3 +1,5 @@
+import { match } from "ts-pattern"
+
 import { APIClient } from "../Client.js"
 
 import {
@@ -366,7 +368,7 @@ export class ChainAPI {
     // See the test `does not unwrap user table whose key is itself an
     // object` for a pinned repro of this known false-positive so the
     // behavior is caught if the discriminant is ever tightened.
-    type WireKvRow = {
+    interface WireKvRow {
       key: Record<string, unknown>
       value: unknown
       payer?: string
@@ -419,35 +421,21 @@ export class ChainAPI {
       }
     }
 
-    if (next_key && next_key.length > 0) {
-      let indexType: ABISerializableType
-
-      // set index type so we can decode next_key in the response if present
-      switch (key_type) {
-        case "i64":
-          indexType = UInt64
-          break
-        case "i128":
-          indexType = UInt128
-          break
-        case "name":
-          indexType = Name
-          break
-        case "float64":
-          indexType = Float64
-          break
-        case "float128":
-          indexType = Float128
-          break
-        case "sha256":
-          indexType = Checksum256
-          break
-        case "ripemd160":
-          indexType = Checksum160
-          break
-        default:
+    // KV cursors are opaque JSON bounds (or encoded bytes), not legacy name/i64 keys.
+    const isKvCursor =
+      params.index_name || isWireKvShape || next_key?.startsWith("{")
+    if (next_key && next_key.length > 0 && !isKvCursor) {
+      const indexType: ABISerializableType = match(key_type)
+        .with("i64", () => UInt64)
+        .with("i128", () => UInt128)
+        .with("name", () => Name)
+        .with("float64", () => Float64)
+        .with("float128", () => Float128)
+        .with("sha256", () => Checksum256)
+        .with("ripemd160", () => Checksum160)
+        .otherwise(() => {
           throw new Error(`Unsupported key type: ${key_type}`)
-      }
+        })
 
       if (indexType === Name) {
         // names are sent back as an uint64 string instead of a name string..
@@ -457,7 +445,7 @@ export class ChainAPI {
       } else {
         next_key = Serializer.decode({ object: next_key, type: indexType })
       }
-    } else {
+    } else if (!next_key) {
       next_key = undefined
     }
 

@@ -6,6 +6,8 @@ import {
   GetBlockResponse
 } from "@wireio/sdk-core/api/v1/Types"
 import { Serializer } from "@wireio/sdk-core/serializer"
+import { Name } from "@wireio/sdk-core/chain/Name"
+import { UInt64 } from "@wireio/sdk-core/chain/Integer"
 
 // Tests for the wire-sysio PR #290 unified get_table_rows response
 // shape — KV-backed tables now return rows as `{key, value, payer?}`
@@ -18,7 +20,7 @@ import { Serializer } from "@wireio/sdk-core/serializer"
 // passed via the `responses` map keyed by request path.
 class MockProvider implements APIProvider {
   constructor(private responses: Record<string, any>) {}
-  async call(args: { path: string; params?: unknown }): Promise<APIResponse> {
+  async call(args: Parameters<APIProvider["call"]>[0]): Promise<APIResponse> {
     const json = this.responses[args.path]
     if (json === undefined) {
       throw new Error(`MockProvider: no response registered for ${args.path}`)
@@ -36,7 +38,7 @@ class MockProvider implements APIProvider {
 class CapturingProvider implements APIProvider {
   params: unknown
 
-  async call(args: { path: string; params?: unknown }): Promise<APIResponse> {
+  async call(args: Parameters<APIProvider["call"]>[0]): Promise<APIResponse> {
     this.params = args.params
     return {
       status: 200,
@@ -47,7 +49,7 @@ class CapturingProvider implements APIProvider {
   }
 }
 
-function makeClient(responses: Record<string, any>): APIClient {
+function createClient(responses: Record<string, any>): APIClient {
   return new APIClient({
     provider: new MockProvider(responses)
   })
@@ -114,7 +116,7 @@ describe("ChainAPI.get_block", () => {
 
 describe("ChainAPI.get_account", () => {
   test("decodes system accounts that omit the creation timestamp", async () => {
-    const client = makeClient({
+    const client = createClient({
         "/v1/chain/get_account": {
           account_name: "sysio",
           head_block_num: 729126,
@@ -138,6 +140,82 @@ describe("ChainAPI.get_account", () => {
 })
 
 describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
+  test.each([
+    ["byname", '{"byname":"16406237203414318128"}'],
+    [
+      "bypubkey",
+      '{"bypubkey":"3054c49cc19a07b8947de3b99239b3dc6cef985f732bfa5f9f8c06ff1a8725f7"}'
+    ],
+    [
+      "bypubkey",
+      "3054c49cc19a07b8947de3b99239b3dc6cef985f732bfa5f9f8c06ff1a8725f7"
+    ]
+  ])(
+    "preserves the %s KV cursor for the next request",
+    async (index, cursor) => {
+      const provider = new MockProvider({
+          "/v1/chain/get_table_rows": { rows: [], more: true, next_key: cursor }
+        }),
+        call = jest.spyOn(provider, "call"),
+        client = new APIClient({ provider }),
+        params = { code: "sysio.authex", table: "links", index_name: index },
+        page = await client.v1.chain.get_table_rows<string>(params)
+
+      expect(page.next_key).toBe(cursor)
+      await client.v1.chain.get_table_rows<string>({
+        ...params,
+        lower_bound: page.next_key
+      })
+      expect(call).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          params: expect.objectContaining({ lower_bound: cursor })
+        })
+      )
+    }
+  )
+
+  test("preserves a primary KV cursor without a named index", async () => {
+    const cursor = '{"key":17}',
+      client = createClient({
+        "/v1/chain/get_table_rows": {
+          rows: [{ key: { key: 16 }, value: { username: "alice" } }],
+          more: true,
+          next_key: cursor
+        }
+      }),
+      page = await client.v1.chain.get_table_rows<string>({
+        code: "sysio.authex",
+        table: "links"
+      })
+
+    expect(page.rows).toEqual([{ username: "alice" }])
+    expect(page.next_key).toBe(cursor)
+  })
+
+  test("still decodes legacy numeric cursors and rejects invalid numbers", async () => {
+    const cursor = Name.from("alice").value.toString(),
+      client = createClient({
+        "/v1/chain/get_table_rows": { rows: [], more: true, next_key: cursor }
+      }),
+      params = { code: "sysio.token", table: "accounts" },
+      names = await client.v1.chain.get_table_rows(params),
+      integers = await client.v1.chain.get_table_rows({
+        ...params,
+        key_type: "i64"
+      })
+
+    expect(names.next_key).toBeInstanceOf(Name)
+    expect(String(names.next_key)).toBe("alice")
+    expect(integers.next_key).toBeInstanceOf(UInt64)
+    expect(String(integers.next_key)).toBe(cursor)
+    const invalid = createClient({
+      "/v1/chain/get_table_rows": { rows: [], more: true, next_key: "invalid" }
+    })
+    await expect(invalid.v1.chain.get_table_rows(params)).rejects.toThrow(
+      "Invalid number"
+    )
+  })
+
   test("forwards named KV secondary-index bounds", async () => {
     const provider = new CapturingProvider(),
       client = new APIClient({ provider })
@@ -158,7 +236,7 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
   })
 
   test("unwraps the new {key, value, payer?} shape into plain rows", async () => {
-    const client = makeClient({
+    const client = createClient({
       "/v1/chain/get_table_rows": {
         rows: [
           {
@@ -191,7 +269,7 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
   })
 
   test("unwraps the new shape with show_payer and captures payers", async () => {
-    const client = makeClient({
+    const client = createClient({
       "/v1/chain/get_table_rows": {
         rows: [
           {
@@ -229,7 +307,7 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
   test("preserves legacy plain-row shape from EOSIO chains", async () => {
     // EOSIO chains still return rows as the decoded struct directly
     // (no {key, value} wrapper). The wrapper must not touch these.
-    const client = makeClient({
+    const client = createClient({
       "/v1/chain/get_table_rows": {
         rows: [
           { owner: "alice", balance: "100.0000 SYS" },
@@ -252,7 +330,7 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
   })
 
   test("preserves legacy {data, payer} show_payer shape from EOSIO chains", async () => {
-    const client = makeClient({
+    const client = createClient({
       "/v1/chain/get_table_rows": {
         rows: [
           { data: { owner: "alice", balance: "100.0000 SYS" }, payer: "alice" },
@@ -279,7 +357,7 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
   })
 
   test("empty rows array works for both shapes", async () => {
-    const client = makeClient({
+    const client = createClient({
       "/v1/chain/get_table_rows": {
         rows: [],
         more: false,
@@ -302,7 +380,7 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
     // but a row was returned without a payer, the wrapper pushes
     // `undefined` so the absent-payer case is explicit to callers rather
     // than silently coerced to an empty Name.
-    const client = makeClient({
+    const client = createClient({
       "/v1/chain/get_table_rows": {
         rows: [
           {
@@ -334,7 +412,7 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
     // pass an object-only check. The wire-sysio KV key is always a
     // struct (Record<string, unknown>), never an array, so rejecting
     // arrays tightens the discriminant at no cost to the real case.
-    const client = makeClient({
+    const client = createClient({
       "/v1/chain/get_table_rows": {
         rows: [
           { key: ["a", 1], value: "first" },
@@ -361,7 +439,7 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
     // collide with the wire-sysio KV shape on field-name alone. Requiring
     // `key` to be an object (wire KV keys are always composite) avoids
     // misinterpreting these rows.
-    const client = makeClient({
+    const client = createClient({
       "/v1/chain/get_table_rows": {
         rows: [
           { key: "some_setting", value: 42 },
@@ -392,7 +470,7 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
     // documents that known limitation so future tightening of the
     // heuristic (or an ABI-aware detection path) has a regression
     // target to flip from xfail → pass.
-    const client = makeClient({
+    const client = createClient({
       "/v1/chain/get_table_rows": {
         rows: [
           {
@@ -428,7 +506,7 @@ describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {
 
 describe("ChainAPI.get_table_by_scope", () => {
   test("decodes Wire rows that omit payer and count", async () => {
-    const client = makeClient({
+    const client = createClient({
       "/v1/chain/get_table_by_scope": {
         rows: [
           {

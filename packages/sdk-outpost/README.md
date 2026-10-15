@@ -8,7 +8,7 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-The current source pins Ethereum artifacts `0.4.0` and Solana artifacts `0.4.0`
+The current source pins Ethereum artifacts `0.4.1` and Solana artifacts `0.4.0`
 as one artifact suite for the depot-collateral stack. Their published manifests identify
 the exact producer commits, runtime artifacts, and ethers v6/Anchor bindings
 used by the SDK. Package versions are managed and published only through the
@@ -39,8 +39,8 @@ after building those outputs; otherwise the exact registry versions remain in us
 
 | Family   | Generated clients and workflows                                          |
 | -------- | ------------------------------------------------------------------------- |
-| Ethereum | `OPP`, `OPPInbound`, `BAR`, node-owner registration |
-| Solana   | `liqsol_core`, OPP transport and LIQ custody  |
+| Ethereum | `OPP`, `OPPInbound`, `BAR`, node-owner registration, native deposit and syndication |
+| Solana   | `liqsol_core`, native deposit, PostLaunch syndication and OPP transport  |
 
 Client creation verifies all four boundaries before returning:
 
@@ -61,6 +61,16 @@ factory entrypoints or internal module paths.
 These checks prove deployment compatibility, not end-to-end feature readiness.
 Applications must still gate staking, settlement, retry, funding, and
 underwriting using platform capability evidence.
+
+## Native deposits and syndication
+
+`client.syndication`, obtained through `OutpostClient.create`, keeps external LIQ acquisition separate from Wire settlement. Syndication helper types are exported without public constructors:
+
+- Ethereum: `read(owner)`, `quoteDeposit(amount)`, `deposit(amount)`, exact-amount `approve(amount)`, and `syndicate(amount, compressedPublicKey)`. Amounts are base-unit `bigint`. Save the returned transaction hash before waiting for confirmation. Syndication requires allowance and a compressed public key matching the signer. `depositPaused` follows the liquid token; `syndicationPaused` also includes the pool pause.
+- Solana: `read(user)`, `quoteDeposit(amount)`, `deposit(user, amount, uniqueU32Seed)`, and `syndicate(user, amount)` return exact balances or unsigned transactions. The quote returns `amount`, `fee` and `totalDebit` in lamports using the current pay-rate history and fee multiplier. The protocol fee is added to the amount; transaction fees and account rent are additional. Deposit rechecks affordability, but the contract does not bind execution to a quoted fee. The caller adds a recent blockhash, signs and persists the signature before broadcasting. Syndication requires PostLaunch and a configured LIQSOL mint/precision; it never creates a legacy prelaunch position.
+- Profiles opt into Ethereum `DepositManager`, `LiqEthToken`, `SyndicationPool` identities and Solana `liqsol.tokenProgramAddress` / `transferHookProgramAddress`. Missing identities disable this capability without changing existing profiles. Solana companion addresses are checked against the derived mint and executable accounts; the existing verifier authenticates the core program binary, not companion binaries.
+
+Source confirmation does not prove shadow LIQ is spendable on Wire. Applications must separately check the linked Wire account, relay/bond release and its `sysio.liq` balance. No administrator bootstrap, automatic approval, faucet or collateral deposit is performed by these helpers.
 
 ## Deployment profiles
 
@@ -113,8 +123,10 @@ release; consumers continue to use the same `OutpostClient.create` facade.
 
 ### Artifact compatibility
 
-The `0.4.0` Ethereum/Solana pair supplies the depot-collateral, syndication and
-node-registration bindings. The previous `0.3.0`/`0.3.1` pair is not retained;
+The Ethereum `0.4.1` / Solana `0.4.0` pair supplies the depot-collateral,
+native-deposit, syndication and node-registration bindings. Ethereum `0.4.1`
+adds exports from the existing compiled deployment without changing its runtime.
+The previous `0.3.0`/`0.3.1` pair is not retained;
 older deployments require their matching SDK release. Consumers must provide a
 fresh deployment profile and pass exact live runtime verification before use.
 Artifact compatibility alone does not establish swap or operator readiness.

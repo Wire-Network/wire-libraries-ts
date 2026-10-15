@@ -1,3 +1,4 @@
+import { SolanaSyndicationClient } from "./SolanaSyndicationClient.js"
 import { Program } from "@coral-xyz/anchor"
 import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
 import { match } from "ts-pattern"
@@ -47,6 +48,16 @@ export class SolanaOutpostClient {
         address
       },
       options.provider
+    )
+  }
+
+  /** Native deposits and PostLaunch syndication for explicit companion programs. */
+  get syndication(): SolanaSyndicationClient {
+    if (this.profile.solana.liqsol == null)
+      throw new Error("Deployment profile has no liqSOL companion identities")
+    return new SolanaSyndicationClient(
+      this.liqsolCore,
+      this.profile.solana.liqsol
     )
   }
 

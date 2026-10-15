@@ -88,6 +88,11 @@ explorers, wallet adapters and application capabilities remain caller
 configuration. The former external reserve and swap-underwriter clients are
 removed.
 
+For Wire KV table pagination, call `get_table_rows<string>(...)` and pass the
+returned `next_key` unchanged as the next bound (`lower_bound` forward,
+`upper_bound` in reverse). KV cursors are opaque JSON or encoded keys, not
+numeric account names. Domain clients such as AuthEx use this same reader.
+
 ## Depot swap quotes
 
 `contracts.sysio.swap.quoteSwap(options)` estimates one exact-input trade from
