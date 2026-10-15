@@ -8,8 +8,8 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-The current source pins Ethereum artifacts `0.3.0` and Solana artifacts `0.3.1`
-as one verified compatible artifact suite. Their published manifests identify
+The current source pins Ethereum artifacts `0.4.0` and Solana artifacts `0.4.0`
+as one artifact suite for the depot-collateral stack. Their published manifests identify
 the exact producer commits, runtime artifacts, and ethers v6/Anchor bindings
 used by the SDK. Package versions are managed and published only through the
 repository release workflow.
@@ -111,14 +111,16 @@ works without an SDK release. A deployable code or interface change requires a
 producer artifact release, a corresponding internal suite entry, and an SDK
 release; consumers continue to use the same `OutpostClient.create` facade.
 
-### Current Sandbox validation
+### Artifact compatibility
 
-The Ethereum `0.3.0` and Solana `0.3.1` pair was validated on the current
-Sandbox deployment, optionally described as **Bearbox** when distinguishing
-that specific chain from other local sandboxes. Bearbox is validation
-provenance, not an SDK environment key: any sandbox or other deployment with a
-matching authenticated profile selects the same artifact suite. A later
-same-code sandbox respin needs a new profile but no artifact or SDK release.
+The `0.4.0` Ethereum/Solana pair supplies the depot-collateral, syndication and
+node-registration bindings. The previous `0.3.0`/`0.3.1` pair is not retained;
+older deployments require their matching SDK release. Consumers must provide a
+fresh deployment profile and pass exact live runtime verification before use.
+Artifact compatibility alone does not establish swap or operator readiness.
+
+A same-code respin needs a new profile; changed deployable bytes require matching
+producer artifacts and an SDK release. The client facade remains unchanged.
 
 ## Usage
 
@@ -154,8 +156,8 @@ BAR, reads owned tiers, obtains approval only when needed, and submits
 `BAR.commitNode`. Wire account authority parsing reuses `@wireio/sdk-core`; the
 SDK validates that the uncompressed depositor key belongs to the EVM signer.
 BAR is an optional deployment capability: schema-v1 profiles without a BAR
-identity continue to support the existing reserve and swap clients, while
-accessing `nodeOwners` fails closed with an explicit availability error.
+identity can still verify the OPP clients, while accessing `nodeOwners` fails
+closed with an explicit availability error.
 
 ```ts
 const slots = await ethereum.nodeOwners.ownedSlots(ownerAddress)

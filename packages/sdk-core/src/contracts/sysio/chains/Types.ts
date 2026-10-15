@@ -19,8 +19,8 @@ export interface ChainsClientOptions {
  * Remote outpost contract identities for one chain.
  *
  * An EVM outpost deploys a distinct contract per role. An SVM outpost is a
- * single program named by `oppAddress`; the protocol requires the role fields
- * to be empty there, and readers fall back to `oppAddress` for every role. Every
+ * single program named by `oppAddress`; the protocol requires `oppInboundAddress`
+ * to be empty there, and readers fall back to `oppAddress` for both roles. Every
  * field may be empty while the remote contracts are not deployed yet.
  */
 export interface ChainOutpostAddresses {
@@ -28,10 +28,6 @@ export interface ChainOutpostAddresses {
   oppAddress: string
   /** EVM: the OPPInbound contract. Must be empty for SVM. */
   oppInboundAddress: string
-  /** EVM: the OperatorRegistry contract. Must be empty for SVM. */
-  operatorRegistryAddress: string
-  /** EVM: the source swap-deposit contract. Must be empty for SVM. */
-  sourceDepositAddress: string
 }
 
 /** User-facing chain registration data. */

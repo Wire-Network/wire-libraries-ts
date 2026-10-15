@@ -15,14 +15,10 @@ const {
 
 const EVM_OPP = "0x5FbDB2315678afecb367f032d93F642f64180aa3",
   EVM_INBOUND = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-  EVM_OPREG = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-  EVM_DEPOSIT = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
   SVM_PROGRAM = "So11111111111111111111111111111111111111112",
   EMPTY_OUTPOST = {
     opp_addr: "",
-    opp_inbound_addr: "",
-    operator_registry_addr: "",
-    source_deposit_addr: ""
+    opp_inbound_addr: ""
   }
 
 const REGISTRATION = {
@@ -84,22 +80,18 @@ describe("sysio.chains action helpers", () => {
         ...REGISTRATION,
         outpost: {
           oppAddress: EVM_OPP,
-          oppInboundAddress: EVM_INBOUND,
-          operatorRegistryAddress: EVM_OPREG,
-          sourceDepositAddress: EVM_DEPOSIT
+          oppInboundAddress: EVM_INBOUND
         }
       }).outpost
     ).toEqual({
       opp_addr: EVM_OPP,
-      opp_inbound_addr: EVM_INBOUND,
-      operator_registry_addr: EVM_OPREG,
-      source_deposit_addr: EVM_DEPOSIT
+      opp_inbound_addr: EVM_INBOUND
     })
   })
 
   test("defaults an omitted role to empty rather than dropping the field", () => {
     // An SVM outpost is one program: only opp_addr is set, and the protocol
-    // REQUIRES the other three to be empty.
+    // REQUIRES opp_inbound_addr to be empty.
     expect(
       createSetOutpostActionData("SOLANA", { oppAddress: SVM_PROGRAM })
     ).toEqual({
@@ -113,9 +105,7 @@ describe("sysio.chains action helpers", () => {
         code: "POLYGON",
         outpost: {
           oppAddress: EVM_OPP,
-          oppInboundAddress: EVM_INBOUND,
-          operatorRegistryAddress: EVM_OPREG,
-          sourceDepositAddress: EVM_DEPOSIT
+          oppInboundAddress: EVM_INBOUND
         },
         authorization: ["sysio.chains@active"]
       }),
@@ -127,8 +117,6 @@ describe("sysio.chains action helpers", () => {
     expect(data.code.toJSON()).toBe("POLYGON")
     expect(data.outpost.opp_addr).toBe(EVM_OPP)
     expect(data.outpost.opp_inbound_addr).toBe(EVM_INBOUND)
-    expect(data.outpost.operator_registry_addr).toBe(EVM_OPREG)
-    expect(data.outpost.source_deposit_addr).toBe(EVM_DEPOSIT)
   })
 
   test("rejects external chain identifiers outside uint32", () => {
