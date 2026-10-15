@@ -16,6 +16,8 @@ A monorepo containing shared TypeScript libraries for Wire applications, providi
 
 See the [SDK core guide](packages/sdk-core/README.md) for installation, contract access, and [depot swap quote snapshots](packages/sdk-core/README.md#depot-swap-quotes).
 
+See [native deposits and syndication](packages/sdk-outpost/README.md#native-deposits-and-syndication) for external LIQ acquisition and its separate Wire-settlement boundary.
+
 ## Examples
 
 | Example | Description |

@@ -39,8 +39,8 @@ after building those outputs; otherwise the exact registry versions remain in us
 
 | Family   | Generated clients and workflows                                          |
 | -------- | ------------------------------------------------------------------------- |
-| Ethereum | `OPP`, `OPPInbound`, `BAR`, node-owner registration |
-| Solana   | `liqsol_core`, OPP transport and LIQ custody  |
+| Ethereum | `OPP`, `OPPInbound`, `BAR`, node-owner registration, native deposit and syndication |
+| Solana   | `liqsol_core`, native deposit, PostLaunch syndication and OPP transport  |
 
 Client creation verifies all four boundaries before returning:
 
@@ -61,6 +61,18 @@ factory entrypoints or internal module paths.
 These checks prove deployment compatibility, not end-to-end feature readiness.
 Applications must still gate staking, settlement, retry, funding, and
 underwriting using platform capability evidence.
+
+## Native deposits and syndication
+
+`client.syndication` keeps external LIQ acquisition separate from Wire settlement:
+
+- Ethereum: `read(owner)`, `quoteDeposit(amount)`, `deposit(amount)`, exact-amount `approve(amount)`, and `syndicate(amount, compressedPublicKey)`. Amounts are base-unit `bigint`. Save the returned transaction hash before waiting for confirmation. Syndication requires allowance and a compressed public key matching the signer.
+- Solana: `read(user)`, `deposit(user, amount, uniqueU32Seed)`, and `syndicate(user, amount)` return exact balances or unsigned transactions. The caller adds a recent blockhash, signs and persists the signature before broadcasting. Syndication requires PostLaunch and a configured LIQSOL mint/precision; it never creates a legacy prelaunch position.
+- Profiles opt into Ethereum `DepositManager`, `LiqEthToken`, `SyndicationPool` identities and Solana `liqsol.tokenProgramAddress` / `transferHookProgramAddress`. Missing identities disable this capability without changing existing profiles. Solana companion addresses are checked against the derived mint and executable accounts; the existing verifier authenticates the core program binary, not companion binaries.
+
+Source confirmation does not prove shadow LIQ is spendable on Wire. Applications must separately check the linked Wire account, relay/bond release and its `sysio.liq` balance. No administrator bootstrap, automatic approval, faucet or collateral deposit is performed by these helpers.
+
+**Draft release dependency:** the three new Ethereum exports require the producer artifact companion in [wire-ethereum#235](https://github.com/Wire-Network/wire-ethereum/pull/235). The current `0.4.0` pin does not contain them. Publish the producer artifact, update the exact dependency/lockfile and artifact identity test, then release this SDK before consumers adopt these helpers. Local sibling artifacts are development validation only.
 
 ## Deployment profiles
 

@@ -1,5 +1,8 @@
 import {
   BAR__factory,
+  DepositManager__factory,
+  LiqEthToken__factory,
+  SyndicationPool__factory,
   EthereumOutpostArtifactManifest,
   OPPInbound__factory,
   OPP__factory
@@ -20,6 +23,9 @@ import {
 /** Generated ethers v6 factories keyed by deployment identity. */
 export interface EthereumOutpostArtifactFactories {
   readonly [EthereumContractName.BAR]: typeof BAR__factory
+  readonly [EthereumContractName.DepositManager]: typeof DepositManager__factory
+  readonly [EthereumContractName.LiqEthToken]: typeof LiqEthToken__factory
+  readonly [EthereumContractName.SyndicationPool]: typeof SyndicationPool__factory
   readonly [EthereumContractName.OPP]: typeof OPP__factory
   readonly [EthereumContractName.OPPInbound]: typeof OPPInbound__factory
 }
@@ -69,6 +75,9 @@ export const CurrentOutpostArtifactSuite: OutpostArtifactSuite = {
     manifest: EthereumOutpostArtifactManifest,
     factories: {
       [EthereumContractName.BAR]: BAR__factory,
+      [EthereumContractName.DepositManager]: DepositManager__factory,
+      [EthereumContractName.LiqEthToken]: LiqEthToken__factory,
+      [EthereumContractName.SyndicationPool]: SyndicationPool__factory,
       [EthereumContractName.OPP]: OPP__factory,
       [EthereumContractName.OPPInbound]: OPPInbound__factory
     }
