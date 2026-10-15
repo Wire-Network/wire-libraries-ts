@@ -19,7 +19,9 @@ Solana artifact libraries, including their ethers v6 factories and Anchor
 types. Chain bindings are generated and verified by those producer repos, not
 inside this monorepo. An internal compile-time artifact-suite registry selects
 compatible producer bindings from caller-supplied deployment profiles without
-owning endpoints or environment configuration.
+owning endpoints or environment configuration. The current source targets the
+`0.4.0` Ethereum/Solana artifact pair; see [SDK Outpost](packages/sdk-outpost/README.md)
+for supported bindings and deployment compatibility.
 
 ## Examples
 
