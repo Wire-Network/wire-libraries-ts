@@ -15,6 +15,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   SYSVAR_STAKE_HISTORY_PUBKEY
 } from "@solana/web3.js"
+import { SlugName } from "@wireio/sdk-core"
 import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
 import type { OutpostDeploymentProfile } from "../../deployments/index.js"
 
@@ -24,7 +25,7 @@ const DepositComputeUnitLimit = 1_000_000,
   LiquidDecimals = 9,
   EphemeralStakePrefix = "ephemeral_",
   MaximumSeed = 0xffffffff,
-  LiquidTokenCode = 53413609783296n
+  LiquidTokenCode = BigInt(SlugName.from("LIQSOL"))
 
 /** Deployed companion programs selected alongside the verified core program. */
 export type SolanaLiqsolDeployment = NonNullable<
@@ -33,14 +34,23 @@ export type SolanaLiqsolDeployment = NonNullable<
 
 /** Wallet funds and on-chain admission gates; no readiness is inferred from an RPC URL. */
 export interface SolanaSyndicationState {
+  /** Native SOL balance in lamports, before fees and rent. */
   nativeBalance: bigint
+  /** External liqSOL balance in token base units. */
   liquidBalance: bigint
+  /** Liquid token decimal precision. */
   decimals: number
+  /** Minimum native deposit in lamports. */
   minimumDeposit: bigint
+  /** Maximum liqSOL base units allowed in one syndication. */
   maximumSyndication: bigint
+  /** Native deposits are enabled by the core feature flag. */
   depositEnabled: boolean
+  /** OPP syndication is in PostLaunch mode. */
   postLaunch: boolean
+  /** OPP has the exact liqSOL mint and decimal precision. */
   mapped: boolean
+  /** The core is paused or frozen. */
   paused: boolean
 }
 
@@ -69,6 +79,7 @@ const Seed = {
 export class SolanaSyndicationClient {
   /** Accept the verified core and explicit companion identities; no private keys or admin actions. */
   constructor(
+    /** Producer-generated client for the verified core program. */
     readonly program: Program<LiqsolCore>,
     private readonly deployment: SolanaLiqsolDeployment
   ) {}
@@ -145,7 +156,7 @@ export class SolanaSyndicationClient {
 
   /** Read exact balances and launch/mint/precision gates without submitting anything. */
   async read(user: PublicKey): Promise<SolanaSyndicationState> {
-    const a = this.addresses(user),
+    const addresses = this.addresses(user),
       connection = this.program.provider.connection,
       [
         config,
@@ -156,20 +167,22 @@ export class SolanaSyndicationClient {
         nativeBalance,
         companions
       ] = await Promise.all([
-        this.program.account.globalConfig.fetch(a.globalConfig),
-        this.program.account.globalState.fetch(a.globalState),
-        this.program.account.outpostConfig.fetch(a.config),
-        this.program.account.distributionState.fetch(a.distributionState),
-        connection.getAccountInfo(a.userAta),
+        this.program.account.globalConfig.fetch(addresses.globalConfig),
+        this.program.account.globalState.fetch(addresses.globalState),
+        this.program.account.outpostConfig.fetch(addresses.config),
+        this.program.account.distributionState.fetch(
+          addresses.distributionState
+        ),
+        connection.getAccountInfo(addresses.userAta),
         connection.getBalance(user),
         connection.getMultipleAccountsInfo([
-          a.liqsolProgram,
-          a.transferHookProgram
+          addresses.liqsolProgram,
+          addresses.transferHookProgram
         ])
       ])
     if (
       companions.some(program => !program?.executable) ||
-      !distribution.liqsolMint.equals(a.liqsolMint)
+      !distribution.liqsolMint.equals(addresses.liqsolMint)
     ) {
       throw new Error(
         "The deployed liqSOL mint or companion programs do not match the deployment profile"
@@ -179,7 +192,7 @@ export class SolanaSyndicationClient {
       outpost.tokenAddressesByCode.some(
         entry =>
           BigInt(entry.tokenCode.toString()) === LiquidTokenCode &&
-          entry.mint.equals(a.liqsolMint)
+          entry.mint.equals(addresses.liqsolMint)
       ) &&
       outpost.precisionByTokenCode.some(
         entry =>
@@ -191,7 +204,8 @@ export class SolanaSyndicationClient {
       liquidBalance:
         account == null
           ? 0n
-          : unpackAccount(a.userAta, account, TOKEN_2022_PROGRAM_ID).amount,
+          : unpackAccount(addresses.userAta, account, TOKEN_2022_PROGRAM_ID)
+              .amount,
       decimals: LiquidDecimals,
       minimumDeposit: BigInt(config.minUserDeposit.toString()),
       maximumSyndication: BigInt(config.maxSyndicationPerTransfer.toString()),
@@ -217,7 +231,7 @@ export class SolanaSyndicationClient {
       )
     if (!Number.isInteger(seed) || seed < 0 || seed > MaximumSeed)
       throw new Error("Invalid unique deposit seed")
-    const a = this.addresses(user),
+    const addresses = this.addresses(user),
       ephemeralStake = await PublicKey.createWithSeed(
         user,
         `${EphemeralStakePrefix}${seed}`,
@@ -227,26 +241,26 @@ export class SolanaSyndicationClient {
       .solToLiqsol(new BN(amount.toString()), seed)
       .accountsStrict({
         user,
-        depositAuthority: a.depositAuthority,
+        depositAuthority: addresses.depositAuthority,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_2022_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        liqsolProgram: a.liqsolProgram,
-        payRateHistory: a.payRateHistory,
+        liqsolProgram: addresses.liqsolProgram,
+        payRateHistory: addresses.payRateHistory,
         stakeProgram: StakeProgram.programId,
-        liqsolMint: a.liqsolMint,
-        userAta: a.userAta,
-        liqsolMintAuthority: a.liqsolMintAuthority,
-        reservePool: a.reservePool,
-        vault: a.vault,
+        liqsolMint: addresses.liqsolMint,
+        userAta: addresses.userAta,
+        liqsolMintAuthority: addresses.liqsolMintAuthority,
+        reservePool: addresses.reservePool,
+        vault: addresses.vault,
         ephemeralStake,
-        controllerState: a.controllerState,
-        payoutState: a.payoutState,
-        bucketAuthority: a.bucketAuthority,
-        bucketTokenAccount: a.bucketTokenAccount,
-        userRecord: a.userRecord,
-        distributionState: a.distributionState,
-        globalConfig: a.globalConfig,
+        controllerState: addresses.controllerState,
+        payoutState: addresses.payoutState,
+        bucketAuthority: addresses.bucketAuthority,
+        bucketTokenAccount: addresses.bucketTokenAccount,
+        userRecord: addresses.userRecord,
+        distributionState: addresses.distributionState,
+        globalConfig: addresses.globalConfig,
         instructionsSysvar: SYSVAR_INSTRUCTIONS_PUBKEY,
         clock: SYSVAR_CLOCK_PUBKEY,
         stakeHistory: SYSVAR_STAKE_HISTORY_PUBKEY,
@@ -276,30 +290,30 @@ export class SolanaSyndicationClient {
       throw new Error(
         "Syndication exceeds the wallet balance or configured limit"
       )
-    const a = this.addresses(user)
+    const addresses = this.addresses(user)
     return this.program.methods
       .synd(new BN(amount.toString()))
       .accountsStrict({
         user,
-        globalConfig: a.globalConfig,
-        liqsolMint: a.liqsolMint,
-        globalState: a.globalState,
-        distributionState: a.distributionState,
-        userAta: a.userAta,
-        poolAuthority: a.poolAuthority,
-        bucketAuthority: a.bucketAuthority,
-        bucketTokenAccount: a.bucketTokenAccount,
-        bucketUserRecord: a.bucketUserRecord,
-        senderUserRecord: a.userRecord,
-        receiverUserRecord: a.receiverUserRecord,
-        extraAccountMetaList: a.extraAccountMetaList,
+        globalConfig: addresses.globalConfig,
+        liqsolMint: addresses.liqsolMint,
+        globalState: addresses.globalState,
+        distributionState: addresses.distributionState,
+        userAta: addresses.userAta,
+        poolAuthority: addresses.poolAuthority,
+        bucketAuthority: addresses.bucketAuthority,
+        bucketTokenAccount: addresses.bucketTokenAccount,
+        bucketUserRecord: addresses.bucketUserRecord,
+        senderUserRecord: addresses.userRecord,
+        receiverUserRecord: addresses.receiverUserRecord,
+        extraAccountMetaList: addresses.extraAccountMetaList,
         liqsolCoreProgram: this.program.programId,
-        transferHookProgram: a.transferHookProgram,
-        liqsolPoolAta: a.liqsolPoolAta,
+        transferHookProgram: addresses.transferHookProgram,
+        liqsolPoolAta: addresses.liqsolPoolAta,
         outpostAccount: null,
         pretokenPurchaseHistory: null,
-        outboundMessageBuffer: a.outboundMessageBuffer,
-        config: a.config,
+        outboundMessageBuffer: addresses.outboundMessageBuffer,
+        config: addresses.config,
         tokenProgram: TOKEN_2022_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId

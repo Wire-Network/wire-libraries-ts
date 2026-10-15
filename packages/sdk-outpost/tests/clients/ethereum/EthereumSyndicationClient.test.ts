@@ -71,6 +71,21 @@ describe("Ethereum syndication", () => {
     expect(pool.syndicate).not.toHaveBeenCalled()
   })
 
+  it("keeps the pool's syndication pause separate from native deposits", async () => {
+    const { client, deposit, token, pool, wallet } = fixture()
+    pool.paused.mockResolvedValue(true)
+    await expect(client.deposit(20n)).resolves.toEqual({ hash: "deposit" })
+    await expect(
+      client.syndicate(20n, wallet.signingKey.compressedPublicKey)
+    ).rejects.toThrow("Syndication is paused")
+    token.paused.mockResolvedValue(true)
+    await expect(client.deposit(20n)).rejects.toThrow(
+      "Liquid staking is paused"
+    )
+    expect(deposit.deposit).toHaveBeenCalledTimes(1)
+    expect(pool.syndicate).not.toHaveBeenCalled()
+  })
+
   it("requires exact approval, wallet identity and configured limits", async () => {
     const { client, token, pool, wallet } = fixture()
     const key = wallet.signingKey.compressedPublicKey

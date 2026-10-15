@@ -15,13 +15,22 @@ import { assertEthereumSigner, ethereumProvider } from "./Connection.js"
 
 /** Exact external-wallet balances and configured deposit/syndication limits. */
 export interface EthereumSyndicationState {
+  /** Spendable native ETH in wei, before gas. */
   nativeBalance: bigint
+  /** External liqETH balance in token base units. */
   liquidBalance: bigint
+  /** Current token allowance granted to the syndication pool. */
   allowance: bigint
+  /** Liquid token decimal precision. */
   decimals: number
+  /** Minimum native deposit in wei. */
   minimumDeposit: bigint
+  /** Maximum liqETH base units allowed in one syndication. */
   maximumSyndication: bigint
-  paused: boolean
+  /** Token minting is paused. */
+  depositPaused: boolean
+  /** Token transfers or pool syndication are paused. */
+  syndicationPaused: boolean
 }
 const CompressedPublicKeyLength = 33
 
@@ -29,8 +38,11 @@ const CompressedPublicKeyLength = 33
 export class EthereumSyndicationClient {
   /** Construct from producer-generated contracts in a verified deployment. */
   constructor(
+    /** Verified native-deposit contract. */
     readonly depositManager: DepositManager,
+    /** Verified external liqETH contract. */
     readonly token: LiqEthToken,
+    /** Verified syndication custody contract. */
     readonly pool: SyndicationPool,
     private readonly connection: Provider | Signer
   ) {}
@@ -76,7 +88,8 @@ export class EthereumSyndicationClient {
       decimals: Number(decimals),
       minimumDeposit,
       maximumSyndication,
-      paused: tokenPaused || poolPaused
+      depositPaused: tokenPaused,
+      syndicationPaused: tokenPaused || poolPaused
     }
   }
 
@@ -95,7 +108,7 @@ export class EthereumSyndicationClient {
   async deposit(amount: bigint): Promise<ContractTransactionResponse> {
     const signer = assertEthereumSigner(this.connection, "Deposit"),
       state = await this.read(await signer.getAddress())
-    if (state.paused) throw new Error("Liquid staking or syndication is paused")
+    if (state.depositPaused) throw new Error("Liquid staking is paused")
     if (
       amount <= 0n ||
       amount < state.minimumDeposit ||
@@ -131,7 +144,7 @@ export class EthereumSyndicationClient {
         "Syndication public key does not match the signing wallet"
       )
     }
-    if (state.paused) throw new Error("Liquid staking or syndication is paused")
+    if (state.syndicationPaused) throw new Error("Syndication is paused")
     if (
       amount <= 0n ||
       amount > state.liquidBalance ||
