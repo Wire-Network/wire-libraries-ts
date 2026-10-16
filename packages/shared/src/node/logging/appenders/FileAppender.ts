@@ -83,10 +83,14 @@ export class FileAppender<
   /**
    * Initialize and setup the appender
    *
+   * @throws When shutdown has started; closed appenders cannot be reopened.
    * @returns {FileAppender<Record>}
    */
   setup(): FileAppender<Record> {
     const { state } = this
+    if (this.closing) {
+      throw Error(`${this.filename} is closing or closed`)
+    }
     if (!!state.ready) {
       return this
     }
@@ -178,7 +182,8 @@ export class FileAppender<
 
   /**
    * Drain all queued and in-flight writes, then close the handler once.
-   * Repeated calls share the first close promise.
+   * Repeated calls share the first close promise. Write failures reject it after
+   * draining the queued tail and releasing the descriptor.
    *
    * @returns {Promise<void>}
    */
@@ -188,6 +193,9 @@ export class FileAppender<
         Option.of(this.state.file).map(Fs.closeSync)
         this.state.file = null
         this.state.ready = false
+        if (this.state.error) {
+          throw this.state.error
+        }
       })
       .toPromise())
   }
@@ -228,11 +236,15 @@ export class FileAppender<
         while (this.queue.length) {
           const buf: Buffer = this.queue.shift()
 
-          await Bluebird.fromCallback(cb =>
-            Fs.appendFile(file, buf, "utf-8", cb)
-          )
-
-          state.currentSize += buf.byteLength
+          try {
+            await Bluebird.fromCallback(cb =>
+              Fs.appendFile(file, buf, "utf-8", cb)
+            )
+            state.currentSize += buf.byteLength
+          } catch (err) {
+            // Keep draining the queued tail, but close must report lost writes.
+            state.error ??= err
+          }
         }
 
         const { maxSize } = this.config
@@ -242,7 +254,7 @@ export class FileAppender<
 
         //await Bluebird.fromCallback((cb) => Fs.fdatasync(this.file, cb))
       } catch (err) {
-        console.error(`Failed to append file ${this.filename}`, err)
+        state.error ??= err
       } finally {
         this.state.flushing = false
         this.pendingFlush = null
