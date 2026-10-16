@@ -254,7 +254,7 @@ async function verifyOutpostArtifactSuiteCandidates(
   input: OutpostDeploymentVerificationInput,
   suites: readonly OutpostArtifactSuite[],
   index = 0
-): Promise<void> {
+): Promise<OutpostArtifactSuite> {
   const suite = suites[index]
   if (suite == null) {
     assertOutpostArtifactSuiteCompatibility(
@@ -269,19 +269,20 @@ async function verifyOutpostArtifactSuiteCandidates(
 
   try {
     await verifyOutpostArtifactSuite(input, suite)
+    return suite
   } catch (error: unknown) {
     if (index + 1 >= suites.length) throw error
-    await verifyOutpostArtifactSuiteCandidates(input, suites, index + 1)
+    return verifyOutpostArtifactSuiteCandidates(input, suites, index + 1)
   }
 }
 
 /** Cross-chain facade for exact outpost deployment-profile verification. */
 export namespace OutpostDeploymentVerifier {
-  /** Verify chain identity, interface compatibility, and exact live runtime identity. */
+  /** Verify the deployment and return the exact producer bindings that passed. */
   export async function verify(
     input: OutpostDeploymentVerificationInput
-  ): Promise<void> {
-    await verifyOutpostArtifactSuiteCandidates(
+  ): Promise<OutpostArtifactSuite> {
+    return verifyOutpostArtifactSuiteCandidates(
       input,
       OutpostArtifactRegistry.candidates(input.profile)
     )

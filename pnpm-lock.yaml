@@ -21,8 +21,6 @@ overrides:
   webpack-dev-server: 6.0.0
   ws: 8.21.0
 
-pnpmfileChecksum: sha256-Pwp47mavrVQdghhognPPNAyXDlYjTYSnW8dYP14xMLU=
-
 importers:
 
   .:
@@ -213,11 +211,14 @@ importers:
         specifier: ^1.98.4
         version: 1.98.4(bufferutil@4.1.0)(typescript@6.0.2)(utf-8-validate@6.0.6)
       '@wireio/outpost-ethereum-artifacts':
-        specifier: 0.4.1
-        version: 0.4.1(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))
+        specifier: 0.4.2
+        version: 0.4.2(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))
       '@wireio/outpost-solana-artifacts':
-        specifier: 0.4.0
-        version: 0.4.0
+        specifier: 0.4.1
+        version: 0.4.1
+      '@wireio/outpost-solana-artifacts-v0-4-2':
+        specifier: npm:@wireio/outpost-solana-artifacts@0.4.2
+        version: '@wireio/outpost-solana-artifacts@0.4.2'
       '@wireio/sdk-core':
         specifier: workspace:*
         version: link:../sdk-core
@@ -1697,13 +1698,16 @@ packages:
   '@wireio/opp-typescript-models@1.0.51':
     resolution: {integrity: sha512-MgSMRZScCBAvtmxDe7/HHmJADENX0JW9jbt8tL4vmQ3U9Om8IwzzCUYKkmVohTGKClydVmXmncrC8gn1aMENbg==}
 
-  '@wireio/outpost-ethereum-artifacts@0.4.1':
-    resolution: {integrity: sha512-ToWpQenxpqC0/YwyGU6ccJEuxiKHBBORc9cgS/fnbWCO9Yy3YlBJGvG2RfT8tFssD5MTfF7uJJW4NS8x47gCVg==}
+  '@wireio/outpost-ethereum-artifacts@0.4.2':
+    resolution: {integrity: sha512-fs/UYZ2D3TDxUpwdRGRIDIlZVr15ghDqqwQIi73Opg6pG9QuXJN3LTRqxDpdWDB2sG82YCO9pGOuN3lr5jv/Jg==}
     peerDependencies:
       ethers: ^6.15.0
 
-  '@wireio/outpost-solana-artifacts@0.4.0':
-    resolution: {integrity: sha512-k0rhWt2XlX8kynvF6I/4x83zis5W5RmmqwQv0ZIAhrRhrvBit8ClptkmcvbnQNhL2SRfUDghEVug8kDB5xdjKg==}
+  '@wireio/outpost-solana-artifacts@0.4.1':
+    resolution: {integrity: sha512-4CV7DBtT0JiEq4YMm345/k7I02Ll3Y6d+2dlbJOiRoabm0qSFGCG9Yo7FtGta0wa8LLKiHxNaeSL06eawmiwnw==}
+
+  '@wireio/outpost-solana-artifacts@0.4.2':
+    resolution: {integrity: sha512-QyQQ8oho9XchlGCkRcWY0QGPM/K8s+quglZhxsB/zjb/kfNkkohS7Tq9sAVk4gbk/pBWzNGCmaQlnxJZ4rD5RA==}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -5993,11 +5997,13 @@ snapshots:
     dependencies:
       '@protobuf-ts/runtime': 2.11.1
 
-  '@wireio/outpost-ethereum-artifacts@0.4.1(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
+  '@wireio/outpost-ethereum-artifacts@0.4.2(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
     dependencies:
       ethers: 6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
-  '@wireio/outpost-solana-artifacts@0.4.0': {}
+  '@wireio/outpost-solana-artifacts@0.4.1': {}
+
+  '@wireio/outpost-solana-artifacts@0.4.2': {}
 
   '@xtuc/ieee754@1.2.0': {}
 

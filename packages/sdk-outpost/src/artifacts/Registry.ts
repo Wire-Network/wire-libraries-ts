@@ -11,6 +11,10 @@ import {
   SolanaOutpostArtifactManifest,
   liqsolCoreIdl
 } from "@wireio/outpost-solana-artifacts"
+import {
+  SolanaOutpostArtifactManifest as SolanaV042ArtifactManifest,
+  liqsolCoreIdl as solanaV042LiqsolCoreIdl
+} from "@wireio/outpost-solana-artifacts-v0-4-2"
 import { match } from "ts-pattern"
 
 import {
@@ -92,7 +96,14 @@ export const CurrentOutpostArtifactSuite: OutpostArtifactSuite = {
 
 /** Artifact suites supported by this SDK release. */
 const RegisteredOutpostArtifactSuites: readonly OutpostArtifactSuite[] = [
-  CurrentOutpostArtifactSuite
+  CurrentOutpostArtifactSuite,
+  {
+    ethereum: CurrentOutpostArtifactSuite.ethereum,
+    solana: {
+      manifest: SolanaV042ArtifactManifest,
+      idls: { [SolanaProgramName.liqsolCore]: solanaV042LiqsolCoreIdl }
+    }
+  }
 ]
 
 /** Return Ethereum interface mismatches for one artifact suite. */
@@ -171,18 +182,5 @@ export namespace OutpostArtifactRegistry {
           suite
         ).length === 0
     )
-  }
-
-  /** Resolve paired generated bindings for a compatible deployment profile. */
-  export function resolve(
-    profile: OutpostDeploymentProfile
-  ): OutpostArtifactSuite {
-    const suite = candidates(profile)[0]
-    if (suite == null) {
-      throw new Error(
-        `No registered artifact suite matches deployment profile ${profile.id}`
-      )
-    }
-    return suite
   }
 }

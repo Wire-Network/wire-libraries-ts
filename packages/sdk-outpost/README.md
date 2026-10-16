@@ -8,8 +8,8 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-The current source pins Ethereum artifacts `0.4.1` and Solana artifacts `0.4.0`
-as one artifact suite for the depot-collateral stack. Their published manifests identify
+The current source pairs Ethereum artifacts `0.4.2` with Solana artifacts `0.4.1`
+or `0.4.2` for the depot-collateral stack. Their published manifests identify
 the exact producer commits, runtime artifacts, and ethers v6/Anchor bindings
 used by the SDK. Package versions are managed and published only through the
 repository release workflow.
@@ -112,7 +112,9 @@ The SDK keeps an internal, compile-time registry of supported Ethereum and
 Solana producer package pairs. Client creation selects compatible bindings from
 the deployment profile's ABI or IDL digests, then verifies the selected
 candidate against the exact live Ethereum runtime or Solana ProgramData before
-returning a client.
+returning a client. The client uses that exact verified suite; it does not select
+bindings again from interface hashes. `OutpostDeploymentVerifier.verify` also
+returns the verified suite for read-only deployment checks.
 
 This registry is not a network, endpoint, or environment catalog. It contains no
 RPC URLs, does not download code, and is not keyed by names such as sandbox or
@@ -123,9 +125,10 @@ release; consumers continue to use the same `OutpostClient.create` facade.
 
 ### Artifact compatibility
 
-The Ethereum `0.4.1` / Solana `0.4.0` pair supplies the depot-collateral,
-native-deposit, syndication and node-registration bindings. Ethereum `0.4.1`
-adds exports from the existing compiled deployment without changing its runtime.
+Ethereum `0.4.2` pairs with Solana `0.4.1` or `0.4.2`, selected by exact live
+runtime verification. These Solana builds share an IDL but have different executable
+bytes. The Ethereum bindings are shared; no transaction API adapter is needed.
+The retired Ethereum `0.4.1` / Solana `0.4.0` pair is no longer registered.
 The previous `0.3.0`/`0.3.1` pair is not retained;
 older deployments require their matching SDK release. Consumers must provide a
 fresh deployment profile and pass exact live runtime verification before use.
