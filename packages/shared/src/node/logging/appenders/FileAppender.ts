@@ -170,15 +170,26 @@ export class FileAppender<
     })
   }
 
+  /** The single drain shared by append and close while writes are pending. */
+  private pendingFlush: Future<boolean>
+
+  /** The first close operation; also prevents appends during shutdown. */
+  private closing: Promise<void>
+
   /**
-   * Close the handler
+   * Drain all queued and in-flight writes, then close the handler once.
+   * Repeated calls share the first close promise.
    *
    * @returns {Promise<void>}
    */
   close() {
-    return this.flush()
-      .onComplete(() => Option.of(this.state.file).map(Fs.closeSync))
-      .toPromise()
+    return (this.closing ??= this.flush()
+      .map(() => {
+        Option.of(this.state.file).map(Fs.closeSync)
+        this.state.file = null
+        this.state.ready = false
+      })
+      .toPromise())
   }
 
   get queue() {
@@ -202,7 +213,12 @@ export class FileAppender<
    */
   private flush() {
     const { state } = this
-    return Future.do(async () => {
+    if (this.pendingFlush) {
+      return this.pendingFlush
+    }
+    return (this.pendingFlush = Future.do(async () => {
+      // Defer the drain until pendingFlush owns it, including an empty queue.
+      await Promise.resolve()
       state.flushing = true
       try {
         const { file } = this
@@ -229,19 +245,22 @@ export class FileAppender<
         console.error(`Failed to append file ${this.filename}`, err)
       } finally {
         this.state.flushing = false
-        if (this.queue.length) {
-          queueMicrotask(() => this.flush())
-        }
+        this.pendingFlush = null
       }
-    })
+      return true
+    }))
   }
 
   /**
    * Handle log records, transform, push to ES
    *
    * @param record
+   * @throws When shutdown has started; a closed descriptor cannot accept records.
    */
   append(record: Record): void {
+    if (this.closing) {
+      throw Error(`${this.filename} is closing or closed`)
+    }
     try {
       const { queue, filename } = this.state
       const count = queue.length
