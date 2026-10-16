@@ -30,6 +30,9 @@
       "path": "./packages/sdk-outpost/tsconfig.json"
     },
     {
+      "path": "./packages/opp-snapshot/tsconfig.json"
+    },
+    {
       "path": "./packages/wallet-ext-sdk/tsconfig.json"
     },
     {
