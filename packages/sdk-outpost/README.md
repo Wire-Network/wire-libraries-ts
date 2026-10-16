@@ -112,7 +112,9 @@ The SDK keeps an internal, compile-time registry of supported Ethereum and
 Solana producer package pairs. Client creation selects compatible bindings from
 the deployment profile's ABI or IDL digests, then verifies the selected
 candidate against the exact live Ethereum runtime or Solana ProgramData before
-returning a client.
+returning a client. The client uses that exact verified suite; it does not select
+bindings again from interface hashes. `OutpostDeploymentVerifier.verify` also
+returns the verified suite for read-only deployment checks.
 
 This registry is not a network, endpoint, or environment catalog. It contains no
 RPC URLs, does not download code, and is not keyed by names such as sandbox or
@@ -123,10 +125,10 @@ release; consumers continue to use the same `OutpostClient.create` facade.
 
 ### Artifact compatibility
 
-The Ethereum `0.4.2` / Solana `0.4.1` pair supplies the current depot-collateral,
-native-deposit, syndication and node-registration bindings. The Ethereum `0.4.1` /
-Solana `0.4.0` pair remains registered for existing deployments. Both use exact
-producer-owned runtime verification through the same client API.
+Ethereum `0.4.2` pairs with Solana `0.4.1` or `0.4.2`, selected by exact live
+runtime verification. These Solana builds share an IDL but have different executable
+bytes. The Ethereum bindings are shared; no transaction API adapter is needed.
+The retired Ethereum `0.4.1` / Solana `0.4.0` pair is no longer registered.
 The previous `0.3.0`/`0.3.1` pair is not retained;
 older deployments require their matching SDK release. Consumers must provide a
 fresh deployment profile and pass exact live runtime verification before use.

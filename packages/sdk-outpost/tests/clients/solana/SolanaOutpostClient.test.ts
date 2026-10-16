@@ -41,6 +41,27 @@ describe("SolanaOutpostClient", () => {
     )
   })
 
+  it("keeps cluster genesis verification scoped to each client", async () => {
+    const first = createOutpostDeploymentProfileFixture(),
+      second = createOutpostDeploymentProfileFixture()
+    second.solana.genesisHash = WrongProgramDataAddress
+    const firstProvider = createSolanaProviderFixture(first),
+      secondProvider = createSolanaProviderFixture(second),
+      [firstClient, secondClient] = await Promise.all([
+        createSolanaClient({ profile: first, provider: firstProvider }),
+        createSolanaClient({ profile: second, provider: secondProvider })
+      ])
+    expect(firstClient.profile.solana.genesisHash).toBe(
+      first.solana.genesisHash
+    )
+    expect(secondClient.profile.solana.genesisHash).toBe(
+      second.solana.genesisHash
+    )
+    await expect(
+      createSolanaClient({ profile: first, provider: secondProvider })
+    ).rejects.toThrow("Solana genesis mismatch")
+  })
+
   it("rejects the wrong Solana cluster", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createSolanaProviderFixture(profile)

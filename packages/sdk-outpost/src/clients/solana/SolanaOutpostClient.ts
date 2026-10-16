@@ -3,10 +3,7 @@ import { Program } from "@coral-xyz/anchor"
 import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
 import { match } from "ts-pattern"
 
-import {
-  OutpostArtifactRegistry,
-  type OutpostArtifactSuite
-} from "../../artifacts/Registry.js"
+import type { OutpostArtifactSuite } from "../../artifacts/Registry.js"
 import {
   OutpostChainFamily,
   SolanaProgramName
@@ -22,15 +19,12 @@ export class SolanaOutpostClient {
   ): Promise<SolanaOutpostClient> {
     const { profile, provider } = options
 
-    await OutpostDeploymentVerifier.verify({
+    const artifactSuite = await OutpostDeploymentVerifier.verify({
       family: OutpostChainFamily.solana,
       profile,
       connection: provider.connection
     })
-    return new SolanaOutpostClient(
-      options,
-      OutpostArtifactRegistry.resolve(profile)
-    )
+    return new SolanaOutpostClient(options, artifactSuite)
   }
 
   private readonly liqsolCore: Program<LiqsolCore>

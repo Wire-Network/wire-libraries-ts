@@ -1,10 +1,7 @@
 import type { Provider } from "ethers"
 import { match } from "ts-pattern"
 
-import {
-  OutpostArtifactRegistry,
-  type OutpostArtifactSuite
-} from "../../artifacts/Registry.js"
+import type { OutpostArtifactSuite } from "../../artifacts/Registry.js"
 import {
   EthereumContractName,
   OutpostChainFamily
@@ -24,16 +21,12 @@ export class EthereumOutpostClient {
     const { connection, profile } = options,
       provider = ethereumProvider(connection)
 
-    await OutpostDeploymentVerifier.verify({
+    const artifactSuite = await OutpostDeploymentVerifier.verify({
       family: OutpostChainFamily.ethereum,
       profile,
       provider
     })
-    return new EthereumOutpostClient(
-      options,
-      provider,
-      OutpostArtifactRegistry.resolve(profile)
-    )
+    return new EthereumOutpostClient(options, provider, artifactSuite)
   }
 
   private constructor(

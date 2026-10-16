@@ -7,15 +7,14 @@ import {
   OPPInbound__factory,
   OPP__factory
 } from "@wireio/outpost-ethereum-artifacts"
-import * as EthereumV041Artifacts from "@wireio/outpost-ethereum-artifacts-v0-4-1"
 import {
   SolanaOutpostArtifactManifest,
   liqsolCoreIdl
 } from "@wireio/outpost-solana-artifacts"
 import {
-  SolanaOutpostArtifactManifest as SolanaV040ArtifactManifest,
-  liqsolCoreIdl as solanaV040LiqsolCoreIdl
-} from "@wireio/outpost-solana-artifacts-v0-4-0"
+  SolanaOutpostArtifactManifest as SolanaV042ArtifactManifest,
+  liqsolCoreIdl as solanaV042LiqsolCoreIdl
+} from "@wireio/outpost-solana-artifacts-v0-4-2"
 import { match } from "ts-pattern"
 
 import {
@@ -102,24 +101,10 @@ export const CurrentOutpostArtifactSuite: OutpostArtifactSuite = {
 const RegisteredOutpostArtifactSuites: readonly OutpostArtifactSuite[] = [
   CurrentOutpostArtifactSuite,
   {
-    ethereum: {
-      manifest: EthereumV041Artifacts.EthereumOutpostArtifactManifest,
-      factories: {
-        [EthereumContractName.BAR]: EthereumV041Artifacts.BAR__factory,
-        [EthereumContractName.DepositManager]:
-          EthereumV041Artifacts.DepositManager__factory,
-        [EthereumContractName.LiqEthToken]:
-          EthereumV041Artifacts.LiqEthToken__factory,
-        [EthereumContractName.SyndicationPool]:
-          EthereumV041Artifacts.SyndicationPool__factory,
-        [EthereumContractName.OPP]: EthereumV041Artifacts.OPP__factory,
-        [EthereumContractName.OPPInbound]:
-          EthereumV041Artifacts.OPPInbound__factory
-      }
-    },
+    ethereum: CurrentOutpostArtifactSuite.ethereum,
     solana: {
-      manifest: SolanaV040ArtifactManifest,
-      idls: { [SolanaProgramName.liqsolCore]: solanaV040LiqsolCoreIdl }
+      manifest: SolanaV042ArtifactManifest,
+      idls: { [SolanaProgramName.liqsolCore]: solanaV042LiqsolCoreIdl }
     }
   }
 ]
@@ -200,18 +185,5 @@ export namespace OutpostArtifactRegistry {
           suite
         ).length === 0
     )
-  }
-
-  /** Resolve paired generated bindings for a compatible deployment profile. */
-  export function resolve(
-    profile: OutpostDeploymentProfile
-  ): OutpostArtifactSuite {
-    const suite = candidates(profile)[0]
-    if (suite == null) {
-      throw new Error(
-        `No registered artifact suite matches deployment profile ${profile.id}`
-      )
-    }
-    return suite
   }
 }
