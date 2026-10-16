@@ -26,13 +26,10 @@ import {
 
 /** Generated ethers v6 factories keyed by deployment identity. */
 export interface EthereumOutpostArtifactFactories {
-  readonly [EthereumContractName.BAR]: Pick<typeof BAR__factory, "connect">
+  readonly [EthereumContractName.BAR]: typeof BAR__factory
   readonly [EthereumContractName.DepositManager]: typeof DepositManager__factory
   readonly [EthereumContractName.LiqEthToken]: typeof LiqEthToken__factory
-  readonly [EthereumContractName.SyndicationPool]: Pick<
-    typeof SyndicationPool__factory,
-    "connect"
-  >
+  readonly [EthereumContractName.SyndicationPool]: typeof SyndicationPool__factory
   readonly [EthereumContractName.OPP]: typeof OPP__factory
   readonly [EthereumContractName.OPPInbound]: typeof OPPInbound__factory
 }
