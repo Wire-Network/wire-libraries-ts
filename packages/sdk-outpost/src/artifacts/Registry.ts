@@ -7,10 +7,15 @@ import {
   OPPInbound__factory,
   OPP__factory
 } from "@wireio/outpost-ethereum-artifacts"
+import * as EthereumV041Artifacts from "@wireio/outpost-ethereum-artifacts-v0-4-1"
 import {
   SolanaOutpostArtifactManifest,
   liqsolCoreIdl
 } from "@wireio/outpost-solana-artifacts"
+import {
+  SolanaOutpostArtifactManifest as SolanaV040ArtifactManifest,
+  liqsolCoreIdl as solanaV040LiqsolCoreIdl
+} from "@wireio/outpost-solana-artifacts-v0-4-0"
 import { match } from "ts-pattern"
 
 import {
@@ -22,10 +27,13 @@ import {
 
 /** Generated ethers v6 factories keyed by deployment identity. */
 export interface EthereumOutpostArtifactFactories {
-  readonly [EthereumContractName.BAR]: typeof BAR__factory
+  readonly [EthereumContractName.BAR]: Pick<typeof BAR__factory, "connect">
   readonly [EthereumContractName.DepositManager]: typeof DepositManager__factory
   readonly [EthereumContractName.LiqEthToken]: typeof LiqEthToken__factory
-  readonly [EthereumContractName.SyndicationPool]: typeof SyndicationPool__factory
+  readonly [EthereumContractName.SyndicationPool]: Pick<
+    typeof SyndicationPool__factory,
+    "connect"
+  >
   readonly [EthereumContractName.OPP]: typeof OPP__factory
   readonly [EthereumContractName.OPPInbound]: typeof OPPInbound__factory
 }
@@ -92,7 +100,28 @@ export const CurrentOutpostArtifactSuite: OutpostArtifactSuite = {
 
 /** Artifact suites supported by this SDK release. */
 const RegisteredOutpostArtifactSuites: readonly OutpostArtifactSuite[] = [
-  CurrentOutpostArtifactSuite
+  CurrentOutpostArtifactSuite,
+  {
+    ethereum: {
+      manifest: EthereumV041Artifacts.EthereumOutpostArtifactManifest,
+      factories: {
+        [EthereumContractName.BAR]: EthereumV041Artifacts.BAR__factory,
+        [EthereumContractName.DepositManager]:
+          EthereumV041Artifacts.DepositManager__factory,
+        [EthereumContractName.LiqEthToken]:
+          EthereumV041Artifacts.LiqEthToken__factory,
+        [EthereumContractName.SyndicationPool]:
+          EthereumV041Artifacts.SyndicationPool__factory,
+        [EthereumContractName.OPP]: EthereumV041Artifacts.OPP__factory,
+        [EthereumContractName.OPPInbound]:
+          EthereumV041Artifacts.OPPInbound__factory
+      }
+    },
+    solana: {
+      manifest: SolanaV040ArtifactManifest,
+      idls: { [SolanaProgramName.liqsolCore]: solanaV040LiqsolCoreIdl }
+    }
+  }
 ]
 
 /** Return Ethereum interface mismatches for one artifact suite. */

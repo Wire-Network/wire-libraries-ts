@@ -8,7 +8,7 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-The current source pins Ethereum artifacts `0.4.1` and Solana artifacts `0.4.0`
+The current source pins Ethereum artifacts `0.4.2` and Solana artifacts `0.4.1`
 as one artifact suite for the depot-collateral stack. Their published manifests identify
 the exact producer commits, runtime artifacts, and ethers v6/Anchor bindings
 used by the SDK. Package versions are managed and published only through the
@@ -123,9 +123,10 @@ release; consumers continue to use the same `OutpostClient.create` facade.
 
 ### Artifact compatibility
 
-The Ethereum `0.4.1` / Solana `0.4.0` pair supplies the depot-collateral,
-native-deposit, syndication and node-registration bindings. Ethereum `0.4.1`
-adds exports from the existing compiled deployment without changing its runtime.
+The Ethereum `0.4.2` / Solana `0.4.1` pair supplies the current depot-collateral,
+native-deposit, syndication and node-registration bindings. The Ethereum `0.4.1` /
+Solana `0.4.0` pair remains registered for existing deployments. Both use exact
+producer-owned runtime verification through the same client API.
 The previous `0.3.0`/`0.3.1` pair is not retained;
 older deployments require their matching SDK release. Consumers must provide a
 fresh deployment profile and pass exact live runtime verification before use.
