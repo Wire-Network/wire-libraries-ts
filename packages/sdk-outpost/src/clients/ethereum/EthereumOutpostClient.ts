@@ -12,6 +12,7 @@ import {
 import { OutpostDeploymentVerifier } from "../../verification/index.js"
 import { ethereumProvider } from "./Connection.js"
 import { EthereumContractMap, EthereumOutpostClientOptions } from "./Types.js"
+import { EthereumSyndicationClient } from "./EthereumSyndicationClient.js"
 import { EthereumNodeOwnerClient } from "./EthereumNodeOwnerClient.js"
 
 /** Strictly typed access to one verified Ethereum outpost deployment. */
@@ -61,9 +62,27 @@ export class EthereumOutpostClient {
     return this.nodeOwnerClient
   }
 
+  /** Native deposits and syndication for profiles carrying all three LIQ contracts. */
+  get syndication(): EthereumSyndicationClient {
+    return new EthereumSyndicationClient(
+      this.contract(EthereumContractName.DepositManager),
+      this.contract(EthereumContractName.LiqEthToken),
+      this.contract(EthereumContractName.SyndicationPool),
+      this.options.connection
+    )
+  }
+
   /** Deployment profile used to verify and connect this client. */
   get profile(): EthereumOutpostClientOptions["profile"] {
     return this.options.profile
+  }
+
+  /** Refuse optional capabilities that the deployment has not identified. */
+  private assertContractAddress(name: EthereumContractName): string {
+    const deployment = this.profile.ethereum.contracts[name]
+    if (deployment == null)
+      throw new Error(`Deployment profile has no ${name} identity`)
+    return deployment.address
   }
 
   /** Connect a generated contract client by its typed deployment name. */
@@ -71,6 +90,24 @@ export class EthereumOutpostClient {
     const { connection, profile } = this.options,
       factories = this.artifactSuite.ethereum.factories,
       contract = match(name as EthereumContractName)
+        .with(EthereumContractName.DepositManager, () =>
+          factories.DepositManager.connect(
+            this.assertContractAddress(EthereumContractName.DepositManager),
+            connection
+          )
+        )
+        .with(EthereumContractName.LiqEthToken, () =>
+          factories.LiqEthToken.connect(
+            this.assertContractAddress(EthereumContractName.LiqEthToken),
+            connection
+          )
+        )
+        .with(EthereumContractName.SyndicationPool, () =>
+          factories.SyndicationPool.connect(
+            this.assertContractAddress(EthereumContractName.SyndicationPool),
+            connection
+          )
+        )
         .with(EthereumContractName.BAR, () => {
           const bar = profile.ethereum.contracts[EthereumContractName.BAR]
           if (bar == null) {

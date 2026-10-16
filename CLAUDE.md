@@ -216,6 +216,8 @@ GitHub Actions:
 - Published package manifests must keep `repository.url` set to
   `https://github.com/Wire-Network/wire-libraries-ts` — npm provenance matches it.
 
+- `contracts.sysio.swap.quoteSwap` owns pure, exact-input depot quote math. Compose generated pool/LIQ row types; require explicit holder/index reads for yield pools, accrue before pricing, and preserve integer fee/minimum rounding. Use generic system-contract tables for transport. Do not add environment keys, RPC, signing, multi-hop routing or execution-readiness claims to this helper. Keep source pins, exact-key lookups, verified-absence semantics and state-coherence limits in the [SDK quote guide](packages/sdk-core/README.md#depot-swap-quotes).
+
 ## Documentation Comments
 
 All generated or modified code **must** include JSDoc comments (`/** ... */`), compatible with Docusaurus.
@@ -238,14 +240,17 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - Producer repositories assemble those npm packages from checksummed deployment handoffs. `sdk-outpost` never downloads the handoff or owns producer publication inputs.
 - `sdk-outpost` registers exact producer package pairs in an internal compile-time artifact-suite registry. Select suites from deployment-profile ABI/IDL identity and verify exact live runtime identity; never key suite selection by environment names or turn it into an endpoint catalog/runtime package loader.
 - Name the reusable deployment class `Sandbox` in documentation. Use a chain label such as `Bearbox` only as an optional descriptor for one specific Sandbox deployment and its validation provenance; never make that label an SDK key.
-- Advance the exact Ethereum and Solana producer pins independently as one verified compatible pair; do not publish or bump an unchanged producer merely because a deployment profile was respun.
+- Advance the exact Ethereum and Solana producer pins independently as one verified compatible pair; do not publish or bump an unchanged producer merely because a deployment profile was respun. Current source uses Ethereum 0.4.1 / Solana 0.4.0; the Ethereum update exports the existing native-deposit and syndication contracts. Keep installed-package identity tests aligned and verify the caller-owned live profile. Keep package documentation focused on compatibility; deployment acceptance belongs with the consuming application.
 - `OutpostClient.create` is sdk-outpost's only published client-construction facade. It delegates family selection to an internal factory; concrete Ethereum/Solana instance types remain available for typing, but their backend factories and module paths are not package entrypoints.
-- `packages/sdk-outpost` owns external reserve lifecycle, swap execution, and BAR-backed Ethereum node-owner registration. BAR is an optional deployment capability: profiles without it preserve reserve and swap behavior, while node-owner access fails closed. Node-owner registration must use BAR's canonical WireNodes address and is not staking; staking remains outside this package until its dedicated migration.
+- `packages/sdk-outpost` owns verified outpost access, BAR-backed Ethereum node-owner registration, native deposits and PostLaunch syndication. BAR and syndication are optional deployment capabilities; missing identities fail closed at access. Use producer-owned bindings and BAR's canonical WireNodes address. External confirmation does not establish spendable Wire LIQ.
 - `sdk-outpost` accepts caller-owned providers and deployment profiles, verifies exact Ethereum implementations and Solana ProgramData against source-owned runtime artifacts, and never owns mutable endpoint catalogs. A same-code cluster respin requires a new profile, not an artifact or SDK release; any deployable binary change requires both a producer artifact and SDK release.
 - A connected outpost client proves deployment compatibility, not swap or stake readiness. Wire-chain orchestration remains in `sdk-core`, and consumers must retain flow-specific capability gates.
+- Solana deposit quotes mirror the producer pay-rate history and ceiling rounding; protocol fees are added to the amount. Keep helper constructors internal and leave fees/rent and quote-to-execution drift explicit.
 - Publish `sdk-outpost` only through the repository release workflow after its normal build and tests pass.
 - Do not describe `sdk-outpost` as npm-available until `npm view` succeeds for both exact producer artifact versions and `@wireio/sdk-outpost`, and a clean platform-compatible install passes without sibling artifact links.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
 - Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch
 - Node >=22 required (package.json says >=22, README says >=24 — actual CI uses v24)
 - The `web-logging-example` requires `WIRE_PUSH_URL` env var injected at webpack build time
+
+- Preserve Wire KV pagination cursors as opaque strings; do not decode JSON/encoded bounds as legacy numeric account names.

@@ -32,9 +32,7 @@ function outpostAddressData(
 ): SysioContracts.SysioChainsOutpostAddrsType {
   return {
     opp_addr: outpost?.oppAddress ?? "",
-    opp_inbound_addr: outpost?.oppInboundAddress ?? "",
-    operator_registry_addr: outpost?.operatorRegistryAddress ?? "",
-    source_deposit_addr: outpost?.sourceDepositAddress ?? ""
+    opp_inbound_addr: outpost?.oppInboundAddress ?? ""
   }
 }
 
