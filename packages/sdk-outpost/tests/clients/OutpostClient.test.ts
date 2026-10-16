@@ -4,6 +4,7 @@ import {
   type EthereumOutpostClient,
   type SolanaOutpostClient
 } from "@wireio/sdk-outpost"
+import * as OutpostExports from "@wireio/sdk-outpost"
 import {
   createEthereumProviderFixture,
   createOutpostDeploymentProfileFixture,
@@ -11,6 +12,10 @@ import {
 } from "../Fixtures.js"
 
 describe("OutpostClient", () => {
+  it("keeps syndication constructors behind the verified facade", () => {
+    expect(OutpostExports).not.toHaveProperty("EthereumSyndicationClient")
+    expect(OutpostExports).not.toHaveProperty("SolanaSyndicationClient")
+  })
   it("preserves the precise Ethereum client type", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       client = await OutpostClient.create({

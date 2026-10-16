@@ -61,6 +61,12 @@ export const OutpostDeploymentProfileSchema = z
       contracts: z.object({
         [EthereumContractName.BAR]:
           EthereumContractDeploymentProfileSchema.optional(),
+        [EthereumContractName.DepositManager]:
+          EthereumContractDeploymentProfileSchema.optional(),
+        [EthereumContractName.LiqEthToken]:
+          EthereumContractDeploymentProfileSchema.optional(),
+        [EthereumContractName.SyndicationPool]:
+          EthereumContractDeploymentProfileSchema.optional(),
         [EthereumContractName.OPP]: EthereumContractDeploymentProfileSchema,
         [EthereumContractName.OPPInbound]:
           EthereumContractDeploymentProfileSchema
@@ -68,6 +74,12 @@ export const OutpostDeploymentProfileSchema = z
     }),
     solana: z.object({
       genesisHash: SolanaAddressSchema,
+      liqsol: z
+        .object({
+          tokenProgramAddress: SolanaAddressSchema,
+          transferHookProgramAddress: SolanaAddressSchema
+        })
+        .optional(),
       programs: z.object({
         [SolanaProgramName.liqsolCore]: SolanaProgramDeploymentProfileSchema
       })

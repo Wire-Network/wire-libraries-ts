@@ -45,13 +45,13 @@ describe("source-owned outpost artifacts", () => {
     expect(OutpostArtifactManifests.solana.package.name).toBe(
       "@wireio/outpost-solana-artifacts"
     )
-    expect(OutpostArtifactManifests.ethereum.package.version).toBe("0.3.0")
-    expect(OutpostArtifactManifests.solana.package.version).toBe("0.3.1")
+    expect(OutpostArtifactManifests.ethereum.package.version).toBe("0.4.1")
+    expect(OutpostArtifactManifests.solana.package.version).toBe("0.4.0")
     expect(OutpostArtifactManifests.ethereum.source.revision).toBe(
-      "b90035b48414267d1b3ca183b88e2118a8c5b16e"
+      "ad3f30ca0f12af236e2c030247e0855006e08fcf"
     )
     expect(OutpostArtifactManifests.solana.source.revision).toBe(
-      "9d49cbe92419606667f6a4684714aa742ac5c40b"
+      "994b4df7d23b0d259dc8f0d139d7fba06d81efe8"
     )
   })
 
@@ -143,9 +143,10 @@ describe("source-owned outpost artifacts", () => {
       liqsolCoreIdl.instructions.map(instruction => instruction.name)
     ).toEqual(
       expect.arrayContaining([
-        "requestSwap",
-        "requestSwapSpl",
-        "commitUnderwrite"
+        "epochIn",
+        "dispatchAttestations",
+        "synd",
+        "desynd"
       ])
     )
     expect(accountNames).toEqual(["outpostConfig", "operatorRegistry"])

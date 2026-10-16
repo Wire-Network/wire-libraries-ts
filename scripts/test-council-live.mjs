@@ -518,8 +518,13 @@ async function main() {
     { stdio: ["ignore", log, log] }
   )
   closeSync(log)
-  const exit = once(child, "exit")
+  // Observe startup errors immediately; cleanup must never await a rejected promise.
+  const exit = once(child, "exit").then(
+    () => null,
+    error => error
+  )
   try {
+    await once(child, "spawn")
     client = new APIClient({
       url: `http://${bind.nodeop.address}:${ports.http}`,
       signer: createClassicSigner(key)
@@ -539,24 +544,28 @@ async function main() {
     )
     console.log(JSON.stringify(report))
   } finally {
-    child.kill("SIGTERM")
     const abort = new AbortController()
-    await Promise.race([
-      exit,
-      delay(TimeoutMs, null, { signal: abort.signal }).then(() =>
-        child.kill("SIGKILL")
+    try {
+      child.kill("SIGTERM")
+      await Promise.race([
+        exit,
+        delay(TimeoutMs, null, { signal: abort.signal }).then(() =>
+          child.kill("SIGKILL")
+        )
+      ])
+      const error = await exit
+      if (error) throw error
+    } finally {
+      abort.abort()
+      rmSync(configPath)
+      const logPath = join(runDirectory, "nodeop.log")
+      writeFileSync(
+        logPath,
+        readFileSync(logPath, "utf8")
+          .replaceAll(key.toString(), "<redacted>")
+          .replaceAll(finalizerKey.toString(), "<redacted>")
       )
-    ])
-    abort.abort()
-    await exit
-    rmSync(configPath)
-    const logPath = join(runDirectory, "nodeop.log")
-    writeFileSync(
-      logPath,
-      readFileSync(logPath, "utf8")
-        .replaceAll(key.toString(), "<redacted>")
-        .replaceAll(finalizerKey.toString(), "<redacted>")
-    )
+    }
   }
 }
 
