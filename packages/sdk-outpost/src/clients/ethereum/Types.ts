@@ -1,11 +1,6 @@
 import type {
-  WithdrawalQueue,
-  WithdrawalQueueV2,
-  DepositManagerV3,
-  LiqEthTokenV4
-} from "@wireio/outpost-ethereum-artifacts-v0-4-3"
-import type {
   BAR,
+  WithdrawalQueue,
   OPP,
   OPPInbound,
   DepositManager,
@@ -28,9 +23,6 @@ export interface EthereumOutpostClientOptions {
 /** Generated contract clients keyed by their deployment identity. */
 export interface EthereumContractMap {
   [EthereumContractName.WithdrawalQueue]: WithdrawalQueue
-  [EthereumContractName.WithdrawalQueueV2]: WithdrawalQueueV2
-  [EthereumContractName.DepositManagerV3]: DepositManagerV3
-  [EthereumContractName.LiqEthTokenV4]: LiqEthTokenV4
 
   /** Native ETH deposit contract for the deployed liquid-staking suite. */
   [EthereumContractName.DepositManager]: DepositManager

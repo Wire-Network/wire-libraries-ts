@@ -13,50 +13,16 @@ export interface SwapYieldSnapshot {
   index: SysioLiqYieldIndexType
 }
 
-/** Caller-owned pool and shadow state; all reads must describe one coherent snapshot. */
-export interface SwapPoolSnapshot {
+/** Caller-owned snapshot for a depot-local, single-pair exact-input estimate. */
+export interface SwapQuoteOptions {
   /** Generated pair row, including the issuing contracts and exact symbols. */
   pool: SysioSwapCurrencyStatsType
-  /** Required for yield pools, even when the queried index/holder is absent. */
-  yield?: SwapYieldSnapshot
-}
-
-/** Caller-owned snapshot for a depot-local, single-pair exact-input estimate. */
-export interface SwapQuoteOptions extends SwapPoolSnapshot {
-  /** Exact input token, including its issuing contract and precision. */
+  /** Exact input token and quantity; its contract and precision must match a leg. */
   input: ExtendedAsset
   /** Explicit output tolerance in basis points, from 0 through 9999. */
   slippageBps: number
-}
-
-/** Exact share quantity for the contract's mint or burn operation. */
-export interface LiquidityQuoteOptions extends SwapPoolSnapshot {
-  /** LP asset with the pool's exact symbol and precision, never a JS float. */
-  shares: string
-  /** Maximum input / minimum output tolerance, in basis points from 0 to 9999. */
-  slippageBps: number
-}
-
-/** Exact-share mint estimate. Unspent maximum deposits remain in internal custody. */
-export interface AddLiquidityQuote {
-  shares: string
-  input1: ExtendedAsset
-  input2: ExtendedAsset
-  maximum1: ExtendedAsset
-  maximum2: ExtendedAsset
-  fee1: ExtendedAsset
-  fee2: ExtendedAsset
-  accruedYield: ExtendedAsset
-}
-
-/** Share burn credits both internal token balances; it does not send to a wallet. */
-export interface RemoveLiquidityQuote {
-  shares: string
-  output1: ExtendedAsset
-  output2: ExtendedAsset
-  minimum1: ExtendedAsset
-  minimum2: ExtendedAsset
-  accruedYield: ExtendedAsset
+  /** Required for yield pools, even when the queried index/holder is absent. */
+  yield?: SwapYieldSnapshot
 }
 
 /** Snapshot estimate only; neither execution readiness nor guaranteed settlement. */

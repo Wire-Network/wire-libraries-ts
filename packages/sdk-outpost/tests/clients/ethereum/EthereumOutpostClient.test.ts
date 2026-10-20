@@ -37,10 +37,10 @@ describe("EthereumOutpostClient", () => {
       profile.ethereum.contracts[EthereumContractName.OPPInbound].address
     )
     expect(provider.getCode).toHaveBeenCalledTimes(
-      Object.values(EthereumContractName).length * 2
+      Object.keys(profile.ethereum.contracts).length * 2
     )
     expect(provider.getStorage).toHaveBeenCalledTimes(
-      Object.values(EthereumContractName).length
+      Object.keys(profile.ethereum.contracts).length
     )
   })
 
@@ -81,28 +81,19 @@ describe("EthereumOutpostClient", () => {
 
     expect(() => client.nodeOwners).toThrow("has no BAR identity")
     expect(provider.getCode).toHaveBeenCalledTimes(
-      (Object.values(EthereumContractName).length - 1) * 2
+      Object.keys(profile.ethereum.contracts).length * 2
     )
   })
 
-  it("requires one explicit withdrawal family and rejects ambiguous token versions", async () => {
-    const profile = createOutpostDeploymentProfileFixture(),
-      create = () =>
-        createEthereumClient({
-          profile,
-          connection: createEthereumProviderFixture(profile)
-        })
-    let client = await create()
-    expect(() => client.withdrawals).toThrow("multiple withdrawal queues")
-    delete profile.ethereum.contracts.WithdrawalQueueV2
-    client = await create()
-    expect(() => client.withdrawals).toThrow("multiple liquid tokens")
-    delete profile.ethereum.contracts.LiqEthTokenV4
-    client = await create()
-    expect(client.withdrawals).toBeDefined()
+  it("requires an explicit verified withdrawal queue without disabling existing capabilities", async () => {
+    const profile = createOutpostDeploymentProfileFixture()
     delete profile.ethereum.contracts.WithdrawalQueue
-    client = await create()
-    expect(() => client.withdrawals).toThrow("no verified WithdrawalQueue")
+    const client = await createEthereumClient({
+      profile,
+      connection: createEthereumProviderFixture(profile)
+    })
+    expect(client.syndication).toBeDefined()
+    expect(() => client.withdrawals).toThrow("no WithdrawalQueue identity")
   })
 
   it("rejects the wrong Ethereum chain", async () => {

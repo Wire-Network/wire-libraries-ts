@@ -204,17 +204,6 @@ helper rejects unsafe numeric inputs, malformed values and overflow; it does not
 model corrupt uint128 wraparound or multi-hop routing. Unit vectors cover
 arithmetic; they do not establish live deployment parity.
 
-### Liquidity provision and custody
-
-`contracts.sysio.swap.quoteAddLiquidity` and `quoteRemoveLiquidity` estimate exact
-LP share quantities from the same pool/yield snapshot. They preserve the
-contract's ceil-rounded mint inputs, one-basis-point per-leg mint fee,
-floor-rounded burn outputs and locked-share floor. Returned maximum inputs and
-minimum outputs include explicit basis-point tolerance; values remain exact
-asset strings with issuing contracts. They perform no RPC, signing or readiness
-checks. See [depot liquidity](docs/depot-liquidity.md) for transaction composition,
-internal-balance recovery and source references.
-
 ## Development
 
 From a checkout of the repository, install dependencies and build at the root,

@@ -3,11 +3,7 @@ import type {
   DepositManager,
   LiqEthToken
 } from "@wireio/outpost-ethereum-artifacts"
-import {
-  WithdrawalQueueV2__factory,
-  type WithdrawalQueue,
-  type WithdrawalQueueV2
-} from "@wireio/outpost-ethereum-artifacts-v0-4-3"
+import type { WithdrawalQueue } from "@wireio/outpost-ethereum-artifacts"
 import { EthereumWithdrawalClient } from "@wireio/sdk-outpost/clients/ethereum/EthereumWithdrawalClient"
 
 const QueueAddress = "0x0000000000000000000000000000000000000011",
@@ -15,7 +11,7 @@ const QueueAddress = "0x0000000000000000000000000000000000000011",
   ReceiptId = (1n << 200n) + 1n
 
 /** Producer-contract doubles retaining named ABI returns and exact uint256 IDs. */
-function fixture(queueV1 = true) {
+function fixture() {
   const provider = new JsonRpcProvider("https://example.invalid"),
     wallet = Wallet.createRandom().connect(provider),
     token = {
@@ -49,8 +45,8 @@ function fixture(queueV1 = true) {
   jest.spyOn(provider, "getBalance").mockResolvedValue(200n)
   const client = new EthereumWithdrawalClient(
     token as unknown as LiqEthToken,
-    queue as unknown as WithdrawalQueue | WithdrawalQueueV2,
-    queueV1 ? (payer as unknown as DepositManager) : undefined,
+    queue as unknown as WithdrawalQueue,
+    payer as unknown as DepositManager,
     wallet
   )
   return { client, provider, wallet, token, queue, payer }
@@ -97,19 +93,6 @@ describe("Ethereum native withdrawals", () => {
     })
     expect(payer.claim).toHaveBeenCalledWith(ReceiptId)
     expect(queue.claim).not.toHaveBeenCalled()
-  })
-
-  it("uses the V2 queue directly and its own ETH balance, without a deposit manager", async () => {
-    const { client, provider, queue, payer } = fixture(false)
-    await expect(client.claim(ReceiptId)).resolves.toEqual({
-      hash: "queue-claim"
-    })
-    expect(provider.getBalance).toHaveBeenCalledWith(QueueAddress, 42)
-    expect(payer.claim).not.toHaveBeenCalled()
-    const iface = WithdrawalQueueV2__factory.createInterface(),
-      data = iface.encodeFunctionData("claim", [ReceiptId])
-    expect(iface.decodeFunctionData("claim", data)[0]).toBe(ReceiptId)
-    expect(queue.claim).toHaveBeenCalledWith(ReceiptId)
   })
 
   it("distinguishes waiting for time, waiting for funding, pauses and missing ownership", async () => {

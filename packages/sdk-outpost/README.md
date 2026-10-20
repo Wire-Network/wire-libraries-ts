@@ -8,8 +8,8 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-This branch adds Ethereum artifacts `0.4.3` alongside exact `0.4.2` support,
-paired with Solana artifacts `0.4.1` or `0.4.2` for the depot-collateral stack. Their published manifests identify
+Ethereum artifacts `0.4.3` pair with Solana artifacts `0.4.1` or `0.4.2`
+for the depot-collateral stack. Their manifests identify
 the exact producer commits, runtime artifacts, and ethers v6/Anchor bindings
 used by the SDK. Package versions are managed and published only through the
 repository release workflow.
@@ -39,8 +39,8 @@ after building those outputs; otherwise the exact registry versions remain in us
 
 | Family   | Generated clients and workflows                                          |
 | -------- | ------------------------------------------------------------------------- |
-| Ethereum | `OPP`, `OPPInbound`, `BAR`, node-owner registration, native deposit and syndication |
-| Solana   | `liqsol_core`, native deposit, PostLaunch syndication and OPP transport  |
+| Ethereum | `OPP`, `OPPInbound`, `BAR`, node-owner registration, native deposit, syndication and withdrawals |
+| Solana   | `liqsol_core`, native deposit, PostLaunch syndication, withdrawals and OPP transport |
 
 Client creation verifies all four boundaries before returning:
 
@@ -92,30 +92,10 @@ and submits a withdrawal request; `claim(id)` rechecks ownership, delay, pauses
 and funds before submitting one claim. Both return the transaction immediately;
 store its hash before waiting. A ready receipt can still be unfunded.
 
-The deployment profile must identify exactly one verified `WithdrawalQueue` or
-`WithdrawalQueueV2`. The former pays through the verified `DepositManager`; the
-latter pays directly from the queue. Optional `DepositManagerV3` / `LiqEthTokenV4`
-identities support the upgraded suite, without replacing existing aliases or
-probing unknown write methods. Omit the original token/manager identity when
-selecting its versioned replacement. Old profiles still verify their existing
-capabilities; withdrawals fail closed until a matching queue identity is supplied.
-
-## Complete producer bindings
-
-`EthereumArtifacts` and `SolanaArtifacts` namespace exports expose the complete
-installed producer packages: generated types, factories/IDL and manifests.
-Ethereum's catalog covers 17 current-head and required bootstrap identities,
-plus ERC-20/721/1155 interfaces. It omits intermediate migration implementations,
-old Accounting and DeepFreeze; existing published aliases are unchanged. Solana's producer
-package currently exports the core IDL; it does not export companion token/hook
-IDLs. Raw factory access does **not** perform deployment or permission checks.
-Use `OutpostClient.create` for supported verified user operations. Do not infer
-that an exported upgrade implementation is deployed.
-
-The new Ethereum producer release must be published before the SDK dependency
-and lockfile can be finalized. No local artifact paths belong in a release.
-See [launch capability coverage](docs/launch-capabilities.md) for the boundary
-between outpost bindings, depot liquidity, operator and governance APIs.
+The deployment profile must identify the verified `WithdrawalQueue` used by the
+deployed bootstrap suite. Claims pay through `DepositManager.claim`. Existing
+profiles retain their capabilities; withdrawals fail closed until a matching
+queue identity is supplied. Newer upgrade generations are outside this release.
 
 ## Deployment profiles
 
@@ -170,7 +150,7 @@ release; consumers continue to use the same `OutpostClient.create` facade.
 
 ### Artifact compatibility
 
-Ethereum `0.4.3` and retained `0.4.2` each pair with Solana `0.4.1` or `0.4.2`, selected by exact live
+Ethereum `0.4.3` pairs with Solana `0.4.1` or `0.4.2`, selected by exact live
 runtime verification. These Solana builds share an IDL but have different executable
 bytes. The Ethereum bindings are shared; no transaction API adapter is needed.
 The retired Ethereum `0.4.1` / Solana `0.4.0` pair is no longer registered.

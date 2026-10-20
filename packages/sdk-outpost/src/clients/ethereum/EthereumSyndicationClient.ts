@@ -1,8 +1,4 @@
 import type {
-  DepositManagerV3,
-  LiqEthTokenV4
-} from "@wireio/outpost-ethereum-artifacts-v0-4-3"
-import type {
   DepositManager,
   LiqEthToken,
   SyndicationPool
@@ -43,9 +39,9 @@ export class EthereumSyndicationClient {
   /** Construct from producer-generated contracts in a verified deployment. */
   constructor(
     /** Verified native-deposit contract. */
-    readonly depositManager: DepositManager | DepositManagerV3,
+    readonly depositManager: DepositManager,
     /** Verified external liqETH contract. */
-    readonly token: LiqEthToken | LiqEthTokenV4,
+    readonly token: LiqEthToken,
     /** Verified syndication custody contract. */
     readonly pool: SyndicationPool,
     private readonly connection: Provider | Signer

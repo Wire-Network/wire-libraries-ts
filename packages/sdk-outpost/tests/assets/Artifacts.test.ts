@@ -15,8 +15,6 @@ import { createRequire } from "node:module"
 
 import {
   EthereumContractName,
-  EthereumArtifacts,
-  SolanaArtifacts,
   OutpostArtifactManifests,
   OutpostChainFamily,
   SolanaProgramName,
@@ -34,11 +32,7 @@ function installedPackageFileSha256(
 ): string {
   return createHash("sha256")
     .update(
-      readFileSync(
-        PackageRequire.resolve(
-          `${packageName === "@wireio/outpost-ethereum-artifacts" ? "@wireio/outpost-ethereum-artifacts-v0-4-3" : packageName}/${packagePath}`
-        )
-      )
+      readFileSync(PackageRequire.resolve(`${packageName}/${packagePath}`))
     )
     .digest("hex")
 }
@@ -53,34 +47,12 @@ describe("source-owned outpost artifacts", () => {
     )
     expect(OutpostArtifactManifests.ethereum.package.version).toBe("0.4.3")
     expect(OutpostArtifactManifests.solana.package.version).toBe("0.4.1")
-    expect(OutpostArtifactManifests.ethereum.source.revision).toMatch(
-      /^[0-9a-f]{40}$/
+    expect(OutpostArtifactManifests.ethereum.source.revision).toBe(
+      "e7a91e27f85510ae3a3b168c101669a9ef6b46e9"
     )
     expect(OutpostArtifactManifests.solana.source.revision).toBe(
       "6e3715619408a55421f9f984363c7c83b13485d0"
     )
-  })
-
-  it("exposes current producer bindings without historical migration implementations", () => {
-    expect(
-      EthereumArtifacts.WithdrawalQueueV2__factory.createInterface().getFunction(
-        "claim"
-      )
-    ).toBeDefined()
-    expect(
-      EthereumArtifacts.KeyBondManagerV4__factory.abi.length
-    ).toBeGreaterThan(0)
-    expect(SolanaArtifacts.liqsolCoreIdl).toBe(liqsolCoreIdl)
-    for (const name of [
-      "DepositManagerV2",
-      "LiqEthTokenV2",
-      "LiqEthTokenV3",
-      "StakingModuleV2",
-      "KeyBondManagerV3",
-      "Accounting",
-      "LiqEthDeepFreeze"
-    ])
-      expect(EthereumArtifacts).not.toHaveProperty(`${name}__factory`)
   })
 
   it("ships checksum-valid Ethereum runtimes and Solana program inputs", () => {

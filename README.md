@@ -10,7 +10,7 @@ A monorepo containing shared TypeScript libraries for Wire applications, providi
 | [`@wireio/shared-web`](packages/shared-web/) | Web-specific utilities | *private* |
 | [`@wireio/shared-node`](packages/shared-node/) | Node.js-specific utilities | *private* |
 | [`@wireio/sdk-core`](packages/sdk-core/) | Wire blockchain SDK core types, primitives, signing helpers, generated `sysio` contract proxy, and domain workflows | [![npm](https://img.shields.io/npm/v/@wireio/sdk-core)](https://www.npmjs.com/package/@wireio/sdk-core) |
-| [`@wireio/sdk-outpost`](packages/sdk-outpost/) | Verified Ethereum/Solana outpost clients, including native withdrawal requests/claims and complete producer bindings | [![npm](https://img.shields.io/npm/v/@wireio/sdk-outpost)](https://www.npmjs.com/package/@wireio/sdk-outpost) |
+| [`@wireio/sdk-outpost`](packages/sdk-outpost/) | Verified Ethereum/Solana outpost clients with native withdrawal requests and claims | [![npm](https://img.shields.io/npm/v/@wireio/sdk-outpost)](https://www.npmjs.com/package/@wireio/sdk-outpost) |
 | [`@wireio/wallet-ext-sdk`](packages/wallet-ext-sdk/) | Client SDK for the Wire Wallet browser extension | [![npm](https://img.shields.io/npm/v/@wireio/wallet-ext-sdk)](https://www.npmjs.com/package/@wireio/wallet-ext-sdk) |
 | [`@wireio/wallet-browser-ext`](packages/wallet-browser-ext/) | Chrome extension developer wallet for Wire | *private* |
 

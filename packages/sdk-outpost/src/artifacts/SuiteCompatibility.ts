@@ -56,12 +56,8 @@ export function assertEthereumRuntimeSuiteCompatibility(
   code: string,
   suite: OutpostArtifactSuite
 ): void {
-  const artifact = suite.ethereum.manifest.contracts[contractName]
-  if (!artifact)
-    throw new Error(
-      `Ethereum ${contractName} is not supplied by this artifact release`
-    )
-  const runtimeReferences = [
+  const artifact = suite.ethereum.manifest.contracts[contractName],
+    runtimeReferences = [
       ...artifact.runtimeLinkReferences,
       ...artifact.runtimeImmutableReferences
     ].sort((left, right) => left.start - right.start),

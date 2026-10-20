@@ -8,9 +8,6 @@ export enum OutpostChainFamily {
 export enum EthereumContractName {
   BAR = "BAR",
   WithdrawalQueue = "WithdrawalQueue",
-  WithdrawalQueueV2 = "WithdrawalQueueV2",
-  DepositManagerV3 = "DepositManagerV3",
-  LiqEthTokenV4 = "LiqEthTokenV4",
   DepositManager = "DepositManager",
   LiqEthToken = "LiqEthToken",
   SyndicationPool = "SyndicationPool",

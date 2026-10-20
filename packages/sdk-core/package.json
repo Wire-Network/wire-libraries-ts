@@ -13,8 +13,7 @@
   },
   "files": [
     "lib",
-    "README.md",
-    "docs"
+    "README.md"
   ],
   "types": "lib/esm/index.d.ts",
   "main": "lib/cjs/index.js",

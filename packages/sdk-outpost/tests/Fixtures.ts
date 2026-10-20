@@ -1,4 +1,3 @@
-import type { EthereumProducerManifest } from "@wireio/sdk-outpost/artifacts/Registry"
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor"
 import { Connection, Keypair, PublicKey } from "@solana/web3.js"
 import { readFileSync } from "node:fs"
@@ -55,18 +54,16 @@ function createEthereumAddress(index: number): string {
 
 /** Create deployment-substituted live code from one producer runtime template. */
 export function createEthereumImplementationCode(
-  contractName: EthereumContractName,
-  manifest: EthereumProducerManifest = OutpostArtifactManifests.ethereum
+  contractName: EthereumContractName
 ): string {
-  const artifact = manifest.contracts[contractName]
-  if (!artifact) throw new Error("Fixture artifact is absent")
-  const runtimeCode = Buffer.from(
-    readFileSync(
-      PackageRequire.resolve(
-        `${manifest.package.version === "0.4.3" ? "@wireio/outpost-ethereum-artifacts-v0-4-3" : manifest.package.name}/${artifact.runtimeBytecodePath}`
+  const artifact = OutpostArtifactManifests.ethereum.contracts[contractName],
+    runtimeCode = Buffer.from(
+      readFileSync(
+        PackageRequire.resolve(
+          `${OutpostArtifactManifests.ethereum.package.name}/${artifact.runtimeBytecodePath}`
+        )
       )
     )
-  )
 
   artifact.runtimeLinkReferences.forEach(({ start, length }) =>
     runtimeCode.fill(1, start, start + length)
@@ -105,27 +102,22 @@ export function createSolanaProgramDataAccountData(
 }
 
 /** Create a valid profile aligned with the SDK's source-owned artifacts. */
-export function createOutpostDeploymentProfileFixture(
-  ethereum: EthereumProducerManifest = OutpostArtifactManifests.ethereum
-): OutpostDeploymentProfile {
+export function createOutpostDeploymentProfileFixture(): OutpostDeploymentProfile {
   const ethereumContracts = Object.fromEntries(
-      Object.values(EthereumContractName)
-        .filter(name => ethereum.contracts[name])
-        .map((contractName, index) => [
-          contractName,
-          {
-            address: createEthereumAddress(
-              TestEthereumProxyAddressBase + index
-            ),
-            implementationAddress: createEthereumAddress(
-              TestEthereumImplementationAddressBase + index
-            ),
-            abiSha256: ethereum.contracts[contractName]!.abiSha256,
-            implementationCodeSha256: sha256(
-              createEthereumImplementationCode(contractName, ethereum)
-            ).slice(2)
-          }
-        ])
+      Object.values(EthereumContractName).map((contractName, index) => [
+        contractName,
+        {
+          address: createEthereumAddress(TestEthereumProxyAddressBase + index),
+          implementationAddress: createEthereumAddress(
+            TestEthereumImplementationAddressBase + index
+          ),
+          abiSha256:
+            OutpostArtifactManifests.ethereum.contracts[contractName].abiSha256,
+          implementationCodeSha256: sha256(
+            createEthereumImplementationCode(contractName)
+          ).slice(2)
+        }
+      ])
     ),
     programData = createSolanaProgramDataAccountData(),
     profile = {
@@ -158,8 +150,7 @@ export function createOutpostDeploymentProfileFixture(
 
 /** Create an Ethereum provider aligned with one deployment profile. */
 export function createEthereumProviderFixture(
-  profile: OutpostDeploymentProfile,
-  manifest: EthereumProducerManifest = OutpostArtifactManifests.ethereum
+  profile: OutpostDeploymentProfile
 ): JsonRpcProvider {
   const provider = new JsonRpcProvider()
   jest.spyOn(provider, "getNetwork").mockResolvedValue(
@@ -174,8 +165,7 @@ export function createEthereumProviderFixture(
     )
     if (implementation != null) {
       return createEthereumImplementationCode(
-        implementation[0] as EthereumContractName,
-        manifest
+        implementation[0] as EthereumContractName
       )
     }
     return Object.values(profile.ethereum.contracts).some(

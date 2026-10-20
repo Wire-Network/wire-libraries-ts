@@ -1,4 +1,4 @@
-import { OPPInbound__factory } from "@wireio/outpost-ethereum-artifacts-v0-4-3"
+import { OPPInbound__factory } from "@wireio/outpost-ethereum-artifacts"
 import { liqsolCoreIdl } from "@wireio/outpost-solana-artifacts"
 
 import {
