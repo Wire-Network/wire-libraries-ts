@@ -1,4 +1,14 @@
-import { Action, contracts, SysioContracts } from "@wireio/sdk-core"
+import { arrayify } from "@ethersproject/bytes"
+import { computeAddress } from "@ethersproject/transactions"
+
+import {
+  Action,
+  Bytes,
+  contracts,
+  KeyType,
+  PrivateKey,
+  SysioContracts
+} from "@wireio/sdk-core"
 
 const { SysioContractName } = SysioContracts
 
@@ -155,17 +165,25 @@ describe("system contract proxy", () => {
 
   test("keeps non-workflow actions available through the generated proxy", () => {
     const authex = contracts.sysio.getSysioContract(SysioContractName.authex),
-      prepared = authex.actions.clearlinks.prepare(
-        {},
-        { authorization: ["sysio.authex@active"] }
-      )
+      publicKey = PrivateKey.generate(KeyType.EM).toPublic(),
+      data: SysioContracts.SysioAuthexRecordlinkAction = {
+        account: "alice",
+        chain_kind: SysioContracts.SysioAuthexChainkind.CHAIN_KIND_EVM,
+        pub_key: publicKey.toString(),
+        native_address: Bytes.from(
+          arrayify(computeAddress(publicKey.data.array))
+        ).hexString
+      },
+      prepared = authex.actions.recordlink.prepare(data, {
+        authorization: ["sysio.authex@active"]
+      })
 
     expect(prepared).not.toBeInstanceOf(Action)
     expect(prepared).toMatchObject({
       contract: SysioContractName.authex,
       account: "sysio.authex",
-      name: "clearlinks",
-      data: {}
+      name: "recordlink",
+      data
     })
   })
 
