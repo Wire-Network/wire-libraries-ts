@@ -216,7 +216,7 @@ GitHub Actions:
 - Published package manifests must keep `repository.url` set to
   `https://github.com/Wire-Network/wire-libraries-ts` — npm provenance matches it.
 
-- `contracts.sysio.swap.quoteSwap` owns pure, exact-input depot quote math. Compose generated pool/LIQ row types; require explicit holder/index reads for yield pools, accrue before pricing, and preserve integer fee/minimum rounding. Use generic system-contract tables for transport. Do not add environment keys, RPC, signing, multi-hop routing or execution-readiness claims to this helper. Keep source pins, exact-key lookups, verified-absence semantics and state-coherence limits in the [SDK quote guide](packages/sdk-core/README.md#depot-swap-quotes).
+- `contracts.sysio.swap.quoteSwap`, `quoteAddLiquidity` and `quoteRemoveLiquidity` own pure depot quote math. Compose generated pool/LIQ row types; require explicit holder/index reads for yield pools, accrue before pricing, and preserve integer fee/minimum rounding. Use generic system-contract tables for transport. Do not add environment keys, RPC, signing, multi-hop routing or execution-readiness claims to this helper. Keep source pins, exact-key lookups, verified-absence semantics and state-coherence limits in the [SDK quote guide](packages/sdk-core/README.md#depot-swap-quotes).
 
 ## Documentation Comments
 
@@ -254,3 +254,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - The `web-logging-example` requires `WIRE_PUSH_URL` env var injected at webpack build time
 
 - Preserve Wire KV pagination cursors as opaque strings; do not decode JSON/encoded bounds as legacy numeric account names.
+
+- Solana native exits use `client.withdrawals`: discover owned receipts through Token-2022, preserve exact receipt IDs and recheck serviceability before claims. Do not run cranks, replay receipt-ID collisions or infer native payout from a confirmed request.
+
+- Withdrawal helpers require exact queue identities and producer bindings. Preserve ETH v1 DepositManager payout versus v2 queue payout, native funding versus delay, SOL receipt ownership/serviceability, and no automatic retries. Raw artifact namespace exports do not verify deployments.

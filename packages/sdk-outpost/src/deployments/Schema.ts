@@ -59,6 +59,15 @@ export const OutpostDeploymentProfileSchema = z
     ethereum: z.object({
       chainId: z.number().int().positive(),
       contracts: z.object({
+        [EthereumContractName.WithdrawalQueue]:
+          EthereumContractDeploymentProfileSchema.optional(),
+        [EthereumContractName.WithdrawalQueueV2]:
+          EthereumContractDeploymentProfileSchema.optional(),
+        [EthereumContractName.DepositManagerV3]:
+          EthereumContractDeploymentProfileSchema.optional(),
+        [EthereumContractName.LiqEthTokenV4]:
+          EthereumContractDeploymentProfileSchema.optional(),
+
         [EthereumContractName.BAR]:
           EthereumContractDeploymentProfileSchema.optional(),
         [EthereumContractName.DepositManager]:

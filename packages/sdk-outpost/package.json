@@ -29,7 +29,8 @@
   "files": [
     "lib/cjs",
     "lib/esm",
-    "README.md"
+    "README.md",
+    "docs"
   ],
   "types": "lib/esm/index.d.ts",
   "main": "lib/cjs/index.js",
@@ -60,7 +61,8 @@
     "@wireio/sdk-core": "workspace:*",
     "ethers": "^6.15.0",
     "ts-pattern": "^5.9.0",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@wireio/outpost-ethereum-artifacts-v0-4-3": "npm:@wireio/outpost-ethereum-artifacts@0.4.3"
   },
   "devDependencies": {
     "rpc-websockets": "9.3.8",

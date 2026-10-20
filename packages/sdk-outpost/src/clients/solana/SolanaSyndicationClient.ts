@@ -1,3 +1,4 @@
+import { SolanaSeeds as Seed, solanaProgramAddress } from "./Addresses.js"
 import { BN, type Program } from "@coral-xyz/anchor"
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -69,25 +70,6 @@ export interface SolanaSyndicationState {
 }
 
 /** Core-owned PDA seeds shared by deposit and PostLaunch syndication. */
-const Seed = {
-  globalState: "outpost_global_state",
-  globalConfig: "global_config",
-  distributionState: "distribution_state",
-  poolAuthority: "liqsol_pool",
-  bucketAuthority: "liqsol_bucket",
-  userRecord: "user_record",
-  liqsolMint: "liqsol_mint",
-  mintAuthority: "mint_authority",
-  extraAccountMetaList: "extra-account-metas",
-  reservePool: "reserve_pool",
-  depositAuthority: "deposit_authority",
-  vault: "vault",
-  controllerState: "stake_controller",
-  payoutState: "payout_state",
-  payRateHistory: "pay_rate_history",
-  config: "outpost_config",
-  outboundMessageBuffer: "outbound_message_buffer"
-} as const
 
 /** Browser-safe transaction construction for the current liqsol-core contract. */
 export class SolanaSyndicationClient {
@@ -99,10 +81,7 @@ export class SolanaSyndicationClient {
   ) {}
 
   private coreAddress(seed: string, ...rest: Buffer[]): PublicKey {
-    return PublicKey.findProgramAddressSync(
-      [Buffer.from(seed), ...rest],
-      this.program.programId
-    )[0]
+    return solanaProgramAddress(this.program.programId, seed, ...rest)
   }
 
   /** Derive the canonical Token-2022 and core account set for a wallet. */

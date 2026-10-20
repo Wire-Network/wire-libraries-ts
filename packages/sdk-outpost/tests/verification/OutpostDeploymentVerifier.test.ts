@@ -1,3 +1,4 @@
+import { EthereumOutpostArtifactManifest as LegacyEthereumManifest } from "@wireio/outpost-ethereum-artifacts"
 import {
   OutpostChainFamily,
   OutpostDeploymentVerifier,
@@ -29,6 +30,20 @@ const PackageRequire = createRequire(__filename),
   )
 
 describe("OutpostDeploymentVerifier", () => {
+  it("preserves exact v0.4.2 Ethereum runtimes while withholding unverified withdrawal identities", async () => {
+    const profile = createOutpostDeploymentProfileFixture(
+        LegacyEthereumManifest
+      ),
+      provider = createEthereumProviderFixture(profile, LegacyEthereumManifest),
+      suite = await OutpostDeploymentVerifier.verify({
+        family: OutpostChainFamily.ethereum,
+        profile,
+        provider
+      })
+    expect(suite.ethereum.manifest.package.version).toBe("0.4.2")
+    expect(profile.ethereum.contracts.WithdrawalQueue).toBeUndefined()
+  })
+
   it("verifies an Ethereum deployment through the generic facade", async () => {
     const profile = createOutpostDeploymentProfileFixture()
 
@@ -112,7 +127,7 @@ describe("OutpostDeploymentVerifier", () => {
           provider: createEthereumProviderFixture(profile)
         })
       ).resolves.toMatchObject({
-        ethereum: { manifest: { package: { version: "0.4.2" } } }
+        ethereum: { manifest: { package: { version: "0.4.3" } } }
       })
       const provider = createSolanaProviderFixture(profile, programData),
         verification = OutpostDeploymentVerifier.verify({

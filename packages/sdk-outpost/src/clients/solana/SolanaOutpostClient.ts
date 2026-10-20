@@ -1,4 +1,5 @@
 import { SolanaSyndicationClient } from "./SolanaSyndicationClient.js"
+import { SolanaWithdrawalClient } from "./SolanaWithdrawalClient.js"
 import { Program } from "@coral-xyz/anchor"
 import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
 import { match } from "ts-pattern"
@@ -58,6 +59,11 @@ export class SolanaOutpostClient {
   /** Provider verified against the configured Solana cluster. */
   get provider(): SolanaOutpostClientOptions["provider"] {
     return this.options.provider
+  }
+
+  /** User-owned native withdrawal requests and claims. */
+  get withdrawals(): SolanaWithdrawalClient {
+    return new SolanaWithdrawalClient(this.syndication)
   }
 
   /** Deployment profile used to verify and connect this client. */

@@ -85,6 +85,26 @@ describe("EthereumOutpostClient", () => {
     )
   })
 
+  it("requires one explicit withdrawal family and rejects ambiguous token versions", async () => {
+    const profile = createOutpostDeploymentProfileFixture(),
+      create = () =>
+        createEthereumClient({
+          profile,
+          connection: createEthereumProviderFixture(profile)
+        })
+    let client = await create()
+    expect(() => client.withdrawals).toThrow("multiple withdrawal queues")
+    delete profile.ethereum.contracts.WithdrawalQueueV2
+    client = await create()
+    expect(() => client.withdrawals).toThrow("multiple liquid tokens")
+    delete profile.ethereum.contracts.LiqEthTokenV4
+    client = await create()
+    expect(client.withdrawals).toBeDefined()
+    delete profile.ethereum.contracts.WithdrawalQueue
+    client = await create()
+    expect(() => client.withdrawals).toThrow("no verified WithdrawalQueue")
+  })
+
   it("rejects the wrong Ethereum chain", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createEthereumProviderFixture(profile)
