@@ -8,8 +8,8 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-The current source pairs Ethereum artifacts `0.4.2` with Solana artifacts `0.4.1`
-or `0.4.2` for the depot-collateral stack. Their published manifests identify
+Ethereum artifacts `0.4.3` pair with Solana artifacts `0.4.1` or `0.4.2`
+for the depot-collateral stack. Their manifests identify
 the exact producer commits, runtime artifacts, and ethers v6/Anchor bindings
 used by the SDK. Package versions are managed and published only through the
 repository release workflow.
@@ -39,8 +39,8 @@ after building those outputs; otherwise the exact registry versions remain in us
 
 | Family   | Generated clients and workflows                                          |
 | -------- | ------------------------------------------------------------------------- |
-| Ethereum | `OPP`, `OPPInbound`, `BAR`, node-owner registration, native deposit and syndication |
-| Solana   | `liqsol_core`, native deposit, PostLaunch syndication and OPP transport  |
+| Ethereum | `OPP`, `OPPInbound`, `BAR`, node-owner registration, native deposit, syndication and withdrawals |
+| Solana   | `liqsol_core`, native deposit, PostLaunch syndication, withdrawals and OPP transport |
 
 Client creation verifies all four boundaries before returning:
 
@@ -71,6 +71,31 @@ underwriting using platform capability evidence.
 - Profiles opt into Ethereum `DepositManager`, `LiqEthToken`, `SyndicationPool` identities and Solana `liqsol.tokenProgramAddress` / `transferHookProgramAddress`. Missing identities disable this capability without changing existing profiles. Solana companion addresses are checked against the derived mint and executable accounts; the existing verifier authenticates the core program binary, not companion binaries.
 
 Source confirmation does not prove shadow LIQ is spendable on Wire. Applications must separately check the linked Wire account, relay/bond release and its `sysio.liq` balance. No administrator bootstrap, automatic approval, faucet or collateral deposit is performed by these helpers.
+
+## Solana native withdrawals
+
+`client.withdrawals.read(user)` discovers owned Token-2022 withdrawal receipts and
+reads the minimum, withdrawal/claim flags and serviceable epoch. `request(user,
+amount)` burns external liqSOL and builds an unsigned withdrawal request;
+`claim(user, receiptMint)` rechecks ownership and serviceability before building
+the native payout. Amounts and receipt IDs remain exact integers. The caller owns
+wallet signing, persistence before broadcast and confirmation. Receipt-ID races
+must fail visibly; these helpers never retry a request automatically.
+
+A confirmed request is not a SOL payout. Network processing can advance
+serviceability later; the SDK does not run validator cranks or modify it.
+## Ethereum native withdrawals
+
+`client.withdrawals.read(owner)` returns owned NFT IDs, exact amounts, chain-time
+readiness and payout funding at one block. `request(amount)` burns external LIQ
+and submits a withdrawal request; `claim(id)` rechecks ownership, delay, pauses
+and funds before submitting one claim. Both return the transaction immediately;
+store its hash before waiting. A ready receipt can still be unfunded.
+
+The deployment profile must identify the verified `WithdrawalQueue` used by the
+deployed bootstrap suite. Claims pay through `DepositManager.claim`. Existing
+profiles retain their capabilities; withdrawals fail closed until a matching
+queue identity is supplied. Newer upgrade generations are outside this release.
 
 ## Deployment profiles
 
@@ -125,7 +150,7 @@ release; consumers continue to use the same `OutpostClient.create` facade.
 
 ### Artifact compatibility
 
-Ethereum `0.4.2` pairs with Solana `0.4.1` or `0.4.2`, selected by exact live
+Ethereum `0.4.3` pairs with Solana `0.4.1` or `0.4.2`, selected by exact live
 runtime verification. These Solana builds share an IDL but have different executable
 bytes. The Ethereum bindings are shared; no transaction API adapter is needed.
 The retired Ethereum `0.4.1` / Solana `0.4.0` pair is no longer registered.

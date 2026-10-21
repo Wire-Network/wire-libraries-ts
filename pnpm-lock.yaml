@@ -21,8 +21,6 @@ overrides:
   webpack-dev-server: 6.0.0
   ws: 8.21.0
 
-pnpmfileChecksum: sha256-Pwp47mavrVQdghhognPPNAyXDlYjTYSnW8dYP14xMLU=
-
 importers:
 
   .:
@@ -213,8 +211,8 @@ importers:
         specifier: ^1.98.4
         version: 1.98.4(bufferutil@4.1.0)(typescript@6.0.2)(utf-8-validate@6.0.6)
       '@wireio/outpost-ethereum-artifacts':
-        specifier: 0.4.2
-        version: 0.4.2(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))
+        specifier: 0.4.3
+        version: 0.4.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))
       '@wireio/outpost-solana-artifacts':
         specifier: 0.4.1
         version: 0.4.1
@@ -1700,8 +1698,8 @@ packages:
   '@wireio/opp-typescript-models@1.0.51':
     resolution: {integrity: sha512-MgSMRZScCBAvtmxDe7/HHmJADENX0JW9jbt8tL4vmQ3U9Om8IwzzCUYKkmVohTGKClydVmXmncrC8gn1aMENbg==}
 
-  '@wireio/outpost-ethereum-artifacts@0.4.2':
-    resolution: {integrity: sha512-fs/UYZ2D3TDxUpwdRGRIDIlZVr15ghDqqwQIi73Opg6pG9QuXJN3LTRqxDpdWDB2sG82YCO9pGOuN3lr5jv/Jg==}
+  '@wireio/outpost-ethereum-artifacts@0.4.3':
+    resolution: {integrity: sha512-s7Ap6HFUWzljcZhvwaTYKy2r5ImpCyW6RKrkLFeCJw0eVFfLeMhpj6kakA/1Ou72Oggyp8rohvEmdTeptyv/Rg==}
     peerDependencies:
       ethers: ^6.15.0
 
@@ -5999,7 +5997,7 @@ snapshots:
     dependencies:
       '@protobuf-ts/runtime': 2.11.1
 
-  '@wireio/outpost-ethereum-artifacts@0.4.2(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
+  '@wireio/outpost-ethereum-artifacts@0.4.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
     dependencies:
       ethers: 6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 

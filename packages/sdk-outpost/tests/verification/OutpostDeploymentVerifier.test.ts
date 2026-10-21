@@ -112,7 +112,7 @@ describe("OutpostDeploymentVerifier", () => {
           provider: createEthereumProviderFixture(profile)
         })
       ).resolves.toMatchObject({
-        ethereum: { manifest: { package: { version: "0.4.2" } } }
+        ethereum: { manifest: { package: { version: "0.4.3" } } }
       })
       const provider = createSolanaProviderFixture(profile, programData),
         verification = OutpostDeploymentVerifier.verify({

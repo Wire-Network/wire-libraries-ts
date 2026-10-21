@@ -1,4 +1,12 @@
-import type { BAR, OPP, OPPInbound, DepositManager, LiqEthToken, SyndicationPool } from "@wireio/outpost-ethereum-artifacts"
+import type {
+  BAR,
+  WithdrawalQueue,
+  OPP,
+  OPPInbound,
+  DepositManager,
+  LiqEthToken,
+  SyndicationPool
+} from "@wireio/outpost-ethereum-artifacts"
 import type { Provider, Signer } from "ethers"
 
 import type { OutpostDeploymentProfile } from "../../deployments/index.js"
@@ -14,6 +22,9 @@ export interface EthereumOutpostClientOptions {
 
 /** Generated contract clients keyed by their deployment identity. */
 export interface EthereumContractMap {
+  /** Native withdrawal receipt queue used by the verified DepositManager. */
+  [EthereumContractName.WithdrawalQueue]: WithdrawalQueue
+
   /** Native ETH deposit contract for the deployed liquid-staking suite. */
   [EthereumContractName.DepositManager]: DepositManager
   /** External liquid ETH token. */

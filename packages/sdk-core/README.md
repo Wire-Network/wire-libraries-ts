@@ -204,6 +204,30 @@ helper rejects unsafe numeric inputs, malformed values and overflow; it does not
 model corrupt uint128 wraparound or multi-hop routing. Unit vectors cover
 arithmetic; they do not establish live deployment parity.
 
+### Liquidity provision and custody
+
+`contracts.sysio.swap.quoteAddLiquidity` and `quoteRemoveLiquidity` estimate an
+exact LP share mint or burn using the same caller-owned pool/yield snapshot as
+`quoteSwap`. Mint inputs round up, including the one-basis-point fee on each leg;
+burn outputs round down and respect the locked-share floor. Explicit basis-point
+tolerance produces maximum inputs or minimum outputs. All amounts retain their
+issuing contract and exact precision; no RPC, signing or readiness check occurs.
+
+Use the existing typed `swap` actions through `contracts.sysio.createClient`:
+open the required `evodexacnts` rows with `openext`, deposit the reviewed input
+amounts, then call `addliquidity` with shares/maxima or `remliquidity` with
+shares/minima. Unspent deposits and removal proceeds remain in internal custody;
+use `withdraw` for a reviewed amount. `closeext` returns the entire remaining
+balance, so never close a preexisting row without the user's explicit intent.
+Prepared actions can be composed in one transaction through the existing API
+client. Callers must refresh state, check balances/authority/Andon, enforce bounds
+on-chain and reconcile actual results. No automatic retry or multi-hop routing
+is provided.
+
+These calculations follow [`sysio.swap` share accounting](https://github.com/Wire-Network/wire-sysio/blob/6508c9e8f4044df8d5acb082a7af3be6a80cd9a0/contracts/sysio.swap/sysio.swap.cpp)
+and its [integer AMM kernel](https://github.com/Wire-Network/wire-sysio/blob/6508c9e8f4044df8d5acb082a7af3be6a80cd9a0/contracts/sysio.opp.common/include/sysio.opp.common/amm_math.hpp).
+They do not establish live deployment acceptance.
+
 ## Development
 
 From a checkout of the repository, install dependencies and build at the root,

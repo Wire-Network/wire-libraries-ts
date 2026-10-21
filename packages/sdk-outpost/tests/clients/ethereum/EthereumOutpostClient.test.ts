@@ -37,10 +37,10 @@ describe("EthereumOutpostClient", () => {
       profile.ethereum.contracts[EthereumContractName.OPPInbound].address
     )
     expect(provider.getCode).toHaveBeenCalledTimes(
-      Object.values(EthereumContractName).length * 2
+      Object.keys(profile.ethereum.contracts).length * 2
     )
     expect(provider.getStorage).toHaveBeenCalledTimes(
-      Object.values(EthereumContractName).length
+      Object.keys(profile.ethereum.contracts).length
     )
   })
 
@@ -81,8 +81,19 @@ describe("EthereumOutpostClient", () => {
 
     expect(() => client.nodeOwners).toThrow("has no BAR identity")
     expect(provider.getCode).toHaveBeenCalledTimes(
-      (Object.values(EthereumContractName).length - 1) * 2
+      Object.keys(profile.ethereum.contracts).length * 2
     )
+  })
+
+  it("requires an explicit verified withdrawal queue without disabling existing capabilities", async () => {
+    const profile = createOutpostDeploymentProfileFixture()
+    delete profile.ethereum.contracts.WithdrawalQueue
+    const client = await createEthereumClient({
+      profile,
+      connection: createEthereumProviderFixture(profile)
+    })
+    expect(client.syndication).toBeDefined()
+    expect(() => client.withdrawals).toThrow("no WithdrawalQueue identity")
   })
 
   it("rejects the wrong Ethereum chain", async () => {

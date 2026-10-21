@@ -1,5 +1,6 @@
 import {
   BAR__factory,
+  WithdrawalQueue__factory,
   DepositManager__factory,
   LiqEthToken__factory,
   SyndicationPool__factory,
@@ -26,6 +27,7 @@ import {
 
 /** Generated ethers v6 factories keyed by deployment identity. */
 export interface EthereumOutpostArtifactFactories {
+  readonly [EthereumContractName.WithdrawalQueue]: typeof WithdrawalQueue__factory
   readonly [EthereumContractName.BAR]: typeof BAR__factory
   readonly [EthereumContractName.DepositManager]: typeof DepositManager__factory
   readonly [EthereumContractName.LiqEthToken]: typeof LiqEthToken__factory
@@ -78,6 +80,7 @@ export const CurrentOutpostArtifactSuite: OutpostArtifactSuite = {
   ethereum: {
     manifest: EthereumOutpostArtifactManifest,
     factories: {
+      [EthereumContractName.WithdrawalQueue]: WithdrawalQueue__factory,
       [EthereumContractName.BAR]: BAR__factory,
       [EthereumContractName.DepositManager]: DepositManager__factory,
       [EthereumContractName.LiqEthToken]: LiqEthToken__factory,
