@@ -79,8 +79,11 @@ describe("Ethereum native withdrawals", () => {
     token.paused.mockResolvedValue(true)
     await expect(client.request(20n)).rejects.toThrow("paused")
     token.paused.mockResolvedValue(false)
-    for (const amount of [0n, -1n, 101n])
-      await expect(client.request(amount)).rejects.toThrow("balance")
+    await Promise.all(
+      [0n, -1n, 101n].map(amount =>
+        expect(client.request(amount)).rejects.toThrow("balance")
+      )
+    )
     token.safeBurn.staticCall.mockResolvedValue(0n)
     await expect(client.request(1n)).rejects.toThrow("one liquid-token share")
     expect(token.safeBurn).not.toHaveBeenCalled()

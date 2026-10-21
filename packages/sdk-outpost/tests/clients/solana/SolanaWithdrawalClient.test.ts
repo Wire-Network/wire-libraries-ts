@@ -113,8 +113,11 @@ describe("Solana native withdrawals", () => {
 
   it("refuses disabled, below-minimum, over-balance and overflowing requests", async () => {
     const { client, user, state } = fixture()
-    for (const amount of [0n, 9n, 1001n, 1n << 64n])
-      await expect(client.request(user, amount)).rejects.toThrow(/minimum/)
+    await Promise.all(
+      [0n, 9n, 1001n, 1n << 64n].map(amount =>
+        expect(client.request(user, amount)).rejects.toThrow(/minimum/)
+      )
+    )
     state.enabled = false
     await expect(client.request(user, 100n)).rejects.toThrow(/disabled/)
   })

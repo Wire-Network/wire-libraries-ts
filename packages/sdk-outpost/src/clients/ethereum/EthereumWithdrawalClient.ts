@@ -13,25 +13,41 @@ import { assertEthereumSigner, ethereumProvider } from "./Connection.js"
 
 /** Owned withdrawal NFT and its observed on-chain readiness, not a payout promise. */
 export interface EthereumWithdrawalReceipt {
+  /** Receipt NFT ID, kept exact through discovery and submission. */
   id: bigint
+  /** Requested native payout in wei. */
   amount: bigint
+  /** Earliest claim time as a Unix timestamp in seconds. */
   readyAt: bigint
+  /** Whether the observed block timestamp meets the receipt delay. */
   ready: boolean
+  /** Whether the payer currently holds enough ETH for this receipt alone. */
   funded: boolean
+  /** Observed readiness, funding and pause checks; not a payout guarantee. */
   claimable: boolean
 }
 
 /** Exact wallet and queue state observed at one Ethereum block. */
 export interface EthereumWithdrawalState {
+  /** Block used consistently for these state reads. */
   blockNumber: number
+  /** Observed block timestamp in seconds. */
   timestamp: bigint
+  /** Owner native ETH balance in wei. */
   nativeBalance: bigint
+  /** Owner external LIQ balance in token base units. */
   liquidBalance: bigint
+  /** External LIQ display precision. */
   decimals: number
+  /** Configured withdrawal delay in seconds. */
   withdrawalDelay: bigint
+  /** Whether the liquid token currently pauses withdrawal requests. */
   requestPaused: boolean
+  /** Whether DepositManager currently pauses payouts. */
   claimPaused: boolean
+  /** Native ETH held by the verified DepositManager payer. */
   payoutBalance: bigint
+  /** All discovered owned receipts within the enumeration limit. */
   receipts: EthereumWithdrawalReceipt[]
 }
 

@@ -22,6 +22,7 @@ export interface EthereumOutpostClientOptions {
 
 /** Generated contract clients keyed by their deployment identity. */
 export interface EthereumContractMap {
+  /** Native withdrawal receipt queue used by the verified DepositManager. */
   [EthereumContractName.WithdrawalQueue]: WithdrawalQueue
 
   /** Native ETH deposit contract for the deployed liquid-staking suite. */

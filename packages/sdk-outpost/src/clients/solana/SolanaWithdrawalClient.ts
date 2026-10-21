@@ -19,18 +19,27 @@ import { SolanaSyndicationClient } from "./SolanaSyndicationClient.js"
 
 /** An owned withdrawal receipt, not a promise of immediate native payout. */
 export interface SolanaWithdrawalReceipt {
+  /** Receipt mint public key, discovered from current ownership. */
   mint: string
+  /** Requested native payout in lamports. */
   amount: bigint
+  /** Receipt epoch used for serviceability checks. */
   epoch: bigint
+  /** Whether claims are enabled and this receipt epoch is serviceable. */
   claimable: boolean
 }
 
 /** Native withdrawal gates and receipts from the verified core program. */
 export interface SolanaWithdrawalState {
+  /** Minimum withdrawal request in LIQ base units. */
   minimum: bigint
+  /** Whether new withdrawal requests are enabled. */
   enabled: boolean
+  /** Whether native payout claims are enabled. */
   claimsEnabled: boolean
+  /** Highest epoch currently serviced by network processing. */
   serviceableEpoch: bigint
+  /** Owned, unfulfilled receipts discovered from Token-2022 accounts. */
   receipts: SolanaWithdrawalReceipt[]
 }
 
@@ -43,8 +52,10 @@ const ReceiptReadBatchSize = 100,
 
 /** Builds user withdrawals; never advances serviceability or runs validator cranks. */
 export class SolanaWithdrawalClient {
+  /** Use the same already verified core program as the syndication client. */
   constructor(private readonly syndication: SolanaSyndicationClient) {}
 
+  /** Derive a core-owned PDA using the canonical seed list. */
   private address(seed: string, ...rest: Buffer[]): PublicKey {
     return solanaProgramAddress(
       this.syndication.program.programId,
@@ -84,7 +95,7 @@ export class SolanaWithdrawalClient {
       rows.forEach((row, index) => {
         if (!row || row.fulfilled) return
         const expected = this.address(
-          "mint",
+          Seed.receiptMint,
           row.receiptId.toArrayLike(Buffer, "le", ReceiptIdByteLength)
         )
         if (!expected.equals(batch[index]))
@@ -130,7 +141,7 @@ export class SolanaWithdrawalClient {
       global = this.address(Seed.global),
       next = await program.account.global.fetch(global),
       nftMint = this.address(
-        "mint",
+        Seed.receiptMint,
         next.nextReceiptId.toArrayLike(Buffer, "le", ReceiptIdByteLength)
       )
     return program.methods
