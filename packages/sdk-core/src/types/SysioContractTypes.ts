@@ -52,9 +52,6 @@ export enum SysioAuthexChainkind {
   CHAIN_KIND_SVM = 3
 }
 
-/** sysio.authex::clearlinks (action) */
-export interface SysioAuthexClearlinksAction {}
-
 /** sysio.authex::createlink (action) */
 export interface SysioAuthexCreatelinkAction {
   chain_kind: SysioAuthexChainkind | keyof typeof SysioAuthexChainkind
@@ -88,7 +85,6 @@ export interface SysioAuthexRecordlinkAction {
 /** sysio.authex - action + table surface for the typed contract client. */
 export interface SysioAuthexContract {
   actions: {
-    clearlinks: SysioAuthexClearlinksAction
     createlink: SysioAuthexCreatelinkAction
     recordlink: SysioAuthexRecordlinkAction
   }
@@ -4163,7 +4159,7 @@ export const SysioContractDefinitions: {
   [SysioContractName.authex]: {
     name: SysioContractName.authex,
     account: "sysio.authex",
-    actions: ["clearlinks", "createlink", "recordlink"],
+    actions: ["createlink", "recordlink"],
     tables: ["links"]
   },
   [SysioContractName.bios]: {
