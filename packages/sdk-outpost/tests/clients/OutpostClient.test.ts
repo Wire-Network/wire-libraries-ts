@@ -15,6 +15,8 @@ describe("OutpostClient", () => {
   it("keeps syndication constructors behind the verified facade", () => {
     expect(OutpostExports).not.toHaveProperty("EthereumSyndicationClient")
     expect(OutpostExports).not.toHaveProperty("SolanaSyndicationClient")
+    expect(OutpostExports).not.toHaveProperty("EthereumWithdrawalClient")
+    expect(OutpostExports).not.toHaveProperty("SolanaWithdrawalClient")
   })
   it("preserves the precise Ethereum client type", async () => {
     const profile = createOutpostDeploymentProfileFixture(),

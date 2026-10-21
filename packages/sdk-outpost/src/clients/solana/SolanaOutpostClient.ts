@@ -1,12 +1,10 @@
 import { SolanaSyndicationClient } from "./SolanaSyndicationClient.js"
+import { SolanaWithdrawalClient } from "./SolanaWithdrawalClient.js"
 import { Program } from "@coral-xyz/anchor"
 import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
 import { match } from "ts-pattern"
 
-import {
-  OutpostArtifactRegistry,
-  type OutpostArtifactSuite
-} from "../../artifacts/Registry.js"
+import type { OutpostArtifactSuite } from "../../artifacts/Registry.js"
 import {
   OutpostChainFamily,
   SolanaProgramName
@@ -22,15 +20,12 @@ export class SolanaOutpostClient {
   ): Promise<SolanaOutpostClient> {
     const { profile, provider } = options
 
-    await OutpostDeploymentVerifier.verify({
+    const artifactSuite = await OutpostDeploymentVerifier.verify({
       family: OutpostChainFamily.solana,
       profile,
       connection: provider.connection
     })
-    return new SolanaOutpostClient(
-      options,
-      OutpostArtifactRegistry.resolve(profile)
-    )
+    return new SolanaOutpostClient(options, artifactSuite)
   }
 
   private readonly liqsolCore: Program<LiqsolCore>
@@ -64,6 +59,11 @@ export class SolanaOutpostClient {
   /** Provider verified against the configured Solana cluster. */
   get provider(): SolanaOutpostClientOptions["provider"] {
     return this.options.provider
+  }
+
+  /** User-owned native withdrawal requests and claims. */
+  get withdrawals(): SolanaWithdrawalClient {
+    return new SolanaWithdrawalClient(this.syndication)
   }
 
   /** Deployment profile used to verify and connect this client. */

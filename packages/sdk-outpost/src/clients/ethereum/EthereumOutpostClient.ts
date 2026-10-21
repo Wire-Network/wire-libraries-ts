@@ -1,10 +1,7 @@
 import type { Provider } from "ethers"
 import { match } from "ts-pattern"
 
-import {
-  OutpostArtifactRegistry,
-  type OutpostArtifactSuite
-} from "../../artifacts/Registry.js"
+import type { OutpostArtifactSuite } from "../../artifacts/Registry.js"
 import {
   EthereumContractName,
   OutpostChainFamily
@@ -13,6 +10,7 @@ import { OutpostDeploymentVerifier } from "../../verification/index.js"
 import { ethereumProvider } from "./Connection.js"
 import { EthereumContractMap, EthereumOutpostClientOptions } from "./Types.js"
 import { EthereumSyndicationClient } from "./EthereumSyndicationClient.js"
+import { EthereumWithdrawalClient } from "./EthereumWithdrawalClient.js"
 import { EthereumNodeOwnerClient } from "./EthereumNodeOwnerClient.js"
 
 /** Strictly typed access to one verified Ethereum outpost deployment. */
@@ -24,16 +22,12 @@ export class EthereumOutpostClient {
     const { connection, profile } = options,
       provider = ethereumProvider(connection)
 
-    await OutpostDeploymentVerifier.verify({
+    const artifactSuite = await OutpostDeploymentVerifier.verify({
       family: OutpostChainFamily.ethereum,
       profile,
       provider
     })
-    return new EthereumOutpostClient(
-      options,
-      provider,
-      OutpostArtifactRegistry.resolve(profile)
-    )
+    return new EthereumOutpostClient(options, provider, artifactSuite)
   }
 
   private constructor(
@@ -72,6 +66,16 @@ export class EthereumOutpostClient {
     )
   }
 
+  /** Native withdrawals through the verified deployed queue and DepositManager payer. */
+  get withdrawals(): EthereumWithdrawalClient {
+    return new EthereumWithdrawalClient(
+      this.contract(EthereumContractName.LiqEthToken),
+      this.contract(EthereumContractName.WithdrawalQueue),
+      this.contract(EthereumContractName.DepositManager),
+      this.options.connection
+    )
+  }
+
   /** Deployment profile used to verify and connect this client. */
   get profile(): EthereumOutpostClientOptions["profile"] {
     return this.options.profile
@@ -90,6 +94,12 @@ export class EthereumOutpostClient {
     const { connection, profile } = this.options,
       factories = this.artifactSuite.ethereum.factories,
       contract = match(name as EthereumContractName)
+        .with(EthereumContractName.WithdrawalQueue, () =>
+          factories.WithdrawalQueue.connect(
+            this.assertContractAddress(EthereumContractName.WithdrawalQueue),
+            connection
+          )
+        )
         .with(EthereumContractName.DepositManager, () =>
           factories.DepositManager.connect(
             this.assertContractAddress(EthereumContractName.DepositManager),

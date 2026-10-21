@@ -87,15 +87,17 @@ export function createSolanaProgramAccountData(
 }
 
 /** Encode deterministic upgradeable-loader ProgramData account contents. */
-export function createSolanaProgramDataAccountData(): Buffer {
+export function createSolanaProgramDataAccountData(
+  programBinary: Buffer = SolanaProgramBinary
+): Buffer {
   const data = Buffer.alloc(
     SolanaProgramDataMetadataByteLength +
-      SolanaProgramBinary.length +
+      programBinary.length +
       SolanaProgramDataPaddingByteLength
   )
   data.writeUInt32LE(ProgramDataStateTag, 0)
   data.writeBigUInt64LE(1n, UpgradeableLoaderStateTagByteLength)
-  SolanaProgramBinary.copy(data, SolanaProgramDataMetadataByteLength)
+  programBinary.copy(data, SolanaProgramDataMetadataByteLength)
   return data
 }
 
@@ -188,7 +190,8 @@ export function createEthereumProviderFixture(
 
 /** Create a Solana provider aligned with one deployment profile. */
 export function createSolanaProviderFixture(
-  profile: OutpostDeploymentProfile
+  profile: OutpostDeploymentProfile,
+  programData: Buffer = createSolanaProgramDataAccountData()
 ): AnchorProvider {
   const connection = new Connection(TestSolanaRpcUrl),
     provider = new AnchorProvider(connection, new Wallet(Keypair.generate())),
@@ -209,7 +212,7 @@ export function createSolanaProviderFixture(
     }
     if (address.equals(new PublicKey(program.programDataAddress))) {
       return {
-        data: createSolanaProgramDataAccountData(),
+        data: programData,
         executable: false,
         lamports: 1,
         owner: SolanaUpgradeableLoaderProgramId,

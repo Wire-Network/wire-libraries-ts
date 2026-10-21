@@ -37,10 +37,36 @@ describe("EthereumOutpostClient", () => {
       profile.ethereum.contracts[EthereumContractName.OPPInbound].address
     )
     expect(provider.getCode).toHaveBeenCalledTimes(
-      Object.values(EthereumContractName).length * 2
+      Object.keys(profile.ethereum.contracts).length * 2
     )
     expect(provider.getStorage).toHaveBeenCalledTimes(
-      Object.values(EthereumContractName).length
+      Object.keys(profile.ethereum.contracts).length
+    )
+  })
+
+  it("keeps two deployments on the same EVM chain ID independent", async () => {
+    const first = createOutpostDeploymentProfileFixture(),
+      second = createOutpostDeploymentProfileFixture()
+    second.wire.chainId = "d".repeat(64)
+    second.id = `${second.wire.chainId}-${second.deploymentChecksum.slice(0, 12)}`
+    second.ethereum.contracts[EthereumContractName.OPPInbound].address =
+      "0x0000000000000000000000000000000000000999"
+    const [firstClient, secondClient] = await Promise.all(
+      [first, second].map(profile =>
+        createEthereumClient({
+          profile,
+          connection: createEthereumProviderFixture(profile)
+        })
+      )
+    )
+    expect(firstClient.contract(EthereumContractName.OPPInbound).target).toBe(
+      first.ethereum.contracts[EthereumContractName.OPPInbound].address
+    )
+    expect(secondClient.contract(EthereumContractName.OPPInbound).target).toBe(
+      second.ethereum.contracts[EthereumContractName.OPPInbound].address
+    )
+    expect(firstClient.profile.wire.chainId).not.toBe(
+      secondClient.profile.wire.chainId
     )
   })
 
@@ -55,8 +81,19 @@ describe("EthereumOutpostClient", () => {
 
     expect(() => client.nodeOwners).toThrow("has no BAR identity")
     expect(provider.getCode).toHaveBeenCalledTimes(
-      (Object.values(EthereumContractName).length - 1) * 2
+      Object.keys(profile.ethereum.contracts).length * 2
     )
+  })
+
+  it("requires an explicit verified withdrawal queue without disabling existing capabilities", async () => {
+    const profile = createOutpostDeploymentProfileFixture()
+    delete profile.ethereum.contracts.WithdrawalQueue
+    const client = await createEthereumClient({
+      profile,
+      connection: createEthereumProviderFixture(profile)
+    })
+    expect(client.syndication).toBeDefined()
+    expect(() => client.withdrawals).toThrow("no WithdrawalQueue identity")
   })
 
   it("rejects the wrong Ethereum chain", async () => {

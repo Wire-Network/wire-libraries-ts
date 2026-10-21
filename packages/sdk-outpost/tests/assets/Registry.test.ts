@@ -13,7 +13,7 @@ const MismatchedInterfaceDigest = "f".repeat(64)
 
 describe("OutpostArtifactRegistry", () => {
   it("resolves the exact installed Ethereum and Solana package pair", () => {
-    const suite = OutpostArtifactRegistry.resolve(
+    const [suite] = OutpostArtifactRegistry.candidates(
       createOutpostDeploymentProfileFixture()
     )
 
@@ -30,9 +30,6 @@ describe("OutpostArtifactRegistry", () => {
       MismatchedInterfaceDigest
 
     expect(OutpostArtifactRegistry.candidates(profile)).toEqual([])
-    expect(() => OutpostArtifactRegistry.resolve(profile)).toThrow(
-      "No registered artifact suite matches deployment profile"
-    )
   })
 
   it("rejects an unregistered Solana interface", () => {
@@ -41,8 +38,5 @@ describe("OutpostArtifactRegistry", () => {
       MismatchedInterfaceDigest
 
     expect(OutpostArtifactRegistry.candidates(profile)).toEqual([])
-    expect(() => OutpostArtifactRegistry.resolve(profile)).toThrow(
-      "No registered artifact suite matches deployment profile"
-    )
   })
 })
