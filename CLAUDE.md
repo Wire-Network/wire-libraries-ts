@@ -258,3 +258,5 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - Solana native exits use `client.withdrawals`: discover owned receipts through Token-2022, preserve exact receipt IDs and recheck serviceability before claims. Do not run cranks, replay receipt-ID collisions or infer native payout from a confirmed request.
 
 - Withdrawal helpers require exact queue identities and producer bindings. This release supports the deployed ETH queue's DepositManager payout, native funding versus delay, SOL receipt ownership/serviceability, and no automatic retries. Defer newer ETH upgrade generations. Raw artifact namespace exports do not verify deployments.
+
+- Depot LP quotes (`quoteAddLiquidity` / `quoteRemoveLiquidity`) share the swap snapshot/yield math. Preserve ceil-rounded mint inputs and per-leg fees, floor-rounded burn outputs, locked shares and explicit tolerance. Results describe internal swap custody, not wallet payouts; reuse typed actions and caller-owned transaction composition.
