@@ -11,6 +11,7 @@ and CommonJS builds with TypeScript declarations.
 - [Installation](#installation)
 - [Quick start](#quick-start)
 - [System contracts](#system-contracts)
+- [Desyndication request decoding](#desyndication-request-decoding)
 - [Depot swap quotes](#depot-swap-quotes)
 - [Development](#development)
 
@@ -92,6 +93,25 @@ For Wire KV table pagination, call `get_table_rows<string>(...)` and pass the
 returned `next_key` unchanged as the next bound (`lower_bound` forward,
 `upper_bound` in reverse). KV cursors are opaque JSON or encoded keys, not
 numeric account names. Domain clients such as AuthEx use this same reader.
+
+## Desyndication request decoding
+
+`contracts.sysio.synd.decodeDesyndicateLIQ(queueout)` accepts generated
+`SysioContracts.SysioMsgchQueueoutAction` data from a decoded public trace.
+It validates the attestation type, destination and required correlation fields,
+then returns the producer-owned `DesyndicateLIQ` model: `requestId`, `chainCode`,
+`amount.tokenCode` and `amount.amount` remain `bigint`; `user.address` remains
+native public-key bytes. No RPC, signing or unit conversion occurs.
+
+```ts
+const request = contracts.sysio.synd.decodeDesyndicateLIQ(queueout)
+const requestId = request.requestId.toString() // retain precision for event matching
+```
+
+Callers must verify canonical Wire execution, match `queueout` to the originating
+`desyndicate` action by inline ancestry, and match the ID, recipient, token and
+amount to a successful payout on the correct outpost. Decoding alone does not
+prove delivery. Unknown protobuf fields retain the producer runtime's handling.
 
 ## Depot swap quotes
 
