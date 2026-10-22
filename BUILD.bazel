@@ -34,7 +34,10 @@ js_workspace_build(
     name = "build",
     # wire-sysio emits the OPP codegen this repo's .pnpmfile.cjs consumes.
     deps = ["//wire-sysio:build"],
-    install_cmd = "WIRE_LINK_LOCAL_OPP_MODELS=1 pnpm install --lockfile=false",
+    # Keep third-party versions from the committed lockfile, as repository CI
+    # does. Allow pnpm's hook to substitute the freshly built sibling artifacts
+    # without requiring the registry-only lockfile to contain local link paths.
+    install_cmd = "WIRE_LINK_LOCAL_OPP_MODELS=1 pnpm install --no-frozen-lockfile",
     package_manager = "pnpm",
     tags = ["ts"],
     # Unit tests gate the platform build (and thus the e2e gate) — skippable

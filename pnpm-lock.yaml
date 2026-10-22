@@ -21,7 +21,7 @@ overrides:
   webpack-dev-server: 6.0.0
   ws: 8.21.0
 
-pnpmfileChecksum: sha256-Pwp47mavrVQdghhognPPNAyXDlYjTYSnW8dYP14xMLU=
+pnpmfileChecksum: sha256-AnY9gFZCvgoeWJe7/jmg3w0b/KTpAw/bVrsFJm1iUm0=
 
 importers:
 

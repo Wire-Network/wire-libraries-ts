@@ -5,7 +5,8 @@
  *
  * Usage:
  *   1. Build any supported sibling package outputs you want to use locally.
- *   2. Run `pnpm install --lockfile=false` to consume available local packages.
+ *   2. Run `pnpm install --no-frozen-lockfile` to consume available local packages
+ *      while retaining the committed third-party dependency resolutions.
  *   3. Remove those outputs to resolve packages from the registry again.
  *
  * Docs: https://pnpm.io/pnpmfile
