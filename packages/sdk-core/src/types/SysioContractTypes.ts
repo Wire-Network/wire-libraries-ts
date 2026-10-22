@@ -3392,6 +3392,7 @@ export interface SysioSystemProducerInfoType {
   is_demoted: boolean
   snapshot_attestations: number
   snapshot_period: number
+  last_paid_round: number
 }
 
 /** sysio.system::producer_key (type) */
