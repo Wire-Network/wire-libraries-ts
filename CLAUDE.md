@@ -180,7 +180,7 @@ Every new/modified symbol ships unit tests in the same change. Tests never assum
 
 `wire-platform-manifest/.claude/rules/*.md` is the authoritative cross-repo rule set — read the relevant file before acting; the one-liners below only index the ones that bind this repo:
 
-- **`opp-models-packages.md` / `cross-repo.md`** — `@wireio/opp-typescript-models` and `@wireio/opp-solidity-models` MUST NOT appear in any `wire-libraries-ts` package: the generators that produce them live here (tool/output cycle). Sighting one under `node_modules/.pnpm/` here is a red flag.
+- **`opp-models-packages.md` / `cross-repo.md`** — consume producer-owned `@wireio/opp-typescript-models` for OPP decoding; generators live in `wire-sysio/libraries/opp/tools/`. Do not import Solidity models or duplicate generated codecs/types.
 - **`standard-names-not-invented.md`** — the author's / repo's existing name for a concept is the spec; synonyms are violations (the `assert*`-not-`require*` table).
 - **`string-enum-value-equals-key.md`**, **`enums-are-first-class.md`** — identity string enums; typed enums at every layer, never raw literals/ints.
 - **`search-generated-types-before-creating-new.md`**, **`precise-types-no-unknown-shortcut.md`** — generated types first; no `unknown`/`any` for typed domain fields.
@@ -260,3 +260,5 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - Withdrawal helpers require exact queue identities and producer bindings. This release supports the deployed ETH queue's DepositManager payout, native funding versus delay, SOL receipt ownership/serviceability, and no automatic retries. Defer newer ETH upgrade generations. Raw artifact namespace exports do not verify deployments.
 
 - Depot LP quotes (`quoteAddLiquidity` / `quoteRemoveLiquidity`) share the swap snapshot/yield math. Preserve ceil-rounded mint inputs and per-leg fees, floor-rounded burn outputs, locked shares and explicit tolerance. Results describe internal swap custody, not wallet payouts; reuse typed actions and caller-owned transaction composition.
+
+- `contracts.sysio.synd.decodeDesyndicateLIQ` decodes public queueout data with the producer model. Keep bigint precision and distinguish request decoding from canonical execution and outpost payout verification.
