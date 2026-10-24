@@ -99,6 +99,8 @@ export interface SysioAuthexContract {
 export interface SysioBiosAbiHashType {
   owner: string
   hash: string
+  updated_at: string
+  block_num: number
 }
 
 /** sysio.bios::abihash_key (type) */
@@ -145,6 +147,19 @@ export interface SysioBiosBlockchainParametersType {
   max_kv_key_size: number
   max_kv_value_size: number
   max_kv_secondary_key_size: number
+}
+
+/** sysio.bios::code_hash (type) */
+export interface SysioBiosCodeHashType {
+  owner: string
+  hash: string
+  updated_at: string
+  block_num: number
+}
+
+/** sysio.bios::codehash_key (type) */
+export interface SysioBiosCodehashKeyType {
+  owner: number | string
 }
 
 /** sysio.bios::deleteauth (action) */
@@ -308,6 +323,7 @@ export interface SysioBiosContract {
   }
   tables: {
     abihash: SysioBiosAbiHashType
+    codehash: SysioBiosCodeHashType
   }
 }
 
@@ -3012,6 +3028,8 @@ export enum SysioSystemTrxMatchType {
 export interface SysioSystemAbiHashType {
   owner: string
   hash: string
+  updated_at: string
+  block_num: number
 }
 
 /** sysio.system::abihash_key (type) */
@@ -3122,6 +3140,19 @@ export interface SysioSystemClaimnodedisAction {
 /** sysio.system::claimpay (action) */
 export interface SysioSystemClaimpayAction {
   account_name: string
+}
+
+/** sysio.system::code_hash (type) */
+export interface SysioSystemCodeHashType {
+  owner: string
+  hash: string
+  updated_at: string
+  block_num: number
+}
+
+/** sysio.system::codehash_key (type) */
+export interface SysioSystemCodehashKeyType {
+  owner: number | string
 }
 
 /** sysio.system::deleteauth (action) */
@@ -3808,6 +3839,7 @@ export interface SysioSystemContract {
     abihash: SysioSystemAbiHashType
     batchepochs: SysioSystemBatchEpochType
     blockinfo: SysioSystemBlockInfoRecordType
+    codehash: SysioSystemCodeHashType
     emissionmngr: SysioSystemEmissionStateType
     emitcfg: SysioSystemEmissionConfigType
     epochlog: SysioSystemEpochLogType
@@ -4191,7 +4223,7 @@ export const SysioContractDefinitions: {
       "unlinkauth",
       "updateauth"
     ],
-    tables: ["abihash"]
+    tables: ["abihash", "codehash"]
   },
   [SysioContractName.bond]: {
     name: SysioContractName.bond,
@@ -4528,6 +4560,7 @@ export const SysioContractDefinitions: {
       "abihash",
       "batchepochs",
       "blockinfo",
+      "codehash",
       "emissionmngr",
       "emitcfg",
       "epochlog",
