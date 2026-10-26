@@ -2679,10 +2679,17 @@ export interface SysioSyndCursorKeyType {
   chain_code: number | string
 }
 
+/** sysio.synd::desynd_quote (type) */
+export interface SysioSyndDesyndQuoteType {
+  fee: number | string
+  net: number | string
+}
+
 /** sysio.synd::desyndicate (action) */
 export interface SysioSyndDesyndicateAction {
   holder: string
   quantity: string
+  max_fee: number | string
 }
 
 /** sysio.synd::dropenv (action) */
@@ -2870,6 +2877,13 @@ export interface SysioSyndPruneenvAction {
   limit: number
 }
 
+/** sysio.synd::quotedesynd (action) */
+export interface SysioSyndQuotedesyndAction {
+  chain_code: string
+  token_code: string
+  quantity: number | string
+}
+
 /** sysio.synd::reconcile (action) */
 export interface SysioSyndReconcileAction {
   chain_code: string
@@ -2912,6 +2926,7 @@ export interface SysioSyndSetconfigAction {
   bounty: number | string
   challenge_extra: number | string
   min_desyndicate: number | string
+  desynd_fee_flat: number | string
 }
 
 /** sysio.synd::sweep (action) */
@@ -2951,6 +2966,7 @@ export interface SysioSyndSyndConfigType {
   bounty: number | string
   challenge_extra: number | string
   min_desyndicate: number | string
+  desynd_fee_flat: number | string
 }
 
 /** sysio.synd::synd_counters (type) */
@@ -3002,6 +3018,7 @@ export interface SysioSyndContract {
     onsynd: SysioSyndOnsyndAction
     onyield: SysioSyndOnyieldAction
     pruneenv: SysioSyndPruneenvAction
+    quotedesynd: SysioSyndQuotedesyndAction
     reconcile: SysioSyndReconcileAction
     refundreturn: SysioSyndRefundreturnAction
     setconfig: SysioSyndSetconfigAction
@@ -4489,6 +4506,7 @@ export const SysioContractDefinitions: {
       "onsynd",
       "onyield",
       "pruneenv",
+      "quotedesynd",
       "reconcile",
       "refundreturn",
       "setconfig",
