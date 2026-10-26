@@ -1116,6 +1116,12 @@ export interface SysioEpochEpochStateType {
   is_paused: boolean
 }
 
+/** sysio.epoch::finishadv (action) */
+export interface SysioEpochFinishadvAction {
+  epoch_index: number
+  emission_amount: number | string
+}
+
 /** sysio.epoch::pause (action) */
 export interface SysioEpochPauseAction {}
 
@@ -1138,6 +1144,7 @@ export interface SysioEpochUnpauseAction {}
 export interface SysioEpochContract {
   actions: {
     advance: SysioEpochAdvanceAction
+    finishadv: SysioEpochFinishadvAction
     pause: SysioEpochPauseAction
     schbatchgps: SysioEpochSchbatchgpsAction
     setconfig: SysioEpochSetconfigAction
@@ -4276,7 +4283,7 @@ export const SysioContractDefinitions: {
   [SysioContractName.epoch]: {
     name: SysioContractName.epoch,
     account: "sysio.epoch",
-    actions: ["advance", "pause", "schbatchgps", "setconfig", "unpause"],
+    actions: ["advance", "finishadv", "pause", "schbatchgps", "setconfig", "unpause"],
     tables: ["blocklog", "epochcfg", "epochstate"]
   },
   [SysioContractName.liq]: {
