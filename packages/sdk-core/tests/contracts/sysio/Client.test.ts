@@ -286,6 +286,30 @@ describe("system contract proxy", () => {
     })
   })
 
+  test("reads the sysio.msgch outbound queue as typed rows", async () => {
+    const row: SysioContracts.SysioMsgchOutboundQueueEntryType = {
+        chain_code: 42,
+        queued: 3
+      },
+      api = createMockApi([row]),
+      msgch = contracts.sysio.getSysioContract(SysioContractName.msgch, {
+        client: api
+      }),
+      result = await msgch.tables.outqueue.query(),
+      rows: SysioContracts.SysioMsgchOutboundQueueEntryType[] = result.rows
+
+    expect(
+      SysioContracts.SysioContractDefinitions[SysioContractName.msgch].tables
+    ).toContain("outqueue")
+    expect(rows).toEqual([row])
+    expect(api.v1.chain.get_table_rows).toHaveBeenCalledWith({
+      code: "sysio.msgch",
+      table: "outqueue",
+      scope: "sysio.msgch",
+      json: true
+    })
+  })
+
   test("supports table aliases, first-row reads, and scope discovery", async () => {
     const row = { current_epoch_index: 7 },
       api = createMockApi([row]),

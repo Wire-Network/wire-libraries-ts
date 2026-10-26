@@ -1480,6 +1480,17 @@ export interface SysioMsgchOutboundEnvelopeType {
   last_message_id: string
 }
 
+/** sysio.msgch::outbound_queue_entry (type) */
+export interface SysioMsgchOutboundQueueEntryType {
+  chain_code: number | string
+  queued: number
+}
+
+/** sysio.msgch::outbound_queue_key (type) */
+export interface SysioMsgchOutboundQueueKeyType {
+  chain_code: number | string
+}
+
 /** sysio.msgch::outpost_consensus_entry (type) */
 export interface SysioMsgchOutpostConsensusEntryType {
   chain_code: number | string
@@ -1535,6 +1546,7 @@ export interface SysioMsgchContract {
     messages: SysioMsgchMessageEntryType
     outenvelopes: SysioMsgchOutboundEnvelopeType
     outpcons: SysioMsgchOutpostConsensusEntryType
+    outqueue: SysioMsgchOutboundQueueEntryType
   }
 }
 
@@ -4314,7 +4326,8 @@ export const SysioContractDefinitions: {
       "envlog",
       "messages",
       "outenvelopes",
-      "outpcons"
+      "outpcons",
+      "outqueue"
     ]
   },
   [SysioContractName.msig]: {
