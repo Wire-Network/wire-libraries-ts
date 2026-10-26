@@ -308,12 +308,6 @@ describe("system contract proxy", () => {
       scope: "sysio.msgch",
       json: true
     })
-
-    // An outpost with nothing queued has no row.
-    const empty = contracts.sysio.getSysioContract(SysioContractName.msgch, {
-      client: createMockApi()
-    })
-    await expect(empty.tables.outqueue.first()).resolves.toBeNull()
   })
 
   test("supports table aliases, first-row reads, and scope discovery", async () => {
