@@ -3563,11 +3563,13 @@ export interface SysioSystemSetscorecfgAction {
 /** sysio.system::setsnpcfg (action) */
 export interface SysioSystemSetsnpcfgAction {
   min_providers: number
+  block_spacing: number
 }
 
 /** sysio.system::snap_config (type) */
 export interface SysioSystemSnapConfigType {
   min_providers: number
+  block_spacing: number
 }
 
 /** sysio.system::snap_provider (type) */
@@ -4283,7 +4285,14 @@ export const SysioContractDefinitions: {
   [SysioContractName.epoch]: {
     name: SysioContractName.epoch,
     account: "sysio.epoch",
-    actions: ["advance", "finishadv", "pause", "schbatchgps", "setconfig", "unpause"],
+    actions: [
+      "advance",
+      "finishadv",
+      "pause",
+      "schbatchgps",
+      "setconfig",
+      "unpause"
+    ],
     tables: ["blocklog", "epochcfg", "epochstate"]
   },
   [SysioContractName.liq]: {
