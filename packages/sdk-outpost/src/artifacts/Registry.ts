@@ -8,6 +8,7 @@ import {
   OPPInbound__factory,
   OPP__factory
 } from "@wireio/outpost-ethereum-artifacts"
+import * as EthereumV043 from "@wireio/outpost-ethereum-artifacts-v0-4-3"
 import {
   SolanaOutpostArtifactManifest,
   liqsolCoreIdl
@@ -27,18 +28,34 @@ import {
 
 /** Generated ethers v6 factories keyed by deployment identity. */
 export interface EthereumOutpostArtifactFactories {
-  readonly [EthereumContractName.WithdrawalQueue]: typeof WithdrawalQueue__factory
-  readonly [EthereumContractName.BAR]: typeof BAR__factory
-  readonly [EthereumContractName.DepositManager]: typeof DepositManager__factory
-  readonly [EthereumContractName.LiqEthToken]: typeof LiqEthToken__factory
-  readonly [EthereumContractName.SyndicationPool]: typeof SyndicationPool__factory
-  readonly [EthereumContractName.OPP]: typeof OPP__factory
-  readonly [EthereumContractName.OPPInbound]: typeof OPPInbound__factory
+  readonly [EthereumContractName.WithdrawalQueue]:
+    | typeof WithdrawalQueue__factory
+    | typeof EthereumV043.WithdrawalQueue__factory
+  readonly [EthereumContractName.BAR]:
+    | typeof BAR__factory
+    | typeof EthereumV043.BAR__factory
+  readonly [EthereumContractName.DepositManager]:
+    | typeof DepositManager__factory
+    | typeof EthereumV043.DepositManager__factory
+  readonly [EthereumContractName.LiqEthToken]:
+    | typeof LiqEthToken__factory
+    | typeof EthereumV043.LiqEthToken__factory
+  readonly [EthereumContractName.SyndicationPool]:
+    | typeof SyndicationPool__factory
+    | typeof EthereumV043.SyndicationPool__factory
+  readonly [EthereumContractName.OPP]:
+    | typeof OPP__factory
+    | typeof EthereumV043.OPP__factory
+  readonly [EthereumContractName.OPPInbound]:
+    | typeof OPPInbound__factory
+    | typeof EthereumV043.OPPInbound__factory
 }
 
 /** Generated Anchor IDLs keyed by deployment identity. */
 export interface SolanaOutpostArtifactIdls {
-  readonly [SolanaProgramName.liqsolCore]: typeof liqsolCoreIdl
+  readonly [SolanaProgramName.liqsolCore]:
+    | typeof liqsolCoreIdl
+    | typeof solanaV042LiqsolCoreIdl
 }
 
 /** Ethereum producer bindings and manifest owned by one artifact release. */
@@ -101,7 +118,21 @@ export const CurrentOutpostArtifactSuite: OutpostArtifactSuite = {
 const RegisteredOutpostArtifactSuites: readonly OutpostArtifactSuite[] = [
   CurrentOutpostArtifactSuite,
   {
-    ethereum: CurrentOutpostArtifactSuite.ethereum,
+    ethereum: {
+      manifest: EthereumV043.EthereumOutpostArtifactManifest,
+      factories: {
+        [EthereumContractName.WithdrawalQueue]:
+          EthereumV043.WithdrawalQueue__factory,
+        [EthereumContractName.BAR]: EthereumV043.BAR__factory,
+        [EthereumContractName.DepositManager]:
+          EthereumV043.DepositManager__factory,
+        [EthereumContractName.LiqEthToken]: EthereumV043.LiqEthToken__factory,
+        [EthereumContractName.SyndicationPool]:
+          EthereumV043.SyndicationPool__factory,
+        [EthereumContractName.OPP]: EthereumV043.OPP__factory,
+        [EthereumContractName.OPPInbound]: EthereumV043.OPPInbound__factory
+      }
+    },
     solana: {
       manifest: SolanaV042ArtifactManifest,
       idls: { [SolanaProgramName.liqsolCore]: solanaV042LiqsolCoreIdl }

@@ -1,5 +1,5 @@
 import { SolanaSeeds as Seed, solanaProgramAddress } from "./Addresses.js"
-import { BN, type Program } from "@coral-xyz/anchor"
+import { BN } from "@coral-xyz/anchor"
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
@@ -17,7 +17,7 @@ import {
   SYSVAR_STAKE_HISTORY_PUBKEY
 } from "@solana/web3.js"
 import { SlugName } from "@wireio/sdk-core"
-import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
+import type { SolanaCoreProgram } from "./Types.js"
 import type { OutpostDeploymentProfile } from "../../deployments/index.js"
 
 const DepositComputeUnitLimit = 1_000_000,
@@ -76,7 +76,7 @@ export class SolanaSyndicationClient {
   /** Accept the verified core and explicit companion identities; no private keys or admin actions. */
   constructor(
     /** Producer-generated client for the verified core program. */
-    readonly program: Program<LiqsolCore>,
+    readonly program: SolanaCoreProgram,
     private readonly deployment: SolanaLiqsolDeployment
   ) {}
 

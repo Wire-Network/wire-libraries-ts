@@ -54,14 +54,14 @@ function createEthereumAddress(index: number): string {
 
 /** Create deployment-substituted live code from one producer runtime template. */
 export function createEthereumImplementationCode(
-  contractName: EthereumContractName
+  contractName: EthereumContractName,
+  artifacts = OutpostArtifactManifests.ethereum,
+  packageName = artifacts.package.name
 ): string {
-  const artifact = OutpostArtifactManifests.ethereum.contracts[contractName],
+  const artifact = artifacts.contracts[contractName],
     runtimeCode = Buffer.from(
       readFileSync(
-        PackageRequire.resolve(
-          `${OutpostArtifactManifests.ethereum.package.name}/${artifact.runtimeBytecodePath}`
-        )
+        PackageRequire.resolve(`${packageName}/${artifact.runtimeBytecodePath}`)
       )
     )
 
@@ -102,7 +102,10 @@ export function createSolanaProgramDataAccountData(
 }
 
 /** Create a valid profile aligned with the SDK's source-owned artifacts. */
-export function createOutpostDeploymentProfileFixture(): OutpostDeploymentProfile {
+export function createOutpostDeploymentProfileFixture(
+  ethereumArtifacts = OutpostArtifactManifests.ethereum,
+  ethereumArtifactPackage = ethereumArtifacts.package.name
+): OutpostDeploymentProfile {
   const ethereumContracts = Object.fromEntries(
       Object.values(EthereumContractName).map((contractName, index) => [
         contractName,
@@ -111,10 +114,13 @@ export function createOutpostDeploymentProfileFixture(): OutpostDeploymentProfil
           implementationAddress: createEthereumAddress(
             TestEthereumImplementationAddressBase + index
           ),
-          abiSha256:
-            OutpostArtifactManifests.ethereum.contracts[contractName].abiSha256,
+          abiSha256: ethereumArtifacts.contracts[contractName].abiSha256,
           implementationCodeSha256: sha256(
-            createEthereumImplementationCode(contractName)
+            createEthereumImplementationCode(
+              contractName,
+              ethereumArtifacts,
+              ethereumArtifactPackage
+            )
           ).slice(2)
         }
       ])
@@ -150,7 +156,9 @@ export function createOutpostDeploymentProfileFixture(): OutpostDeploymentProfil
 
 /** Create an Ethereum provider aligned with one deployment profile. */
 export function createEthereumProviderFixture(
-  profile: OutpostDeploymentProfile
+  profile: OutpostDeploymentProfile,
+  artifacts = OutpostArtifactManifests.ethereum,
+  packageName = artifacts.package.name
 ): JsonRpcProvider {
   const provider = new JsonRpcProvider()
   jest.spyOn(provider, "getNetwork").mockResolvedValue(
@@ -165,7 +173,9 @@ export function createEthereumProviderFixture(
     )
     if (implementation != null) {
       return createEthereumImplementationCode(
-        implementation[0] as EthereumContractName
+        implementation[0] as EthereumContractName,
+        artifacts,
+        packageName
       )
     }
     return Object.values(profile.ethereum.contracts).some(

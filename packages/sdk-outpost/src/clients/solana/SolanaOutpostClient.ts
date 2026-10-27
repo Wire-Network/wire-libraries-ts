@@ -2,6 +2,7 @@ import { SolanaSyndicationClient } from "./SolanaSyndicationClient.js"
 import { SolanaWithdrawalClient } from "./SolanaWithdrawalClient.js"
 import { Program } from "@coral-xyz/anchor"
 import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
+import type { LiqsolCore as LiqsolCoreV042 } from "@wireio/outpost-solana-artifacts-v0-4-2"
 import { match } from "ts-pattern"
 
 import type { OutpostArtifactSuite } from "../../artifacts/Registry.js"
@@ -10,7 +11,12 @@ import {
   SolanaProgramName
 } from "../../deployments/index.js"
 import { OutpostDeploymentVerifier } from "../../verification/index.js"
-import { SolanaOutpostClientOptions, SolanaProgramMap } from "./Types.js"
+import {
+  SolanaOutpostClientOptions,
+  SolanaProgramMap,
+  type SolanaCoreProgram,
+  hasWithdrawalNonce
+} from "./Types.js"
 
 /** Strictly typed access to one verified Solana outpost deployment. */
 export class SolanaOutpostClient {
@@ -28,7 +34,7 @@ export class SolanaOutpostClient {
     return new SolanaOutpostClient(options, artifactSuite)
   }
 
-  private readonly liqsolCore: Program<LiqsolCore>
+  private readonly liqsolCore: SolanaCoreProgram
 
   private constructor(
     private readonly options: SolanaOutpostClientOptions,
@@ -37,13 +43,11 @@ export class SolanaOutpostClient {
     const address =
       options.profile.solana.programs[SolanaProgramName.liqsolCore].address
 
-    this.liqsolCore = new Program<LiqsolCore>(
-      {
-        ...artifactSuite.solana.idls[SolanaProgramName.liqsolCore],
-        address
-      },
-      options.provider
-    )
+    const idl = artifactSuite.solana.idls[SolanaProgramName.liqsolCore]
+    // Anchor's constructor cannot infer its generic from the supplied IDL.
+    this.liqsolCore = hasWithdrawalNonce(idl)
+      ? new Program<LiqsolCore>({ ...idl, address }, options.provider)
+      : new Program<LiqsolCoreV042>({ ...idl, address }, options.provider)
   }
 
   /** Native deposits and PostLaunch syndication for explicit companion programs. */

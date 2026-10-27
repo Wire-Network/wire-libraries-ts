@@ -8,7 +8,7 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-Ethereum artifacts `0.4.3` pair with Solana artifacts `0.4.1` or `0.4.2`
+Ethereum artifacts `0.4.4` pair with Solana artifacts `0.4.4`; the verified `0.4.3` / `0.4.2` pair remains supported
 for the depot-collateral stack. Their manifests identify
 the exact producer commits, runtime artifacts, and ethers v6/Anchor bindings
 used by the SDK. Package versions are managed and published only through the
@@ -79,8 +79,10 @@ reads the minimum, withdrawal/claim flags and serviceable epoch. `request(user,
 amount)` burns external liqSOL and builds an unsigned withdrawal request;
 `claim(user, receiptMint)` rechecks ownership and serviceability before building
 the native payout. Amounts and receipt IDs remain exact integers. The caller owns
-wallet signing, persistence before broadcast and confirmation. Receipt-ID races
-must fail visibly; these helpers never retry a request automatically.
+wallet signing, persistence before broadcast and confirmation. Nonce-capable
+programs use a fresh random u64 and a user-scoped receipt mint; older verified
+programs retain their counter-based request. Discovery accepts modern and legacy
+receipts on the nonce-capable program. These helpers never retry a request automatically.
 
 A confirmed request is not a SOL payout. Network processing can advance
 serviceability later; the SDK does not run validator cranks or modify it.
@@ -150,11 +152,10 @@ release; consumers continue to use the same `OutpostClient.create` facade.
 
 ### Artifact compatibility
 
-Ethereum `0.4.3` pairs with Solana `0.4.1` or `0.4.2`, selected by exact live
-runtime verification. These Solana builds share an IDL but have different executable
-bytes. The Ethereum bindings are shared; no transaction API adapter is needed.
-The retired Ethereum `0.4.1` / Solana `0.4.0` pair is no longer registered.
-The previous `0.3.0`/`0.3.1` pair is not retained;
+Ethereum `0.4.4` / Solana `0.4.4` and Ethereum `0.4.3` / Solana `0.4.2` are
+selected by exact interface and live runtime verification. Requests use the
+verified producer IDL's withdrawal arguments, never an environment name.
+Earlier pairs are not retained;
 older deployments require their matching SDK release. Consumers must provide a
 fresh deployment profile and pass exact live runtime verification before use.
 Artifact compatibility alone does not establish swap or operator readiness.

@@ -5,6 +5,7 @@ import {
   SolanaUpgradeableLoaderProgramId
 } from "@wireio/sdk-outpost"
 import { SolanaOutpostArtifactManifest as SolanaV042Manifest } from "@wireio/outpost-solana-artifacts-v0-4-2"
+import { EthereumOutpostArtifactManifest as EthereumV043Manifest } from "@wireio/outpost-ethereum-artifacts-v0-4-3"
 import { sha256 } from "ethers"
 import {
   CurrentOutpostArtifactSuite,
@@ -21,6 +22,7 @@ import {
 
 const PackageRequire = createRequire(__filename),
   SolanaV042Package = "@wireio/outpost-solana-artifacts-v0-4-2",
+  EthereumV043Package = "@wireio/outpost-ethereum-artifacts-v0-4-3",
   SolanaV042Artifact = SolanaV042Manifest.programs.liqsolCore,
   SolanaV042Binary = readFileSync(
     PackageRequire.resolve(
@@ -100,7 +102,10 @@ describe("OutpostDeploymentVerifier", () => {
     async altered => {
       const binary = Buffer.from(SolanaV042Binary)
       if (altered) binary[0] ^= 1
-      const profile = createOutpostDeploymentProfileFixture(),
+      const profile = createOutpostDeploymentProfileFixture(
+          EthereumV043Manifest,
+          EthereumV043Package
+        ),
         programData = createSolanaProgramDataAccountData(binary),
         program = profile.solana.programs[SolanaProgramName.liqsolCore]
       program.idlSha256 = SolanaV042Artifact.idlSha256
@@ -109,7 +114,11 @@ describe("OutpostDeploymentVerifier", () => {
         OutpostDeploymentVerifier.verify({
           family: OutpostChainFamily.ethereum,
           profile,
-          provider: createEthereumProviderFixture(profile)
+          provider: createEthereumProviderFixture(
+            profile,
+            EthereumV043Manifest,
+            EthereumV043Package
+          )
         })
       ).resolves.toMatchObject({
         ethereum: { manifest: { package: { version: "0.4.3" } } }
