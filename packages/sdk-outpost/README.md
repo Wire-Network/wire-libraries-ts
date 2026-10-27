@@ -8,7 +8,7 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-Ethereum artifacts `0.4.4` pair with Solana artifacts `0.4.3`; the verified `0.4.3` / `0.4.2` pair remains supported
+Ethereum artifacts `0.4.4` pair with Solana artifacts `0.4.4`; the verified `0.4.3` / `0.4.2` pair remains supported
 for the depot-collateral stack. Their manifests identify
 the exact producer commits, runtime artifacts, and ethers v6/Anchor bindings
 used by the SDK. Package versions are managed and published only through the
@@ -152,7 +152,7 @@ release; consumers continue to use the same `OutpostClient.create` facade.
 
 ### Artifact compatibility
 
-Ethereum `0.4.4` / Solana `0.4.3` and Ethereum `0.4.3` / Solana `0.4.2` are
+Ethereum `0.4.4` / Solana `0.4.4` and Ethereum `0.4.3` / Solana `0.4.2` are
 selected by exact interface and live runtime verification. Requests use the
 verified producer IDL's withdrawal arguments, never an environment name.
 Earlier pairs are not retained;

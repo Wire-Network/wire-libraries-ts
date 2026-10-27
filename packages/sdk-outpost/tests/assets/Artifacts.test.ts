@@ -46,12 +46,15 @@ describe("source-owned outpost artifacts", () => {
       "@wireio/outpost-solana-artifacts"
     )
     expect(OutpostArtifactManifests.ethereum.package.version).toBe("0.4.4")
-    expect(OutpostArtifactManifests.solana.package.version).toBe("0.4.3")
+    expect(OutpostArtifactManifests.solana.package.version).toBe("0.4.4")
     expect(OutpostArtifactManifests.ethereum.source.revision).toBe(
       "a76e7a0b70ce38db3460d06d71e51ed755c2f8c4"
     )
     expect(OutpostArtifactManifests.solana.source.revision).toBe(
       "2c7ba391c44bb5f462a9a2c25b1510d9fb77d722"
+    )
+    expect(OutpostArtifactManifests.solana.source.wireSysioRevision).toBe(
+      "c3764aa78fc2a826a4b3119651ed1ccfbdf9694e"
     )
   })
 
