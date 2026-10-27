@@ -1173,6 +1173,92 @@ export interface SysioEpochContract {
   }
 }
 
+// ── sysio.kicker ──
+
+/** sysio.kicker::addpool (action) */
+export interface SysioKickerAddpoolAction {
+  sym: string
+  rate_bps: number
+  min_gift: number | string
+  max_gift_per_day: number | string
+}
+
+/** sysio.kicker::cumulative_price (type) */
+export interface SysioKickerCumulativePriceType {
+  lo: string
+  hi: string
+}
+
+/** sysio.kicker::kick (action) */
+export interface SysioKickerKickAction {
+  sym: string
+}
+
+/** sysio.kicker::kick_config (type) */
+export interface SysioKickerKickConfigType {
+  budget_remaining: number | string
+  min_interval_sec: number
+  twap_window_sec: number
+  max_spot_deviation_bps: number
+}
+
+/** sysio.kicker::kick_pool (type) */
+export interface SysioKickerKickPoolType {
+  sym: string
+  rate_bps: number
+  min_gift: number | string
+  last_kick: string
+  gifted_total: string
+  shortfall_amount: number | string
+  shortfall_time: string
+  gift_overflow: boolean
+  spot_deviation: boolean
+  max_gift_per_day: number | string
+  day: number | string
+  spent_today: string
+  supply_snapshot: number | string
+  price_snapshot: SysioKickerCumulativePriceType
+  price_time: string
+}
+
+/** sysio.kicker::pool_key (type) */
+export interface SysioKickerPoolKeyType {
+  symbol_code: number | string
+}
+
+/** sysio.kicker::rmpool (action) */
+export interface SysioKickerRmpoolAction {
+  sym: string
+}
+
+/** sysio.kicker::setconfig (action) */
+export interface SysioKickerSetconfigAction {
+  cfg: SysioKickerKickConfigType
+}
+
+/** sysio.kicker::setpool (action) */
+export interface SysioKickerSetpoolAction {
+  sym: string
+  rate_bps: number
+  min_gift: number | string
+  max_gift_per_day: number | string
+}
+
+/** sysio.kicker - action + table surface for the typed contract client. */
+export interface SysioKickerContract {
+  actions: {
+    addpool: SysioKickerAddpoolAction
+    kick: SysioKickerKickAction
+    rmpool: SysioKickerRmpoolAction
+    setconfig: SysioKickerSetconfigAction
+    setpool: SysioKickerSetpoolAction
+  }
+  tables: {
+    kickcfg: SysioKickerKickConfigType
+    kickpools: SysioKickerKickPoolType
+  }
+}
+
 // ── sysio.liq ──
 
 /** sysio.liq::account (type) */
@@ -2679,10 +2765,17 @@ export interface SysioSyndCursorKeyType {
   chain_code: number | string
 }
 
+/** sysio.synd::desynd_quote (type) */
+export interface SysioSyndDesyndQuoteType {
+  fee: number | string
+  net: number | string
+}
+
 /** sysio.synd::desyndicate (action) */
 export interface SysioSyndDesyndicateAction {
   holder: string
   quantity: string
+  max_fee: number | string
 }
 
 /** sysio.synd::dropenv (action) */
@@ -2870,6 +2963,13 @@ export interface SysioSyndPruneenvAction {
   limit: number
 }
 
+/** sysio.synd::quotedesynd (action) */
+export interface SysioSyndQuotedesyndAction {
+  chain_code: string
+  token_code: string
+  quantity: number | string
+}
+
 /** sysio.synd::reconcile (action) */
 export interface SysioSyndReconcileAction {
   chain_code: string
@@ -2912,6 +3012,7 @@ export interface SysioSyndSetconfigAction {
   bounty: number | string
   challenge_extra: number | string
   min_desyndicate: number | string
+  desynd_fee_flat: number | string
 }
 
 /** sysio.synd::sweep (action) */
@@ -2951,6 +3052,7 @@ export interface SysioSyndSyndConfigType {
   bounty: number | string
   challenge_extra: number | string
   min_desyndicate: number | string
+  desynd_fee_flat: number | string
 }
 
 /** sysio.synd::synd_counters (type) */
@@ -3002,6 +3104,7 @@ export interface SysioSyndContract {
     onsynd: SysioSyndOnsyndAction
     onyield: SysioSyndOnyieldAction
     pruneenv: SysioSyndPruneenvAction
+    quotedesynd: SysioSyndQuotedesyndAction
     reconcile: SysioSyndReconcileAction
     refundreturn: SysioSyndRefundreturnAction
     setconfig: SysioSyndSetconfigAction
@@ -4133,6 +4236,7 @@ export enum SysioContractName {
   councl = "councl",
   dclaim = "dclaim",
   epoch = "epoch",
+  kicker = "kicker",
   liq = "liq",
   msgch = "msgch",
   msig = "msig",
@@ -4157,6 +4261,7 @@ export const SysioContractAccount: Record<SysioContractName, string> = {
   [SysioContractName.councl]: "sysio.councl",
   [SysioContractName.dclaim]: "sysio.dclaim",
   [SysioContractName.epoch]: "sysio.epoch",
+  [SysioContractName.kicker]: "sysio.kicker",
   [SysioContractName.liq]: "sysio.liq",
   [SysioContractName.msgch]: "sysio.msgch",
   [SysioContractName.msig]: "sysio.msig",
@@ -4181,6 +4286,7 @@ export interface SysioContractMapping {
   [SysioContractName.councl]: SysioCounclContract
   [SysioContractName.dclaim]: SysioDclaimContract
   [SysioContractName.epoch]: SysioEpochContract
+  [SysioContractName.kicker]: SysioKickerContract
   [SysioContractName.liq]: SysioLiqContract
   [SysioContractName.msgch]: SysioMsgchContract
   [SysioContractName.msig]: SysioMsigContract
@@ -4326,6 +4432,12 @@ export const SysioContractDefinitions: {
       "unpause"
     ],
     tables: ["blocklog", "epochcfg", "epochstate"]
+  },
+  [SysioContractName.kicker]: {
+    name: SysioContractName.kicker,
+    account: "sysio.kicker",
+    actions: ["addpool", "kick", "rmpool", "setconfig", "setpool"],
+    tables: ["kickcfg", "kickpools"]
   },
   [SysioContractName.liq]: {
     name: SysioContractName.liq,
@@ -4498,6 +4610,7 @@ export const SysioContractDefinitions: {
       "onsynd",
       "onyield",
       "pruneenv",
+      "quotedesynd",
       "reconcile",
       "refundreturn",
       "setconfig",
