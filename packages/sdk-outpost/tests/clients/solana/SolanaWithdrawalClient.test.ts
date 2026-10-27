@@ -15,22 +15,29 @@ import {
   liqsolCoreIdl,
   type LiqsolCore
 } from "@wireio/outpost-solana-artifacts"
+import {
+  liqsolCoreIdl as legacyLiqsolCoreIdl,
+  type LiqsolCore as LegacyLiqsolCore
+} from "@wireio/outpost-solana-artifacts-v0-4-2"
 import { SolanaSyndicationClient } from "@wireio/sdk-outpost/clients/solana/SolanaSyndicationClient"
 import { SolanaWithdrawalClient } from "@wireio/sdk-outpost/clients/solana/SolanaWithdrawalClient"
 import type { SolanaWithdrawalState } from "@wireio/sdk-outpost"
 
 interface DecodedWithdrawalRequest {
   amount: BN
+  nonce?: BN
 }
 
-function fixture() {
+function fixture(legacy = false) {
   const user = Keypair.generate().publicKey,
     provider = new AnchorProvider(
       new Connection("https://example.invalid"),
       new Wallet(Keypair.generate()),
       {}
     ),
-    program = new Program<LiqsolCore>(liqsolCoreIdl, provider),
+    program = legacy
+      ? new Program<LegacyLiqsolCore>(legacyLiqsolCoreIdl, provider)
+      : new Program<LiqsolCore>(liqsolCoreIdl, provider),
     syndication = new SolanaSyndicationClient(program, {
       tokenProgramAddress: Keypair.generate().publicKey.toBase58(),
       transferHookProgramAddress: Keypair.generate().publicKey.toBase58()
@@ -43,7 +50,12 @@ function fixture() {
       )[0],
     mint = address(
       "mint",
-      new BN("9007199254740993").toArrayLike(Buffer, "le", 8)
+      ...(legacy
+        ? [new BN("9007199254740993").toArrayLike(Buffer, "le", 8)]
+        : [
+            user.toBuffer(),
+            new BN("9007199254740993").toArrayLike(Buffer, "le", 8)
+          ])
     ),
     state: SolanaWithdrawalState = {
       minimum: 10n,
@@ -76,8 +88,8 @@ function fixture() {
 }
 
 describe("Solana native withdrawals", () => {
-  it("builds the producer IDL request with an exact u64 receipt ID and user-owned receipt", async () => {
-    const { client, user, program, syndication, mint, address } = fixture(),
+  it("builds the producer IDL request with a user nonce and user-owned receipt", async () => {
+    const { client, user, program, syndication, address } = fixture(),
       tx = await client.request(user, 900n),
       instruction = tx.instructions[1],
       decoded = new BorshInstructionCoder(liqsolCoreIdl).decode(
@@ -87,7 +99,14 @@ describe("Solana native withdrawals", () => {
     expect((decoded?.data as DecodedWithdrawalRequest).amount.toString()).toBe(
       "900"
     )
-    const names = liqsolCoreIdl.instructions
+    const nonce = (decoded?.data as DecodedWithdrawalRequest).nonce!
+    expect(nonce.bitLength()).toBeLessThanOrEqual(64)
+    const mint = address(
+        "mint",
+        user.toBuffer(),
+        nonce.toArrayLike(Buffer, "le", 8)
+      ),
+      names = liqsolCoreIdl.instructions
         .find(row => row.name === "requestWithdraw")!
         .accounts.map(row => row.name),
       accounts = Object.fromEntries(
@@ -109,6 +128,42 @@ describe("Solana native withdrawals", () => {
     ).toBe(true)
     expect(accounts.tokenProgram.equals(TOKEN_2022_PROGRAM_ID)).toBe(true)
     expect(program.provider.publicKey?.equals(user)).toBe(false)
+  })
+
+  it("retains the verified older deployment's counter-based request encoding", async () => {
+    const { client, user, mint } = fixture(true),
+      transaction = await client.request(user, 900n),
+      instruction = transaction.instructions[1],
+      decoded = new BorshInstructionCoder(legacyLiqsolCoreIdl).decode(
+        instruction.data
+      ),
+      names = legacyLiqsolCoreIdl.instructions
+        .find(row => row.name === "requestWithdraw")!
+        .accounts.map(row => row.name)
+    expect((decoded?.data as DecodedWithdrawalRequest).amount.toString()).toBe(
+      "900"
+    )
+    expect((decoded?.data as DecodedWithdrawalRequest).nonce).toBeUndefined()
+    expect(instruction.keys[names.indexOf("nftMint")].pubkey.equals(mint)).toBe(
+      true
+    )
+  })
+
+  it("uses distinct receipt addresses for requests built before either lands", async () => {
+    const { client, user } = fixture(),
+      transactions = await Promise.all([
+        client.request(user, 100n),
+        client.request(user, 100n)
+      ]),
+      coder = new BorshInstructionCoder(liqsolCoreIdl),
+      requests = transactions.map(
+        transaction =>
+          coder.decode(transaction.instructions[1].data)!
+            .data as DecodedWithdrawalRequest
+      )
+    expect(requests[0].nonce!.toString()).not.toBe(
+      requests[1].nonce!.toString()
+    )
   })
 
   it("refuses disabled, below-minimum, over-balance and overflowing requests", async () => {

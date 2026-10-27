@@ -214,11 +214,14 @@ importers:
         specifier: ^1.98.4
         version: 1.98.4(bufferutil@4.1.0)(typescript@6.0.2)(utf-8-validate@6.0.6)
       '@wireio/outpost-ethereum-artifacts':
-        specifier: 0.4.3
-        version: 0.4.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))
+        specifier: 0.4.4
+        version: 0.4.4(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))
+      '@wireio/outpost-ethereum-artifacts-v0-4-3':
+        specifier: npm:@wireio/outpost-ethereum-artifacts@0.4.3
+        version: '@wireio/outpost-ethereum-artifacts@0.4.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))'
       '@wireio/outpost-solana-artifacts':
-        specifier: 0.4.1
-        version: 0.4.1
+        specifier: 0.4.4
+        version: 0.4.4
       '@wireio/outpost-solana-artifacts-v0-4-2':
         specifier: npm:@wireio/outpost-solana-artifacts@0.4.2
         version: '@wireio/outpost-solana-artifacts@0.4.2'
@@ -1706,11 +1709,16 @@ packages:
     peerDependencies:
       ethers: ^6.15.0
 
-  '@wireio/outpost-solana-artifacts@0.4.1':
-    resolution: {integrity: sha512-4CV7DBtT0JiEq4YMm345/k7I02Ll3Y6d+2dlbJOiRoabm0qSFGCG9Yo7FtGta0wa8LLKiHxNaeSL06eawmiwnw==}
+  '@wireio/outpost-ethereum-artifacts@0.4.4':
+    resolution: {integrity: sha512-pk07Bt0uu5SNoKPxh04oOX/dZ62SB6MnD7JCfGAww/yIWfhUyF4QoFEqYb5g+ts1P81tyCRKyJRbIMdUtVLU0Q==}
+    peerDependencies:
+      ethers: ^6.15.0
 
   '@wireio/outpost-solana-artifacts@0.4.2':
     resolution: {integrity: sha512-QyQQ8oho9XchlGCkRcWY0QGPM/K8s+quglZhxsB/zjb/kfNkkohS7Tq9sAVk4gbk/pBWzNGCmaQlnxJZ4rD5RA==}
+
+  '@wireio/outpost-solana-artifacts@0.4.4':
+    resolution: {integrity: sha512-I6Vc01GGbEFTtVWcUDwuGT1XlEGglS7UwPyeMmGYtRGTvmczCEJDrBi+rkl4YGWMKp9OJZYKryYEJXqlC2qXoQ==}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -6004,9 +6012,13 @@ snapshots:
     dependencies:
       ethers: 6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
-  '@wireio/outpost-solana-artifacts@0.4.1': {}
+  '@wireio/outpost-ethereum-artifacts@0.4.4(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
+    dependencies:
+      ethers: 6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
   '@wireio/outpost-solana-artifacts@0.4.2': {}
+
+  '@wireio/outpost-solana-artifacts@0.4.4': {}
 
   '@xtuc/ieee754@1.2.0': {}
 
