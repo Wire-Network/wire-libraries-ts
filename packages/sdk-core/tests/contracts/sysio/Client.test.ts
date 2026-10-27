@@ -70,11 +70,12 @@ describe("system contract proxy", () => {
       window_sec: 60,
       bounty: 0,
       challenge_extra: 1_000_000_000,
-      min_desyndicate: 1_000_000
+      min_desyndicate: 50_000_000,
+      desynd_fee_flat: 100_000
     }
     expect(sysio.synd.actions.setconfig.prepare(data)).toMatchObject({
       name: "setconfig",
-      data: { min_desyndicate: 1_000_000 }
+      data: { min_desyndicate: 50_000_000, desynd_fee_flat: 100_000 }
     })
   })
 
@@ -214,6 +215,44 @@ describe("system contract proxy", () => {
       authorization: [],
       data: {}
     })
+  })
+
+  test("exposes the sysio.kicker action and table surface", async () => {
+    const rows: SysioContracts.SysioKickerKickPoolType[] = [
+        {
+          sym: "LIQSOL",
+          rate_bps: 200,
+          min_gift: 1_000,
+          last_kick: "2026-01-01T00:00:00",
+          gifted_total: "0",
+          shortfall_amount: 0,
+          shortfall_time: "1970-01-01T00:00:00",
+          gift_overflow: false,
+          spot_deviation: false,
+          max_gift_per_day: 0,
+          day: 0,
+          spent_today: "0",
+          supply_snapshot: "9007199254740993",
+          price_snapshot: { lo: "0", hi: "0" },
+          price_time: "2026-01-01T00:00:00"
+        }
+      ],
+      api = createMockApi(rows),
+      kicker = contracts.sysio.getSysioContract(SysioContractName.kicker, {
+        client: api
+      }),
+      data: SysioContracts.SysioKickerKickAction = { sym: "LIQSOL" }
+
+    expect(kicker.account).toBe("sysio.kicker")
+    expect(kicker.actions.kick.prepare(data)).toMatchObject({
+      account: "sysio.kicker",
+      name: "kick",
+      data
+    })
+    await expect(kicker.tables.kickpools.first()).resolves.toEqual(rows[0])
+    expect(api.v1.chain.get_table_rows).toHaveBeenCalledWith(
+      expect.objectContaining({ code: "sysio.kicker", table: "kickpools" })
+    )
   })
 
   test("uses a caller ABI to encode generated actions without local codecs", () => {
