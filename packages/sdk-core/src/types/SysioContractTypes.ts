@@ -2190,6 +2190,12 @@ export interface SysioOpregContract {
 
 // ── sysio.roa ──
 
+/** sysio.roa::account_limit_config (type) */
+export interface SysioRoaAccountLimitConfigType {
+  default_limit: number | string
+  max_raise_multiplier_bps: number
+}
+
 /** sysio.roa::activateroa (action) */
 export interface SysioRoaActivateroaAction {
   total_sys: string
@@ -2304,6 +2310,12 @@ export interface SysioRoaPolicyKeyType {
   owner: number | string
 }
 
+/** sysio.roa::raiseacctlim (action) */
+export interface SysioRoaRaiseacctlimAction {
+  owner: string
+  new_limit: number | string
+}
+
 /** sysio.roa::reducepolicy (action) */
 export interface SysioRoaReducepolicyAction {
   owner: string
@@ -2333,6 +2345,12 @@ export interface SysioRoaRoaStateType {
   total_sys: string
   bytes_per_unit: number | string
   network_gen: number
+}
+
+/** sysio.roa::setacctlim (action) */
+export interface SysioRoaSetacctlimAction {
+  default_limit: number | string
+  max_raise_multiplier_bps: number
 }
 
 /** sysio.roa::setbyteprice (action) */
@@ -2369,6 +2387,7 @@ export interface SysioRoaSponsorKeyType {
 export interface SysioRoaSponsorcountType {
   owner: string
   count: number | string
+  raised_limit: number | string
 }
 
 /** sysio.roa::sponsorcount_key (type) */
@@ -2388,12 +2407,15 @@ export interface SysioRoaContract {
     newnameduser: SysioRoaNewnameduserAction
     newuser: SysioRoaNewuserAction
     nodeownreg: SysioRoaNodeownregAction
+    raiseacctlim: SysioRoaRaiseacctlimAction
     reducepolicy: SysioRoaReducepolicyAction
+    setacctlim: SysioRoaSetacctlimAction
     setbyteprice: SysioRoaSetbytepriceAction
     setsysabi: SysioRoaSetsysabiAction
     setsyscode: SysioRoaSetsyscodeAction
   }
   tables: {
+    acctlimcfg: SysioRoaAccountLimitConfigType
     nodeownerreg: SysioRoaNodeownerregType
     nodeowners: SysioRoaNodeownersType
     policies: SysioRoaPoliciesType
@@ -4535,12 +4557,15 @@ export const SysioContractDefinitions: {
       "newnameduser",
       "newuser",
       "nodeownreg",
+      "raiseacctlim",
       "reducepolicy",
+      "setacctlim",
       "setbyteprice",
       "setsysabi",
       "setsyscode"
     ],
     tables: [
+      "acctlimcfg",
       "nodeownerreg",
       "nodeowners",
       "policies",
