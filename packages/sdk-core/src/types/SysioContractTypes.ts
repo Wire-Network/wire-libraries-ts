@@ -2830,9 +2830,6 @@ export interface SysioSyndEnvelopeRowType {
   outcome: SysioSyndRequestOutcome | keyof typeof SysioSyndRequestOutcome
   forfeit: number | string
   bounty_returned: number | string
-  hold_share: number | string
-  hold_beneficiary: string
-  share_pending: boolean
 }
 
 /** sysio.synd::fee_row (type) */
