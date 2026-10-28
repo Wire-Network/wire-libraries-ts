@@ -1,6 +1,8 @@
 import { match } from "ts-pattern"
+import { getLogger } from "@wireio/shared"
 
-import { APIClient } from "../../../api/Client.js"
+import { APIClient, APIError } from "../../../api/Client.js"
+import type { SendTransactionResponse } from "../../../api/v1/Types.js"
 import { Action } from "../../../chain/Action.js"
 import { Bytes } from "../../../chain/Bytes.js"
 import { Name, NameType } from "../../../chain/Name.js"
@@ -32,6 +34,17 @@ import type {
   MsigTableName,
   ProposalDetail
 } from "./Types.js"
+
+const log = getLogger(__filename)
+const READ_ONLY_TRANSACTION_PATH = "/v1/chain/send_read_only_transaction"
+const READ_ONLY_DISABLED = "read-only transactions execution not enabled"
+const NOT_FOUND_STATUS = 404
+const CHUNKED_PROFILE = "chunked-v2"
+const PROPOSAL_KEY = "proposal_name"
+
+interface MsigReadOnlyResponse {
+  processed?: Partial<SendTransactionResponse["processed"]>
+}
 
 interface MsigNamedRow {
   proposal_name?: NameType
@@ -77,17 +90,10 @@ function isReadOnlyUnavailableError(error: unknown): boolean {
   const message = String(error).toLowerCase()
 
   return (
-    message.includes("send_read_only_transaction") ||
-    message.includes("read-only transactions execution not enabled")
-  )
-}
-
-function isKvBoundReadError(error: unknown): boolean {
-  const message = String(error).toLowerCase()
-
-  return (
-    message.includes("parse_error_exception") ||
-    message.includes("bad_cast_exception")
+    (error instanceof APIError &&
+      error.path === READ_ONLY_TRANSACTION_PATH &&
+      error.response.status === NOT_FOUND_STATUS) ||
+    message.includes(READ_ONLY_DISABLED)
   )
 }
 
@@ -97,7 +103,15 @@ interface ProposalReadResult {
 }
 
 /** Decodes the return value emitted by read-only `sysio.msig::getproposal`. */
-export function decodeReadOnlyProposalReturn(response: any): MsigProposal {
+export function decodeReadOnlyProposalReturn(
+  response: MsigReadOnlyResponse
+): MsigProposal {
+  const exception = response?.processed?.except
+  if (exception) {
+    throw new Error(`${exception.name}: ${exception.message}`, {
+      cause: exception
+    })
+  }
   const traces = response?.processed?.action_traces || [],
     trace =
       traces.find((candidate: any) => candidate?.act?.name === "getproposal") ||
@@ -221,33 +235,26 @@ export class MsigClient {
     proposer: NameType,
     options: ListProposalsOptions = {}
   ): Promise<MsigProposal[]> {
-    const limit = options.limit || 100
-    let rows: any[]
-
-    try {
-      const result = await this.contractClient.tables.proposal.query({
+    const limit = options.limit || 100,
+      result = await this.contractClient.tables.proposal.query({
         scope: nameString(proposer),
         ...(options.lowerBound
-          ? { lower_bound: Name.from(options.lowerBound as NameType) }
+          ? {
+              lower_bound: await this.proposalBound(
+                options.lowerBound as NameType
+              )
+            }
           : {}),
         ...(options.upperBound
-          ? { upper_bound: Name.from(options.upperBound as NameType) }
+          ? {
+              upper_bound: await this.proposalBound(
+                options.upperBound as NameType
+              )
+            }
           : {}),
         limit
       })
-
-      rows = result.rows
-    } catch (error) {
-      if (!isKvBoundReadError(error)) {
-        throw error
-      }
-
-      rows = await this.getScopedRows(
-        proposer,
-        "proposal",
-        Math.max(limit, 1000)
-      )
-    }
+    let rows = result.rows
 
     if (options.lowerBound || options.upperBound) {
       const lowerBound = options.lowerBound
@@ -342,6 +349,7 @@ export class MsigClient {
             readStrategy: "read-only-getproposal" as const
           }
         } catch (error) {
+          log.warn("Multisig read-only proposal read failed: %s", String(error))
           if (!isReadOnlyUnavailableError(error)) {
             throw error
           }
@@ -444,7 +452,9 @@ export class MsigClient {
     return proposal
   }
 
-  private async sendReadOnlyAction(action: Action): Promise<any> {
+  private async sendReadOnlyAction(
+    action: Action
+  ): Promise<SendTransactionResponse> {
     const info = await this.client.v1.chain.get_info(),
       transaction = SignedTransaction.from({
         ...info.getTransactionHeader(),
@@ -501,22 +511,11 @@ export class MsigClient {
     table: MsigTableName,
     proposalName: NameType
   ): Promise<any> {
-    let rows: any[]
-
-    try {
-      const result = await this.contractClient.tables[table].query({
-        scope: nameString(scope),
-        lower_bound: Name.from(proposalName),
-        limit: 1
-      })
-
-      rows = result.rows
-    } catch (error) {
-      if (!isKvBoundReadError(error)) {
-        throw error
-      }
-      rows = []
-    }
+    const { rows } = await this.contractClient.tables[table].query({
+      scope: nameString(scope),
+      lower_bound: await this.proposalBound(proposalName),
+      limit: 1
+    })
 
     const row =
       rows.find((candidate: any) =>
@@ -528,6 +527,13 @@ export class MsigClient {
       null
 
     return row
+  }
+
+  private async proposalBound(value: NameType): Promise<Name | string> {
+    const name = Name.from(value)
+    return (await this.getProfile()) === CHUNKED_PROFILE
+      ? JSON.stringify({ [PROPOSAL_KEY]: name.value.toString() })
+      : name
   }
 
   private async getScopedRows(

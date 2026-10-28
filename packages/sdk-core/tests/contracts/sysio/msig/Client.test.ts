@@ -1,8 +1,9 @@
 import { Checksum256 } from "@wireio/sdk-core/chain/Checksum"
 import { Serializer } from "@wireio/sdk-core/serializer"
-import { contracts } from "@wireio/sdk-core"
+import { APIError, Name, contracts } from "@wireio/sdk-core"
 
-const { MsigClient, MsigProposal, decodeReadOnlyProposalReturn } = contracts.sysio.msig
+const { MsigClient, MsigProposal, decodeReadOnlyProposalReturn } =
+  contracts.sysio.msig
 
 function chunkedAbi(): any {
   return {
@@ -49,6 +50,20 @@ function chunkedAbi(): any {
 }
 
 describe("read-only proposal return decoding", () => {
+  test("preserves an HTTP-200 execution exception instead of reporting a missing return", () => {
+    expect(() =>
+      decodeReadOnlyProposalReturn({
+        processed: {
+          except: {
+            code: 3080004,
+            name: "tx_cpu_usage_exceeded",
+            message: "transaction exceeded CPU limit",
+            stack: []
+          }
+        }
+      })
+    ).toThrow("tx_cpu_usage_exceeded: transaction exceeded CPU limit")
+  })
   test("prefers decoded return_value_data when present", () => {
     const proposal = {
         proposal_name: "upgrade1",
@@ -101,82 +116,219 @@ describe("read-only proposal return decoding", () => {
 })
 
 describe("MsigClient", () => {
-  test("falls back from read-only getproposal to chunk table assembly", async () => {
-    const packed = new Uint8Array([1, 2, 3, 4]),
-      tableRows = jest.fn(async (params: any) => {
-        if (String(params.table) === "proposal") {
-          return {
-            rows: [
-              {
-                proposal_name: "largeprop",
-                packed_transaction: "",
-                earliest_exec_time: null,
-                chunk_count: 2,
-                total_size: 4,
-                trx_hash: Checksum256.hash(packed).toString()
+  test.each(["parse_error_exception", "bad_cast_exception", "RPC unavailable"])(
+    "preserves table failures: %s",
+    async message => {
+      const error = new Error(message),
+        tableRows = jest.fn(async () => {
+          throw error
+        }),
+        client = new MsigClient({
+          client: {
+            v1: {
+              chain: {
+                get_abi: jest.fn(async () => ({ abi: chunkedAbi() })),
+                get_table_rows: tableRows
               }
-            ],
-            more: false
-          }
-        }
-
-        if (String(params.table) === "propchunks") {
-          return {
-            rows: [
-              { proposal_name: "largeprop", chunk_index: 1, data: "0304" },
-              { proposal_name: "largeprop", chunk_index: 0, data: "0102" }
-            ],
-            more: false
-          }
-        }
-
-        if (String(params.table) === "approvals2") {
-          return {
-            rows: [
-              {
-                version: 1,
-                proposal_name: "largeprop",
-                requested_approvals: [],
-                provided_approvals: [
-                  {
-                    level: { actor: "bob", permission: "active" },
-                    time: "2026-06-16T15:00:00.000"
-                  }
-                ]
-              }
-            ],
-            more: false
-          }
-        }
-
-        return { rows: [], more: false }
-      }),
-      client = new MsigClient({
-        client: {
-          v1: {
-            chain: {
-              get_abi: jest.fn(async () => ({ abi: chunkedAbi() })),
-              get_info: jest.fn(async () => ({
-                getTransactionHeader: () => ({
-                  expiration: "2026-06-16T16:00:00",
-                  ref_block_num: 1,
-                  ref_block_prefix: 2
-                })
-              })),
-              send_read_only_transaction: jest.fn(async () => {
-                throw new Error("read-only transactions execution not enabled")
-              }),
-              get_table_rows: tableRows
+            }
+          } as any
+        })
+      await expect(
+        client.listProposals("alice", { lowerBound: "first" })
+      ).rejects.toBe(error)
+      await expect(client.getApprovals("alice", "first")).rejects.toBe(error)
+      expect(tableRows).toHaveBeenCalledTimes(2)
+    }
+  )
+  test.each([
+    new Error("read-only transactions execution not enabled"),
+    new APIError("/v1/chain/send_read_only_transaction", {
+      status: 404,
+      text: "unknown endpoint",
+      headers: {}
+    })
+  ])(
+    "falls back from unavailable read-only getproposal to chunk table assembly",
+    async failure => {
+      const packed = new Uint8Array([1, 2, 3, 4]),
+        tableRows = jest.fn(async (params: any) => {
+          if (String(params.table) === "proposal") {
+            return {
+              rows: [
+                {
+                  proposal_name: "largeprop",
+                  packed_transaction: "",
+                  earliest_exec_time: null,
+                  chunk_count: 2,
+                  total_size: 4,
+                  trx_hash: Checksum256.hash(packed).toString()
+                }
+              ],
+              more: false
             }
           }
-        } as any
-      }),
-      detail = await client.getProposalDetail("alice", "largeprop")
 
-    expect(detail.profile).toBe("chunked-v2")
-    expect(detail.readStrategy).toBe("chunk-table")
-    expect(detail.proposal.packed_transaction.hexString).toBe("01020304")
-    expect(detail.hash.status).toBe("verified")
-    expect(detail.status.provided).toEqual(["bob@active"])
-  })
+          if (String(params.table) === "propchunks") {
+            return {
+              rows: [
+                { proposal_name: "largeprop", chunk_index: 1, data: "0304" },
+                { proposal_name: "largeprop", chunk_index: 0, data: "0102" }
+              ],
+              more: false
+            }
+          }
+
+          if (String(params.table) === "approvals2") {
+            return {
+              rows: [
+                {
+                  version: 1,
+                  proposal_name: "largeprop",
+                  requested_approvals: [],
+                  provided_approvals: [
+                    {
+                      level: { actor: "bob", permission: "active" },
+                      time: "2026-06-16T15:00:00.000"
+                    }
+                  ]
+                }
+              ],
+              more: false
+            }
+          }
+
+          return { rows: [], more: false }
+        }),
+        client = new MsigClient({
+          client: {
+            v1: {
+              chain: {
+                get_abi: jest.fn(async () => ({ abi: chunkedAbi() })),
+                get_info: jest.fn(async () => ({
+                  getTransactionHeader: () => ({
+                    expiration: "2026-06-16T16:00:00",
+                    ref_block_num: 1,
+                    ref_block_prefix: 2
+                  })
+                })),
+                send_read_only_transaction: jest.fn(async () => {
+                  throw failure
+                }),
+                get_table_rows: tableRows
+              }
+            }
+          } as any
+        }),
+        detail = await client.getProposalDetail("alice", "largeprop")
+
+      expect(detail.profile).toBe("chunked-v2")
+      expect(detail.readStrategy).toBe("chunk-table")
+      expect(detail.proposal.packed_transaction.hexString).toBe("01020304")
+      expect(detail.hash.status).toBe("verified")
+      expect(detail.status.provided).toEqual(["bob@active"])
+      expect(
+        tableRows.mock.calls.some(
+          ([request]) =>
+            String(request.table) === "approvals2" &&
+            request.lower_bound ===
+              JSON.stringify({
+                proposal_name: Name.from("largeprop").value.toString()
+              })
+        )
+      ).toBe(true)
+    }
+  )
+
+  test.each([false, true])(
+    "encodes bounded proposal queries for the detected profile (chunked=%s)",
+    async chunked => {
+      const tableRows = jest.fn(async (_request: any) => ({
+          rows: [],
+          more: false
+        })),
+        abi = chunkedAbi(),
+        client = new MsigClient({
+          client: {
+            v1: {
+              chain: {
+                get_abi: jest.fn(async () => ({
+                  abi: chunked
+                    ? abi
+                    : {
+                        ...abi,
+                        actions: abi.actions.filter(
+                          action => action.name !== "getproposal"
+                        ),
+                        structs: abi.structs.map(struct =>
+                          struct.name === "proposal"
+                            ? { ...struct, fields: struct.fields.slice(0, 2) }
+                            : struct
+                        )
+                      }
+                })),
+                get_table_rows: tableRows
+              }
+            }
+          } as any
+        })
+      await client.listProposals("alice", {
+        lowerBound: "first",
+        upperBound: "last"
+      })
+      const request = tableRows.mock.calls[0][0]
+      expect(String(request.scope)).toBe("alice")
+      expect(String(request.lower_bound)).toBe(
+        chunked
+          ? JSON.stringify({
+              proposal_name: Name.from("first").value.toString()
+            })
+          : "first"
+      )
+      expect(String(request.upper_bound)).toBe(
+        chunked
+          ? JSON.stringify({
+              proposal_name: Name.from("last").value.toString()
+            })
+          : "last"
+      )
+    }
+  )
+
+  test.each([
+    new Error("CPU limit exceeded at /v1/chain/send_read_only_transaction"),
+    new APIError("/v1/chain/send_read_only_transaction", {
+      status: 503,
+      text: "unavailable",
+      headers: {}
+    })
+  ])(
+    "does not hide a real read-only execution or transport failure",
+    async failure => {
+      const tables = jest.fn(),
+        client = new MsigClient({
+          client: {
+            v1: {
+              chain: {
+                get_abi: jest.fn(async () => ({ abi: chunkedAbi() })),
+                get_info: jest.fn(async () => ({
+                  getTransactionHeader: () => ({
+                    expiration: "2026-06-16T16:00:00",
+                    ref_block_num: 1,
+                    ref_block_prefix: 2
+                  })
+                })),
+                send_read_only_transaction: jest.fn(async () => {
+                  throw failure
+                }),
+                get_table_rows: tables
+              }
+            }
+          } as any
+        })
+      await expect(client.getProposal("alice", "largeprop")).rejects.toBe(
+        failure
+      )
+      expect(tables).not.toHaveBeenCalled()
+    }
+  )
 })

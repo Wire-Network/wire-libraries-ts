@@ -89,6 +89,11 @@ explorers, wallet adapters and application capabilities remain caller
 configuration. The former external reserve and swap-underwriter clients are
 removed.
 
+`msig.MsigClient` encodes named proposal bounds for the detected legacy or Wire KV
+contract profile. Read-only execution failures remain errors; table fallback is
+limited to a disabled or missing read-only endpoint. Approval rows alone do not
+prove executable authority: invalidations, current permissions and delay still apply.
+
 For Wire KV table pagination, call `get_table_rows<string>(...)` and pass the
 returned `next_key` unchanged as the next bound (`lower_bound` forward,
 `upper_bound` in reverse). KV cursors are opaque JSON or encoded keys, not

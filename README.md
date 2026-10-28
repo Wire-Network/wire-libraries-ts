@@ -23,6 +23,9 @@ Solana withdrawal requests select user-scoped nonce or counter encoding from tha
 
 ## Examples
 
+The [Core SDK guide](packages/sdk-core/README.md) covers generated contract access
+and multisig compatibility, including Wire KV bounds and read-only failure handling.
+
 | Example | Description |
 |---------|-------------|
 | [`web-logging-example`](examples/web-logging-example/) | Browser-based logging demo using `@wireio/shared` |
