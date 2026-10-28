@@ -3035,6 +3035,8 @@ export interface SysioSyndSetconfigAction {
   challenge_extra: number | string
   min_desyndicate: number | string
   desynd_fee_flat: number | string
+  /** Maximum tolerated custody shortfall in basis points of outstanding liabilities. */
+  custody_shortfall_bps: number
 }
 
 /** sysio.synd::sweep (action) */
@@ -3075,6 +3077,8 @@ export interface SysioSyndSyndConfigType {
   challenge_extra: number | string
   min_desyndicate: number | string
   desynd_fee_flat: number | string
+  /** Maximum tolerated custody shortfall in basis points of outstanding liabilities. */
+  custody_shortfall_bps: number
 }
 
 /** sysio.synd::synd_counters (type) */
