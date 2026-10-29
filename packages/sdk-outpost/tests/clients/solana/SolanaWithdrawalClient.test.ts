@@ -72,6 +72,7 @@ function fixture(legacy = false) {
     liquidBalance: 1000n,
     decimals: 9,
     minimumDeposit: 1n,
+    minimumSyndication: 1n,
     maximumSyndication: 1000n,
     depositEnabled: false,
     postLaunch: true,
@@ -278,7 +279,7 @@ describe("Solana native withdrawals", () => {
         ReturnType<typeof globalFetch>
       >)
     expect((await client.read(user)).receipts[0].claimable).toBe(true)
-    jest.mocked(program.account.globalConfig.fetch).mockResolvedValue({
+    jest.spyOn(program.account.globalConfig, "fetch").mockResolvedValue({
       featureFlags: 2,
       minUnstakeRequest: new BN(10)
     } as Awaited<ReturnType<typeof _configFetch>>)

@@ -5,7 +5,7 @@ import { SolanaProgramName } from "../../deployments/index.js"
 import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
 import type { LiqsolCore as LiqsolCoreV042 } from "@wireio/outpost-solana-artifacts-v0-4-2"
 
-/** Producer-generated interfaces accepted by the verified artifact suites. */
+/** Temporary Testnet IDL union; remove the retained type when Testnet adopts the RC. */
 export type SupportedLiqsolCore = LiqsolCore | LiqsolCoreV042
 
 /** Preserve each producer's complete generated Anchor program type. */

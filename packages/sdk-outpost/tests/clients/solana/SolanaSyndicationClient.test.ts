@@ -32,6 +32,7 @@ function fixture(mockRead = true) {
       liquidBalance: 2_000_000_000n,
       decimals: 9,
       minimumDeposit: 10_000_000n,
+      minimumSyndication: 2_500_000n,
       maximumSyndication: 10_000_000_000n,
       depositEnabled: true,
       postLaunch: true,
@@ -146,6 +147,7 @@ describe("Solana syndication", () => {
 
     jest.spyOn(globalConfig, "fetch").mockResolvedValue({
       minUserDeposit: new BN(10),
+      minSyndicationPerTransfer: new BN(25),
       maxSyndicationPerTransfer: new BN(100),
       featureFlags: 1
     } as Awaited<ReturnType<typeof globalConfig.fetch>>)
@@ -179,6 +181,7 @@ describe("Solana syndication", () => {
       nativeBalance: 2_500_000_000n,
       liquidBalance: 0n,
       minimumDeposit: 10n,
+      minimumSyndication: 25n,
       maximumSyndication: 100n,
       depositEnabled: true,
       postLaunch: true,
@@ -201,6 +204,16 @@ describe("Solana syndication", () => {
       .spyOn(connection, "getBalance")
       .mockRejectedValueOnce(new Error("RPC unavailable"))
     await expect(client.read(user)).rejects.toThrow("RPC unavailable")
+  })
+
+  it("refuses a syndication below the current configured minimum", async () => {
+    const { client, user, state } = fixture()
+    await expect(
+      client.syndicate(user, state.minimumSyndication - 1n)
+    ).rejects.toThrow("minimum")
+    await expect(
+      client.syndicate(user, state.minimumSyndication)
+    ).resolves.toBeDefined()
   })
 
   it("encodes a native deposit with the u32 seed and canonical ephemeral stake account", async () => {
