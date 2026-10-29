@@ -254,6 +254,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - The `web-logging-example` requires `WIRE_PUSH_URL` env var injected at webpack build time
 
 - Preserve Wire KV pagination cursors as opaque strings; do not decode JSON/encoded bounds as legacy numeric account names.
+- Multisig named bounds follow a known contract profile. Unknown profiles use bounded scoped reads with local filtering; log ABI failures and retry detection on later calls. Missing/disabled read-only endpoints may fall back to tables; transport and execution failures must remain errors. Raw approvals do not certify current authority or invalidation status.
 
 - Solana native exits use `client.withdrawals`: discover owned receipts through Token-2022, preserve exact receipt IDs and recheck serviceability before claims. Do not run cranks, replay receipt-ID collisions or infer native payout from a confirmed request.
 - Select nonce withdrawal encoding from the verified producer IDL. Nonce-capable programs use fresh random u64 user-scoped mint seeds and accept owned modern/legacy receipts; older verified programs retain counter encoding. Never retry an uncertain request.

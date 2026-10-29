@@ -24,6 +24,9 @@ The Outpost guide documents temporary Testnet support and its required removal w
 
 ## Examples
 
+The [Core SDK guide](packages/sdk-core/README.md) covers generated contract access
+and multisig compatibility, including Wire KV bounds, ABI recovery and read-only failure handling.
+
 | Example | Description |
 |---------|-------------|
 | [`web-logging-example`](examples/web-logging-example/) | Browser-based logging demo using `@wireio/shared` |

@@ -1,6 +1,7 @@
 import { contracts } from "@wireio/sdk-core"
+import { getLogger } from "@wireio/shared"
 
-const { capabilitiesFromAbi } = contracts.sysio.msig
+const { capabilitiesFromAbi, detectMsigCapabilities } = contracts.sysio.msig
 
 const baseActions = ["propose", "approve", "unapprove", "cancel", "exec", "invalidate"],
   baseTables = ["proposal", "approvals2", "approvals", "invals"]
@@ -78,6 +79,26 @@ function chunkedAbi(): any {
 }
 
 describe("msig capabilities", () => {
+  test("logs the original ABI failure while returning diagnostic unknown capabilities", async () => {
+    const failure = new Error("ABI service unavailable"),
+      logger = getLogger(
+        require.resolve("@wireio/sdk-core/contracts/sysio/msig/Capabilities")
+      ),
+      warn = jest.spyOn(logger, "warn").mockImplementation(() => {}),
+      client = {
+        v1: { chain: { get_abi: jest.fn().mockRejectedValue(failure) } }
+      }
+    try {
+      expect((await detectMsigCapabilities(client as any)).profile).toBe("unknown")
+      expect(warn).toHaveBeenCalledWith(
+        "Multisig ABI capability detection failed: %s",
+        String(failure)
+      )
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
   test("classifies current legacy sysio.msig as legacy table readable", () => {
     const capabilities = capabilitiesFromAbi({ abi: legacyAbi() })
 

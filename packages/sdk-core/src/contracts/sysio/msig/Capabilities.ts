@@ -1,4 +1,5 @@
 import { match } from "ts-pattern"
+import { getLogger } from "@wireio/shared"
 
 import type { APIClient } from "../../../api/Client.js"
 import { ABI } from "../../../chain/Abi.js"
@@ -11,6 +12,8 @@ import type {
   MsigProposalFieldName,
   MsigTableName
 } from "./Types.js"
+
+const log = getLogger(__filename)
 
 /** Base action surface required by legacy and chunked-v2 `sysio.msig`. */
 export const MSIG_BASE_ACTIONS = [
@@ -236,7 +239,8 @@ export async function detectMsigCapabilities(
 ): Promise<MsigCapabilities> {
   try {
     return capabilitiesFromAbi(await client.v1.chain.get_abi(contract), contract)
-  } catch {
+  } catch (error) {
+    log.warn("Multisig ABI capability detection failed: %s", String(error))
     // Capability detection is diagnostic: an ABI read failure means callers
     // should see an `unknown` profile instead of losing the whole msig view.
     return capabilitiesFromAbi(null, contract)
