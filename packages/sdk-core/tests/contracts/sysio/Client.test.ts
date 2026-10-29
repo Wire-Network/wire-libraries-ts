@@ -188,6 +188,26 @@ describe("system contract proxy", () => {
     })
   })
 
+  test("preserves snapshot cadence in generated system action and table types", async () => {
+    const config: SysioContracts.SysioSystemSnapConfigType = {
+        min_providers: 3,
+        block_spacing: 250
+      },
+      action: SysioContracts.SysioSystemSetsnpcfgAction = config,
+      api = createMockApi([config]),
+      system = contracts.sysio.getSysioContract(SysioContractName.system, {
+        client: api
+      })
+
+    expect(system.actions.setsnpcfg.prepare(action)).toMatchObject({
+      contract: SysioContractName.system,
+      account: "sysio",
+      name: "setsnpcfg",
+      data: config
+    })
+    await expect(system.tables.snapconfig.first()).resolves.toEqual(config)
+  })
+
   test("falls back to a typed AnyAction when synchronous encoding fails", () => {
     const msig = contracts.sysio.getSysioContract(SysioContractName.msig),
       data = {},
