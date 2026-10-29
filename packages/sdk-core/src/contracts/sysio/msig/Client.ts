@@ -40,6 +40,8 @@ const READ_ONLY_TRANSACTION_PATH = "/v1/chain/send_read_only_transaction"
 const READ_ONLY_DISABLED = "read-only transactions execution not enabled"
 const NOT_FOUND_STATUS = 404
 const CHUNKED_PROFILE = "chunked-v2"
+const UNKNOWN_PROFILE = "unknown"
+const SCOPED_ROW_LIMIT = 1000
 const PROPOSAL_KEY = "proposal_name"
 
 interface MsigReadOnlyResponse {
@@ -158,13 +160,17 @@ export class MsigClient {
     this.configuredReadStrategy = config.readStrategy || "auto"
   }
 
-  /** Returns cached ABI-derived `sysio.msig` capabilities. */
+  /** Caches known capabilities; unknown detection is retried on the next read. */
   async getCapabilities(): Promise<MsigCapabilities> {
     if (!this.capabilities) {
       this.capabilities = detectMsigCapabilities(this.client, this.contract)
     }
 
-    return this.capabilities
+    const capabilities = await this.capabilities
+    if (capabilities.profile === UNKNOWN_PROFILE) {
+      this.capabilities = null
+    }
+    return capabilities
   }
 
   /** Returns the detected contract profile. */
@@ -236,23 +242,34 @@ export class MsigClient {
     options: ListProposalsOptions = {}
   ): Promise<MsigProposal[]> {
     const limit = options.limit || 100,
+      profile =
+        options.lowerBound || options.upperBound
+          ? await this.getProfile()
+          : null,
       result = await this.contractClient.tables.proposal.query({
         scope: nameString(proposer),
-        ...(options.lowerBound
+        ...(profile && profile !== UNKNOWN_PROFILE && options.lowerBound
           ? {
-              lower_bound: await this.proposalBound(
-                options.lowerBound as NameType
+              lower_bound: this.proposalBound(
+                options.lowerBound as NameType,
+                profile
               )
             }
           : {}),
-        ...(options.upperBound
+        ...(profile && profile !== UNKNOWN_PROFILE && options.upperBound
           ? {
-              upper_bound: await this.proposalBound(
-                options.upperBound as NameType
+              upper_bound: this.proposalBound(
+                options.upperBound as NameType,
+                profile
               )
             }
           : {}),
-        limit
+        // Without a known encoding, use the existing bounded scoped scan and
+        // filter names below rather than guessing a legacy or KV bound.
+        limit:
+          profile === UNKNOWN_PROFILE
+            ? Math.max(limit, SCOPED_ROW_LIMIT)
+            : limit
       })
     let rows = result.rows
 
@@ -506,14 +523,23 @@ export class MsigClient {
     return strategy
   }
 
+  /** Unknown profiles use scoped reads without guessing a named-bound encoding. */
   private async getExactScopedRow(
     scope: NameType,
     table: MsigTableName,
     proposalName: NameType
   ): Promise<any> {
+    const profile = await this.getProfile()
+    if (profile === UNKNOWN_PROFILE) {
+      return (
+        (await this.getScopedRows(scope, table)).find((row: MsigNamedRow) =>
+          rowNameEquals(row, "proposal_name", proposalName)
+        ) || null
+      )
+    }
     const { rows } = await this.contractClient.tables[table].query({
       scope: nameString(scope),
-      lower_bound: await this.proposalBound(proposalName),
+      lower_bound: this.proposalBound(proposalName, profile),
       limit: 1
     })
 
@@ -529,9 +555,13 @@ export class MsigClient {
     return row
   }
 
-  private async proposalBound(value: NameType): Promise<Name | string> {
+  /** Encodes named bounds only for a known contract profile. */
+  private proposalBound(
+    value: NameType,
+    profile: Exclude<MsigCapabilities["profile"], typeof UNKNOWN_PROFILE>
+  ): Name | string {
     const name = Name.from(value)
-    return (await this.getProfile()) === CHUNKED_PROFILE
+    return profile === CHUNKED_PROFILE
       ? JSON.stringify({ [PROPOSAL_KEY]: name.value.toString() })
       : name
   }
@@ -539,7 +569,7 @@ export class MsigClient {
   private async getScopedRows(
     scope: NameType,
     table: MsigTableName,
-    limit = 1000
+    limit = SCOPED_ROW_LIMIT
   ): Promise<any[]> {
     const result = await this.contractClient.tables[table].query({
       scope: nameString(scope),

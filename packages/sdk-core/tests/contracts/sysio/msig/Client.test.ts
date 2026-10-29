@@ -116,6 +116,100 @@ describe("read-only proposal return decoding", () => {
 })
 
 describe("MsigClient", () => {
+  test.each(["failed", "missing", "unsupported"])(
+    "reads scoped rows while ABI detection is %s and retries after recovery",
+    async state => {
+      const proposal = { proposal_name: "upgrade1", packed_transaction: "" },
+        approval = {
+          version: 1,
+          proposal_name: "upgrade1",
+          requested_approvals: [],
+          provided_approvals: []
+        },
+        getAbi = jest.fn(async () => {
+          if (state === "failed") throw new Error("ABI service unavailable")
+          return { abi: state === "missing" ? null : {} }
+        }),
+        tableRows = jest.fn(async (params: any) => {
+          if (params.lower_bound != null) {
+            // A deployed KV table refuses legacy Name bounds.
+            expect(params.lower_bound).toBe(
+              JSON.stringify({
+                proposal_name: Name.from("upgrade1").value.toString()
+              })
+            )
+          }
+          return {
+            rows:
+              String(params.table) === "approvals2"
+                ? [{ ...approval, proposal_name: "aaa" }, approval]
+                : [
+                    { ...proposal, proposal_name: "aaa" },
+                    proposal,
+                    { ...proposal, proposal_name: "zzz" }
+                  ],
+            more: false
+          }
+        }),
+        client = new MsigClient({
+          client: {
+            v1: { chain: { get_abi: getAbi, get_table_rows: tableRows } }
+          } as any
+        })
+
+      const approvals = await client.getApprovals("alice", "upgrade1")
+      expect(approvals?.kind).toBe("approvals2")
+      expect(approvals?.approvals.proposal_name.toString()).toBe("upgrade1")
+      expect(
+        (
+          await client.listProposals("alice", {
+            lowerBound: "upgrade1",
+            upperBound: "upgrade1",
+            limit: 1
+          })
+        ).map(row => row.proposal_name.toString())
+      ).toEqual(["upgrade1"])
+      expect(getAbi).toHaveBeenCalledTimes(2)
+      tableRows.mock.calls.forEach(([params]) => {
+        expect(params).not.toHaveProperty("lower_bound")
+        expect(params).not.toHaveProperty("upper_bound")
+        expect(params.limit).toBeGreaterThan(1)
+      })
+
+      getAbi.mockResolvedValue({ abi: chunkedAbi() })
+      await client.getApprovals("alice", "upgrade1")
+      expect(await client.getProfile()).toBe("chunked-v2")
+      expect(getAbi).toHaveBeenCalledTimes(3)
+      expect(tableRows.mock.calls.at(-1)?.[0].lower_bound).toBe(
+        JSON.stringify({
+          proposal_name: Name.from("upgrade1").value.toString()
+        })
+      )
+    }
+  )
+
+  test("shares in-flight capability detection but never caches an unknown result", async () => {
+    const getAbi = jest
+        .fn()
+        .mockRejectedValueOnce(new Error("ABI service unavailable"))
+        .mockResolvedValue({ abi: chunkedAbi() }),
+      client = new MsigClient({
+        client: { v1: { chain: { get_abi: getAbi } } } as any
+      })
+    const results = await Promise.all([
+      client.getCapabilities(),
+      client.getCapabilities()
+    ])
+    expect(results.map(result => result.profile)).toEqual([
+      "unknown",
+      "unknown"
+    ])
+    expect(getAbi).toHaveBeenCalledTimes(1)
+    expect((await client.getCapabilities()).profile).toBe("chunked-v2")
+    expect((await client.getCapabilities()).profile).toBe("chunked-v2")
+    expect(getAbi).toHaveBeenCalledTimes(2)
+  })
+
   test.each(["parse_error_exception", "bad_cast_exception", "RPC unavailable"])(
     "preserves table failures: %s",
     async message => {
