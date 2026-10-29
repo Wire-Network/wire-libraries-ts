@@ -114,7 +114,11 @@ export const CurrentOutpostArtifactSuite: OutpostArtifactSuite = {
   }
 }
 
-/** Artifact suites supported by this SDK release. */
+/**
+ * Temporary Testnet compatibility: remove the retained suite and package aliases
+ * as soon as all supported deployments converge on the approved RC artifacts.
+ * Select by verified artifact identity, never by environment labels.
+ */
 const RegisteredOutpostArtifactSuites: readonly OutpostArtifactSuite[] = [
   CurrentOutpostArtifactSuite,
   {

@@ -24,6 +24,7 @@ const DepositComputeUnitLimit = 1_000_000,
   SyndicationComputeUnitLimit = 800_000,
   DepositsEnabled = 1,
   LiquidDecimals = 9,
+  MinimumPositiveAmount = 1n,
   EphemeralStakePrefix = "ephemeral_",
   MaximumSeed = 0xffffffff,
   DepositPayRateCount = 5,
@@ -57,6 +58,8 @@ export interface SolanaSyndicationState {
   decimals: number
   /** Minimum native deposit in lamports. */
   minimumDeposit: bigint
+  /** Minimum liqSOL base units; legacy Testnet requires only a positive amount. */
+  minimumSyndication: bigint
   /** Maximum liqSOL base units allowed in one syndication. */
   maximumSyndication: bigint
   /** Native deposits are enabled by the core feature flag. */
@@ -204,6 +207,11 @@ export class SolanaSyndicationClient {
               .amount,
       decimals: LiquidDecimals,
       minimumDeposit: BigInt(config.minUserDeposit.toString()),
+      // TEMPORARY Testnet fallback: remove when its verified IDL gains the RC field.
+      minimumSyndication:
+        "minSyndicationPerTransfer" in config
+          ? BigInt(config.minSyndicationPerTransfer.toString())
+          : MinimumPositiveAmount,
       maximumSyndication: BigInt(config.maxSyndicationPerTransfer.toString()),
       depositEnabled: (config.featureFlags & DepositsEnabled) !== 0,
       postLaunch: "postLaunch" in state.wireState,
@@ -327,11 +335,12 @@ export class SolanaSyndicationClient {
     if (state.paused) throw new Error("Solana syndication is paused or frozen")
     if (
       amount <= 0n ||
+      amount < state.minimumSyndication ||
       amount > state.liquidBalance ||
       amount > state.maximumSyndication
     )
       throw new Error(
-        "Syndication exceeds the wallet balance or configured limit"
+        "Syndication must meet the minimum, wallet balance and configured limit"
       )
     const addresses = this.addresses(user)
     return this.program.methods

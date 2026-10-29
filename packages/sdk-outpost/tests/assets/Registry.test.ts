@@ -11,7 +11,9 @@ import { EthereumContractName, SolanaProgramName } from "@wireio/sdk-outpost"
 
 import { createOutpostDeploymentProfileFixture } from "../Fixtures.js"
 
-const MismatchedInterfaceDigest = "f".repeat(64)
+const MismatchedInterfaceDigest = "f".repeat(64),
+  RetiredSolanaV044IdlDigest =
+    "e3650e76f9eed4db25d2720a2be108fe85420d6cb366c8089044655879cf8915"
 
 describe("OutpostArtifactRegistry", () => {
   it("resolves the exact installed Ethereum and Solana package pair", () => {
@@ -49,6 +51,21 @@ describe("OutpostArtifactRegistry", () => {
     mixed.solana.programs[SolanaProgramName.liqsolCore].idlSha256 =
       SolanaV042Manifest.programs.liqsolCore.idlSha256
     expect(OutpostArtifactRegistry.candidates(mixed)).toEqual([])
+  })
+
+  it("refuses a legacy Ethereum interface paired with the new Solana IDL", () => {
+    const mixed = createOutpostDeploymentProfileFixture(
+      EthereumV043Manifest,
+      "@wireio/outpost-ethereum-artifacts-v0-4-3"
+    )
+    expect(OutpostArtifactRegistry.candidates(mixed)).toEqual([])
+  })
+
+  it("rejects the retired intermediate Sandbox interface", () => {
+    const profile = createOutpostDeploymentProfileFixture()
+    profile.solana.programs[SolanaProgramName.liqsolCore].idlSha256 =
+      RetiredSolanaV044IdlDigest
+    expect(OutpostArtifactRegistry.candidates(profile)).toEqual([])
   })
 
   it("rejects an unregistered Solana interface", () => {
