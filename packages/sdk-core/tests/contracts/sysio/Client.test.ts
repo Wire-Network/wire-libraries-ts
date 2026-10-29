@@ -71,11 +71,12 @@ describe("system contract proxy", () => {
       bounty: 0,
       challenge_extra: 1_000_000_000,
       min_desyndicate: 50_000_000,
-      desynd_fee_flat: 100_000
+      desynd_fee_flat: 100_000,
+      custody_shortfall_bps: 0
     }
     expect(sysio.synd.actions.setconfig.prepare(data)).toMatchObject({
       name: "setconfig",
-      data: { min_desyndicate: 50_000_000, desynd_fee_flat: 100_000 }
+      data: { min_desyndicate: 50_000_000, desynd_fee_flat: 100_000, custody_shortfall_bps: 0 }
     })
   })
 
