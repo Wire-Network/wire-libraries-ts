@@ -1916,6 +1916,12 @@ export interface SysioOpregBalanceEntryType {
   shadow_yield: SysioOpregPositionType
 }
 
+/** sysio.opreg::batch_sweep (type) */
+export interface SysioOpregBatchSweepType {
+  cursor: number | string
+  pending: boolean
+}
+
 /** sysio.opreg::cancelwtdw (action) */
 export interface SysioOpregCancelwtdwAction {
   account: string
@@ -2037,6 +2043,9 @@ export interface SysioOpregProcessuwAction {
 
 /** sysio.opreg::prune (action) */
 export interface SysioOpregPruneAction {}
+
+/** sysio.opreg::recheckbatch (action) */
+export interface SysioOpregRecheckbatchAction {}
 
 /** sysio.opreg::recorddel (action) */
 export interface SysioOpregRecorddelAction {
@@ -2167,6 +2176,7 @@ export interface SysioOpregContract {
     processprod: SysioOpregProcessprodAction
     processuw: SysioOpregProcessuwAction
     prune: SysioOpregPruneAction
+    recheckbatch: SysioOpregRecheckbatchAction
     recorddel: SysioOpregRecorddelAction
     regoperator: SysioOpregRegoperatorAction
     setconfig: SysioOpregSetconfigAction
@@ -2177,6 +2187,7 @@ export interface SysioOpregContract {
     withdraw: SysioOpregWithdrawAction
   }
   tables: {
+    batchsweep: SysioOpregBatchSweepType
     dellog: SysioOpregDeliveryLogEntryType
     opconfig: SysioOpregOpConfigType
     opcounters: SysioOpregOpCountersType
@@ -3032,6 +3043,7 @@ export interface SysioSyndSetconfigAction {
   challenge_extra: number | string
   min_desyndicate: number | string
   desynd_fee_flat: number | string
+  custody_shortfall_bps: number
 }
 
 /** sysio.synd::sweep (action) */
@@ -3072,6 +3084,7 @@ export interface SysioSyndSyndConfigType {
   challenge_extra: number | string
   min_desyndicate: number | string
   desynd_fee_flat: number | string
+  custody_shortfall_bps: number
 }
 
 /** sysio.synd::synd_counters (type) */
@@ -4440,7 +4453,14 @@ export const SysioContractDefinitions: {
   [SysioContractName.epoch]: {
     name: SysioContractName.epoch,
     account: "sysio.epoch",
-    actions: ["advance", "finishadv", "pause", "schbatchgps", "setconfig", "unpause"],
+    actions: [
+      "advance",
+      "finishadv",
+      "pause",
+      "schbatchgps",
+      "setconfig",
+      "unpause"
+    ],
     tables: ["blocklog", "epochcfg", "epochstate"]
   },
   [SysioContractName.kicker]: {
@@ -4521,6 +4541,7 @@ export const SysioContractDefinitions: {
       "processprod",
       "processuw",
       "prune",
+      "recheckbatch",
       "recorddel",
       "regoperator",
       "setconfig",
@@ -4531,6 +4552,7 @@ export const SysioContractDefinitions: {
       "withdraw"
     ],
     tables: [
+      "batchsweep",
       "dellog",
       "opconfig",
       "opcounters",
