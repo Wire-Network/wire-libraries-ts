@@ -4,7 +4,6 @@ import {
   SolanaProgramName,
   SolanaUpgradeableLoaderProgramId
 } from "@wireio/sdk-outpost"
-import { SolanaOutpostArtifactManifest as SolanaV044Manifest } from "@wireio/outpost-solana-artifacts-v0-4-4"
 import { SolanaOutpostArtifactManifest as SolanaV042Manifest } from "@wireio/outpost-solana-artifacts-v0-4-2"
 import { EthereumOutpostArtifactManifest as EthereumV043Manifest } from "@wireio/outpost-ethereum-artifacts-v0-4-3"
 import { sha256 } from "ethers"
@@ -97,36 +96,6 @@ describe("OutpostDeploymentVerifier", () => {
       "BPFLoaderUpgradeab1e11111111111111111111111"
     )
   })
-
-  it.each([false, true])(
-    "verifies the preceding program and rejects altered bytes (altered: %s)",
-    async altered => {
-      const artifact = SolanaV044Manifest.programs.liqsolCore,
-        binary = readFileSync(
-          PackageRequire.resolve(
-            `@wireio/outpost-solana-artifacts-v0-4-4/${artifact.programBinaryPath}`
-          )
-        ),
-        profile = createOutpostDeploymentProfileFixture()
-      if (altered) binary[0] ^= 1
-      const programData = createSolanaProgramDataAccountData(binary),
-        program = profile.solana.programs[SolanaProgramName.liqsolCore]
-      program.idlSha256 = artifact.idlSha256
-      program.programDataSha256 = sha256(programData).slice(2)
-      const provider = createSolanaProviderFixture(profile, programData),
-        verification = OutpostDeploymentVerifier.verify({
-          family: OutpostChainFamily.solana,
-          profile,
-          connection: provider.connection
-        })
-      if (altered)
-        await expect(verification).rejects.toThrow("artifact program mismatch")
-      else
-        await expect(verification).resolves.toMatchObject({
-          solana: { manifest: SolanaV044Manifest }
-        })
-    }
-  )
 
   it.each([false, true])(
     "verifies an additional Solana build and rejects altered bytes (altered: %s)",

@@ -17,10 +17,6 @@ import {
   SolanaOutpostArtifactManifest as SolanaV042ArtifactManifest,
   liqsolCoreIdl as solanaV042LiqsolCoreIdl
 } from "@wireio/outpost-solana-artifacts-v0-4-2"
-import {
-  SolanaOutpostArtifactManifest as SolanaV044ArtifactManifest,
-  liqsolCoreIdl as solanaV044LiqsolCoreIdl
-} from "@wireio/outpost-solana-artifacts-v0-4-4"
 import { match } from "ts-pattern"
 
 import {
@@ -60,7 +56,6 @@ export interface SolanaOutpostArtifactIdls {
   readonly [SolanaProgramName.liqsolCore]:
     | typeof liqsolCoreIdl
     | typeof solanaV042LiqsolCoreIdl
-    | typeof solanaV044LiqsolCoreIdl
 }
 
 /** Ethereum producer bindings and manifest owned by one artifact release. */
@@ -120,19 +115,12 @@ export const CurrentOutpostArtifactSuite: OutpostArtifactSuite = {
 }
 
 /**
- * Temporary pre-RC compatibility: remove retained suites and package aliases
+ * Temporary Testnet compatibility: remove the retained suite and package aliases
  * as soon as all supported deployments converge on the approved RC artifacts.
  * Select by verified artifact identity, never by environment labels.
  */
 const RegisteredOutpostArtifactSuites: readonly OutpostArtifactSuite[] = [
   CurrentOutpostArtifactSuite,
-  {
-    ethereum: CurrentOutpostArtifactSuite.ethereum,
-    solana: {
-      manifest: SolanaV044ArtifactManifest,
-      idls: { [SolanaProgramName.liqsolCore]: solanaV044LiqsolCoreIdl }
-    }
-  },
   {
     ethereum: {
       manifest: EthereumV043.EthereumOutpostArtifactManifest,

@@ -20,7 +20,7 @@ See [native deposits and syndication](packages/sdk-outpost/README.md#native-depo
 
 Use [deployment profiles](packages/sdk-outpost/README.md#deployment-profiles) to select multiple supported networks in one SDK version. Client bindings come from the suite that passed live verification.
 Solana withdrawal requests select user-scoped nonce or counter encoding from that verified producer IDL; callers keep the same signing flow.
-The Outpost guide lists the temporary three-suite development matrix and its required removal when supported deployments converge on the RC.
+The Outpost guide documents temporary Testnet support and its required removal when deployments converge on the RC.
 
 ## Examples
 

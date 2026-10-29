@@ -10,15 +10,15 @@ deployment profiles remain caller-supplied.
 
 The current artifact pair is Ethereum **0.4.4** / Solana **0.4.5**, from
 [the October 28 cluster release](https://github.com/Wire-Network/wire-platform-build-system/releases/tag/cluster-v1.0.0-dev-20261028_144410).
-One SDK also accepts the retained **0.4.4 / 0.4.4** Sandbox and **0.4.3 / 0.4.2**
-Testnet pairs. Selection uses exact paired interface identity followed by live
+The retained **0.4.3 / 0.4.2** Testnet pair remains supported temporarily.
+Selection uses exact paired interface identity followed by live
 runtime verification; network names and version strings never authorize a match.
 
 **Temporary pre-RC compatibility — remove as soon as the RC is fixed:** once all
-supported deployments have moved to the approved RC, delete the retained suites,
-aliased producer dependencies, old IDL types and counter-withdrawal/fixed-floor
-branches together with their tests. Do not carry this development matrix into
-mainnet. Keep it until the supported live networks have actually migrated.
+supported deployments have moved to the approved RC, delete the Testnet suite,
+dependency aliases, old IDL types and legacy withdrawal/minimum branches together
+with their tests. Keep this support only until Testnet has actually migrated;
+do not carry it into mainnet.
 The package supplies artifacts only; a fresh deployment still needs its own
 verified profile, endpoints and acceptance. SDK versions use the normal release workflow.
 
@@ -75,7 +75,7 @@ underwriting using platform capability evidence.
 `client.syndication`, obtained through `OutpostClient.create`, keeps external LIQ acquisition separate from Wire settlement. Syndication helper types are exported without public constructors:
 
 - Ethereum: `read(owner)`, `quoteDeposit(amount)`, `deposit(amount)`, exact-amount `approve(amount)`, and `syndicate(amount, compressedPublicKey)`. Amounts are base-unit `bigint`. Save the returned transaction hash before waiting for confirmation. Syndication requires allowance and a compressed public key matching the signer. `depositPaused` follows the liquid token; `syndicationPaused` also includes the pool pause.
-- Solana: `read(user)`, `quoteDeposit(amount)`, `deposit(user, amount, uniqueU32Seed)`, and `syndicate(user, amount)` return exact balances or unsigned transactions. The quote returns `amount`, `fee` and `totalDebit` in lamports using the current pay-rate history and fee multiplier. The protocol fee is added to the amount; transaction fees and account rent are additional. Deposit rechecks affordability, but the contract does not bind execution to a quoted fee. The caller adds a recent blockhash, signs and persists the signature before broadcasting. `read` exposes `minimumSyndication`: the current on-chain minimum, the preceding program’s 0.001-LIQSOL constant, or one positive base unit for the older Testnet program that has no dust floor. Syndication rechecks that floor, PostLaunch and configured LIQSOL mint/precision; it never creates a legacy prelaunch position.
+- Solana: `read(user)`, `quoteDeposit(amount)`, `deposit(user, amount, uniqueU32Seed)`, and `syndicate(user, amount)` return exact balances or unsigned transactions. The quote returns `amount`, `fee` and `totalDebit` in lamports using the current pay-rate history and fee multiplier. The protocol fee is added to the amount; transaction fees and account rent are additional. Deposit rechecks affordability, but the contract does not bind execution to a quoted fee. The caller adds a recent blockhash, signs and persists the signature before broadcasting. `read` exposes `minimumSyndication`: the current on-chain minimum, or one positive base unit for legacy Testnet, which has no dust floor. Syndication rechecks that floor, PostLaunch and configured LIQSOL mint/precision; it never creates a legacy prelaunch position.
 - Profiles opt into Ethereum `DepositManager`, `LiqEthToken`, `SyndicationPool` identities and Solana `liqsol.tokenProgramAddress` / `transferHookProgramAddress`. Missing identities disable this capability without changing existing profiles. Solana companion addresses are checked against the derived mint and executable accounts; the existing verifier authenticates the core program binary, not companion binaries.
 
 Source confirmation does not prove shadow LIQ is spendable on Wire. Applications must separately check the linked Wire account, relay/bond release and its `sysio.liq` balance. No administrator bootstrap, automatic approval, faucet or collateral deposit is performed by these helpers.
@@ -160,9 +160,10 @@ release; consumers continue to use the same `OutpostClient.create` facade.
 
 ### Artifact compatibility
 
-Ethereum `0.4.4` / Solana `0.4.4` and Ethereum `0.4.3` / Solana `0.4.2` are
-selected by exact interface and live runtime verification. Requests use the
-verified producer IDL's withdrawal arguments, never an environment name.
+The current Ethereum `0.4.4` / Solana `0.4.5` pair and temporary Testnet
+Ethereum `0.4.3` / Solana `0.4.2` pair are selected by exact interface and live
+runtime verification. Requests use the verified producer IDL's withdrawal
+arguments, never an environment name.
 Earlier pairs are not retained;
 older deployments require their matching SDK release. Consumers must provide a
 fresh deployment profile and pass exact live runtime verification before use.

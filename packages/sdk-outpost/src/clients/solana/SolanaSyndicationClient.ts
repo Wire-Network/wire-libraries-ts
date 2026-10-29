@@ -17,19 +17,13 @@ import {
   SYSVAR_STAKE_HISTORY_PUBKEY
 } from "@solana/web3.js"
 import { SlugName } from "@wireio/sdk-core"
-import {
-  hasConfigurableSyndicationMinimum,
-  hasSyndicationMinimum,
-  type SolanaCoreProgram
-} from "./Types.js"
+import type { SolanaCoreProgram } from "./Types.js"
 import type { OutpostDeploymentProfile } from "../../deployments/index.js"
 
 const DepositComputeUnitLimit = 1_000_000,
   SyndicationComputeUnitLimit = 800_000,
   DepositsEnabled = 1,
   LiquidDecimals = 9,
-  // Temporary pre-RC floor in the retained producer IDLs; remove with those suites.
-  LegacyMinimumSyndication = 1_000_000n,
   MinimumPositiveAmount = 1n,
   EphemeralStakePrefix = "ephemeral_",
   MaximumSeed = 0xffffffff,
@@ -64,7 +58,7 @@ export interface SolanaSyndicationState {
   decimals: number
   /** Minimum native deposit in lamports. */
   minimumDeposit: bigint
-  /** Minimum liqSOL base units read from config, or the retained contract constant. */
+  /** Minimum liqSOL base units; legacy Testnet requires only a positive amount. */
   minimumSyndication: bigint
   /** Maximum liqSOL base units allowed in one syndication. */
   maximumSyndication: bigint
@@ -193,13 +187,6 @@ export class SolanaSyndicationClient {
         "The deployed liqSOL mint or companion programs do not match the deployment profile"
       )
     }
-    if (
-      hasConfigurableSyndicationMinimum(this.program.idl) &&
-      !("minSyndicationPerTransfer" in config)
-    )
-      throw new Error(
-        "The configured Solana syndication minimum is unavailable"
-      )
     const mapped =
       outpost.tokenAddressesByCode.some(
         entry =>
@@ -220,12 +207,11 @@ export class SolanaSyndicationClient {
               .amount,
       decimals: LiquidDecimals,
       minimumDeposit: BigInt(config.minUserDeposit.toString()),
+      // TEMPORARY Testnet fallback: remove when its verified IDL gains the RC field.
       minimumSyndication:
         "minSyndicationPerTransfer" in config
           ? BigInt(config.minSyndicationPerTransfer.toString())
-          : hasSyndicationMinimum(this.program.idl)
-            ? LegacyMinimumSyndication
-            : MinimumPositiveAmount,
+          : MinimumPositiveAmount,
       maximumSyndication: BigInt(config.maxSyndicationPerTransfer.toString()),
       depositEnabled: (config.featureFlags & DepositsEnabled) !== 0,
       postLaunch: "postLaunch" in state.wireState,

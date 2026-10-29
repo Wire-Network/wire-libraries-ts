@@ -1,7 +1,6 @@
 import { OPPInbound__factory } from "@wireio/outpost-ethereum-artifacts"
 import { liqsolCoreIdl } from "@wireio/outpost-solana-artifacts"
 import { EthereumOutpostArtifactManifest as EthereumV043Manifest } from "@wireio/outpost-ethereum-artifacts-v0-4-3"
-import { SolanaOutpostArtifactManifest as SolanaV044Manifest } from "@wireio/outpost-solana-artifacts-v0-4-4"
 import { SolanaOutpostArtifactManifest as SolanaV042Manifest } from "@wireio/outpost-solana-artifacts-v0-4-2"
 
 import {
@@ -12,7 +11,9 @@ import { EthereumContractName, SolanaProgramName } from "@wireio/sdk-outpost"
 
 import { createOutpostDeploymentProfileFixture } from "../Fixtures.js"
 
-const MismatchedInterfaceDigest = "f".repeat(64)
+const MismatchedInterfaceDigest = "f".repeat(64),
+  RetiredSolanaV044IdlDigest =
+    "e3650e76f9eed4db25d2720a2be108fe85420d6cb366c8089044655879cf8915"
 
 describe("OutpostArtifactRegistry", () => {
   it("resolves the exact installed Ethereum and Solana package pair", () => {
@@ -25,16 +26,6 @@ describe("OutpostArtifactRegistry", () => {
       OPPInbound__factory
     )
     expect(suite.solana.idls[SolanaProgramName.liqsolCore]).toBe(liqsolCoreIdl)
-  })
-
-  it("retains the preceding suite while making the new release current", () => {
-    const profile = createOutpostDeploymentProfileFixture()
-    profile.solana.programs[SolanaProgramName.liqsolCore].idlSha256 =
-      SolanaV044Manifest.programs.liqsolCore.idlSha256
-    const [suite] = OutpostArtifactRegistry.candidates(profile)
-    expect(suite.ethereum).toBe(CurrentOutpostArtifactSuite.ethereum)
-    expect(suite.solana.manifest).toBe(SolanaV044Manifest)
-    expect(suite).not.toBe(CurrentOutpostArtifactSuite)
   })
 
   it("rejects an unregistered Ethereum interface", () => {
@@ -68,6 +59,13 @@ describe("OutpostArtifactRegistry", () => {
       "@wireio/outpost-ethereum-artifacts-v0-4-3"
     )
     expect(OutpostArtifactRegistry.candidates(mixed)).toEqual([])
+  })
+
+  it("rejects the retired intermediate Sandbox interface", () => {
+    const profile = createOutpostDeploymentProfileFixture()
+    profile.solana.programs[SolanaProgramName.liqsolCore].idlSha256 =
+      RetiredSolanaV044IdlDigest
+    expect(OutpostArtifactRegistry.candidates(profile)).toEqual([])
   })
 
   it("rejects an unregistered Solana interface", () => {
