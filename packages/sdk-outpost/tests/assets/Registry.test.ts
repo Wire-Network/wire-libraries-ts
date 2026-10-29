@@ -1,6 +1,7 @@
 import { OPPInbound__factory } from "@wireio/outpost-ethereum-artifacts"
 import { liqsolCoreIdl } from "@wireio/outpost-solana-artifacts"
 import { EthereumOutpostArtifactManifest as EthereumV043Manifest } from "@wireio/outpost-ethereum-artifacts-v0-4-3"
+import { SolanaOutpostArtifactManifest as SolanaV044Manifest } from "@wireio/outpost-solana-artifacts-v0-4-4"
 import { SolanaOutpostArtifactManifest as SolanaV042Manifest } from "@wireio/outpost-solana-artifacts-v0-4-2"
 
 import {
@@ -26,6 +27,16 @@ describe("OutpostArtifactRegistry", () => {
     expect(suite.solana.idls[SolanaProgramName.liqsolCore]).toBe(liqsolCoreIdl)
   })
 
+  it("retains the preceding suite while making the new release current", () => {
+    const profile = createOutpostDeploymentProfileFixture()
+    profile.solana.programs[SolanaProgramName.liqsolCore].idlSha256 =
+      SolanaV044Manifest.programs.liqsolCore.idlSha256
+    const [suite] = OutpostArtifactRegistry.candidates(profile)
+    expect(suite.ethereum).toBe(CurrentOutpostArtifactSuite.ethereum)
+    expect(suite.solana.manifest).toBe(SolanaV044Manifest)
+    expect(suite).not.toBe(CurrentOutpostArtifactSuite)
+  })
+
   it("rejects an unregistered Ethereum interface", () => {
     const profile = createOutpostDeploymentProfileFixture()
     profile.ethereum.contracts[EthereumContractName.OPPInbound].abiSha256 =
@@ -48,6 +59,14 @@ describe("OutpostArtifactRegistry", () => {
     const mixed = createOutpostDeploymentProfileFixture()
     mixed.solana.programs[SolanaProgramName.liqsolCore].idlSha256 =
       SolanaV042Manifest.programs.liqsolCore.idlSha256
+    expect(OutpostArtifactRegistry.candidates(mixed)).toEqual([])
+  })
+
+  it("refuses a legacy Ethereum interface paired with the new Solana IDL", () => {
+    const mixed = createOutpostDeploymentProfileFixture(
+      EthereumV043Manifest,
+      "@wireio/outpost-ethereum-artifacts-v0-4-3"
+    )
     expect(OutpostArtifactRegistry.candidates(mixed)).toEqual([])
   })
 

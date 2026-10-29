@@ -17,13 +17,20 @@ import {
   SYSVAR_STAKE_HISTORY_PUBKEY
 } from "@solana/web3.js"
 import { SlugName } from "@wireio/sdk-core"
-import type { SolanaCoreProgram } from "./Types.js"
+import {
+  hasConfigurableSyndicationMinimum,
+  hasSyndicationMinimum,
+  type SolanaCoreProgram
+} from "./Types.js"
 import type { OutpostDeploymentProfile } from "../../deployments/index.js"
 
 const DepositComputeUnitLimit = 1_000_000,
   SyndicationComputeUnitLimit = 800_000,
   DepositsEnabled = 1,
   LiquidDecimals = 9,
+  // Temporary pre-RC floor in the retained producer IDLs; remove with those suites.
+  LegacyMinimumSyndication = 1_000_000n,
+  MinimumPositiveAmount = 1n,
   EphemeralStakePrefix = "ephemeral_",
   MaximumSeed = 0xffffffff,
   DepositPayRateCount = 5,
@@ -57,6 +64,8 @@ export interface SolanaSyndicationState {
   decimals: number
   /** Minimum native deposit in lamports. */
   minimumDeposit: bigint
+  /** Minimum liqSOL base units read from config, or the retained contract constant. */
+  minimumSyndication: bigint
   /** Maximum liqSOL base units allowed in one syndication. */
   maximumSyndication: bigint
   /** Native deposits are enabled by the core feature flag. */
@@ -184,6 +193,13 @@ export class SolanaSyndicationClient {
         "The deployed liqSOL mint or companion programs do not match the deployment profile"
       )
     }
+    if (
+      hasConfigurableSyndicationMinimum(this.program.idl) &&
+      !("minSyndicationPerTransfer" in config)
+    )
+      throw new Error(
+        "The configured Solana syndication minimum is unavailable"
+      )
     const mapped =
       outpost.tokenAddressesByCode.some(
         entry =>
@@ -204,6 +220,12 @@ export class SolanaSyndicationClient {
               .amount,
       decimals: LiquidDecimals,
       minimumDeposit: BigInt(config.minUserDeposit.toString()),
+      minimumSyndication:
+        "minSyndicationPerTransfer" in config
+          ? BigInt(config.minSyndicationPerTransfer.toString())
+          : hasSyndicationMinimum(this.program.idl)
+            ? LegacyMinimumSyndication
+            : MinimumPositiveAmount,
       maximumSyndication: BigInt(config.maxSyndicationPerTransfer.toString()),
       depositEnabled: (config.featureFlags & DepositsEnabled) !== 0,
       postLaunch: "postLaunch" in state.wireState,
@@ -327,11 +349,12 @@ export class SolanaSyndicationClient {
     if (state.paused) throw new Error("Solana syndication is paused or frozen")
     if (
       amount <= 0n ||
+      amount < state.minimumSyndication ||
       amount > state.liquidBalance ||
       amount > state.maximumSyndication
     )
       throw new Error(
-        "Syndication exceeds the wallet balance or configured limit"
+        "Syndication must meet the minimum, wallet balance and configured limit"
       )
     const addresses = this.addresses(user)
     return this.program.methods

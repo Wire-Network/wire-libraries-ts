@@ -1,5 +1,6 @@
 import {
   AnchorProvider,
+  type IdlAccounts,
   BN,
   BorshInstructionCoder,
   Program,
@@ -22,6 +23,9 @@ import {
 import { SolanaSyndicationClient } from "@wireio/sdk-outpost/clients/solana/SolanaSyndicationClient"
 import { SolanaWithdrawalClient } from "@wireio/sdk-outpost/clients/solana/SolanaWithdrawalClient"
 import type { SolanaWithdrawalState } from "@wireio/sdk-outpost"
+
+type WithdrawalConfigFixture = IdlAccounts<LiqsolCore>["globalConfig"] &
+  IdlAccounts<LegacyLiqsolCore>["globalConfig"]
 
 interface DecodedWithdrawalRequest {
   amount: BN
@@ -72,6 +76,7 @@ function fixture(legacy = false) {
     liquidBalance: 1000n,
     decimals: 9,
     minimumDeposit: 1n,
+    minimumSyndication: 1_000_000n,
     maximumSyndication: 1000n,
     depositEnabled: false,
     postLaunch: true,
@@ -233,7 +238,7 @@ describe("Solana native withdrawals", () => {
     jest.spyOn(program.account.globalConfig, "fetch").mockResolvedValue({
       featureFlags: 6,
       minUnstakeRequest: new BN(10)
-    } as Awaited<ReturnType<typeof _configFetch>>)
+    } as WithdrawalConfigFixture)
     jest
       .spyOn(program.provider.connection, "getTokenAccountsByOwner")
       .mockResolvedValue({
@@ -281,7 +286,7 @@ describe("Solana native withdrawals", () => {
     jest.mocked(program.account.globalConfig.fetch).mockResolvedValue({
       featureFlags: 2,
       minUnstakeRequest: new BN(10)
-    } as Awaited<ReturnType<typeof _configFetch>>)
+    } as WithdrawalConfigFixture)
     expect((await client.read(user)).receipts[0].claimable).toBe(false)
   })
 })
