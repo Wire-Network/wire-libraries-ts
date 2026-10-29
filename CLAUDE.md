@@ -35,6 +35,7 @@ pnpm workspaces with TypeScript composite project references. No Lerna/Nx.
 | `@wireio/shared-node` | Node.js utilities | Yes | Hybrid ESM+CJS |
 | `@wireio/sdk-core` | Wire blockchain SDK types/primitives | Yes | Hybrid ESM+CJS |
 | `@wireio/sdk-outpost` | Typed, verified external-chain outpost clients | Yes | Hybrid ESM+CJS |
+| `@wireio/opp-snapshot` | Pre-launch Ethereum OPP stream → staker/purchaser balance snapshot | Yes | Hybrid ESM+CJS |
 | `@wireio/wallet-ext-sdk` | Wallet extension client SDK | Yes | ESM |
 | `@wireio/wallet-browser-ext` | Chrome extension developer wallet | No | Webpack bundle |
 
@@ -69,7 +70,7 @@ Root `tsconfig.json` has project references to all packages. Build order is reso
 
 ## Hybrid ESM/CJS Build Pattern
 
-Packages that publish both ESM and CJS (`shared`, `sdk-core`, `sdk-outpost`, `shared-node`) use:
+Packages that publish both ESM and CJS (`shared`, `sdk-core`, `sdk-outpost`, `shared-node`, `opp-snapshot`) use:
 
 1. Two tsconfig files: one for `lib/esm/`, one for `lib/cjs/`
 2. Post-build: `scripts/fix-hybrid-output.mjs` patches relative imports with `.js` extensions and creates `lib/cjs/package.json` with `{"type":"commonjs"}`
@@ -247,6 +248,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - A connected outpost client proves deployment compatibility, not swap or stake readiness. Wire-chain orchestration remains in `sdk-core`, and consumers must retain flow-specific capability gates.
 - Solana deposit quotes mirror the producer pay-rate history and ceiling rounding; protocol fees are added to the amount. Keep helper constructors internal and leave fees/rent and quote-to-execution drift explicit.
 - Publish `sdk-outpost` only through the repository release workflow after its normal build and tests pass.
+- `packages/opp-snapshot` is the ONE implementation of the pre-launch OPP balance replay: the capital indexer serves it and the wire-tools-ts ladder bootstrap imports it into the depot. It decodes the pre-launch `OPPMessage` format with its own constants and must not depend on `@wireio/opp-typescript-models`. The `OppSnapshot` row shapes are the `/opp/balances` wire contract `sysio.dclaim`'s `convert_import.py` reads; their field names do not change.
 - Do not describe `sdk-outpost` as npm-available until `npm view` succeeds for both exact producer artifact versions and `@wireio/sdk-outpost`, and a clean platform-compatible install passes without sibling artifact links.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
 - Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch
