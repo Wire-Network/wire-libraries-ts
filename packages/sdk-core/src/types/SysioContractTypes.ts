@@ -2743,6 +2743,13 @@ export enum SysioSyndItemKind {
   YIELD = 1
 }
 
+/** sysio.synd::release_destination (enum, uint8) */
+export enum SysioSyndReleaseDestination {
+  ACCOUNT = 0,
+  PARKED = 1,
+  FEE_ONLY = 2
+}
+
 /** sysio.synd::request_outcome (enum, uint8) */
 export enum SysioSyndRequestOutcome {
   PENDING = 0,
@@ -2765,6 +2772,14 @@ export interface SysioSyndBucketRowType {
   direction: SysioSyndBucketDirection | keyof typeof SysioSyndBucketDirection
   level: number | string
   last_epoch: number
+}
+
+/** sysio.synd::burn_receipt (type) */
+export interface SysioSyndBurnReceiptType {
+  chain_code: string
+  token_code: string
+  epoch_index: number
+  digest: string
 }
 
 /** sysio.synd::challenge (action) */
@@ -2871,6 +2886,19 @@ export interface SysioSyndImportsyndAction {
   credits: SysioSyndImportCreditType[]
 }
 
+/** sysio.synd::intake_receipt (type) */
+export interface SysioSyndIntakeReceiptType {
+  item_id: number | string
+  chain_code: string
+  token_code: string
+  epoch_index: number
+  digest: string
+  sequence: number | string
+  chain_kind: SysioSyndChainkind | keyof typeof SysioSyndChainkind
+  pubkey: string
+  amount: number | string
+}
+
 /** sysio.synd::item_key (type) */
 export interface SysioSyndItemKeyType {
   chain_code: number | string
@@ -2913,6 +2941,26 @@ export interface SysioSyndLinksweptAction {
   account: string
   chain_kind: SysioSyndChainkind | keyof typeof SysioSyndChainkind
   pubkey: string
+}
+
+/** sysio.synd::logburn (action) */
+export interface SysioSyndLogburnAction {
+  receipt: SysioSyndBurnReceiptType
+}
+
+/** sysio.synd::logintake (action) */
+export interface SysioSyndLogintakeAction {
+  receipt: SysioSyndIntakeReceiptType
+}
+
+/** sysio.synd::logparked (action) */
+export interface SysioSyndLogparkedAction {
+  receipt: SysioSyndParkedReceiptType
+}
+
+/** sysio.synd::logrelease (action) */
+export interface SysioSyndLogreleaseAction {
+  receipt: SysioSyndReleaseReceiptType
 }
 
 /** sysio.synd::mismatch_key (type) */
@@ -2965,6 +3013,17 @@ export interface SysioSyndParkedKeyType {
   pubkey: string
 }
 
+/** sysio.synd::parked_receipt (type) */
+export interface SysioSyndParkedReceiptType {
+  batch_id: number | string
+  token_code: string
+  chain_kind: SysioSyndChainkind | keyof typeof SysioSyndChainkind
+  pubkey: string
+  recipient: string
+  amount: number | string
+  unattributed: number | string
+}
+
 /** sysio.synd::parked_row (type) */
 export interface SysioSyndParkedRowType {
   token_code: string
@@ -2972,6 +3031,8 @@ export interface SysioSyndParkedRowType {
   pubkey: string
   balance: number | string
   position: SysioSyndPositionType
+  batch_id: number | string
+  unattributed: number | string
 }
 
 /** sysio.synd::pool_row (type) */
@@ -3010,6 +3071,23 @@ export interface SysioSyndReconcileAction {
 /** sysio.synd::refundreturn (action) */
 export interface SysioSyndRefundreturnAction {
   request_id: number | string
+}
+
+/** sysio.synd::release_receipt (type) */
+export interface SysioSyndReleaseReceiptType {
+  item_id: number | string
+  chain_code: string
+  token_code: string
+  epoch_index: number
+  gross: number | string
+  fee: number | string
+  net: number | string
+  remaining: number | string
+  destination:
+    | SysioSyndReleaseDestination
+    | keyof typeof SysioSyndReleaseDestination
+  recipient: string
+  parked_batch_id: number | string
 }
 
 /** sysio.synd::return_key (type) */
@@ -3091,6 +3169,7 @@ export interface SysioSyndSyndConfigType {
 export interface SysioSyndSyndCountersType {
   next_item_id: number | string
   next_request_id: number | string
+  next_batch_id: number | string
 }
 
 /** sysio.synd::synd_cursor (type) */
@@ -3133,6 +3212,10 @@ export interface SysioSyndContract {
     importdone: SysioSyndImportdoneAction
     importsynd: SysioSyndImportsyndAction
     linkswept: SysioSyndLinksweptAction
+    logburn: SysioSyndLogburnAction
+    logintake: SysioSyndLogintakeAction
+    logparked: SysioSyndLogparkedAction
+    logrelease: SysioSyndLogreleaseAction
     onsynd: SysioSyndOnsyndAction
     onyield: SysioSyndOnyieldAction
     pruneenv: SysioSyndPruneenvAction
@@ -4642,6 +4725,10 @@ export const SysioContractDefinitions: {
       "importdone",
       "importsynd",
       "linkswept",
+      "logburn",
+      "logintake",
+      "logparked",
+      "logrelease",
       "onsynd",
       "onyield",
       "pruneenv",
