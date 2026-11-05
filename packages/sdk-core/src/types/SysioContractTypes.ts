@@ -3677,7 +3677,6 @@ export interface SysioSystemProducerScheduleType {
 
 /** sysio.system::producer_score_config (type) */
 export interface SysioSystemProducerScoreConfigType {
-  collateral_weight: number
   snapshot_weight: number
   relay_weight: number
   api_weight: number
@@ -3686,6 +3685,7 @@ export interface SysioSystemProducerScoreConfigType {
   snapshot_target_attestations: number
   min_blocks_per_round: number
   miss_penalty_sec: number
+  seniority_base_sec: number
 }
 
 /** sysio.system::rcrdbatch (action) */

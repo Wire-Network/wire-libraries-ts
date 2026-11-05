@@ -211,7 +211,6 @@ describe("system contract proxy", () => {
 
   test("preserves seniority score weights in generated system action and table types", async () => {
     const weights: SysioContracts.SysioSystemProducerScoreConfigType = {
-        collateral_weight: 0,
         snapshot_weight: 259_200,
         relay_weight: 0,
         api_weight: 0,
@@ -219,7 +218,8 @@ describe("system contract proxy", () => {
         max_consecutive_missed_rounds: 3,
         snapshot_target_attestations: 1,
         min_blocks_per_round: 6,
-        miss_penalty_sec: 604_800
+        miss_penalty_sec: 604_800,
+        seniority_base_sec: 604_800
       },
       action: SysioContracts.SysioSystemSetscorecfgAction = { weights },
       api = createMockApi([weights]),
