@@ -219,6 +219,9 @@ importers:
       '@wireio/outpost-ethereum-artifacts-v0-4-3':
         specifier: npm:@wireio/outpost-ethereum-artifacts@0.4.3
         version: '@wireio/outpost-ethereum-artifacts@0.4.3(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))'
+      '@wireio/outpost-ethereum-artifacts-v0-4-5':
+        specifier: npm:@wireio/outpost-ethereum-artifacts@0.4.5
+        version: '@wireio/outpost-ethereum-artifacts@0.4.5(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))'
       '@wireio/outpost-solana-artifacts':
         specifier: 0.4.5
         version: 0.4.5
@@ -1714,6 +1717,11 @@ packages:
 
   '@wireio/outpost-ethereum-artifacts@0.4.4':
     resolution: {integrity: sha512-pk07Bt0uu5SNoKPxh04oOX/dZ62SB6MnD7JCfGAww/yIWfhUyF4QoFEqYb5g+ts1P81tyCRKyJRbIMdUtVLU0Q==}
+    peerDependencies:
+      ethers: ^6.15.0
+
+  '@wireio/outpost-ethereum-artifacts@0.4.5':
+    resolution: {integrity: sha512-qZw3X9v/SuKg7XpKstjGDkk53orZNvPz+cfQvxbG+5meA7Sd8LySBntfd4DFvmPCSFKt2b3g7DZMaCDWdClm+w==}
     peerDependencies:
       ethers: ^6.15.0
 
@@ -6019,6 +6027,10 @@ snapshots:
       ethers: 6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
   '@wireio/outpost-ethereum-artifacts@0.4.4(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
+    dependencies:
+      ethers: 6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
+
+  '@wireio/outpost-ethereum-artifacts@0.4.5(ethers@6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))':
     dependencies:
       ethers: 6.17.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 

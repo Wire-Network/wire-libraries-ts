@@ -1,13 +1,8 @@
-import type {
-  DepositManager,
-  LiqEthToken,
-  SyndicationPool
-} from "@wireio/outpost-ethereum-artifacts"
+import type { EthereumContractMap } from "./Types.js"
 import {
   computeAddress,
   getAddress,
   getBytes,
-  type BaseContract,
   type ContractTransactionResponse,
   type Provider,
   type Signer
@@ -43,19 +38,19 @@ export class EthereumSyndicationClient {
   /** Construct from producer-generated contracts in a verified deployment. */
   constructor(
     /** Verified native-deposit contract. */
-    readonly depositManager: DepositManager,
+    readonly depositManager: EthereumContractMap["DepositManager"],
     /** Verified external liqETH contract. */
-    readonly token: LiqEthToken,
+    readonly token: EthereumContractMap["LiqEthToken"],
     /** Verified syndication custody contract. */
-    readonly pool: SyndicationPool,
+    readonly pool: EthereumContractMap["SyndicationPool"],
     private readonly connection: Provider | Signer
   ) {}
 
   /** Convert the contract's minimum credited depot units to external LIQ base units. */
   private async minimumSyndication(): Promise<bigint> {
-    if (!this.pool.interface.hasFunction("minSyndication()")) return 1n
+    if (!("minSyndication" in this.pool)) return 1n
     const [minimum, precision] = await Promise.all([
-      (this.pool as BaseContract).getFunction("minSyndication()").staticCall(),
+      this.pool.minSyndication(),
       this.pool.liqTokenPrecision()
     ])
     const scale =

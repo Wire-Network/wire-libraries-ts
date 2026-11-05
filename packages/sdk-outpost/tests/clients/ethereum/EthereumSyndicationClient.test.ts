@@ -3,7 +3,7 @@ import type {
   LiqEthToken,
   SyndicationPool
 } from "@wireio/outpost-ethereum-artifacts"
-import { Interface, JsonRpcProvider, Wallet } from "ethers"
+import { JsonRpcProvider, Wallet } from "ethers"
 import { EthereumSyndicationClient } from "@wireio/sdk-outpost/clients/ethereum/EthereumSyndicationClient"
 
 const TokenAddress = "0x0000000000000000000000000000000000000011",
@@ -28,12 +28,9 @@ function fixture(withMinimum = false) {
       totalSupply: jest.fn(async () => 100n),
       approve: jest.fn(async () => ({ hash: "approval" }))
     },
-    minSyndication = { staticCall: jest.fn(async () => 5_000_000n) },
+    minSyndication = jest.fn(async () => 5_000_000n),
     pool = {
-      interface: new Interface(
-        withMinimum ? ["function minSyndication() view returns (uint64)"] : []
-      ),
-      getFunction: jest.fn(() => minSyndication),
+      ...(withMinimum ? { minSyndication } : {}),
       liqTokenPrecision: jest.fn(async () => 18n),
       getAddress: jest.fn(async () => PoolAddress),
       liqETH: jest.fn(async () => TokenAddress),
@@ -100,7 +97,7 @@ describe("Ethereum syndication", () => {
       client.syndicate(floor - 1n, wallet.signingKey.compressedPublicKey)
     ).rejects.toThrow("minimum")
     expect(pool.syndicate).not.toHaveBeenCalled()
-    minSyndication.staticCall.mockRejectedValue(new Error("RPC unavailable"))
+    minSyndication.mockRejectedValue(new Error("RPC unavailable"))
     await expect(client.read(wallet.address)).rejects.toThrow("RPC unavailable")
   })
 
