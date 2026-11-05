@@ -209,6 +209,73 @@ describe("system contract proxy", () => {
     await expect(system.tables.snapconfig.first()).resolves.toEqual(config)
   })
 
+  test("preserves seniority score weights in generated system action and table types", async () => {
+    const weights: SysioContracts.SysioSystemProducerScoreConfigType = {
+        collateral_weight: 0,
+        snapshot_weight: 259_200,
+        relay_weight: 0,
+        api_weight: 0,
+        benchmark_weight: 0,
+        max_consecutive_missed_rounds: 3,
+        snapshot_target_attestations: 1,
+        min_blocks_per_round: 6,
+        miss_penalty_sec: 604_800
+      },
+      action: SysioContracts.SysioSystemSetscorecfgAction = { weights },
+      api = createMockApi([weights]),
+      system = contracts.sysio.getSysioContract(SysioContractName.system, {
+        client: api
+      })
+
+    expect(system.actions.setscorecfg.prepare(action)).toMatchObject({
+      contract: SysioContractName.system,
+      account: "sysio",
+      name: "setscorecfg",
+      data: action
+    })
+    await expect(system.tables.prodscorecfg.first()).resolves.toEqual(weights)
+  })
+
+  test("reads producer seniority and runtime state from generated system tables", async () => {
+    const producer: SysioContracts.SysioSystemProducerInfoType = {
+        owner: "produceraaaa",
+        producer_key:
+          "PUB_K1_7pyBBnwHmDD6tKMunrobP5mgbqWgei4GAx42c9Bof3kjSUdPTx",
+        rank_score: "4611684901060608001",
+        is_active: true,
+        url: "",
+        unpaid_blocks: 12,
+        last_claim_time: "2026-11-04T00:00:00.000",
+        location: 0,
+        producer_authority: null,
+        consecutive_missed_rounds: 0,
+        is_demoted: false,
+        snapshot_attestations: 1,
+        snapshot_period: 1,
+        last_paid_round: 40,
+        service_sec: 7_200,
+        registration_seq: 1
+      },
+      state: SysioContracts.SysioSystemProducerRuntimeStateType = {
+        last_producer_schedule_update: "2026-11-04T00:00:00.000",
+        last_producer_schedule_size: 21,
+        last_producer: "produceraaaa",
+        rescore_cursor: 0,
+        rescore_pending: false,
+        round_start_block: 1_200,
+        last_registration_seq: 21
+      },
+      producers = contracts.sysio.getSysioContract(SysioContractName.system, {
+        client: createMockApi([producer])
+      }),
+      runtime = contracts.sysio.getSysioContract(SysioContractName.system, {
+        client: createMockApi([state])
+      })
+
+    await expect(producers.tables.producers.first()).resolves.toEqual(producer)
+    await expect(runtime.tables.prodstate.first()).resolves.toEqual(state)
+  })
+
   test("falls back to a typed AnyAction when synchronous encoding fails", () => {
     const msig = contracts.sysio.getSysioContract(SysioContractName.msig),
       data = {},
