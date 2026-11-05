@@ -5,6 +5,7 @@ import type {
 } from "@wireio/outpost-ethereum-artifacts"
 import {
   getAddress,
+  type BaseContract,
   type ContractTransactionResponse,
   type Provider,
   type Signer
@@ -43,9 +44,9 @@ export interface EthereumWithdrawalState {
   withdrawalDelay: bigint
   /** Whether the liquid token currently pauses withdrawal requests. */
   requestPaused: boolean
-  /** Whether DepositManager currently pauses payouts. */
+  /** Whether the verified claim entrypoint enforces an active pause. */
   claimPaused: boolean
-  /** Native ETH held by the verified DepositManager payer. */
+  /** Native ETH held by the contract that pays the receipt. */
   payoutBalance: bigint
   /** All discovered owned receipts within the enumeration limit. */
   receipts: EthereumWithdrawalReceipt[]
@@ -60,10 +61,14 @@ export class EthereumWithdrawalClient {
   constructor(
     private readonly token: LiqEthToken,
     private readonly queue: WithdrawalQueue,
-    /** The deployed queue pays through DepositManager.claim. */
-    private readonly depositPayer: DepositManager,
+    private readonly depositManager: DepositManager,
     private readonly connection: Provider | Signer
-  ) {}
+  ) {
+    this.queuePays = queue.interface.hasFunction("claim(uint256)")
+  }
+
+  /** V2 pays from the queue. The bootstrap suite pays through its manager. */
+  private readonly queuePays: boolean
 
   /** Check wiring and enumerate owned receipts at one block, retaining exact uint256 IDs. */
   async read(owner: string): Promise<EthereumWithdrawalState> {
@@ -73,7 +78,9 @@ export class EthereumWithdrawalClient {
     const blockTag = block.number,
       overrides = { blockTag },
       queueAddress = await this.queue.getAddress(),
-      payer = await this.depositPayer.getAddress(),
+      payer = this.queuePays
+        ? queueAddress
+        : await this.depositManager.getAddress(),
       [
         wiredQueue,
         count,
@@ -92,13 +99,13 @@ export class EthereumWithdrawalClient {
         this.token.decimals(overrides),
         this.queue.withdrawDelay(overrides),
         this.token.paused(overrides),
-        this.depositPayer.paused(overrides),
+        this.queuePays ? false : this.depositManager.paused(overrides),
         provider.getBalance(payer, blockTag)
       ])
     if (getAddress(wiredQueue) !== getAddress(queueAddress))
       throw new Error("Liquid token does not use the verified withdrawal queue")
     if (
-      getAddress(await this.depositPayer.withdrawalQueue(overrides)) !==
+      getAddress(await this.depositManager.withdrawalQueue(overrides)) !==
       getAddress(queueAddress)
     )
       throw new Error(
@@ -184,6 +191,10 @@ export class EthereumWithdrawalClient {
     if (state.claimPaused) throw new Error("Withdrawal claims are paused")
     if (!receipt.funded)
       throw new Error("Withdrawal payout is awaiting native ETH funding")
-    return this.depositPayer.claim(id)
+    if (this.queuePays) {
+      // Use the verified binding; the V1 queue type has no claim method.
+      return (this.queue as BaseContract).getFunction("claim(uint256)")(id)
+    }
+    return this.depositManager.claim(id)
   }
 }

@@ -1,4 +1,4 @@
-import { JsonRpcProvider, Wallet } from "ethers"
+import { Interface, JsonRpcProvider, Wallet } from "ethers"
 import type {
   DepositManager,
   LiqEthToken
@@ -11,7 +11,7 @@ const QueueAddress = "0x0000000000000000000000000000000000000011",
   ReceiptId = (1n << 200n) + 1n
 
 /** Producer-contract doubles retaining named ABI returns and exact uint256 IDs. */
-function fixture() {
+function fixture(queuePays = false) {
   const provider = new JsonRpcProvider("https://example.invalid"),
     wallet = Wallet.createRandom().connect(provider),
     token = {
@@ -24,14 +24,17 @@ function fixture() {
         { staticCall: jest.fn(async () => 9n) }
       )
     },
+    queueClaim = jest.fn(async () => ({ hash: "queue-claim" })),
     queue = {
+      interface: new Interface(queuePays ? ["function claim(uint256)"] : []),
+      getFunction: jest.fn(() => queueClaim),
       getAddress: jest.fn(async () => QueueAddress),
       balanceOf: jest.fn(async () => 1n),
       tokenOfOwnerByIndex: jest.fn(async () => ReceiptId),
       ownerOf: jest.fn(async () => wallet.address),
       info: jest.fn(async () => ({ ethAmount: 10n, readyAt: 900n })),
       withdrawDelay: jest.fn(async () => 120n),
-      claim: jest.fn(async () => ({ hash: "queue-claim" }))
+      claim: queueClaim
     },
     payer = {
       getAddress: jest.fn(async () => PayerAddress),
@@ -96,6 +99,26 @@ describe("Ethereum native withdrawals", () => {
     })
     expect(payer.claim).toHaveBeenCalledWith(ReceiptId)
     expect(queue.claim).not.toHaveBeenCalled()
+  })
+
+  it("checks V2 queue funding and pays there even when the manager is paused", async () => {
+    const { client, provider, queue, payer } = fixture(true)
+    payer.paused.mockResolvedValue(true)
+    jest
+      .spyOn(provider, "getBalance")
+      .mockImplementation(async address =>
+        address === QueueAddress ? 9n : 200n
+      )
+    await expect(client.claim(ReceiptId)).rejects.toThrow("funding")
+    expect(queue.claim).not.toHaveBeenCalled()
+    jest.spyOn(provider, "getBalance").mockResolvedValue(10n)
+    await expect(client.claim(ReceiptId)).resolves.toEqual({
+      hash: "queue-claim"
+    })
+    expect(queue.getFunction).toHaveBeenCalledWith("claim(uint256)")
+    expect(queue.claim).toHaveBeenCalledWith(ReceiptId)
+    expect(payer.paused).not.toHaveBeenCalled()
+    expect(payer.claim).not.toHaveBeenCalled()
   })
 
   it("distinguishes waiting for time, waiting for funding, pauses and missing ownership", async () => {

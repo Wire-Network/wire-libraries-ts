@@ -3,14 +3,14 @@ import type {
   LiqEthToken,
   SyndicationPool
 } from "@wireio/outpost-ethereum-artifacts"
-import { JsonRpcProvider, Wallet } from "ethers"
+import { Interface, JsonRpcProvider, Wallet } from "ethers"
 import { EthereumSyndicationClient } from "@wireio/sdk-outpost/clients/ethereum/EthereumSyndicationClient"
 
 const TokenAddress = "0x0000000000000000000000000000000000000011",
   PoolAddress = "0x0000000000000000000000000000000000000022"
 
 /** Generated-contract doubles; no network or funded keys. */
-function fixture() {
+function fixture(withMinimum = false) {
   const provider = new JsonRpcProvider("https://example.invalid"),
     wallet = Wallet.createRandom().connect(provider),
     deposit = {
@@ -28,7 +28,13 @@ function fixture() {
       totalSupply: jest.fn(async () => 100n),
       approve: jest.fn(async () => ({ hash: "approval" }))
     },
+    minSyndication = { staticCall: jest.fn(async () => 5_000_000n) },
     pool = {
+      interface: new Interface(
+        withMinimum ? ["function minSyndication() view returns (uint64)"] : []
+      ),
+      getFunction: jest.fn(() => minSyndication),
+      liqTokenPrecision: jest.fn(async () => 18n),
       getAddress: jest.fn(async () => PoolAddress),
       liqETH: jest.fn(async () => TokenAddress),
       maxSyndicationPerTransfer: jest.fn(async () => 80n),
@@ -42,7 +48,7 @@ function fixture() {
     pool as unknown as SyndicationPool,
     wallet
   )
-  return { client, deposit, token, pool, wallet }
+  return { client, deposit, token, pool, wallet, minSyndication }
 }
 
 describe("Ethereum syndication", () => {
@@ -84,6 +90,18 @@ describe("Ethereum syndication", () => {
     )
     expect(deposit.deposit).toHaveBeenCalledTimes(1)
     expect(pool.syndicate).not.toHaveBeenCalled()
+  })
+
+  it("converts the pool's credited depot minimum to external units and propagates read failures", async () => {
+    const { client, wallet, pool, minSyndication } = fixture(true)
+    const floor = 5_000_000_000_000_000n
+    expect((await client.read(wallet.address)).minimumSyndication).toBe(floor)
+    await expect(
+      client.syndicate(floor - 1n, wallet.signingKey.compressedPublicKey)
+    ).rejects.toThrow("minimum")
+    expect(pool.syndicate).not.toHaveBeenCalled()
+    minSyndication.staticCall.mockRejectedValue(new Error("RPC unavailable"))
+    await expect(client.read(wallet.address)).rejects.toThrow("RPC unavailable")
   })
 
   it("requires exact approval, wallet identity and configured limits", async () => {
