@@ -5,11 +5,14 @@ import nacl from "tweetnacl"
 import { isObject } from "@wireio/shared"
 import { ethers } from "../EthersCompat.js"
 import { blsSign, skFromLE } from "./BLS.js"
-import { asOption, Option } from "@3fv/prelude-ts"
+import { asOption } from "@3fv/prelude-ts"
 import { match } from "ts-pattern"
-import { defaults } from "lodash"
+import lodash from "lodash"
 import { ChainKind } from "@wireio/opp-typescript-models"
 import { numberToBytesBE } from "@noble/curves/utils.js"
+
+/** Preserve the options helper from the CommonJS package export. */
+const { defaults } = lodash
 
 /** Number of bytes in each ECDSA signature component. */
 const SIGNATURE_COMPONENT_BYTES = 32
@@ -34,16 +37,16 @@ export function sign<C extends ChainKind = ChainKind.UNKNOWN>(
   type: KeyType,
   options: sign.Options<C> | null = null
 ): SignatureParts {
-  switch (type) {
-    case KeyType.ED: {
+  return match(type)
+    .with(KeyType.ED, () => {
       // ED25519 detached signature via tweetnacl
       const sigBytes = nacl.sign.detached(message, secret)
       const r = sigBytes.slice(0, 32)
       const s = sigBytes.slice(32, 64)
       return { type, r, s, recid: 0 }
-    }
+    })
 
-    case KeyType.EM: {
+    .with(KeyType.EM, () => {
       // Ethereum signature using EIP-191 prefix by default.
       const ethOptions = sign.getOptions(options, ChainKind.EVM)
       const hash = ethOptions.personalMessage
@@ -57,15 +60,15 @@ export function sign<C extends ChainKind = ChainKind.UNKNOWN>(
       // vWire = recoveryParam + 31 = ethV + 4 for EM signatures.
       const recid = sig.recoveryParam!
       return { type, r, s, recid }
-    }
+    })
 
-    case KeyType.BLS: {
+    .with(KeyType.BLS, () => {
       const skBE = skFromLE(secret)
       const sigLE = blsSign(skBE, message)
       return { type, r: sigLE, s: new Uint8Array(0), recid: 0 }
-    }
+    })
 
-    case KeyType.K1: {
+    .with(KeyType.K1, () => {
       const curve = getCurve(type)
       const key = curve.keyFromPrivate(secret)
       let sig: ReturnType<typeof key.sign>
@@ -88,9 +91,9 @@ export function sign<C extends ChainKind = ChainKind.UNKNOWN>(
       } while (!isCanonical(r, s))
 
       return { type, r, s, recid: sig.recoveryParam || 0 }
-    }
+    })
 
-    default: {
+    .otherwise(() => {
       const signature = getNobleCurve(type).sign(message, secret, {
         lowS: true
       })
@@ -100,8 +103,7 @@ export function sign<C extends ChainKind = ChainKind.UNKNOWN>(
         s: numberToBytesBE(signature.s, SIGNATURE_COMPONENT_BYTES),
         recid: signature.recovery
       }
-    }
-  }
+    })
 }
 
 export namespace sign {
@@ -134,7 +136,7 @@ export namespace sign {
         .map(o => o as Options<C>)
         .getOrElse({ chain } as Options<C>),
       defaultOpts =
-        chain == ChainKind.EVM ? DefaultEthereumOptions : DefaultBaseOptions
+        chain === ChainKind.EVM ? DefaultEthereumOptions : DefaultBaseOptions
 
     return defaults(opts, defaultOpts)
   }

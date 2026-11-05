@@ -165,16 +165,13 @@ const SwitchDebtFiles = [
   "packages/sdk-core/src/chain/Blob.ts",
   "packages/sdk-core/src/chain/Integer.ts",
   "packages/sdk-core/src/chain/KeyType.ts",
-  "packages/sdk-core/src/chain/PrivateKey.ts",
   "packages/sdk-core/src/chain/PublicKey.ts",
   "packages/sdk-core/src/chain/Signature.ts",
   "packages/sdk-core/src/chain/Transaction.ts",
-  "packages/sdk-core/src/crypto/Curves.ts",
   "packages/sdk-core/src/crypto/Generate.ts",
   "packages/sdk-core/src/crypto/GetPublic.ts",
   "packages/sdk-core/src/crypto/Recover.ts",
   "packages/sdk-core/src/crypto/SharedSecret.ts",
-  "packages/sdk-core/src/crypto/Sign.ts",
   "packages/sdk-core/src/crypto/Verify.ts",
   "packages/sdk-core/src/serializer/Decoder.ts",
   "packages/sdk-core/src/serializer/Encoder.ts",
@@ -186,7 +183,6 @@ const SwitchDebtFiles = [
 const InlineIifeDebtFiles = ["packages/wallet-browser-ext/src/inject/Provider.ts"]
 const NullUnionReturnDebtFiles = [
   "packages/sdk-core/src/contracts/Contract.ts",
-  "packages/sdk-core/src/contracts/sysio/msig/Capabilities.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Hash.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Proposal.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Status.ts",
@@ -214,12 +210,10 @@ const InlineTypeLiteralDebtFiles = [
   "packages/sdk-core/src/chain/Transaction.ts",
   "packages/sdk-core/src/common/Connect.ts",
   "packages/sdk-core/src/common/Types.ts",
-  "packages/sdk-core/src/contracts/sysio/msig/Capabilities.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Proposal.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Status.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Transaction.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Types.ts",
-  "packages/sdk-core/src/crypto/Curves.ts",
   "packages/sdk-core/src/p2p/Client.ts",
   "packages/sdk-core/src/p2p/Provider.ts",
   "packages/sdk-core/src/serializer/Decoder.ts",
@@ -253,7 +247,6 @@ const StringLiteralUnionDebtFiles = [
   "packages/sdk-core/src/chain/Integer.ts",
   "packages/sdk-core/src/common/Logo.ts",
   "packages/sdk-core/src/contracts/Contract.ts",
-  "packages/sdk-core/src/contracts/sysio/msig/Capabilities.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Types.ts",
   "packages/shared/src/logging/context/LogContext.ts",
   "packages/wallet-browser-ext/src/popup/slices/WalletSlice.ts",
@@ -272,8 +265,6 @@ const RuleDebt = [
     files: [
       "examples/web-logging-example/src/web-logging-example.ts",
       "packages/sdk-core/src/Utils.ts",
-      "packages/sdk-core/src/chain/PrivateKey.ts",
-      "packages/sdk-core/src/crypto/Sign.ts",
       "packages/sdk-core/tests/chain/Abi.test.ts",
       "packages/sdk-core/tests/chain/Asset.test.ts",
       "packages/sdk-core/tests/crypto/crypto.test.ts",
@@ -281,7 +272,6 @@ const RuleDebt = [
       "packages/shared/src/guards/types.ts",
       "packages/shared/src/logging/InternalLogger.ts",
       "packages/shared/src/logging/appenders/ConsoleAppender.ts",
-      "packages/shared/src/logging/appenders/aws-firehose/AWSFirehoseAppender.ts",
       "packages/shared/src/logging/appenders/push/PushLogRecordsAppender.ts",
       "packages/shared/src/logging/context/LogContext.ts",
       "packages/shared/src/logging/examples/example-file-appender.ts",
@@ -296,8 +286,7 @@ const RuleDebt = [
       "packages/sdk-core/src/api/Client.ts",
       "packages/sdk-core/src/chain/Abi.ts",
       "packages/sdk-core/src/chain/Bytes.ts",
-      "packages/sdk-core/src/chain/PublicKey.ts",
-      "packages/sdk-core/src/crypto/Sign.ts"
+      "packages/sdk-core/src/chain/PublicKey.ts"
     ]
   },
   {
@@ -305,7 +294,6 @@ const RuleDebt = [
     files: [
       "packages/sdk-core/src/chain/Signature.ts",
       "packages/shared/src/guards/assert.ts",
-      "packages/shared/src/logging/Logger.ts",
       "packages/shared/src/logging/context/LogContextProvider.ts",
       "packages/shared/src/node/logging/appenders/FileAppender.ts"
     ]
@@ -323,14 +311,12 @@ const RuleDebt = [
     rule: "no-useless-assignment",
     files: [
       "packages/sdk-core/src/api/Client.ts",
-      "packages/sdk-core/src/chain/PrivateKey.ts",
       "packages/shared/src/node/logging/appenders/FileAppender.ts"
     ]
   },
   {
     rule: "no-extra-boolean-cast",
     files: [
-      "packages/shared/src/logging/appenders/aws-firehose/AWSFirehoseAppender.ts",
       "packages/shared/src/node/logging/appenders/FileAppender.ts"
     ]
   },

@@ -36,7 +36,17 @@ export * from "./signing/IndexSigning.js"
 export * from "./AbiCache.js"
 
 // hash
-import { sha256, sha512, sha384 } from "hash.js"
+import hashjs from "hash.js"
+import type {
+  sha256 as Sha256,
+  sha512 as Sha512,
+  sha384 as Sha384
+} from "hash.js"
+
+/** Keep the public constructor types independent of synthetic default imports. */
+const sha256: typeof Sha256 = hashjs.sha256,
+  sha512: typeof Sha512 = hashjs.sha512,
+  sha384: typeof Sha384 = hashjs.sha384
 export const Hash = {
   sha256,
   sha512,
