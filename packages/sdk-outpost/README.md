@@ -11,6 +11,8 @@ deployment profiles remain caller-supplied.
 The current artifact pair is Ethereum **0.4.4** / Solana **0.4.5**, from
 [the October 28 cluster release](https://github.com/Wire-Network/wire-platform-build-system/releases/tag/cluster-v1.0.0-dev-20261028_144410).
 The retained **0.4.3 / 0.4.2** Testnet pair remains supported temporarily.
+The Devnet Solana client supports the **0.4.6** IDL. Devnet profile selection
+requires the matching Ethereum V3 artifact pair.
 Selection uses exact paired interface identity followed by live
 runtime verification; network names and version strings never authorize a match.
 

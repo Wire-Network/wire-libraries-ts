@@ -17,6 +17,7 @@ import {
   SolanaOutpostArtifactManifest as SolanaV042ArtifactManifest,
   liqsolCoreIdl as solanaV042LiqsolCoreIdl
 } from "@wireio/outpost-solana-artifacts-v0-4-2"
+import type { liqsolCoreIdl as solanaV046LiqsolCoreIdl } from "@wireio/outpost-solana-artifacts-v0-4-6"
 import { match } from "ts-pattern"
 
 import {
@@ -56,6 +57,7 @@ export interface SolanaOutpostArtifactIdls {
   readonly [SolanaProgramName.liqsolCore]:
     | typeof liqsolCoreIdl
     | typeof solanaV042LiqsolCoreIdl
+    | typeof solanaV046LiqsolCoreIdl
 }
 
 /** Ethereum producer bindings and manifest owned by one artifact release. */

@@ -1,9 +1,15 @@
 import { PublicKey } from "@solana/web3.js"
 import { sha256 } from "ethers"
+import {
+  liqsolCoreIdl as devnetIdl,
+  SolanaOutpostArtifactManifest
+} from "@wireio/outpost-solana-artifacts-v0-4-6"
+import { CurrentOutpostArtifactSuite } from "@wireio/sdk-outpost/artifacts/Registry"
 
 import {
   OutpostChainFamily,
   OutpostClient,
+  OutpostDeploymentVerifier,
   SolanaProgramName,
   SolanaUpgradeableLoaderProgramId,
   type SolanaOutpostClient,
@@ -30,6 +36,41 @@ function createSolanaClient(
 }
 
 describe("SolanaOutpostClient", () => {
+  it("decodes the 500-epoch history of the verified Devnet program", async () => {
+    const profile = createOutpostDeploymentProfileFixture(),
+      provider = createSolanaProviderFixture(profile),
+      verified = jest
+        .spyOn(OutpostDeploymentVerifier, "verify")
+        .mockResolvedValueOnce({
+          ...CurrentOutpostArtifactSuite,
+          solana: {
+            manifest: SolanaOutpostArtifactManifest,
+            idls: { liqsolCore: devnetIdl }
+          }
+        })
+    try {
+      const client = await createSolanaClient({ profile, provider }),
+        program = client.program(SolanaProgramName.liqsolCore),
+        data = Buffer.alloc(8032)
+      Buffer.from(
+        devnetIdl.accounts.find(
+          account => account.name === "pretokenPurchaseHistory"
+        )!.discriminator
+      ).copy(data)
+      data.writeBigUInt64LE(7n, 24 + 500 * 8)
+      data[8024] = 255
+      const decoded = program.coder.accounts.decode(
+        "pretokenPurchaseHistory",
+        data
+      )
+      expect(decoded.syndPerEpoch).toHaveLength(500)
+      expect(decoded.syndPerEpoch[0].toString()).toBe("7")
+      expect(decoded.bump).toBe(255)
+    } finally {
+      verified.mockRestore()
+    }
+  })
+
   it("verifies a profile and returns its runtime program address", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createSolanaProviderFixture(profile),
