@@ -1,8 +1,4 @@
-import type {
-  DepositManager,
-  LiqEthToken,
-  SyndicationPool
-} from "@wireio/outpost-ethereum-artifacts"
+import type { EthereumContractMap } from "./Types.js"
 import {
   computeAddress,
   getAddress,
@@ -25,6 +21,8 @@ export interface EthereumSyndicationState {
   decimals: number
   /** Minimum native deposit in wei. */
   minimumDeposit: bigint
+  /** Minimum credited syndication expressed in external liqETH base units. */
+  minimumSyndication: bigint
   /** Maximum liqETH base units allowed in one syndication. */
   maximumSyndication: bigint
   /** Token minting is paused. */
@@ -32,20 +30,34 @@ export interface EthereumSyndicationState {
   /** Token transfers or pool syndication are paused. */
   syndicationPaused: boolean
 }
-const CompressedPublicKeyLength = 33
+const CompressedPublicKeyLength = 33,
+  MaxDepotDecimals = 9
 
 /** User operations only; never bootstraps pools or claims Wire settlement. */
 export class EthereumSyndicationClient {
   /** Construct from producer-generated contracts in a verified deployment. */
   constructor(
     /** Verified native-deposit contract. */
-    readonly depositManager: DepositManager,
+    readonly depositManager: EthereumContractMap["DepositManager"],
     /** Verified external liqETH contract. */
-    readonly token: LiqEthToken,
+    readonly token: EthereumContractMap["LiqEthToken"],
     /** Verified syndication custody contract. */
-    readonly pool: SyndicationPool,
+    readonly pool: EthereumContractMap["SyndicationPool"],
     private readonly connection: Provider | Signer
   ) {}
+
+  /** Convert the contract's minimum credited depot units to external LIQ base units. */
+  private async minimumSyndication(): Promise<bigint> {
+    if (!("minSyndication" in this.pool)) return 1n
+    const [minimum, precision] = await Promise.all([
+      this.pool.minSyndication(),
+      this.pool.liqTokenPrecision()
+    ])
+    const scale =
+      10n ** BigInt(Math.max(0, Number(precision) - MaxDepotDecimals))
+    // The pool rejects zero credited depot units even when no minimum is set.
+    return (BigInt(minimum) || 1n) * scale
+  }
 
   /** Read balances and verify deposit and custody use the same liquid token. */
   async read(owner: string): Promise<EthereumSyndicationState> {
@@ -58,6 +70,7 @@ export class EthereumSyndicationClient {
         allowance,
         decimals,
         minimumDeposit,
+        minimumSyndication,
         maximumSyndication,
         tokenPaused,
         poolPaused
@@ -69,6 +82,7 @@ export class EthereumSyndicationClient {
         this.token.allowance(owner, await this.pool.getAddress()),
         this.token.decimals(),
         this.depositManager.minDeposit(),
+        this.minimumSyndication(),
         this.pool.maxSyndicationPerTransfer(),
         this.token.paused(),
         this.pool.paused()
@@ -87,6 +101,7 @@ export class EthereumSyndicationClient {
       allowance,
       decimals: Number(decimals),
       minimumDeposit,
+      minimumSyndication,
       maximumSyndication,
       depositPaused: tokenPaused,
       syndicationPaused: tokenPaused || poolPaused
@@ -145,6 +160,8 @@ export class EthereumSyndicationClient {
       )
     }
     if (state.syndicationPaused) throw new Error("Syndication is paused")
+    if (amount < state.minimumSyndication)
+      throw new Error("Syndication amount is below the configured minimum")
     if (
       amount <= 0n ||
       amount > state.liquidBalance ||

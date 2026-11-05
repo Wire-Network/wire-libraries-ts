@@ -1,5 +1,12 @@
 import { PublicKey } from "@solana/web3.js"
 import { sha256 } from "ethers"
+import {
+  liqsolCoreIdl as devnetIdl,
+  SolanaOutpostArtifactManifest
+} from "@wireio/outpost-solana-artifacts-v0-4-6"
+import { EthereumOutpostArtifactManifest } from "@wireio/outpost-ethereum-artifacts-v0-4-5"
+import { createRequire } from "node:module"
+import { readFileSync } from "node:fs"
 
 import {
   OutpostChainFamily,
@@ -30,6 +37,41 @@ function createSolanaClient(
 }
 
 describe("SolanaOutpostClient", () => {
+  it("decodes the 500-epoch history of the verified Devnet program", async () => {
+    const profile = createOutpostDeploymentProfileFixture(
+        EthereumOutpostArtifactManifest,
+        "@wireio/outpost-ethereum-artifacts-v0-4-5"
+      ),
+      artifact = SolanaOutpostArtifactManifest.programs.liqsolCore,
+      binaryPath = createRequire(__filename).resolve(
+        `@wireio/outpost-solana-artifacts-v0-4-6/${artifact.programBinaryPath}`
+      ),
+      programData = createSolanaProgramDataAccountData(
+        readFileSync(binaryPath)
+      ),
+      core = profile.solana.programs.liqsolCore
+    core.idlSha256 = artifact.idlSha256
+    core.programDataSha256 = sha256(programData).slice(2)
+    const provider = createSolanaProviderFixture(profile, programData)
+    const client = await createSolanaClient({ profile, provider }),
+      program = client.program(SolanaProgramName.liqsolCore),
+      data = Buffer.alloc(8032)
+    Buffer.from(
+      devnetIdl.accounts.find(
+        account => account.name === "pretokenPurchaseHistory"
+      )!.discriminator
+    ).copy(data)
+    data.writeBigUInt64LE(7n, 24 + 500 * 8)
+    data[8024] = 255
+    const decoded = program.coder.accounts.decode(
+      "pretokenPurchaseHistory",
+      data
+    )
+    expect(decoded.syndPerEpoch).toHaveLength(500)
+    expect(decoded.syndPerEpoch[0].toString()).toBe("7")
+    expect(decoded.bump).toBe(255)
+  })
+
   it("verifies a profile and returns its runtime program address", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
       provider = createSolanaProviderFixture(profile),

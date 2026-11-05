@@ -8,9 +8,11 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-The current artifact pair is Ethereum **0.4.4** / Solana **0.4.5**, from
+Sandbox pairs Ethereum **0.4.4** / Solana **0.4.5**, from
 [the October 28 cluster release](https://github.com/Wire-Network/wire-platform-build-system/releases/tag/cluster-v1.0.0-dev-20261028_144410).
 The retained **0.4.3 / 0.4.2** Testnet pair remains supported temporarily.
+Devnet pairs Ethereum **0.4.5** (V3 staking and V2 withdrawal queue) with
+Solana **0.4.6** (500-epoch history).
 Selection uses exact paired interface identity followed by live
 runtime verification; network names and version strings never authorize a match.
 
@@ -21,6 +23,8 @@ with their tests. Keep this support only until Testnet has actually migrated;
 do not carry it into mainnet.
 The package supplies artifacts only; a fresh deployment still needs its own
 verified profile, endpoints and acceptance. SDK versions use the normal release workflow.
+
+Ethereum pools that expose a credited syndication minimum report it in external liqETH base units. Final credit depends on the actual tokens received by the pool.
 
 ## Install
 
@@ -94,6 +98,7 @@ receipts on the nonce-capable program. These helpers never retry a request autom
 
 A confirmed request is not a SOL payout. Network processing can advance
 serviceability later; the SDK does not run validator cranks or modify it.
+
 ## Ethereum native withdrawals
 
 `client.withdrawals.read(owner)` returns owned NFT IDs, exact amounts, chain-time
@@ -102,10 +107,10 @@ and submits a withdrawal request; `claim(id)` rechecks ownership, delay, pauses
 and funds before submitting one claim. Both return the transaction immediately;
 store its hash before waiting. A ready receipt can still be unfunded.
 
-The deployment profile must identify the verified `WithdrawalQueue` used by the
-deployed bootstrap suite. Claims pay through `DepositManager.claim`. Existing
-profiles retain their capabilities; withdrawals fail closed until a matching
-queue identity is supplied. Newer upgrade generations are outside this release.
+The profile must identify the deployed withdrawal queue. In the bootstrap suite
+the manager holds ETH and handles claims. WithdrawalQueueV2 holds and pays ETH
+itself and has no claim pause. The SDK selects the payer from the verified queue
+ABI. A new deployment still needs a registered producer artifact pair.
 
 ## Deployment profiles
 
@@ -160,10 +165,9 @@ release; consumers continue to use the same `OutpostClient.create` facade.
 
 ### Artifact compatibility
 
-The current Ethereum `0.4.4` / Solana `0.4.5` pair and temporary Testnet
-Ethereum `0.4.3` / Solana `0.4.2` pair are selected by exact interface and live
-runtime verification. Requests use the verified producer IDL's withdrawal
-arguments, never an environment name.
+Devnet (`0.4.5 / 0.4.6`), Sandbox (`0.4.4 / 0.4.5`) and temporary Testnet
+(`0.4.3 / 0.4.2`) are selected by exact interface and live runtime verification.
+Requests use the verified producer IDL's withdrawal arguments.
 Earlier pairs are not retained;
 older deployments require their matching SDK release. Consumers must provide a
 fresh deployment profile and pass exact live runtime verification before use.

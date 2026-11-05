@@ -66,7 +66,7 @@ export class EthereumOutpostClient {
     )
   }
 
-  /** Native withdrawals through the verified deployed queue and DepositManager payer. */
+  /** Native withdrawals through the verified staking contracts. */
   get withdrawals(): EthereumWithdrawalClient {
     return new EthereumWithdrawalClient(
       this.contract(EthereumContractName.LiqEthToken),

@@ -4,12 +4,19 @@ import type { OutpostDeploymentProfile } from "../../deployments/index.js"
 import { SolanaProgramName } from "../../deployments/index.js"
 import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
 import type { LiqsolCore as LiqsolCoreV042 } from "@wireio/outpost-solana-artifacts-v0-4-2"
+import type { LiqsolCore as LiqsolCoreV046 } from "@wireio/outpost-solana-artifacts-v0-4-6"
+
+/** Verified IDLs that support user-chosen withdrawal nonces. */
+type ConcurrentLiqsolCore = LiqsolCore | LiqsolCoreV046
 
 /** Temporary Testnet IDL union; remove the retained type when Testnet adopts the RC. */
-export type SupportedLiqsolCore = LiqsolCore | LiqsolCoreV042
+export type SupportedLiqsolCore = ConcurrentLiqsolCore | LiqsolCoreV042
 
 /** Preserve each producer's complete generated Anchor program type. */
-export type SolanaCoreProgram = Program<LiqsolCore> | Program<LiqsolCoreV042>
+type ConcurrentWithdrawalProgram = Program<LiqsolCore> | Program<LiqsolCoreV046>
+export type SolanaCoreProgram =
+  | ConcurrentWithdrawalProgram
+  | Program<LiqsolCoreV042>
 
 const WithdrawalRequestInstruction = "requestWithdraw",
   WithdrawalNonceArgument = "nonce"
@@ -17,7 +24,7 @@ const WithdrawalRequestInstruction = "requestWithdraw",
 /** Distinguish the supported, already verified producer instruction encodings. */
 export function hasWithdrawalNonce(
   idl: SupportedLiqsolCore
-): idl is LiqsolCore {
+): idl is ConcurrentLiqsolCore {
   return idl.instructions.some(
     instruction =>
       instruction.name === WithdrawalRequestInstruction &&
@@ -30,7 +37,7 @@ export function hasWithdrawalNonce(
 /** Narrow an Anchor client without widening or hand-declaring generated methods. */
 export function hasConcurrentWithdrawals(
   program: SolanaCoreProgram
-): program is Program<LiqsolCore> {
+): program is ConcurrentWithdrawalProgram {
   return hasWithdrawalNonce(program.idl)
 }
 

@@ -11,7 +11,7 @@ const QueueAddress = "0x0000000000000000000000000000000000000011",
   ReceiptId = (1n << 200n) + 1n
 
 /** Producer-contract doubles retaining named ABI returns and exact uint256 IDs. */
-function fixture() {
+function fixture(queuePays = false) {
   const provider = new JsonRpcProvider("https://example.invalid"),
     wallet = Wallet.createRandom().connect(provider),
     token = {
@@ -24,6 +24,7 @@ function fixture() {
         { staticCall: jest.fn(async () => 9n) }
       )
     },
+    queueClaim = jest.fn(async () => ({ hash: "queue-claim" })),
     queue = {
       getAddress: jest.fn(async () => QueueAddress),
       balanceOf: jest.fn(async () => 1n),
@@ -31,13 +32,14 @@ function fixture() {
       ownerOf: jest.fn(async () => wallet.address),
       info: jest.fn(async () => ({ ethAmount: 10n, readyAt: 900n })),
       withdrawDelay: jest.fn(async () => 120n),
-      claim: jest.fn(async () => ({ hash: "queue-claim" }))
+      ...(queuePays ? { claim: queueClaim } : {})
     },
+    managerClaim = jest.fn(async () => ({ hash: "deposit-claim" })),
     payer = {
       getAddress: jest.fn(async () => PayerAddress),
       withdrawalQueue: jest.fn(async () => QueueAddress),
       paused: jest.fn(async () => false),
-      claim: jest.fn(async () => ({ hash: "deposit-claim" }))
+      ...(queuePays ? {} : { claim: managerClaim })
     }
   jest
     .spyOn(provider, "getBlock")
@@ -49,7 +51,16 @@ function fixture() {
     payer as unknown as DepositManager,
     wallet
   )
-  return { client, provider, wallet, token, queue, payer }
+  return {
+    client,
+    provider,
+    wallet,
+    token,
+    queue,
+    payer,
+    queueClaim,
+    managerClaim
+  }
 }
 
 describe("Ethereum native withdrawals", () => {
@@ -90,16 +101,35 @@ describe("Ethereum native withdrawals", () => {
   })
 
   it("uses DepositManager for v1 claims and never calls the queue's nonexistent claim", async () => {
-    const { client, payer, queue } = fixture()
+    const { client, managerClaim, queueClaim } = fixture()
     await expect(client.claim(ReceiptId)).resolves.toEqual({
       hash: "deposit-claim"
     })
-    expect(payer.claim).toHaveBeenCalledWith(ReceiptId)
-    expect(queue.claim).not.toHaveBeenCalled()
+    expect(managerClaim).toHaveBeenCalledWith(ReceiptId)
+    expect(queueClaim).not.toHaveBeenCalled()
+  })
+
+  it("checks V2 queue funding and pays there even when the manager is paused", async () => {
+    const { client, provider, payer, queueClaim, managerClaim } = fixture(true)
+    payer.paused.mockResolvedValue(true)
+    jest
+      .spyOn(provider, "getBalance")
+      .mockImplementation(async address =>
+        address === QueueAddress ? 9n : 200n
+      )
+    await expect(client.claim(ReceiptId)).rejects.toThrow("funding")
+    expect(queueClaim).not.toHaveBeenCalled()
+    jest.spyOn(provider, "getBalance").mockResolvedValue(10n)
+    await expect(client.claim(ReceiptId)).resolves.toEqual({
+      hash: "queue-claim"
+    })
+    expect(queueClaim).toHaveBeenCalledWith(ReceiptId)
+    expect(payer.paused).not.toHaveBeenCalled()
+    expect(managerClaim).not.toHaveBeenCalled()
   })
 
   it("distinguishes waiting for time, waiting for funding, pauses and missing ownership", async () => {
-    const { client, queue, payer, provider } = fixture()
+    const { client, queue, payer, managerClaim, provider } = fixture()
     queue.info.mockResolvedValue({ ethAmount: 10n, readyAt: 1001n })
     await expect(client.claim(ReceiptId)).rejects.toThrow("delay")
     queue.info.mockResolvedValue({ ethAmount: 10n, readyAt: 900n })
@@ -111,7 +141,7 @@ describe("Ethereum native withdrawals", () => {
     payer.paused.mockResolvedValue(false)
     queue.balanceOf.mockResolvedValue(0n)
     await expect(client.claim(ReceiptId)).rejects.toThrow("not owned")
-    expect(payer.claim).not.toHaveBeenCalled()
+    expect(managerClaim).not.toHaveBeenCalled()
   })
 
   it("fails closed on token/queue wiring, changing ownership and excessive enumeration", async () => {

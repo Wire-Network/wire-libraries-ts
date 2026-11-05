@@ -1,12 +1,4 @@
-import type {
-  BAR,
-  WithdrawalQueue,
-  OPP,
-  OPPInbound,
-  DepositManager,
-  LiqEthToken,
-  SyndicationPool
-} from "@wireio/outpost-ethereum-artifacts"
+import type { EthereumOutpostArtifactFactories } from "../../artifacts/Registry.js"
 import type { Provider, Signer } from "ethers"
 
 import type { OutpostDeploymentProfile } from "../../deployments/index.js"
@@ -20,21 +12,9 @@ export interface EthereumOutpostClientOptions {
   connection: Provider | Signer
 }
 
-/** Generated contract clients keyed by their deployment identity. */
-export interface EthereumContractMap {
-  /** Native withdrawal receipt queue used by the verified DepositManager. */
-  [EthereumContractName.WithdrawalQueue]: WithdrawalQueue
-
-  /** Native ETH deposit contract for the deployed liquid-staking suite. */
-  [EthereumContractName.DepositManager]: DepositManager
-  /** External liquid ETH token. */
-  [EthereumContractName.LiqEthToken]: LiqEthToken
-  /** Measured LIQ custody and OPP syndication contract. */
-  [EthereumContractName.SyndicationPool]: SyndicationPool
-  /** Bond and node-owner registration contract. */
-  [EthereumContractName.BAR]: BAR
-  /** Outbound OPP endpoint. */
-  [EthereumContractName.OPP]: OPP
-  /** Inbound OPP endpoint. */
-  [EthereumContractName.OPPInbound]: OPPInbound
+/** Each result is a binding from one of the supported producer packages. */
+export type EthereumContractMap = {
+  [Name in EthereumContractName]: ReturnType<
+    EthereumOutpostArtifactFactories[Name]["connect"]
+  >
 }
