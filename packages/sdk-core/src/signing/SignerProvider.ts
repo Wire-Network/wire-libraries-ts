@@ -2,6 +2,7 @@ import { identity } from "lodash"
 import { Option } from "@3fv/prelude-ts"
 import { ethers } from "../EthersCompat.js"
 import { PrivateKey, type PrivateKeyType } from "../chain/PrivateKey.js"
+import { KeyType } from "../chain/KeyType.js"
 import { PublicKey } from "../chain/PublicKey.js"
 import { hexToArray } from "../Utils.js"
 
@@ -83,7 +84,8 @@ export const createEdSigner = (
  * produced by transaction.signingDigest(...).msgBytes for classic keys) and
  * signs it directly via `signDigest` to avoid double-hashing.
  *
- * The returned bytes are in raw `[r||s||v]` format so callers can pass them
+ * ED receives the prepared message bytes and returns `[public key||signature]`.
+ * Other curves return raw `[r||s||v]` format so callers can pass them
  * into `Signature.fromRaw(...)` without additional conversion.
  *
  * @param privateKey Private key in any supported `PrivateKeyType` representation.
@@ -98,7 +100,10 @@ export function createClassicSigner(
     pubKey: privKey.toPublic(),
     async sign(msg) {
       const digest = toMessageBytes(msg, hexToArray)
-      const signature = privKey.signDigest(digest)
+      const signature =
+        privKey.type === KeyType.ED
+          ? privKey.signMessage(digest)
+          : privKey.signDigest(digest)
       return hexToArray(signature.toHex().slice(2))
     }
   }

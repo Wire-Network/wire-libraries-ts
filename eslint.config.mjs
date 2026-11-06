@@ -165,10 +165,7 @@ const SwitchDebtFiles = [
   "packages/sdk-core/src/chain/Blob.ts",
   "packages/sdk-core/src/chain/Integer.ts",
   "packages/sdk-core/src/chain/KeyType.ts",
-  "packages/sdk-core/src/chain/PrivateKey.ts",
   "packages/sdk-core/src/chain/PublicKey.ts",
-  "packages/sdk-core/src/chain/Signature.ts",
-  "packages/sdk-core/src/chain/Transaction.ts",
   "packages/sdk-core/src/crypto/Curves.ts",
   "packages/sdk-core/src/crypto/Generate.ts",
   "packages/sdk-core/src/crypto/GetPublic.ts",
@@ -195,7 +192,6 @@ const NullUnionReturnDebtFiles = [
 ]
 const InlineTypeLiteralDebtFiles = [
   "packages/sdk-core/src/Utils.ts",
-  "packages/sdk-core/src/api/Client.ts",
   "packages/sdk-core/src/api/Provider.ts",
   "packages/sdk-core/src/api/Types.ts",
   "packages/sdk-core/src/api/v1/History.ts",
@@ -210,8 +206,6 @@ const InlineTypeLiteralDebtFiles = [
   "packages/sdk-core/src/chain/Integer.ts",
   "packages/sdk-core/src/chain/PermissionLevel.ts",
   "packages/sdk-core/src/chain/PublicKey.ts",
-  "packages/sdk-core/src/chain/Signature.ts",
-  "packages/sdk-core/src/chain/Transaction.ts",
   "packages/sdk-core/src/common/Connect.ts",
   "packages/sdk-core/src/common/Types.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Capabilities.ts",
@@ -245,7 +239,6 @@ const InlineTypeLiteralDebtFiles = [
   "packages/wallet-ext-sdk/src/Types.ts"
 ]
 const StringLiteralUnionDebtFiles = [
-  "packages/sdk-core/src/api/Client.ts",
   "packages/sdk-core/src/api/Types.ts",
   "packages/sdk-core/src/api/v1/Types.ts",
   "packages/sdk-core/src/api/v2/Types.ts",
@@ -272,7 +265,6 @@ const RuleDebt = [
     files: [
       "examples/web-logging-example/src/web-logging-example.ts",
       "packages/sdk-core/src/Utils.ts",
-      "packages/sdk-core/src/chain/PrivateKey.ts",
       "packages/sdk-core/src/crypto/Sign.ts",
       "packages/sdk-core/tests/chain/Abi.test.ts",
       "packages/sdk-core/tests/chain/Asset.test.ts",
@@ -293,7 +285,6 @@ const RuleDebt = [
     rule: "eqeqeq",
     files: [
       "packages/sdk-core/src/Utils.ts",
-      "packages/sdk-core/src/api/Client.ts",
       "packages/sdk-core/src/chain/Abi.ts",
       "packages/sdk-core/src/chain/Bytes.ts",
       "packages/sdk-core/src/chain/PublicKey.ts",
@@ -303,7 +294,6 @@ const RuleDebt = [
   {
     rule: "no-console",
     files: [
-      "packages/sdk-core/src/chain/Signature.ts",
       "packages/shared/src/guards/assert.ts",
       "packages/shared/src/logging/Logger.ts",
       "packages/shared/src/logging/context/LogContextProvider.ts",
@@ -322,8 +312,6 @@ const RuleDebt = [
   {
     rule: "no-useless-assignment",
     files: [
-      "packages/sdk-core/src/api/Client.ts",
-      "packages/sdk-core/src/chain/PrivateKey.ts",
       "packages/shared/src/node/logging/appenders/FileAppender.ts"
     ]
   },

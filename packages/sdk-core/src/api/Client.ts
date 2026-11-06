@@ -16,7 +16,6 @@ import { GetRowsOptions, TransactionExtraOptions } from "./Types.js"
 export { ChainAPI, HistoryAPI }
 import { ABI } from "../chain/Abi.js"
 import { Action, AnyAction } from "../chain/Action.js"
-import { KeyType } from "../chain/KeyType.js"
 import { NameType } from "../chain/Name.js"
 import { Signature } from "../chain/Signature.js"
 import {
@@ -53,7 +52,26 @@ export interface APIErrorData {
   details: APIErrorDetail[]
 }
 
-export type APIMethods = "POST" | "GET"
+/** HTTP methods accepted by the RPC provider. */
+export enum APIMethod {
+  POST = "POST",
+  GET = "GET"
+}
+export type APIMethods = `${APIMethod}`
+/** Shared RPC call options. */
+export interface APICallOptions {
+  method?: APIMethods
+  path: string
+  params?: unknown
+  headers?: Record<string, string>
+  responseType?: ABISerializableType
+}
+/** RPC options with a requested typed response. */
+export interface APITypedCallOptions<
+  T extends ABISerializableType
+> extends APICallOptions {
+  responseType: T
+}
 
 /** Response to an API call.  */
 export interface APIResponse {
@@ -150,7 +168,7 @@ export class APIClient {
       this.v1Provider = new FetchProvider(options.url, options)
     else throw new Error("Missing v1 url or provider")
 
-    if (options.hyperionUrl && options.hyperionUrl != "")
+    if (options.hyperionUrl && options.hyperionUrl !== "")
       this.v2Provider = new FetchProvider(options.hyperionUrl, options)
 
     if (options.signer) this._signer = options.signer
@@ -167,34 +185,14 @@ export class APIClient {
     stats: new StatsAPIv2(this)
   }
 
-  async call<T extends ABISerializableConstructor>(args: {
-    method?: APIMethods
-    path: string
-    params?: unknown
-    headers?: Record<string, string>
-    responseType: T
-  }): Promise<InstanceType<T>>
-  async call<T extends keyof BuiltinTypes>(args: {
-    method?: APIMethods
-    path: string
-    params?: unknown
-    headers?: Record<string, string>
-    responseType: T
-  }): Promise<BuiltinTypes[T]>
-  async call<T = unknown>(args: {
-    method?: APIMethods
-    path: string
-    params?: unknown
-    headers?: Record<string, string>
-  }): Promise<T>
-
-  async call(args: {
-    method?: APIMethods
-    path: string
-    params?: unknown
-    headers?: Record<string, string>
-    responseType?: ABISerializableType
-  }) {
+  async call<T extends ABISerializableConstructor>(
+    args: APITypedCallOptions<T>
+  ): Promise<InstanceType<T>>
+  async call<T extends keyof BuiltinTypes>(
+    args: APITypedCallOptions<T>
+  ): Promise<BuiltinTypes[T]>
+  async call<T = unknown>(args: APICallOptions): Promise<T>
+  async call(args: APICallOptions) {
     const isV2 = args.path.startsWith("/v2/")
     if (isV2 && !this.v2Provider)
       throw new Error("HyperionAPI requires a v2 provider")
@@ -321,14 +319,11 @@ export class APIClient {
         opts && opts.context_free_actions ? opts.context_free_actions : []
     })
 
-    // If ED signer, add the public key to the transaction extensions
-    if (keyType === KeyType.ED) transaction.extPubKey(this.signer.pubKey)
-
     const { msgBytes } = transaction.signingDigest(info.chain_id, keyType)
     const sigBytes = await this.signer.sign(msgBytes).catch(err => {
       throw new NestedError("transaction signing failed", { cause: err })
     })
-    const signature = Signature.fromRaw(sigBytes, keyType)
+    const signature = Signature.fromRaw(sigBytes, keyType, this.signer.pubKey)
     return SignedTransaction.from({ ...transaction, signatures: [signature] })
   }
 
@@ -363,9 +358,7 @@ export class APIClient {
     pollInterval = 3000 // 3 seconds 6 blocks half of 12 block round
   ): Promise<void> {
     const start = Date.now()
-    let waiting = true
-
-    while (waiting) {
+    while (true) {
       const info = await this.v1.chain.get_info()
       const libNum = info.last_irreversible_block_num.toNumber()
       const blocksLeft = Math.max(0, +blocknum - libNum)
@@ -374,7 +367,6 @@ export class APIClient {
       if (onProgress) onProgress(blocksLeft, secondsLeft)
 
       if (libNum >= +blocknum) {
-        waiting = false
         return
       }
 

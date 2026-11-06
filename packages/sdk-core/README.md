@@ -69,7 +69,24 @@ client's `signer`, then use `api.pushTransaction(approve)` or the action's
 `invoke` method. Preparing an action does not sign or broadcast it.
 Authorization defaults to empty and must be supplied for writes.
 
-### Read state and use domain clients
+### ED wallet signatures
+
+Use native-base58 `PUB_ED_<Solana address>` public keys. `APIClient` accepts an
+external wallet's 64-byte detached signature through its `SignerProvider` and
+embeds that signer's public key. Wire ED signatures are always 96 bytes:
+`[public key (32) | signature (64)]`, including `SIG_ED_` text and ABI encoding.
+Transaction signing uses the lowercase digest hex as UTF-8, matching libfc.
+`PrivateKey.signDigest` and `Signature.verifyDigest` use that same ED domain;
+`signMessage` / `verifyMessage` use the supplied message bytes directly.
+
+For manual composition, use `Signature.fromRaw(detachedBytes, KeyType.ED, publicKey)`.
+Already embedded 96-byte signatures can be parsed without an additional key;
+when one is supplied, the embedded key must match. AuthEx proofs use the same
+codec. The retired 65-byte padding helpers and transaction public-key extension
+are removed; do not pad signatures or add an `extPubKey` extension. All transaction
+packing paths preserve the complete signature.
+
+## Read state and use domain clients
 
 `tables.<name>.query(options)` returns rows and pagination metadata; `first`
 returns the first matching row or `null`. Set the correct scope and key bounds,

@@ -1,3 +1,4 @@
+import { match } from "ts-pattern"
 import { ABIDecoder } from "../serializer/Decoder.js"
 import { ABIEncoder } from "../serializer/Encoder.js"
 import { ABISerializableObject } from "../serializer/Serializable.js"
@@ -16,12 +17,18 @@ import { verify } from "../crypto/Verify.js"
 
 export type SignatureType = Signature | SignatureParts | string
 
-export type SignatureParts = {
+export interface SignatureParts {
   type: KeyType
   r: Uint8Array
   s: Uint8Array
   recid: number
+  /** ED signatures must carry the corresponding public key. */
+  publicKey?: PublicKey
 }
+
+const ED_PUBLIC_KEY_LENGTH = 32
+const ED_DETACHED_SIGNATURE_LENGTH = 64
+const ED_SIGNATURE_LENGTH = ED_PUBLIC_KEY_LENGTH + ED_DETACHED_SIGNATURE_LENGTH
 
 const EM_RECOVERY_ID_OFFSET = 4
 const COMPACT_SIGNATURE_LENGTH = 65
@@ -40,12 +47,12 @@ export class Signature implements ABISerializableObject {
     if (isInstanceOf(value, Signature)) return value
 
     if (typeof value === "object" && "r" in value && "s" in value) {
-      // ED25519 is pure 64-byte r||s
+      // Convert detached r||s parts with the supplied ED public key.
       if (value.type === KeyType.ED) {
-        const data = new Uint8Array(64)
+        const data = new Uint8Array(ED_DETACHED_SIGNATURE_LENGTH)
         data.set(value.r, 0)
-        data.set(value.s, 32)
-        return new Signature(KeyType.ED, new Bytes(data))
+        data.set(value.s, ED_PUBLIC_KEY_LENGTH)
+        return Signature.fromRaw(data, KeyType.ED, value.publicKey)
       }
 
       if (value.type === KeyType.BLS) {
@@ -115,12 +122,11 @@ export class Signature implements ABISerializableObject {
           type === KeyType.K1 || type === KeyType.R1 ? 65 : undefined
         data = Base58.decodeRipemd160Check(payload, length, type)
       }
-    } catch (e) {
+    } catch (error) {
       try {
         data = hexToArray(payload)
-      } catch (e2) {
-        console.error("Both base58 and hex failed to parse", e, e2)
-        throw e
+      } catch {
+        throw error
       }
     }
 
@@ -146,7 +152,8 @@ export class Signature implements ABISerializableObject {
       return new Signature(type, new Bytes(decoder.readArray(192)))
     }
 
-    const length = type === KeyType.ED ? 64 : 65
+    const length =
+      type === KeyType.ED ? ED_SIGNATURE_LENGTH : COMPACT_SIGNATURE_LENGTH
     const bytes = decoder.readArray(length)
 
     if (type === KeyType.EM) {
@@ -167,7 +174,7 @@ export class Signature implements ABISerializableObject {
    * Build a signature directly from a hex string.
    * @param hexStr  0x-prefixed or plain hex:
    *                  • 130 chars → K1/R1/EM (r‖s‖v)
-   *                  • 128 chars → ED     (r‖s)
+   *                  • 192 chars → ED     (public key‖r‖s)
    * @param type    KeyType.K1 | KeyType.R1 | KeyType.EM | KeyType.ED
    */
   static fromHex(hexStr: string, type: KeyType): Signature {
@@ -178,15 +185,37 @@ export class Signature implements ABISerializableObject {
 
   /**
    * Build a Signature from raw “[r‖s‖v]” bytes.
-   * @param raw    64 bytes (ED) or 65 bytes (EM/K1/R1) in [r(32)‖s(32)‖vRaw(1)] form
+   * @param raw    96 bytes (ED), or 64 detached bytes with publicKey, or 65 bytes (EM/K1/R1) in [r(32)‖s(32)‖vRaw(1)] form
    * @param type   KeyType.ED | KeyType.EM | KeyType.K1 | KeyType.R1
+   * @param publicKey Required for a detached ED wallet signature; checked against embedded ED keys.
    */
-  static fromRaw(raw: Uint8Array, type: KeyType): Signature {
-    // ED25519: the raw is already [r‖s]
+  static fromRaw(
+    raw: Uint8Array,
+    type: KeyType,
+    publicKey?: PublicKey
+  ): Signature {
     if (type === KeyType.ED) {
-      if (raw.length !== 64)
-        throw new Error(`ED raw sig must be 64 bytes, got ${raw.length}`)
-      return new Signature(type, new Bytes(raw))
+      if (publicKey && publicKey.type !== KeyType.ED) {
+        throw new Error("ED signatures require an ED public key")
+      }
+      if (raw.length === ED_SIGNATURE_LENGTH) {
+        const signature = new Signature(type, raw)
+        if (
+          publicKey &&
+          !Bytes.from(raw.subarray(0, ED_PUBLIC_KEY_LENGTH)).equals(
+            publicKey.data
+          )
+        ) {
+          throw new Error("ED signature public key does not match the signer")
+        }
+        return signature
+      }
+      if (raw.length !== ED_DETACHED_SIGNATURE_LENGTH || !publicKey) {
+        throw new Error(
+          "ED signatures require 96 bytes, or 64 detached bytes with an ED public key"
+        )
+      }
+      return new Signature(type, publicKey.data.appending(raw))
     }
 
     // ECDSA/EIP-191: raw should be 65 bytes [r‖s‖v]
@@ -223,11 +252,16 @@ export class Signature implements ABISerializableObject {
    * @param type   Which curve (K1/R1/EM/ED)
    * @param data   **Wire‐format** signature bytes:
    *               - EM/K1/R1: 65 bytes `[vWire (31/32)‖r(32)‖s(32)]`
-   *               - ED:       64 bytes `[r(32)‖s(32)]`
+   *               - ED:       96 bytes `[public key(32)‖r(32)‖s(32)]`
    */
   constructor(type: KeyType, data: Bytes | Uint8Array) {
     this.type = type
     this.data = data instanceof Bytes ? data : new Bytes(data)
+    if (type === KeyType.ED && this.data.length !== ED_SIGNATURE_LENGTH) {
+      throw new Error(
+        `ED signature must be ${ED_SIGNATURE_LENGTH} bytes, got ${this.data.length}`
+      )
+    }
   }
 
   equals(other: SignatureType): boolean {
@@ -238,11 +272,29 @@ export class Signature implements ABISerializableObject {
   /** Recover public key from given message digest. */
   recoverDigest(digest: Checksum256Type): PublicKey {
     digest = Checksum256.from(digest)
+    if (this.type === KeyType.ED) {
+      const key = new PublicKey(
+        KeyType.ED,
+        this.data.array.subarray(0, ED_PUBLIC_KEY_LENGTH)
+      )
+      if (!this.verifyDigest(digest, key))
+        throw new Error("Invalid ED signature")
+      return key
+    }
     return recover(this.data.array, digest.array, this.type)
   }
 
   /** Recover public key from given message using this signature's message domain. */
   recoverMessage(message: BytesType): PublicKey {
+    if (this.type === KeyType.ED) {
+      const key = new PublicKey(
+        KeyType.ED,
+        this.data.array.subarray(0, ED_PUBLIC_KEY_LENGTH)
+      )
+      if (!this.verifyMessage(message, key))
+        throw new Error("Invalid ED signature")
+      return key
+    }
     if (this.type === KeyType.EM) {
       return recover(this.data.array, Bytes.from(message).array, this.type)
     }
@@ -263,6 +315,8 @@ export class Signature implements ABISerializableObject {
       )
     }
 
+    if (this.type === KeyType.ED)
+      return this.verifyMessage(Bytes.from(digest.hexString, "utf8"), publicKey)
     return verify(
       this.data.array,
       digest.array,
@@ -275,7 +329,7 @@ export class Signature implements ABISerializableObject {
    * Verify this signature against a message and public key.
    *
    * The signature.data must be in **wire-format**:
-   *  - **KeyType.ED**: 64 bytes `[r||s]` (Ed25519 detached signature)
+   *  - **KeyType.ED**: 96 bytes `[public key||r||s]`
    *  - **KeyType.EM**: 65 bytes `[vWire‖r‖s]` where `vWire = ethV + 4` (Ethereum EIP-191)
    *  - **KeyType.K1/R1**: 65 bytes `[vWire‖r‖s]` where `vWire = recid + 31` (secp256k1 / R1)
    *
@@ -291,24 +345,33 @@ export class Signature implements ABISerializableObject {
   verifyMessage(message: BytesType, publicKey: PublicKey): boolean {
     const rawMsg = Bytes.from(message).array
 
-    switch (this.type) {
-      case KeyType.ED:
-      case KeyType.BLS:
-        return verify(this.data.array, rawMsg, publicKey.data.array, this.type)
-
-      case KeyType.EM: {
-        return verify(
+    return match(this.type)
+      .with(
+        KeyType.ED,
+        () =>
+          publicKey.type === KeyType.ED &&
+          Bytes.from(this.data.array.subarray(0, ED_PUBLIC_KEY_LENGTH)).equals(
+            publicKey.data
+          ) &&
+          verify(
+            this.data.array.subarray(ED_PUBLIC_KEY_LENGTH),
+            rawMsg,
+            publicKey.data.array,
+            KeyType.ED
+          )
+      )
+      .with(KeyType.BLS, () =>
+        verify(this.data.array, rawMsg, publicKey.data.array, this.type)
+      )
+      .with(KeyType.EM, () =>
+        verify(
           this.toEthereumSignatureBytes(),
           rawMsg,
           publicKey.data.array,
           KeyType.EM
         )
-      }
-
-      default:
-        // K1/R1 use SHA-256 digest path
-        return this.verifyDigest(Checksum256.hash(message), publicKey)
-    }
+      )
+      .otherwise(() => this.verifyDigest(Checksum256.hash(message), publicKey))
   }
 
   /** Convert internal EM wire bytes `[vWire||r||s]` to Ethereum `[r||s||v]`. */
@@ -349,39 +412,26 @@ export class Signature implements ABISerializableObject {
    * Return the raw signature as a 0x‐prefixed hex string:
    * - EM: [r||s||v] with Ethereum v (27/28)
    * - K1/R1: [r||s||v] with secp256k1 v (0/1)
-   * - ED: [r||s] (64 bytes)
+   * - ED: [public key||r||s] (96 bytes)
    */
   toHex(): string {
     const wire = this.data.array
-    let raw: Uint8Array
-
-    switch (this.type) {
-      case KeyType.EM: {
-        raw = this.toEthereumSignatureBytes()
-        break
-      }
-
-      case KeyType.K1:
-      // eslint-disable-next-line no-fallthrough
-      case KeyType.R1: {
-        // wire[0] = k1V + 31
-        const k1V = wire[0] - 31 // 0 or 1
-        raw = new Uint8Array(65)
-        raw.set(wire.subarray(1, 33), 0)
-        raw.set(wire.subarray(33, 65), 32)
-        raw[64] = k1V
-        break
-      }
-
-      case KeyType.ED: {
-        // ED is already [r||s]
-        raw = wire
-        break
-      }
-
-      default:
+    const raw = match(this.type)
+      .with(KeyType.EM, () => this.toEthereumSignatureBytes())
+      .with(KeyType.K1, KeyType.R1, () => {
+        const bytes = new Uint8Array(COMPACT_SIGNATURE_LENGTH)
+        bytes.set(wire.subarray(1, SIGNATURE_S_OFFSET), 0)
+        bytes.set(
+          wire.subarray(SIGNATURE_S_OFFSET, COMPACT_SIGNATURE_LENGTH),
+          SIGNATURE_COMPONENT_LENGTH
+        )
+        bytes[SIGNATURE_V_OFFSET] = wire[0] - 31
+        return bytes
+      })
+      .with(KeyType.ED, () => wire)
+      .otherwise(() => {
         throw new Error(`toHex() not supported for key type ${this.type}`)
-    }
+      })
 
     // hex‐encode
     const hex = Array.from(raw)
@@ -412,38 +462,4 @@ export class Signature implements ABISerializableObject {
   toJSON(): string {
     return this.toString()
   }
-}
-
-/**
- * Pads an ED25519 signature for transaction wire-format.
- * @param sig - The presumed 64 byte r|s signature to pad.
- * @returns The padded 65 byte signature used for wire transactions.
- */
-export function padEdForTx(sig: Signature): Signature {
-  if (sig.type !== KeyType.ED) return sig
-  const arr = sig.data.array
-  if (arr.length === 65) return sig
-  if (arr.length !== 64)
-    throw new Error(`ED sig must be 64 or 65, got ${arr.length}`)
-  const padded = new Uint8Array(65)
-  padded.set(arr, 0)
-  padded[64] = 0
-
-  return new Signature(KeyType.ED, new Bytes(padded))
-}
-
-/**
- * Strips the ED25519 padding from a signature.
- * @param sig - The signature to strip.
- * @returns The stripped signature.
- */
-export function stripEdPad(sig: Signature): Signature {
-  if (sig.type !== KeyType.ED) return sig
-  const a = sig.data.array
-
-  if (a.length === 65 && a[64] === 0) {
-    return new Signature(KeyType.ED, a.subarray(0, 64))
-  }
-
-  return sig
 }
