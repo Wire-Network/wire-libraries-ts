@@ -1,8 +1,11 @@
 import { AsyncLocalStorage } from "async_hooks"
-import { uniq } from "lodash"
+import lodash from "lodash"
 import type { LogContext } from "../../LogContext.js"
 import type { LogContextProvider } from "../../LogContextProvider.js"
 import { LogContextContainer } from "../../LogContextContainer.js"
+
+/** Preserve the CommonJS function when this Node-only subpath is imported natively. */
+const { uniq } = lodash
 
 const contextStorage = new AsyncLocalStorage<Array<LogContext>>()
 

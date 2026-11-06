@@ -8,12 +8,16 @@ import {
   isNumber
 } from "../guards/index.js"
 import { Option } from "@3fv/prelude-ts"
-import { pick } from "lodash"
+import lodash from "lodash"
 import { LevelKind, LevelThresholds } from "./Level.js"
 import type { LoggingManager } from "./LoggingManager.js"
 import type { LogMetadata, LogRecord } from "./LogRecord.js"
 import { isLogLevelKind } from "./util.js"
 import type { Appender } from "./Appender.js"
+import { getInternalLogger } from "./InternalLogger.js"
+
+/** Read CommonJS functions from the default export in both module formats. */
+const { pick } = lodash
 
 export interface LoggerOptions {
   categoryInterpolator: CategoryInterpolator
@@ -254,7 +258,7 @@ export class Logger {
     if (typeof process !== "undefined") {
       process.exit(exitCode)
     } else {
-      console.error(
+      getInternalLogger().fatal(
         "FATAL ASSERTION: `process` is not defined, probably in a web browser"
       )
     }
