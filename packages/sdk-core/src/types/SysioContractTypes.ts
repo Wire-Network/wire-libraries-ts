@@ -2732,6 +2732,13 @@ export enum SysioSyndItemKind {
   YIELD = 1
 }
 
+/** sysio.synd::release_destination (enum, uint8) */
+export enum SysioSyndReleaseDestination {
+  ACCOUNT = 0,
+  PARKED = 1,
+  FEE_ONLY = 2
+}
+
 /** sysio.synd::request_outcome (enum, uint8) */
 export enum SysioSyndRequestOutcome {
   PENDING = 0,
@@ -2754,6 +2761,14 @@ export interface SysioSyndBucketRowType {
   direction: SysioSyndBucketDirection | keyof typeof SysioSyndBucketDirection
   level: number | string
   last_epoch: number
+}
+
+/** sysio.synd::burn_receipt (type) */
+export interface SysioSyndBurnReceiptType {
+  chain_code: string
+  token_code: string
+  epoch_index: number
+  digest: string
 }
 
 /** sysio.synd::challenge (action) */
@@ -2860,6 +2875,19 @@ export interface SysioSyndImportsyndAction {
   credits: SysioSyndImportCreditType[]
 }
 
+/** sysio.synd::intake_receipt (type) */
+export interface SysioSyndIntakeReceiptType {
+  item_id: number | string
+  chain_code: string
+  token_code: string
+  epoch_index: number
+  digest: string
+  sequence: number | string
+  chain_kind: SysioSyndChainkind | keyof typeof SysioSyndChainkind
+  pubkey: string
+  amount: number | string
+}
+
 /** sysio.synd::item_key (type) */
 export interface SysioSyndItemKeyType {
   chain_code: number | string
@@ -2902,6 +2930,26 @@ export interface SysioSyndLinksweptAction {
   account: string
   chain_kind: SysioSyndChainkind | keyof typeof SysioSyndChainkind
   pubkey: string
+}
+
+/** sysio.synd::logburn (action) */
+export interface SysioSyndLogburnAction {
+  receipt: SysioSyndBurnReceiptType
+}
+
+/** sysio.synd::logintake (action) */
+export interface SysioSyndLogintakeAction {
+  receipt: SysioSyndIntakeReceiptType
+}
+
+/** sysio.synd::logparked (action) */
+export interface SysioSyndLogparkedAction {
+  receipt: SysioSyndParkedReceiptType
+}
+
+/** sysio.synd::logrelease (action) */
+export interface SysioSyndLogreleaseAction {
+  receipt: SysioSyndReleaseReceiptType
 }
 
 /** sysio.synd::mismatch_key (type) */
@@ -2954,6 +3002,17 @@ export interface SysioSyndParkedKeyType {
   pubkey: string
 }
 
+/** sysio.synd::parked_receipt (type) */
+export interface SysioSyndParkedReceiptType {
+  batch_id: number | string
+  token_code: string
+  chain_kind: SysioSyndChainkind | keyof typeof SysioSyndChainkind
+  pubkey: string
+  recipient: string
+  amount: number | string
+  unattributed: number | string
+}
+
 /** sysio.synd::parked_row (type) */
 export interface SysioSyndParkedRowType {
   token_code: string
@@ -2961,6 +3020,8 @@ export interface SysioSyndParkedRowType {
   pubkey: string
   balance: number | string
   position: SysioSyndPositionType
+  batch_id: number | string
+  unattributed: number | string
 }
 
 /** sysio.synd::pool_row (type) */
@@ -3001,6 +3062,23 @@ export interface SysioSyndRefundreturnAction {
   request_id: number | string
 }
 
+/** sysio.synd::release_receipt (type) */
+export interface SysioSyndReleaseReceiptType {
+  item_id: number | string
+  chain_code: string
+  token_code: string
+  epoch_index: number
+  gross: number | string
+  fee: number | string
+  net: number | string
+  remaining: number | string
+  destination:
+    | SysioSyndReleaseDestination
+    | keyof typeof SysioSyndReleaseDestination
+  recipient: string
+  parked_batch_id: number | string
+}
+
 /** sysio.synd::return_key (type) */
 export interface SysioSyndReturnKeyType {
   request_id: number | string
@@ -3032,7 +3110,6 @@ export interface SysioSyndSetconfigAction {
   challenge_extra: number | string
   min_desyndicate: number | string
   desynd_fee_flat: number | string
-  /** Maximum tolerated custody shortfall in basis points of outstanding liabilities. */
   custody_shortfall_bps: number
 }
 
@@ -3074,7 +3151,6 @@ export interface SysioSyndSyndConfigType {
   challenge_extra: number | string
   min_desyndicate: number | string
   desynd_fee_flat: number | string
-  /** Maximum tolerated custody shortfall in basis points of outstanding liabilities. */
   custody_shortfall_bps: number
 }
 
@@ -3082,6 +3158,7 @@ export interface SysioSyndSyndConfigType {
 export interface SysioSyndSyndCountersType {
   next_item_id: number | string
   next_request_id: number | string
+  next_batch_id: number | string
 }
 
 /** sysio.synd::synd_cursor (type) */
@@ -3124,6 +3201,10 @@ export interface SysioSyndContract {
     importdone: SysioSyndImportdoneAction
     importsynd: SysioSyndImportsyndAction
     linkswept: SysioSyndLinksweptAction
+    logburn: SysioSyndLogburnAction
+    logintake: SysioSyndLogintakeAction
+    logparked: SysioSyndLogparkedAction
+    logrelease: SysioSyndLogreleaseAction
     onsynd: SysioSyndOnsyndAction
     onyield: SysioSyndOnyieldAction
     pruneenv: SysioSyndPruneenvAction
@@ -3562,6 +3643,8 @@ export interface SysioSystemProducerInfoType {
   snapshot_attestations: number
   snapshot_period: number
   last_paid_round: number
+  service_sec: number | string
+  registration_seq: number | string
 }
 
 /** sysio.system::producer_key (type) */
@@ -3575,6 +3658,17 @@ export interface SysioSystemProducerKeyTType {
   owner: number | string
 }
 
+/** sysio.system::producer_runtime_state (type) */
+export interface SysioSystemProducerRuntimeStateType {
+  last_producer_schedule_update: string
+  last_producer_schedule_size: number
+  last_producer: string
+  rescore_cursor: number | string
+  rescore_pending: boolean
+  round_start_block: number
+  last_registration_seq: number | string
+}
+
 /** sysio.system::producer_schedule (type) */
 export interface SysioSystemProducerScheduleType {
   version: number
@@ -3583,8 +3677,6 @@ export interface SysioSystemProducerScheduleType {
 
 /** sysio.system::producer_score_config (type) */
 export interface SysioSystemProducerScoreConfigType {
-  collateral_weight: number
-  participation_weight: number
   snapshot_weight: number
   relay_weight: number
   api_weight: number
@@ -3592,6 +3684,8 @@ export interface SysioSystemProducerScoreConfigType {
   max_consecutive_missed_rounds: number
   snapshot_target_attestations: number
   min_blocks_per_round: number
+  miss_penalty_sec: number
+  seniority_base_sec: number
 }
 
 /** sysio.system::rcrdbatch (action) */
@@ -3771,13 +3865,6 @@ export interface SysioSystemSnapVoteKeyTType {
 export interface SysioSystemSysioGlobalStateType {
   max_ram_size: number | string
   total_ram_bytes_reserved: number | string
-  last_producer_schedule_update: string
-  last_pervote_bucket_fill: string
-  last_producer_schedule_size: number
-  last_producer: string
-  rescore_cursor: number | string
-  rescore_pending: boolean
-  round_start_block: number
 }
 
 /** sysio.system::t5_state (type) */
@@ -3994,6 +4081,7 @@ export interface SysioSystemContract {
     payclaimtot: SysioSystemPayClaimTotalType
     prodsched: SysioSystemObservedScheduleType
     prodscorecfg: SysioSystemProducerScoreConfigType
+    prodstate: SysioSystemProducerRuntimeStateType
     producers: SysioSystemProducerInfoType
     snapconfig: SysioSystemSnapConfigType
     snapprovs: SysioSystemSnapProviderType
@@ -4633,6 +4721,10 @@ export const SysioContractDefinitions: {
       "importdone",
       "importsynd",
       "linkswept",
+      "logburn",
+      "logintake",
+      "logparked",
+      "logrelease",
       "onsynd",
       "onyield",
       "pruneenv",
@@ -4736,6 +4828,7 @@ export const SysioContractDefinitions: {
       "payclaimtot",
       "prodsched",
       "prodscorecfg",
+      "prodstate",
       "producers",
       "snapconfig",
       "snapprovs",
