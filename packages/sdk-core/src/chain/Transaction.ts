@@ -192,10 +192,19 @@ export class Transaction extends TransactionHeader {
     return { msgDigest, msgBytes }
   }
 
+  /** Encode the unsigned transaction and the protocol's context-free-data digest. */
   signingData(chainId: Checksum256Type): Bytes {
     let data = Bytes.from(Checksum256.from(chainId).array)
     data = data.appending(abiEncode({ object: Transaction.from(this) }))
-    data = data.appending(new Uint8Array(32))
+    const contextFreeData =
+      this instanceof SignedTransaction ? this.context_free_data : []
+    data = data.appending(
+      contextFreeData.length
+        ? Checksum256.hash(
+            abiEncode({ object: contextFreeData, type: "bytes[]" })
+          ).array
+        : new Uint8Array(32)
+    )
     return data
   }
 }
@@ -317,10 +326,21 @@ export class PackedTransaction extends Struct {
     options: InflatePackedTransactionOptions = {}
   ): SignedTransaction {
     const transaction = this.getTransaction(options)
-    // TODO: decode context free data
+    const packedData = this.packed_context_free_data
+    const contextFreeData =
+      packedData.array.length === 0
+        ? []
+        : abiDecode({
+            data:
+              Number(this.compression) === CompressionType.zlib
+                ? inflatePackedTransaction(packedData, options)
+                : packedData,
+            type: "bytes[]"
+          })
     return SignedTransaction.from({
       ...transaction,
-      signatures: this.signatures
+      signatures: this.signatures,
+      context_free_data: contextFreeData
     })
   }
 }

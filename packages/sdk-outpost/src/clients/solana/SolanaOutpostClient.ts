@@ -2,11 +2,6 @@ import { SolanaSyndicationClient } from "./SolanaSyndicationClient.js"
 import { SolanaWithdrawalClient } from "./SolanaWithdrawalClient.js"
 import { Program } from "@coral-xyz/anchor"
 import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
-import {
-  liqsolCoreIdl as devnetIdl,
-  type LiqsolCore as DevnetLiqsolCore
-} from "@wireio/outpost-solana-artifacts-v0-4-6"
-import type { LiqsolCore as LiqsolCoreV042 } from "@wireio/outpost-solana-artifacts-v0-4-2"
 import { match } from "ts-pattern"
 
 import type { OutpostArtifactSuite } from "../../artifacts/Registry.js"
@@ -18,15 +13,8 @@ import { OutpostDeploymentVerifier } from "../../verification/index.js"
 import {
   SolanaOutpostClientOptions,
   SolanaProgramMap,
-  type SolanaCoreProgram,
-  type SupportedLiqsolCore,
-  hasWithdrawalNonce
+  type SolanaCoreProgram
 } from "./Types.js"
-
-/** Identify the deployed development IDL by its registered producer export. */
-function isDevnetIdl(idl: SupportedLiqsolCore): idl is DevnetLiqsolCore {
-  return idl === devnetIdl
-}
 
 /** Strictly typed access to one verified Solana outpost deployment. */
 export class SolanaOutpostClient {
@@ -54,17 +42,10 @@ export class SolanaOutpostClient {
       options.profile.solana.programs[SolanaProgramName.liqsolCore].address
 
     const idl = artifactSuite.solana.idls[SolanaProgramName.liqsolCore]
-    // Anchor's constructor cannot infer its generic from the supplied IDL.
-    if (isDevnetIdl(idl)) {
-      this.liqsolCore = new Program<DevnetLiqsolCore>(
-        { ...idl, address },
-        options.provider
-      )
-      return
-    }
-    this.liqsolCore = hasWithdrawalNonce(idl)
-      ? new Program<LiqsolCore>({ ...idl, address }, options.provider)
-      : new Program<LiqsolCoreV042>({ ...idl, address }, options.provider)
+    this.liqsolCore = new Program<LiqsolCore>(
+      { ...idl, address },
+      options.provider
+    )
   }
 
   /** Native deposits and PostLaunch syndication for explicit companion programs. */

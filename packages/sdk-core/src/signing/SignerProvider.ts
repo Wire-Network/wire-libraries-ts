@@ -1,4 +1,4 @@
-import { identity } from "lodash"
+import identity from "lodash/identity.js"
 import { Option } from "@3fv/prelude-ts"
 import { ethers } from "../EthersCompat.js"
 import { PrivateKey, type PrivateKeyType } from "../chain/PrivateKey.js"

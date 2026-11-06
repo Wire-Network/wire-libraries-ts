@@ -4,7 +4,9 @@
  * 1. Creates lib/cjs/package.json with {"type":"commonjs"} so Node.js treats .js as CJS
  * 2. Fixes extensionless relative imports in ESM output for Node.js compatibility
  *
- * Usage: node etc/scripts/fix-hybrid-output.mjs packages/sdk-core
+ * 3. Uses import.meta.url for per-file loggers in the ESM output
+ *
+ * Usage: node scripts/fix-hybrid-output.mjs packages/sdk-core
  */
 import {
   readdirSync,
@@ -51,6 +53,17 @@ function fixImports(dir) {
 
     let content = readFileSync(fullPath, "utf8")
     let changed = false
+
+    // Dual-emitted sources use the CommonJS filename. Preserve per-file logger
+    // identity in native ESM without introducing a browser-incompatible Node shim.
+    const moduleLogging = content.replaceAll(
+      "getLogger(__filename)",
+      "getLogger(import.meta.url)"
+    )
+    if (moduleLogging !== content) {
+      content = moduleLogging
+      changed = true
+    }
 
     content = content.replace(
       /((?:from|import)\s*\(?\s*["'])(\.\.?\/[^"']*)(["'])/g,

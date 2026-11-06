@@ -8,19 +8,18 @@ export enum Curve {
 export enum SolChainID {
   Devnet = "devnet",
   Testnet = "testnet",
-  Mainnet = "mainnet-beta",
-  WireTestnet = "wire-testnet"
+  Mainnet = "mainnet-beta"
 }
 
 export enum EvmChainID {
   Ethereum = 1,
   Hoodi = 560048,
   Sepolia = 11155111,
-  Polygon = 137,
-  WireTestnet = 1122334455
+  Polygon = 137
 }
 
-export type ChainID = SolChainID | EvmChainID
+/** Caller-supplied numeric EVM chain ID or Solana cluster/genesis identity. */
+export type ChainID = number | string
 
 export enum ProviderType {
   Metamask = "metamask",
@@ -62,6 +61,13 @@ export interface WalletConnection {
   signer: SignerProvider
 }
 
+/** Native asset metadata passed to an external wallet's network configuration. */
+export interface NativeCurrency {
+  name: string
+  symbol: string
+  decimals: number
+}
+
 export interface ExternalNetwork {
   name: string
   chainId: ChainID
@@ -69,10 +75,6 @@ export interface ExternalNetwork {
   rpcUrls: string[]
   blockExplorerUrls: string[]
   iconUrls: string[]
-  nativeCurrency: {
-    name: string
-    symbol: string
-    decimals: number
-  }
+  nativeCurrency: NativeCurrency
   alchemyId?: string
 }

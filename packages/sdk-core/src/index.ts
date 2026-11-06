@@ -23,9 +23,6 @@ export * as P2P from "./p2p/Types.js"
 // common
 export * from "./common/CommonModule.js"
 
-// resources
-export * from "./resources/IndexResources.js"
-
 // system contracts
 export * as contracts from "./contracts/index.js"
 
@@ -35,10 +32,4 @@ export * as Crypto from "./crypto/index.js"
 export * from "./signing/IndexSigning.js"
 export * from "./AbiCache.js"
 
-// hash
-import { sha256, sha512, sha384 } from "hash.js"
-export const Hash = {
-  sha256,
-  sha512,
-  sha384
-}
+export * from "./Hash.js"

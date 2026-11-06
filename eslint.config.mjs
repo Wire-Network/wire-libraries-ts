@@ -165,7 +165,6 @@ const SwitchDebtFiles = [
   "packages/sdk-core/src/chain/Blob.ts",
   "packages/sdk-core/src/chain/Integer.ts",
   "packages/sdk-core/src/chain/KeyType.ts",
-  "packages/sdk-core/src/crypto/Curves.ts",
   "packages/sdk-core/src/crypto/Generate.ts",
   "packages/sdk-core/src/crypto/GetPublic.ts",
   "packages/sdk-core/src/crypto/Recover.ts",
@@ -189,7 +188,6 @@ const NullUnionReturnDebtFiles = [
   "packages/sdk-core/src/signing/SigningRequest.ts"
 ]
 const InlineTypeLiteralDebtFiles = [
-  "packages/sdk-core/src/Utils.ts",
   "packages/sdk-core/src/api/Provider.ts",
   "packages/sdk-core/src/api/Types.ts",
   "packages/sdk-core/src/api/v1/History.ts",
@@ -203,14 +201,12 @@ const InlineTypeLiteralDebtFiles = [
   "packages/sdk-core/src/chain/Bytes.ts",
   "packages/sdk-core/src/chain/Integer.ts",
   "packages/sdk-core/src/chain/PermissionLevel.ts",
-  "packages/sdk-core/src/common/Connect.ts",
   "packages/sdk-core/src/common/Types.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Capabilities.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Proposal.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Status.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Transaction.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Types.ts",
-  "packages/sdk-core/src/crypto/Curves.ts",
   "packages/sdk-core/src/p2p/Client.ts",
   "packages/sdk-core/src/p2p/Provider.ts",
   "packages/sdk-core/src/serializer/Decoder.ts",
@@ -261,7 +257,6 @@ const RuleDebt = [
     rule: "@typescript-eslint/no-unused-vars",
     files: [
       "examples/web-logging-example/src/web-logging-example.ts",
-      "packages/sdk-core/src/Utils.ts",
       "packages/sdk-core/tests/chain/Abi.test.ts",
       "packages/sdk-core/tests/chain/Asset.test.ts",
       "packages/sdk-core/tests/crypto/crypto.test.ts",
@@ -269,7 +264,6 @@ const RuleDebt = [
       "packages/shared/src/guards/types.ts",
       "packages/shared/src/logging/InternalLogger.ts",
       "packages/shared/src/logging/appenders/ConsoleAppender.ts",
-      "packages/shared/src/logging/appenders/aws-firehose/AWSFirehoseAppender.ts",
       "packages/shared/src/logging/appenders/push/PushLogRecordsAppender.ts",
       "packages/shared/src/logging/context/LogContext.ts",
       "packages/shared/src/logging/examples/example-file-appender.ts",
@@ -280,7 +274,6 @@ const RuleDebt = [
   {
     rule: "eqeqeq",
     files: [
-      "packages/sdk-core/src/Utils.ts",
       "packages/sdk-core/src/chain/Abi.ts",
       "packages/sdk-core/src/chain/Bytes.ts"
     ]
@@ -289,7 +282,6 @@ const RuleDebt = [
     rule: "no-console",
     files: [
       "packages/shared/src/guards/assert.ts",
-      "packages/shared/src/logging/Logger.ts",
       "packages/shared/src/logging/context/LogContextProvider.ts",
       "packages/shared/src/node/logging/appenders/FileAppender.ts"
     ]
@@ -312,7 +304,6 @@ const RuleDebt = [
   {
     rule: "no-extra-boolean-cast",
     files: [
-      "packages/shared/src/logging/appenders/aws-firehose/AWSFirehoseAppender.ts",
       "packages/shared/src/node/logging/appenders/FileAppender.ts"
     ]
   },

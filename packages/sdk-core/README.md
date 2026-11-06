@@ -281,6 +281,28 @@ These calculations follow [`sysio.swap` share accounting](https://github.com/Wir
 and its [integer AMM kernel](https://github.com/Wire-Network/wire-sysio/blob/6508c9e8f4044df8d5acb082a7af3be6a80cd9a0/contracts/sysio.opp.common/include/sysio.opp.common/amm_math.hpp).
 They do not establish live deployment acceptance.
 
+## Migration from 1.0
+
+This source candidate removes obsolete public APIs and requires a major release
+before publication; the workspace version is not a release announcement.
+
+| Removed surface | Current integration |
+| --- | --- |
+| `Chains.TESTNET`, `Chains.DEVNET`, `Chains.MAINNET_CLASSIC` | Construct `ChainDefinition` from the deployment handoff's chain ID, endpoints and `WIRE` symbol. |
+| `EvmChainID.WireTestnet`, `SolChainID.WireTestnet` | Supply the deployment's numeric EVM ID or Solana cluster/genesis identity. `ChainID` accepts `number \| string`. |
+| `Resources`, RAM-market, REX and power-up helpers | Use generated system-contract access for the deployed ROA/resource model. These old market tables are not part of the current Wire contracts. |
+| `evmSigToWire` | Use `Signature.fromHex(signature, KeyType.EM)` for an Ethereum wallet signature; the removed helper emitted an incompatible Base58 EM encoding. |
+
+K1 WIF/SYS formats remain supported for current daemon integrations. R1 native
+formatting now returns `PVT_R1_` / `PUB_R1_`; EM native public output remains a
+compressed public key, not an Ethereum address. Signed transactions retain
+nonempty context-free data through packing and include its digest in the signing
+payload, matching the node; empty-data transaction digests are unchanged.
+
+Applications using outposts must also migrate to the
+[current producer artifact pair](../sdk-outpost/README.md#artifact-compatibility).
+The SDK does not upgrade chains or select production endpoints.
+
 ## Development
 
 From a checkout of the repository, install dependencies and build at the root,

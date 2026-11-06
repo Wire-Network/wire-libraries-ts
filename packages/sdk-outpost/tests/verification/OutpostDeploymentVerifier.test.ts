@@ -1,41 +1,18 @@
 import {
   OutpostChainFamily,
   OutpostDeploymentVerifier,
-  SolanaProgramName,
   SolanaUpgradeableLoaderProgramId
 } from "@wireio/sdk-outpost"
-import { SolanaOutpostArtifactManifest as SolanaV042Manifest } from "@wireio/outpost-solana-artifacts-v0-4-2"
-import { EthereumOutpostArtifactManifest as EthereumV043Manifest } from "@wireio/outpost-ethereum-artifacts-v0-4-3"
-import { EthereumOutpostArtifactManifest as EthereumV045Manifest } from "@wireio/outpost-ethereum-artifacts-v0-4-5"
-import { SolanaOutpostArtifactManifest as SolanaV046Manifest } from "@wireio/outpost-solana-artifacts-v0-4-6"
-import { sha256 } from "ethers"
-import {
-  CurrentOutpostArtifactSuite,
-  OutpostArtifactRegistry
-} from "@wireio/sdk-outpost/artifacts/Registry"
-import { readFileSync } from "node:fs"
-import { createRequire } from "node:module"
+import { CurrentOutpostArtifactSuite } from "@wireio/sdk-outpost/artifacts/Registry"
 import {
   createEthereumProviderFixture,
   createOutpostDeploymentProfileFixture,
-  createSolanaProgramDataAccountData,
   createSolanaProviderFixture
 } from "../Fixtures.js"
 
-const PackageRequire = createRequire(__filename),
-  SolanaV042Package = "@wireio/outpost-solana-artifacts-v0-4-2",
-  EthereumV043Package = "@wireio/outpost-ethereum-artifacts-v0-4-3",
-  SolanaV042Artifact = SolanaV042Manifest.programs.liqsolCore,
-  SolanaV042Binary = readFileSync(
-    PackageRequire.resolve(
-      `${SolanaV042Package}/${SolanaV042Artifact.programBinaryPath}`
-    )
-  )
-
 describe("OutpostDeploymentVerifier", () => {
-  it("verifies an Ethereum deployment through the generic facade", async () => {
+  it("verifies Ethereum against the current producer runtime", async () => {
     const profile = createOutpostDeploymentProfileFixture()
-
     await expect(
       OutpostDeploymentVerifier.verify({
         family: OutpostChainFamily.ethereum,
@@ -45,68 +22,59 @@ describe("OutpostDeploymentVerifier", () => {
     ).resolves.toBe(CurrentOutpostArtifactSuite)
   })
 
-  it("requires both registered Devnet interfaces before selecting the new suite", () => {
-    const profile = createOutpostDeploymentProfileFixture(
-      EthereumV045Manifest,
-      "@wireio/outpost-ethereum-artifacts-v0-4-5"
-    )
-    expect(OutpostArtifactRegistry.candidates(profile)).toHaveLength(0)
-    profile.solana.programs.liqsolCore.idlSha256 =
-      SolanaV046Manifest.programs.liqsolCore.idlSha256
-    expect(OutpostArtifactRegistry.candidates(profile)).toMatchObject([
-      {
-        ethereum: { manifest: EthereumV045Manifest },
-        solana: { manifest: SolanaV046Manifest }
-      }
-    ])
+  it("verifies Solana against the current producer binary", async () => {
+    const profile = createOutpostDeploymentProfileFixture()
+    await expect(
+      OutpostDeploymentVerifier.verify({
+        family: OutpostChainFamily.solana,
+        profile,
+        connection: createSolanaProviderFixture(profile).connection
+      })
+    ).resolves.toBe(CurrentOutpostArtifactSuite)
   })
 
-  it("verifies a Solana deployment through the generic facade", async () => {
+  it("rejects a retired paired interface before querying Ethereum", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
-      provider = createSolanaProviderFixture(profile)
+      provider = createEthereumProviderFixture(profile),
+      getNetwork = jest.spyOn(provider, "getNetwork")
+    profile.solana.programs.liqsolCore.idlSha256 =
+      "e3650e76f9eed4db25d2720a2be108fe85420d6cb366c8089044655879cf8915"
+    await expect(
+      OutpostDeploymentVerifier.verify({
+        family: OutpostChainFamily.ethereum,
+        profile,
+        provider
+      })
+    ).rejects.toThrow("IDL interface mismatch")
+    expect(getNetwork).not.toHaveBeenCalled()
+  })
 
+  it("rejects a mixed Ethereum interface before querying Solana", async () => {
+    const profile = createOutpostDeploymentProfileFixture(),
+      provider = createSolanaProviderFixture(profile),
+      getGenesisHash = jest.spyOn(provider.connection, "getGenesisHash")
+    profile.ethereum.contracts.BAR.abiSha256 = "f".repeat(64)
     await expect(
       OutpostDeploymentVerifier.verify({
         family: OutpostChainFamily.solana,
         profile,
         connection: provider.connection
       })
-    ).resolves.toBe(CurrentOutpostArtifactSuite)
+    ).rejects.toThrow("ABI interface mismatch")
+    expect(getGenesisHash).not.toHaveBeenCalled()
   })
 
-  it("returns the verified candidate when matching interfaces have different binaries", async () => {
+  it("rejects runtime drift without trying an older contract", async () => {
     const profile = createOutpostDeploymentProfileFixture(),
-      rejected = {
-        ...CurrentOutpostArtifactSuite,
-        solana: {
-          ...CurrentOutpostArtifactSuite.solana,
-          manifest: {
-            ...CurrentOutpostArtifactSuite.solana.manifest,
-            programs: {
-              liqsolCore: {
-                ...CurrentOutpostArtifactSuite.solana.manifest.programs
-                  .liqsolCore,
-                programBinarySha256: "f".repeat(64)
-              }
-            }
-          }
-        }
-      },
-      candidates = jest
-        .spyOn(OutpostArtifactRegistry, "candidates")
-        .mockReturnValue([rejected, CurrentOutpostArtifactSuite])
-    try {
-      const provider = createSolanaProviderFixture(profile)
-      await expect(
-        OutpostDeploymentVerifier.verify({
-          family: OutpostChainFamily.solana,
-          profile,
-          connection: provider.connection
-        })
-      ).resolves.toBe(CurrentOutpostArtifactSuite)
-    } finally {
-      candidates.mockRestore()
-    }
+      provider = createEthereumProviderFixture(profile)
+    jest.spyOn(provider, "getCode").mockResolvedValue("0x01")
+    await expect(
+      OutpostDeploymentVerifier.verify({
+        family: OutpostChainFamily.ethereum,
+        profile,
+        provider
+      })
+    ).rejects.toThrow(/mismatch/)
   })
 
   it("exports the canonical Solana upgradeable-loader identity", () => {
@@ -114,47 +82,4 @@ describe("OutpostDeploymentVerifier", () => {
       "BPFLoaderUpgradeab1e11111111111111111111111"
     )
   })
-
-  it.each([false, true])(
-    "verifies an additional Solana build and rejects altered bytes (altered: %s)",
-    async altered => {
-      const binary = Buffer.from(SolanaV042Binary)
-      if (altered) binary[0] ^= 1
-      const profile = createOutpostDeploymentProfileFixture(
-          EthereumV043Manifest,
-          EthereumV043Package
-        ),
-        programData = createSolanaProgramDataAccountData(binary),
-        program = profile.solana.programs[SolanaProgramName.liqsolCore]
-      program.idlSha256 = SolanaV042Artifact.idlSha256
-      program.programDataSha256 = sha256(programData).slice(2)
-      await expect(
-        OutpostDeploymentVerifier.verify({
-          family: OutpostChainFamily.ethereum,
-          profile,
-          provider: createEthereumProviderFixture(
-            profile,
-            EthereumV043Manifest,
-            EthereumV043Package
-          )
-        })
-      ).resolves.toMatchObject({
-        ethereum: { manifest: { package: { version: "0.4.3" } } }
-      })
-      const provider = createSolanaProviderFixture(profile, programData),
-        verification = OutpostDeploymentVerifier.verify({
-          family: OutpostChainFamily.solana,
-          profile,
-          connection: provider.connection
-        })
-
-      if (altered) {
-        await expect(verification).rejects.toThrow("artifact program mismatch")
-      } else {
-        await expect(verification).resolves.toMatchObject({
-          solana: { manifest: SolanaV042Manifest }
-        })
-      }
-    }
-  )
 })

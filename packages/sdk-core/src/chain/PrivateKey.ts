@@ -7,7 +7,7 @@ import { sharedSecret } from "../crypto/SharedSecret.js"
 import { sign } from "../crypto/Sign.js"
 import { generate } from "../crypto/Generate.js"
 
-import { ec as EC } from "elliptic"
+import type { ec as EC } from "elliptic"
 
 import { ethers } from "../EthersCompat.js"
 
@@ -270,14 +270,15 @@ export class PrivateKey {
    * Return the private key in the native format expected by the
    * signature_provider_manager_plugin's KEY: spec.
    *
-   * - K1/R1: WIF string
+   * - K1: WIF string; R1: PVT_R1_... string
    * - EM (Ethereum): hex string (0x-prefixed)
    * - ED (Solana): raw base58 of the 64-byte secret key
    * - BLS: PVT_BLS_... encoded string
    */
   toNativeString(): string {
     return match(this.type)
-      .with(KeyType.K1, KeyType.R1, () => this.toWif())
+      .with(KeyType.K1, () => this.toWif())
+      .with(KeyType.R1, () => this.toString())
       .with(KeyType.EM, () => "0x" + this.data.hexString)
       .with(KeyType.ED, () => Base58.encode(this.data))
       .with(KeyType.BLS, () => `PVT_BLS_${blsEncode(this.data.array)}`)
