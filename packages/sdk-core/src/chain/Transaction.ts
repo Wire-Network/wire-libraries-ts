@@ -1,12 +1,8 @@
+import { match } from "ts-pattern"
 import pako from "pako"
 
 import { abiEncode } from "../serializer/Encoder.js"
-import {
-  padEdForTx,
-  Signature,
-  SignatureType,
-  stripEdPad
-} from "./Signature.js"
+import { Signature, SignatureType } from "./Signature.js"
 import { abiDecode } from "../serializer/Decoder.js"
 
 import { ABIDef } from "./Abi.js"
@@ -25,11 +21,8 @@ import {
 } from "./Integer.js"
 import { KeyType } from "./KeyType.js"
 import { Name, NameType } from "./Name.js"
-import { PublicKey, PublicKeyType } from "./PublicKey.js"
 import { Struct } from "./Struct.js"
 import { TimePointSec, TimePointType } from "./Time.js"
-import { ethers } from "../EthersCompat.js"
-import { concatBytes } from "../Utils.js"
 import {
   inflatePackedTransaction,
   type InflatePackedTransactionOptions
@@ -41,10 +34,6 @@ export class TransactionExtension extends Struct {
   @Struct.field("bytes") declare data: Bytes
 }
 
-export enum TransactionExtensionType {
-  PubKey = 0x8000
-  // Add other extension types here as needed
-}
 export interface TransactionHeaderFields {
   /** The time at which a transaction expires. */
   expiration: TimePointType
@@ -87,13 +76,24 @@ export class TransactionHeader extends Struct {
   }
 }
 
+/** Serialized transaction-extension input. */
+export interface TransactionExtensionFields {
+  type: UInt16Type
+  data: BytesType
+}
+/** Contract ABI used to encode transaction actions. */
+export interface TransactionContractABI {
+  contract: NameType
+  abi: ABIDef
+}
+
 export interface TransactionFields extends TransactionHeaderFields {
   /** The context free actions in the transaction. */
   context_free_actions?: ActionType[]
   /** The actions in the transaction. */
   actions?: ActionType[]
   /** Transaction extensions. */
-  transaction_extensions?: { type: UInt16Type; data: BytesType }[]
+  transaction_extensions?: TransactionExtensionFields[]
 }
 
 export interface AnyTransaction extends TransactionHeaderFields {
@@ -102,7 +102,7 @@ export interface AnyTransaction extends TransactionHeaderFields {
   /** The actions in the transaction. */
   actions?: AnyAction[]
   /** Transaction extensions. */
-  transaction_extensions?: { type: UInt16Type; data: BytesType }[]
+  transaction_extensions?: TransactionExtensionFields[]
 }
 
 export type TransactionType = Transaction | TransactionFields
@@ -124,7 +124,7 @@ export class Transaction extends TransactionHeader {
 
   static from(
     object: TransactionType | AnyTransaction,
-    abis?: ABIDef | { contract: NameType; abi: ABIDef }[]
+    abis?: ABIDef | TransactionContractABI[]
   ): Transaction {
     const abiFor = (contract: NameType) => {
       if (!abis) {
@@ -184,45 +184,19 @@ export class Transaction extends TransactionHeader {
     const data = this.signingData(chainId)
     const msgDigest = Checksum256.hash(data)
     const msgDigestHex = msgDigest.hexString.toLowerCase()
-    let msgBytes: Uint8Array = msgDigest.array
-
-    // Prepare custom msgBytes based on key type
-    switch (keyType) {
-      case KeyType.EM: // Prefix with 0x and arrayify
-        msgBytes = ethers.utils.arrayify("0x" + msgDigestHex)
-        break
-
-      case KeyType.ED: // Encode as UTF-8 bytes for Phantom signing
-        msgBytes = new TextEncoder().encode(msgDigestHex)
-        break
-    }
+    const msgBytes =
+      keyType === KeyType.ED
+        ? new TextEncoder().encode(msgDigestHex)
+        : msgDigest.array
 
     return { msgDigest, msgBytes }
   }
 
   signingData(chainId: Checksum256Type): Bytes {
     let data = Bytes.from(Checksum256.from(chainId).array)
-    data = data.appending(abiEncode({ object: this }))
+    data = data.appending(abiEncode({ object: Transaction.from(this) }))
     data = data.appending(new Uint8Array(32))
     return data
-  }
-
-  extPubKey(pubKeys: PublicKeyType | PublicKeyType[]) {
-    if (!Array.isArray(pubKeys)) pubKeys = [pubKeys]
-
-    for (const pkey of pubKeys) {
-      const pubKey = PublicKey.from(pkey)
-      const rawKey = pubKey.data.array
-      const keyTypeTag = KeyType.indexFor(pubKey.type)
-      const tag = Uint8Array.from([keyTypeTag])
-
-      const ext = TransactionExtension.from({
-        type: TransactionExtensionType.PubKey,
-        data: concatBytes(tag, rawKey)
-      })
-
-      this.transaction_extensions.push(ext)
-    }
   }
 }
 
@@ -264,14 +238,14 @@ export class SignedTransaction extends Transaction {
   }
 }
 
-export type PackedTransactionType =
-  | PackedTransaction
-  | {
-      signatures?: SignatureType[]
-      compression?: UInt8Type
-      packed_context_free_data?: BytesType
-      packed_trx: BytesType
-    }
+/** Fields for a packed transaction. */
+export interface PackedTransactionFields {
+  signatures?: SignatureType[]
+  compression?: UInt8Type
+  packed_context_free_data?: BytesType
+  packed_trx: BytesType
+}
+export type PackedTransactionType = PackedTransaction | PackedTransactionFields
 
 // reference: https://github.com/AntelopeIO/leap/blob/339d98eed107b9fd94736988996082c7002fa52a/libraries/chain/include/sysio/chain/transaction.hpp#L131-L134
 export enum CompressionType {
@@ -299,9 +273,6 @@ export class PackedTransaction extends Struct {
     signed: SignedTransaction,
     compression: CompressionType = 1
   ) {
-    // Pad ED sigs to 65 bytes, return unmodified K1/R1/EM sigs
-    const wireSigs = signed.signatures.map(padEdForTx)
-
     // Encode data
     let packed_trx: Bytes = abiEncode({ object: Transaction.from(signed) })
     let packed_context_free_data: Bytes = abiEncode({
@@ -309,22 +280,16 @@ export class PackedTransaction extends Struct {
       type: "bytes[]"
     })
 
-    switch (compression) {
-      case CompressionType.zlib: {
-        // compress data
-        packed_trx = pako.deflate(packed_trx.array)
-        packed_context_free_data = pako.deflate(packed_context_free_data.array)
-        break
-      }
-
-      case CompressionType.none: {
-        break
-      }
+    if (compression === CompressionType.zlib) {
+      packed_trx = pako.deflate(packed_trx.array)
+      packed_context_free_data = pako.deflate(packed_context_free_data.array)
+    } else if (compression !== CompressionType.none) {
+      throw new Error(`Unknown transaction compression ${compression}`)
     }
 
     return this.from({
       compression,
-      signatures: wireSigs,
+      signatures: signed.signatures,
       packed_context_free_data,
       packed_trx
     }) as PackedTransaction
@@ -332,22 +297,19 @@ export class PackedTransaction extends Struct {
 
   /** Decode and return the packed transaction. */
   getTransaction(options: InflatePackedTransactionOptions = {}): Transaction {
-    switch (Number(this.compression)) {
-      // none
-      case CompressionType.none: {
-        return abiDecode({ data: this.packed_trx, type: Transaction })
-      }
-
-      // zlib compressed
-      case CompressionType.zlib: {
-        const inflated = inflatePackedTransaction(this.packed_trx, options)
-        return abiDecode({ data: inflated, type: Transaction })
-      }
-
-      default: {
+    return match(Number(this.compression))
+      .with(CompressionType.none, () =>
+        abiDecode({ data: this.packed_trx, type: Transaction })
+      )
+      .with(CompressionType.zlib, () =>
+        abiDecode({
+          data: inflatePackedTransaction(this.packed_trx, options),
+          type: Transaction
+        })
+      )
+      .otherwise(() => {
         throw new Error(`Unknown transaction compression ${this.compression}`)
-      }
-    }
+      })
   }
 
   /** Decode and return the signed transaction. */
@@ -358,7 +320,7 @@ export class PackedTransaction extends Struct {
     // TODO: decode context free data
     return SignedTransaction.from({
       ...transaction,
-      signatures: this.signatures.map(stripEdPad)
+      signatures: this.signatures
     })
   }
 }

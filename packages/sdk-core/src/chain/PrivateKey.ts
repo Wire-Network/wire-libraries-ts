@@ -1,3 +1,4 @@
+import { match } from "ts-pattern"
 import { Base58 } from "../Base58.js"
 import { hexToArray, isInstanceOf } from "../Utils.js"
 
@@ -78,18 +79,14 @@ export class PrivateKey {
    * Create PrivateKey object from elliptic key pair.
    * @param privKey - Elliptic key pair.
    * @param keyType - Key type.
-   * @param ec - Elliptic curve.
+   * @param _ec - Optional curve parameter, retained for the existing call signature.
    * @returns PrivateKey object.
    */
   static fromElliptic(
     privKey: EC.KeyPair,
     keyType: KeyType,
-    ec?: EC
+    _ec?: EC
   ): PrivateKey {
-    if (!ec) {
-      ec = keyType === KeyType.K1 ? new EC("secp256k1") : new EC("p256")
-    }
-
     return new PrivateKey(
       keyType,
       new Bytes(
@@ -213,7 +210,11 @@ export class PrivateKey {
   /** Sign a 32-byte digest with this key's native digest-signing domain. */
   signDigest(digest: Checksum256Type) {
     digest = Checksum256.from(digest)
-    return Signature.from(sign(this.data.array, digest.array, this.type))
+    const message =
+      this.type === KeyType.ED
+        ? Bytes.from(digest.hexString, "utf8").array
+        : digest.array
+    return Signature.from(sign(this.data.array, message, this.type))
   }
 
   /**
@@ -275,19 +276,12 @@ export class PrivateKey {
    * - BLS: PVT_BLS_... encoded string
    */
   toNativeString(): string {
-    switch (this.type) {
-      case KeyType.K1:
-      case KeyType.R1:
-        return this.toWif()
-      case KeyType.EM:
-        return "0x" + Buffer.from(this.data.array).toString("hex")
-      case KeyType.ED:
-        return Base58.encode(this.data)
-      case KeyType.BLS:
-        return `PVT_BLS_${blsEncode(this.data.array)}`
-      default:
-        return this.toString()
-    }
+    return match(this.type)
+      .with(KeyType.K1, KeyType.R1, () => this.toWif())
+      .with(KeyType.EM, () => "0x" + this.data.hexString)
+      .with(KeyType.ED, () => Base58.encode(this.data))
+      .with(KeyType.BLS, () => `PVT_BLS_${blsEncode(this.data.array)}`)
+      .otherwise(() => this.toString())
   }
 
   toJSON() {
@@ -325,15 +319,9 @@ function decodeKey(value: string) {
       return { type, data }
     }
 
-    let size: number | undefined
-
-    switch (type) {
-      case KeyType.K1:
-      case KeyType.R1:
-      case KeyType.EM:
-        size = 32
-        break
-    }
+    const size = match(type)
+      .with(KeyType.K1, KeyType.R1, KeyType.EM, () => 32)
+      .otherwise(() => undefined)
 
     let data: Bytes
     try {
@@ -343,7 +331,7 @@ function decodeKey(value: string) {
         let hex = payload
         if (hex.startsWith("0x")) hex = hex.slice(2)
         data = new Bytes(hexToArray(hex))
-      } catch (e2) {
+      } catch {
         throw e
       }
     }
