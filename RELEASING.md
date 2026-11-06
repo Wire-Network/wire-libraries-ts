@@ -1,116 +1,84 @@
-# Releasing `@wireio/sdk-outpost`
+# Releasing Wire libraries
 
-`@wireio/sdk-outpost` participates in the same repository-wide release as
-`@wireio/sdk-core`. Do not manually change its version or publish a workspace
-directory outside this process.
+All non-private workspace packages publish through the repository workflows.
+Do not publish a workspace manually or use local artifact links in a release.
 
-## Current first-release state
+## Version and channel
 
-Ethereum and Solana producer packages `0.3.0` are the exact prerequisites for
-the first SDK release. Both are publicly installable and provide directly
-importable TypeScript libraries, ethers v6 factories, Anchor types, manifests,
-and runtime artifacts. The first `@wireio/sdk-outpost` release remains pending
-platform review. Its workspace version remains `0.0.0` until the existing
-repository-wide patch workflow bumps and publishes it.
+**Prepare Release** bumps every package relative to its own version and opens a
+`release/prep-v<core-version>` PR against `master`. It refuses a second open
+bot-created preparation PR. Package tracks remain independent; review every
+manifest in the generated PR.
 
-## Artifact prerequisites
+| Intent | Bump | Prerelease identifier | Example from sdk-core 1.0.109 |
+| --- | --- | --- | --- |
+| Compatible fixes | patch | unused | 1.0.110 |
+| Compatible additions | minor | unused | 1.1.0 |
+| Public API removals or incompatible behavior | major | unused | 2.0.0 |
+| Minor release candidate | preminor | rc | 1.1.0-rc.0 |
+| Major release candidate | premajor | rc | 2.0.0-rc.0 |
+| Next candidate in the same series | prerelease | rc | 2.0.0-rc.1 from 2.0.0-rc.0 |
 
-The package consumes exact runtime versions of:
+The legacy-cleanup candidate removes public core APIs and older outpost pairs.
+Use a major core RC rather than calling it a compatible 1.1.0 release. No version
+is assigned until its preparation PR is approved. A repository-wide major bump
+also advances the 0.x outpost and wallet tracks to 1.0.0; review their readiness
+before choosing that bump.
 
-- `@wireio/outpost-ethereum-artifacts`, published from `wire-ethereum`;
-- `@wireio/outpost-solana-artifacts`, published from `wire-solana`.
+Merging the preparation PR triggers **Tag Release**, which also supports manual
+dispatch for recovery. Its `release` environment requires approval configured in
+repository settings. It reads versions from `master`, installs the frozen
+registry graph, builds/tests, publishes with npm provenance, then tags and
+creates a GitHub release. Prerelease suffixes select the npm dist-tag (`rc`,
+`dev`); stable versions use `latest`. Stable publication also asks
+`wire-tools-ts` to open a dependency-update PR. PR merge alone is not proof of
+npm publication.
 
-Publish a new producer package when its ABI/IDL or deployable contract/program
-binary changes. Publish `sdk-outpost` when its public behavior changes or a new
-ABI, IDL, normalized Ethereum runtime, or Solana program binary must be compiled
-into deployment verification. A same-code deployment respin, address change, or
-endpoint rotation does not require either package to be republished; emit a new
-immutable deployment profile for a respin and update the separate endpoint
-catalog for mutable endpoints.
+## Artifact and deployment boundary
 
-Before updating either dependency, verify its registry integrity/signature,
-source revision, artifact checksums, and immutable version. The producer repos
-are non-public, so their current npm releases do not carry public provenance.
-Keep both versions exact in `packages/sdk-outpost/package.json`. Update
-`pnpm-lock.yaml` with the repository-pinned pnpm version only after both exact
-versions resolve from npm, then run the repository install and test flow.
+Outpost dependencies are exact producer-owned npm releases:
+`@wireio/outpost-ethereum-artifacts@0.4.5` and
+`@wireio/outpost-solana-artifacts@0.4.6` for this candidate. Keep source revisions,
+checksums and registry integrity aligned; never regenerate producer bindings here.
 
-## Release requirements
+A binary or ABI/IDL change requires matching producer artifacts and an SDK
+release. A same-code respin needs a fresh immutable deployment profile, while RPC
+rotation belongs in the application endpoint catalog. Profiles are caller-owned;
+a checksum-derived profile ID is not a signature.
 
-- Use Node.js 24 and the repository-pinned pnpm version through Corepack.
-- Import ethers v6 factories, Anchor types, runtime artifacts, and manifests
-  directly from the exact producer packages; `sdk-outpost` must not regenerate
-  or duplicate them.
-- Confirm the package contains no secrets, RPC credentials, private keys,
-  deployment addresses, or mutable environment configuration.
-- Confirm deployment profiles are distributed through the authenticated
-  platform release channel; their schema and checksum-derived IDs are not
-  signatures.
-- Keep `repository.url` exactly equal to
-  `https://github.com/Wire-Network/wire-libraries-ts` for npm provenance.
+Older deployments must keep their compatible SDK until upgraded. Before adopting
+the candidate, verify both profile interfaces and the connected family's runtime,
+then run the platform flow tests and consuming application's journeys. Unit tests
+do not establish mainnet acceptance.
 
-Local checkouts are verification environments, not publishing authorities. Run
-the checks there, but let the protected GitHub Actions workflow create the
-release.
+## Verification before publication
 
-## Before merge
-
-From the repository root:
+Use Node 24 and the repository-pinned pnpm version:
 
 ```sh
-corepack pnpm install --no-frozen-lockfile --ignore-scripts
-corepack pnpm run lint
-corepack pnpm run test:ci
-corepack pnpm --dir packages/sdk-outpost run build
+pnpm install --ignore-pnpmfile --ignore-scripts --frozen-lockfile
+pnpm run lint
+pnpm run test:ci
 ```
 
-Package verification requires the publishable files to remain limited to the
-README and CJS/ESM build outputs. Raw producer packages and generated source
-trees must not be published by `sdk-outpost`.
+`test:ci` includes `test:packages`: it finalizes hybrid output and imports
+shared/core/outpost through both native Node module loaders.
 
-## First npm listing
+Use a clean checkout when inspecting package contents, so deleted source cannot
+leave obsolete generated files. Confirm CommonJS/ESM imports and declarations,
+registry-only consumer installation, and migration of removed APIs. Published
+files remain README and runtime build outputs; sdk-core excludes compiled tests
+and incremental build metadata. No secrets, local links, network catalog
+or duplicated producer sources.
 
-The first successful publish creates the npm package page. Release sequence:
+Before approving publication, confirm npm publish credentials and repository
+`release` environment reviewers. Keep package `repository.url` exactly
+`https://github.com/Wire-Network/wire-libraries-ts` for provenance.
 
-1. Confirm both exact `0.3.0` producer artifact versions are publicly
-   installable.
-2. Confirm the `wireio` organization exists on npm and the release owner can
-   publish public packages in that scope.
-3. Confirm npm two-factor authentication is enabled for the release owner.
-4. Confirm the GitHub repository secret `NPM_TOKEN` can publish to the `wireio`
-   organization under its required authentication policy.
-5. Confirm the GitHub `release` environment exists with required reviewers; the
-   environment approval is the second release gate.
-6. Merge the reviewed feature pull request into `master`.
-7. Dispatch **Prepare Release** with the intended bump, approve its checks, and
-   merge the generated version-bump pull request.
-8. Dispatch **Tag Release** and approve the `release` environment gate.
+## After publication
 
-The preparation gate keeps each package on its existing version track. A patch
-bump therefore makes the first SDK release `@wireio/sdk-outpost@0.0.1`, while
-`@wireio/sdk-core` advances by one patch on its independent track.
-The Tag Release gate must install the workspace, build and test every package,
-and publish with npm provenance.
-
-Do not create the first `sdk-outpost` version manually. A failed publish must be
-corrected in source and released as the next patch; published npm versions are
-immutable.
-
-## After the first publication
-
-Verify the listing and install path:
-
-```sh
-npm view @wireio/sdk-outpost version dist-tags repository --json
-npm install @wireio/sdk-outpost
-```
-
-Then configure npm trusted publishing for `tag-release.yaml`. After a trusted
-publish succeeds, remove the long-lived write token from the publish step and
-restrict token-based publishing in npm package settings. Keep `id-token: write`
-so npm can generate provenance.
-
-References:
-
-- <https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/>
-- <https://docs.npmjs.com/trusted-publishers/>
+Verify exact versions and dist-tags with `npm view`, then install those exact
+versions in consumers and run their acceptance suites. An RC should remain on
+the `rc` dist-tag until accepted. npm versions are immutable; a failed or
+incorrect release requires a reviewed correction and new version, not replacement
+of published bytes.

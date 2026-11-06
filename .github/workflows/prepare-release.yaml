@@ -13,7 +13,7 @@ name: "Prepare Release"
 # A prepare run REFUSES to start while a previous release PR is still open, so
 # at most one release is in flight at a time.
 #
-# The bump type decides the channel: `prerelease` produces a `-<preid>.N` suffix
+# Prerelease bump types produce a `-<preid>.N` suffix
 # (channel = that preid, e.g. dev/rc); patch/minor/major produce a stable
 # version. Tag Release derives the same channel from the resulting suffix.
 
@@ -29,9 +29,11 @@ on:
           - patch
           - minor
           - major
+          - preminor
+          - premajor
           - prerelease
       preid:
-        description: "Prerelease identifier (only used when bump = prerelease); becomes the npm channel/dist-tag"
+        description: "Prerelease identifier (preminor, premajor or prerelease); becomes the npm channel/dist-tag"
         type: string
         required: false
         default: "dev"
@@ -112,8 +114,8 @@ jobs:
 
           # Relative bump in EACH package -- the exact mechanism publish-npm.yaml
           # used. --no-git-tag-version: change the files only, no tag/commit here.
-          if [[ "$BUMP" == "prerelease" ]]; then
-            pnpm -r exec -- pnpm version prerelease --preid "$PREID" --no-git-tag-version
+          if [[ "$BUMP" == pre* ]]; then
+            pnpm -r exec -- pnpm version "$BUMP" --preid "$PREID" --no-git-tag-version
           else
             pnpm -r exec -- pnpm version "$BUMP" --no-git-tag-version
           fi
@@ -134,9 +136,8 @@ jobs:
             channel="stable"
           fi
 
-          # Refresh the lockfile so it reflects the bumped versions (hygiene;
-          # CI installs with --no-frozen-lockfile, so it is not a hard gate).
-          pnpm install --lockfile-only --ignore-scripts
+          # Update the registry lockfile here; CI and publication must consume it frozen.
+          pnpm install --lockfile-only --ignore-pnpmfile --ignore-scripts --no-frozen-lockfile
 
           {
             echo "previous=$previous"
@@ -176,7 +177,7 @@ jobs:
             "- Every package bumped relative to its own version, so the wallet packages stay on their own track." \
             "- Internal \`workspace:*\` deps are rewritten to concrete versions at publish time." \
             "" \
-            "After merging, dispatch **Tag Release** to tag master and publish the merged versions.")"
+            "Merging triggers **Tag Release**; manual dispatch remains available for recovery.")"
           gh pr create \
             --base master \
             --head "$BRANCH" \

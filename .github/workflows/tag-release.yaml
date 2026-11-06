@@ -20,8 +20,7 @@ name: "Tag Release"
 on:
   # Auto-triggered when a release/prep-v* PR merges to master — the human
   # merge is gate 1; the `release` Environment's required reviewers are gate 2
-  # (an org-configuration action of this change — the environment ships with
-  # no protection rules). The merge must be performed by a HUMAN: an
+  # (maintained in repository settings). The merge must be performed by a HUMAN: an
   # auto-merge or any GITHUB_TOKEN-driven merge is suppressed by GitHub and
   # fires no run — use workflow_dispatch (the standing manual/recovery path)
   # if that ever changes. `pull_request closed` fires for every PR; the
@@ -124,10 +123,8 @@ jobs:
           JEST_JUNIT_OUTPUT_DIR: reports/junit
           JEST_JUNIT_OUTPUT_NAME: jest-junit.xml
         run: |
-          # --no-frozen-lockfile to match ci.yaml / publish-npm.yaml: the OPP
-          # models are resolved via .pnpmfile.cjs, not locked, so a frozen install
-          # fails on the resulting lockfile drift.
-          pnpm install --ignore-scripts --no-frozen-lockfile
+          # Release exactly the reviewed registry dependency graph.
+          pnpm install --ignore-pnpmfile --ignore-scripts --frozen-lockfile
           pnpm run build
           pnpm run test:ci
 

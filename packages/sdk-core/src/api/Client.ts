@@ -84,21 +84,18 @@ export interface APIResponse {
 export class APIError extends Error {
   static __className = "APIError"
 
+  /** Retain the chain diagnostic even when its optional detail list is empty. */
   static formatError(error: APIErrorData) {
+    const detail = error.details?.[0]
     if (
       error.what === "unspecified" &&
-      error.details[0].file &&
-      error.details[0].file === "http_plugin.cpp" &&
-      error.details[0].message.slice(0, 11) === "unknown key"
+      detail?.file === "http_plugin.cpp" &&
+      detail.message?.startsWith("unknown key")
     ) {
       // fix cryptic error messages from nodeop for missing accounts
       return "Account not found"
-    } else if (
-      error.what === "unspecified" &&
-      error.details &&
-      error.details.length > 0
-    ) {
-      return error.details[0].message
+    } else if (error.what === "unspecified" && detail?.message) {
+      return detail.message
     } else if (error.what && error.what.length > 0) {
       return error.what
     } else {

@@ -9,7 +9,7 @@ import { ethers } from "../EthersCompat.js"
 import { blsSign, skFromLE } from "./BLS.js"
 import { asOption } from "@3fv/prelude-ts"
 import { match } from "ts-pattern"
-import { defaults } from "lodash"
+import defaults from "lodash/defaults.js"
 import { ChainKind } from "@wireio/opp-typescript-models"
 import { numberToBytesBE } from "@noble/curves/utils.js"
 

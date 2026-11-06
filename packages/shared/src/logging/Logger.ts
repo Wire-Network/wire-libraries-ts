@@ -8,7 +8,7 @@ import {
   isNumber
 } from "../guards/index.js"
 import { Option } from "@3fv/prelude-ts"
-import { pick } from "lodash"
+import pick from "lodash/pick.js"
 import { LevelKind, LevelThresholds } from "./Level.js"
 import type { LoggingManager } from "./LoggingManager.js"
 import type { LogMetadata, LogRecord } from "./LogRecord.js"
@@ -254,7 +254,7 @@ export class Logger {
     if (typeof process !== "undefined") {
       process.exit(exitCode)
     } else {
-      console.error(
+      this.fatal(
         "FATAL ASSERTION: `process` is not defined, probably in a web browser"
       )
     }

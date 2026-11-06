@@ -1,5 +1,5 @@
 import { SolanaSeeds as Seed, solanaProgramAddress } from "./Addresses.js"
-import { BN } from "@coral-xyz/anchor"
+import { BN } from "./Anchor.js"
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
@@ -16,7 +16,6 @@ import {
   SYSVAR_STAKE_HISTORY_PUBKEY
 } from "@solana/web3.js"
 import { SolanaSyndicationClient } from "./SolanaSyndicationClient.js"
-import { hasConcurrentWithdrawals } from "./Types.js"
 
 /** An owned withdrawal receipt, not a promise of immediate native payout. */
 export interface SolanaWithdrawalReceipt {
@@ -55,11 +54,6 @@ const ReceiptReadBatchSize = 100,
 export class SolanaWithdrawalClient {
   /** Use the same already verified core program as the syndication client. */
   constructor(private readonly syndication: SolanaSyndicationClient) {}
-
-  /** Derive request encoding from the already verified producer IDL. */
-  private get usesNonce(): boolean {
-    return hasConcurrentWithdrawals(this.syndication.program)
-  }
 
   /** Derive a core-owned PDA using the canonical seed list. */
   private address(seed: string, ...rest: Buffer[]): PublicKey {
@@ -100,14 +94,6 @@ export class SolanaWithdrawalClient {
         )
       rows.forEach((row, index) => {
         if (!row || row.fulfilled) return
-        const expected = this.address(
-          Seed.receiptMint,
-          row.receiptId.toArrayLike(Buffer, "le", ReceiptIdByteLength)
-        )
-        if (!this.usesNonce && !expected.equals(batch[index]))
-          throw new Error(
-            "Withdrawal receipt mint does not match its receipt ID"
-          )
         const epoch = BigInt(row.epoch.toString())
         receipts.push({
           mint: batch[index].toBase58(),
@@ -145,29 +131,19 @@ export class SolanaWithdrawalClient {
     const program = this.syndication.program,
       addresses = this.syndication.addresses(user),
       global = this.address(Seed.global),
-      concurrent = hasConcurrentWithdrawals(program),
-      nonce = concurrent
-        ? new BN(
-            globalThis.crypto.getRandomValues(
-              new Uint8Array(ReceiptIdByteLength)
-            ),
-            "le"
-          )
-        : null,
-      next = nonce == null ? await program.account.global.fetch(global) : null,
+      nonce = new BN(
+        globalThis.crypto.getRandomValues(new Uint8Array(ReceiptIdByteLength)),
+        "le"
+      ),
       nftMint = this.address(
         Seed.receiptMint,
-        ...(nonce == null
-          ? [next.nextReceiptId.toArrayLike(Buffer, "le", ReceiptIdByteLength)]
-          : [
-              user.toBuffer(),
-              nonce.toArrayLike(Buffer, "le", ReceiptIdByteLength)
-            ])
+        user.toBuffer(),
+        nonce.toArrayLike(Buffer, "le", ReceiptIdByteLength)
       ),
-      amountArgument = new BN(amount.toString()),
-      request = concurrent
-        ? program.methods.requestWithdraw(amountArgument, nonce!)
-        : program.methods.requestWithdraw(amountArgument)
+      request = program.methods.requestWithdraw(
+        new BN(amount.toString()),
+        nonce
+      )
     return request
       .accountsStrict({
         user,

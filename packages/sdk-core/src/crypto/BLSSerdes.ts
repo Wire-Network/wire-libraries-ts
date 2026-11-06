@@ -1,5 +1,7 @@
 // crypto/BLSSerdes.ts — BLS key/signature encoding/decoding matching C++ wire-sysio fc::crypto::bls format
-import { ripemd160 } from "hash.js"
+import hashjs from "hash.js"
+
+const { ripemd160 } = hashjs
 
 const CHECKSUM_SIZE = 4
 

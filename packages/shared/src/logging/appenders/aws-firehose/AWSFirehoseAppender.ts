@@ -2,13 +2,12 @@ import type {
   FirehoseClient,
   PutRecordBatchInput
 } from "@aws-sdk/client-firehose"
-import { Level } from "../../Level.js"
 
 import AWSFirehoseCredentialManager, {
   type AWSCredentials
 } from "./AWSFirehoseCredentialManager.js"
 import { getInternalLogger } from "../../InternalLogger.js"
-import { pick } from "lodash"
+import pick from "lodash/pick.js"
 import { Deferred } from "../../../helpers/index.js"
 import { LogRecord } from "../../LogRecord.js"
 import { Appender } from "../../Appender.js"
@@ -45,7 +44,7 @@ export class AWSFirehoseAppender<
     )
     this.credentialManager.on("received", () => {
       log.info("Credentials received, initializing firehose client")
-      if (!this.pendingRecords.length || !!this.flushDeferred) {
+      if (!this.pendingRecords.length || this.flushDeferred) {
         log.debug(
           "Nothing to flush upon credential receipt OR flush already in progress"
         )
@@ -105,7 +104,7 @@ export class AWSFirehoseAppender<
    * @returns {Promise<void>}
    */
   private async flush(): Promise<void> {
-    if (!!this.flushDeferred) {
+    if (this.flushDeferred) {
       log.debug("Flush already in progress, skipping")
       return
     }

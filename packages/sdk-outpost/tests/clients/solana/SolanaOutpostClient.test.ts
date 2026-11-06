@@ -3,8 +3,8 @@ import { sha256 } from "ethers"
 import {
   liqsolCoreIdl as devnetIdl,
   SolanaOutpostArtifactManifest
-} from "@wireio/outpost-solana-artifacts-v0-4-6"
-import { EthereumOutpostArtifactManifest } from "@wireio/outpost-ethereum-artifacts-v0-4-5"
+} from "@wireio/outpost-solana-artifacts"
+import { EthereumOutpostArtifactManifest } from "@wireio/outpost-ethereum-artifacts"
 import { createRequire } from "node:module"
 import { readFileSync } from "node:fs"
 
@@ -40,11 +40,11 @@ describe("SolanaOutpostClient", () => {
   it("decodes the 500-epoch history of the verified Devnet program", async () => {
     const profile = createOutpostDeploymentProfileFixture(
         EthereumOutpostArtifactManifest,
-        "@wireio/outpost-ethereum-artifacts-v0-4-5"
+        "@wireio/outpost-ethereum-artifacts"
       ),
       artifact = SolanaOutpostArtifactManifest.programs.liqsolCore,
       binaryPath = createRequire(__filename).resolve(
-        `@wireio/outpost-solana-artifacts-v0-4-6/${artifact.programBinaryPath}`
+        `@wireio/outpost-solana-artifacts/${artifact.programBinaryPath}`
       ),
       programData = createSolanaProgramDataAccountData(
         readFileSync(binaryPath)

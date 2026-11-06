@@ -8,23 +8,17 @@ This package owns verified external-chain clients. Contract ABIs are published
 by `wire-ethereum`, the Solana IDL is published by `wire-solana`, and immutable
 deployment profiles remain caller-supplied.
 
-Sandbox pairs Ethereum **0.4.4** / Solana **0.4.5**, from
-[the October 28 cluster release](https://github.com/Wire-Network/wire-platform-build-system/releases/tag/cluster-v1.0.0-dev-20261028_144410).
-The retained **0.4.3 / 0.4.2** Testnet pair remains supported temporarily.
-Devnet pairs Ethereum **0.4.5** (V3 staking and V2 withdrawal queue) with
-Solana **0.4.6** (500-epoch history).
-Selection uses exact paired interface identity followed by live
-runtime verification; network names and version strings never authorize a match.
+This candidate supports one producer pair: Ethereum **0.4.5** (V3 staking and
+V2 withdrawal queue) and Solana **0.4.6** (500-epoch history and nonce withdrawals).
+Both interfaces and the connected family's live runtime must match. Network
+names and version labels never authorize a match.
 
-**Temporary pre-RC compatibility — remove as soon as the RC is fixed:** once all
-supported deployments have moved to the approved RC, delete the Testnet suite,
-dependency aliases, old IDL types and legacy withdrawal/minimum branches together
-with their tests. Keep this support only until Testnet has actually migrated;
-do not carry it into mainnet.
-The package supplies artifacts only; a fresh deployment still needs its own
-verified profile, endpoints and acceptance. SDK versions use the normal release workflow.
+Earlier pairs are intentionally removed. Deployments using them must keep their
+matching SDK release until upgraded; this source candidate is not yet published.
+A fresh deployment still needs a verified profile, endpoints and live acceptance.
 
-Ethereum pools that expose a credited syndication minimum report it in external liqETH base units. Final credit depends on the actual tokens received by the pool.
+Ethereum's credited syndication minimum is reported in external liqETH base
+units. Final credit depends on the actual tokens received by the pool.
 
 ## Install
 
@@ -79,7 +73,7 @@ underwriting using platform capability evidence.
 `client.syndication`, obtained through `OutpostClient.create`, keeps external LIQ acquisition separate from Wire settlement. Syndication helper types are exported without public constructors:
 
 - Ethereum: `read(owner)`, `quoteDeposit(amount)`, `deposit(amount)`, exact-amount `approve(amount)`, and `syndicate(amount, compressedPublicKey)`. Amounts are base-unit `bigint`. Save the returned transaction hash before waiting for confirmation. Syndication requires allowance and a compressed public key matching the signer. `depositPaused` follows the liquid token; `syndicationPaused` also includes the pool pause.
-- Solana: `read(user)`, `quoteDeposit(amount)`, `deposit(user, amount, uniqueU32Seed)`, and `syndicate(user, amount)` return exact balances or unsigned transactions. The quote returns `amount`, `fee` and `totalDebit` in lamports using the current pay-rate history and fee multiplier. The protocol fee is added to the amount; transaction fees and account rent are additional. Deposit rechecks affordability, but the contract does not bind execution to a quoted fee. The caller adds a recent blockhash, signs and persists the signature before broadcasting. `read` exposes `minimumSyndication`: the current on-chain minimum, or one positive base unit for legacy Testnet, which has no dust floor. Syndication rechecks that floor, PostLaunch and configured LIQSOL mint/precision; it never creates a legacy prelaunch position.
+- Solana: `read(user)`, `quoteDeposit(amount)`, `deposit(user, amount, uniqueU32Seed)`, and `syndicate(user, amount)` return exact balances or unsigned transactions. The quote returns `amount`, `fee` and `totalDebit` in lamports using the current pay-rate history and fee multiplier. The protocol fee is added to the amount; transaction fees and account rent are additional. Deposit rechecks affordability, but the contract does not bind execution to a quoted fee. The caller adds a recent blockhash, signs and persists the signature before broadcasting. `read` exposes `minimumSyndication`: the current on-chain minimum. Syndication rechecks that floor, PostLaunch and configured LIQSOL mint/precision; it never creates a legacy prelaunch position.
 - Profiles opt into Ethereum `DepositManager`, `LiqEthToken`, `SyndicationPool` identities and Solana `liqsol.tokenProgramAddress` / `transferHookProgramAddress`. Missing identities disable this capability without changing existing profiles. Solana companion addresses are checked against the derived mint and executable accounts; the existing verifier authenticates the core program binary, not companion binaries.
 
 Source confirmation does not prove shadow LIQ is spendable on Wire. Applications must separately check the linked Wire account, relay/bond release and its `sysio.liq` balance. No administrator bootstrap, automatic approval, faucet or collateral deposit is performed by these helpers.
@@ -91,10 +85,10 @@ reads the minimum, withdrawal/claim flags and serviceable epoch. `request(user,
 amount)` burns external liqSOL and builds an unsigned withdrawal request;
 `claim(user, receiptMint)` rechecks ownership and serviceability before building
 the native payout. Amounts and receipt IDs remain exact integers. The caller owns
-wallet signing, persistence before broadcast and confirmation. Nonce-capable
-programs use a fresh random u64 and a user-scoped receipt mint; older verified
-programs retain their counter-based request. Discovery accepts modern and legacy
-receipts on the nonce-capable program. These helpers never retry a request automatically.
+wallet signing, persistence before broadcast and confirmation. Requests use a
+fresh random u64 and a user-scoped receipt mint. Discovery preserves all owned
+receipts recognized by the current program, including receipts created before
+a program upgrade. These helpers never retry a request automatically.
 
 A confirmed request is not a SOL payout. Network processing can advance
 serviceability later; the SDK does not run validator cranks or modify it.
@@ -103,14 +97,13 @@ serviceability later; the SDK does not run validator cranks or modify it.
 
 `client.withdrawals.read(owner)` returns owned NFT IDs, exact amounts, chain-time
 readiness and payout funding at one block. `request(amount)` burns external LIQ
-and submits a withdrawal request; `claim(id)` rechecks ownership, delay, pauses
+and submits a withdrawal request; `claim(id)` rechecks ownership, delay
 and funds before submitting one claim. Both return the transaction immediately;
 store its hash before waiting. A ready receipt can still be unfunded.
 
-The profile must identify the deployed withdrawal queue. In the bootstrap suite
-the manager holds ETH and handles claims. WithdrawalQueueV2 holds and pays ETH
-itself and has no claim pause. The SDK selects the payer from the verified queue
-ABI. A new deployment still needs a registered producer artifact pair.
+The profile must identify the deployed WithdrawalQueueV2, which holds and pays
+ETH itself and has no claim pause. Token pauses still gate withdrawal requests.
+DepositManager-based claims from retired deployments are not supported.
 
 ## Deployment profiles
 
@@ -146,30 +139,22 @@ new profile without requiring a producer-artifact or SDK release.
 | Asset/reserve onboarding without code/interface changes | No                        | No                    | Update operational configuration/evidence |
 | RPC or explorer rotation                                | No                        | No                    | Update endpoint catalog only              |
 
-## Artifact suite selection
+## Artifact verification
 
-The SDK keeps an internal, compile-time registry of supported Ethereum and
-Solana producer package pairs. Client creation selects compatible bindings from
-the deployment profile's ABI or IDL digests, then verifies the selected
-candidate against the exact live Ethereum runtime or Solana ProgramData before
-returning a client. The client uses that exact verified suite; it does not select
-bindings again from interface hashes. `OutpostDeploymentVerifier.verify` also
-returns the verified suite for read-only deployment checks.
+Client creation verifies both profile interfaces against the installed producer
+pair, then checks the connected family's exact live Ethereum runtime or Solana
+ProgramData. Public compatibility helpers, manifests and clients use the same
+pair. `OutpostDeploymentVerifier.verify` returns that verified suite.
 
-This registry is not a network, endpoint, or environment catalog. It contains no
-RPC URLs, does not download code, and is not keyed by names such as sandbox or
-devnet. A new deployment profile that uses an already-registered artifact suite
-works without an SDK release. A deployable code or interface change requires a
-producer artifact release, a corresponding internal suite entry, and an SDK
-release; consumers continue to use the same `OutpostClient.create` facade.
+There is no environment catalog, runtime code download or fallback to older
+bindings. A same-code deployment can supply a fresh profile without an SDK
+release. Changed deployable bytes require producer artifacts and an SDK release;
+consumers continue to use the same `OutpostClient.create` facade.
 
 ### Artifact compatibility
 
-Devnet (`0.4.5 / 0.4.6`), Sandbox (`0.4.4 / 0.4.5`) and temporary Testnet
-(`0.4.3 / 0.4.2`) are selected by exact interface and live runtime verification.
-Requests use the verified producer IDL's withdrawal arguments.
-Earlier pairs are not retained;
-older deployments require their matching SDK release. Consumers must provide a
+Only Ethereum `0.4.5` / Solana `0.4.6` is compiled into this candidate.
+Older deployments require their matching SDK release. Consumers must provide a
 fresh deployment profile and pass exact live runtime verification before use.
 Artifact compatibility alone does not establish swap or operator readiness.
 
@@ -258,7 +243,7 @@ The artifact tests read the installed producer-package payloads, verify their
 published runtime checksums and required generated bindings, and assert that the
 internal registry accepts only the exact paired Ethereum and Solana suite.
 
-Release versions are managed by the monorepo-wide patch workflow. See the
+Release versions are managed by the monorepo-wide release workflow. See the
 [repository release guide](https://github.com/Wire-Network/wire-libraries-ts/blob/master/RELEASING.md)
 for artifact prerequisites and the verification checklist.
 

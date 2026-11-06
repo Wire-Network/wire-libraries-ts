@@ -60,15 +60,6 @@ export class EthereumWithdrawalClient {
     private readonly connection: Provider | Signer
   ) {}
 
-  /** V2 pays from the queue. Older deployments pay through the manager. */
-  private get payer() {
-    if ("claim" in this.queue) return this.queue
-    if ("claim" in this.depositManager) return this.depositManager
-    throw new Error(
-      "Verified staking contracts have no withdrawal claim method"
-    )
-  }
-
   /** Check wiring and enumerate owned receipts at one block, retaining exact uint256 IDs. */
   async read(owner: string): Promise<EthereumWithdrawalState> {
     const provider = ethereumProvider(this.connection),
@@ -77,7 +68,6 @@ export class EthereumWithdrawalClient {
     const blockTag = block.number,
       overrides = { blockTag },
       queueAddress = await this.queue.getAddress(),
-      payer = this.payer,
       [
         wiredQueue,
         count,
@@ -96,8 +86,8 @@ export class EthereumWithdrawalClient {
         this.token.decimals(overrides),
         this.queue.withdrawDelay(overrides),
         this.token.paused(overrides),
-        payer === this.queue ? false : this.depositManager.paused(overrides),
-        provider.getBalance(await payer.getAddress(), blockTag)
+        false,
+        provider.getBalance(queueAddress, blockTag)
       ])
     if (getAddress(wiredQueue) !== getAddress(queueAddress))
       throw new Error("Liquid token does not use the verified withdrawal queue")
@@ -188,6 +178,6 @@ export class EthereumWithdrawalClient {
     if (state.claimPaused) throw new Error("Withdrawal claims are paused")
     if (!receipt.funded)
       throw new Error("Withdrawal payout is awaiting native ETH funding")
-    return this.payer.claim(id)
+    return this.queue.claim(id)
   }
 }
