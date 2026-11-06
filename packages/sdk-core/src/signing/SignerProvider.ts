@@ -78,7 +78,7 @@ export const createEdSigner = (
 }
 
 /**
- * Create a classic signer provider for K1/R1-style keys.
+ * Create a local-key signer provider for K1, R1, EM or ED keys.
  *
  * This signer expects a precomputed 32-byte digest payload (the same digest
  * produced by transaction.signingDigest(...).msgBytes for classic keys) and
@@ -89,7 +89,7 @@ export const createEdSigner = (
  * into `Signature.fromRaw(...)` without additional conversion.
  *
  * @param privateKey Private key in any supported `PrivateKeyType` representation.
- * @returns A `SignerProvider` for classic elliptic-curve signing.
+ * @returns A `SignerProvider` for local-key signing.
  */
 export function createClassicSigner(
   privateKey: PrivateKeyType

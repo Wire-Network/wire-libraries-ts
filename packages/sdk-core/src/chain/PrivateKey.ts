@@ -196,10 +196,7 @@ export class PrivateKey {
     const raw = Bytes.from(message).array
 
     if (this.type === KeyType.ED || this.type === KeyType.BLS) {
-      return Signature.from({
-        ...sign(this.data.array, raw, this.type),
-        publicKey: this.type === KeyType.ED ? this.toPublic() : undefined
-      })
+      return Signature.from(sign(this.data.array, raw, this.type))
     }
 
     if (this.type === KeyType.EM) {
@@ -217,10 +214,7 @@ export class PrivateKey {
       this.type === KeyType.ED
         ? Bytes.from(digest.hexString, "utf8").array
         : digest.array
-    return Signature.from({
-      ...sign(this.data.array, message, this.type),
-      publicKey: this.type === KeyType.ED ? this.toPublic() : undefined
-    })
+    return Signature.from(sign(this.data.array, message, this.type))
   }
 
   /**

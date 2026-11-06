@@ -1,4 +1,5 @@
 import nacl from "tweetnacl"
+import { sign as signParts } from "@wireio/sdk-core/crypto/Sign"
 import { APIClient } from "@wireio/sdk-core/api/Client"
 import { Action } from "@wireio/sdk-core/chain/Action"
 import { Bytes } from "@wireio/sdk-core/chain/Bytes"
@@ -8,11 +9,13 @@ import { PrivateKey } from "@wireio/sdk-core/chain/PrivateKey"
 import { Signature } from "@wireio/sdk-core/chain/Signature"
 import {
   CompressionType,
-  PackedTransaction
+  PackedTransaction,
+  SignedTransaction
 } from "@wireio/sdk-core/chain/Transaction"
 import { abiEncode } from "@wireio/sdk-core/serializer/Encoder"
 import { abiDecode } from "@wireio/sdk-core/serializer/Decoder"
 import { GetInfoResponse } from "@wireio/sdk-core/api/v1/Types"
+import { createEmptyTransaction } from "../support/transactions.js"
 import { createClassicSigner } from "@wireio/sdk-core/signing/SignerProvider"
 
 const pair = nacl.sign.keyPair.fromSeed(new Uint8Array(32).fill(7))
@@ -34,20 +37,44 @@ function client() {
     signer: { pubKey: key, sign }
   })
   jest.spyOn(api, "anyToAction").mockResolvedValue([action])
-  jest
-    .spyOn(api.v1.chain, "get_info")
-    .mockResolvedValue({
-      chain_id: chainId,
-      getTransactionHeader: () => ({
-        expiration: "2026-11-06T00:00:00",
-        ref_block_num: 1,
-        ref_block_prefix: 2
-      })
-    } as unknown as GetInfoResponse)
+  jest.spyOn(api.v1.chain, "get_info").mockResolvedValue({
+    chain_id: chainId,
+    getTransactionHeader: () => ({
+      expiration: "2026-11-06T00:00:00",
+      ref_block_num: 1,
+      ref_block_prefix: 2
+    })
+  } as unknown as GetInfoResponse)
   return { api, sign }
 }
 
 describe("Current Wire ED transaction signatures", () => {
+  test("parses canonical ED authorities and rejects invalid key lengths before serialization", () => {
+    expect(PublicKey.from(key.toString()).equals(key)).toBe(true)
+    expect(
+      abiDecode({ data: abiEncode({ object: key }), type: PublicKey }).equals(
+        key
+      )
+    ).toBe(true)
+    expect(() => PublicKey.from("PUB_ED_foo")).toThrow(
+      /ED public key must be 32 bytes/
+    )
+    expect(() => new PublicKey(KeyType.ED, new Uint8Array(31))).toThrow(
+      /32 bytes/
+    )
+    expect(() => new PublicKey(KeyType.ED, new Uint8Array(33))).toThrow(
+      /32 bytes/
+    )
+  })
+  test("low-level ED signing composes directly with Signature.from", () => {
+    const message = Bytes.from("external message", "utf8")
+    const signature = Signature.from(
+      signParts(pair.secretKey, message.array, KeyType.ED)
+    )
+    expect(signature.data.length).toBe(96)
+    expect(signature.verifyMessage(message, key)).toBe(true)
+    expect(signature.recoverMessage(message).equals(key)).toBe(true)
+  })
   test.each([CompressionType.none, CompressionType.zlib])(
     "preserves the full 96-byte signature through packing and ABI decoding (%s)",
     async compression => {
@@ -136,4 +163,43 @@ describe("Current Wire ED transaction signatures", () => {
       )
     ).toBe(false)
   })
+})
+
+/** Packing and the corrected unsigned digest must preserve the other key families. */
+describe("Shared transaction codec compatibility", () => {
+  test.each([KeyType.K1, KeyType.R1, KeyType.EM, KeyType.BLS])(
+    "preserves %s signing and mixed ED signature-array boundaries",
+    type => {
+      const transaction = createEmptyTransaction()
+      const digest = transaction.signingDigest(chainId).msgDigest
+      const privateKey = PrivateKey.generate(type)
+      const signature = privateKey.signDigest(digest)
+      const edSignature = new PrivateKey(
+        KeyType.ED,
+        new Bytes(pair.secretKey)
+      ).signDigest(digest)
+      const signed = SignedTransaction.from({
+        ...transaction,
+        signatures: [edSignature, signature]
+      })
+      expect(signed.signingDigest(chainId).msgDigest.equals(digest)).toBe(true)
+      expect(signature.verifyDigest(digest, privateKey.toPublic())).toBe(true)
+      const decoded = abiDecode({
+        data: abiEncode({ object: signed }),
+        type: SignedTransaction
+      })
+      expect(decoded.signatures.map(value => value.toString())).toEqual(
+        signed.signatures.map(value => value.toString())
+      )
+      ;[CompressionType.none, CompressionType.zlib].forEach(compression => {
+        const packed = PackedTransaction.fromSigned(signed, compression)
+        expect(
+          packed
+            .getSignedTransaction()
+            .signatures.map(value => value.toString())
+        ).toEqual(signed.signatures.map(value => value.toString()))
+        expect(packed.getTransaction().id.equals(transaction.id)).toBe(true)
+      })
+    }
+  )
 })

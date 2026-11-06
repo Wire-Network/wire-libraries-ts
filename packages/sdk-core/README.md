@@ -11,6 +11,7 @@ and CommonJS builds with TypeScript declarations.
 - [Installation](#installation)
 - [Quick start](#quick-start)
 - [System contracts](#system-contracts)
+- [ED wallet signatures](#ed-wallet-signatures)
 - [Desyndication request decoding](#desyndication-request-decoding)
 - [Depot swap quotes](#depot-swap-quotes)
 - [Development](#development)
@@ -71,7 +72,8 @@ Authorization defaults to empty and must be supplied for writes.
 
 ### ED wallet signatures
 
-Use native-base58 `PUB_ED_<Solana address>` public keys. `APIClient` accepts an
+Use native-base58 `PUB_ED_<Solana address>` public keys; the decoded key must be
+32 bytes. `APIClient` accepts an
 external wallet's 64-byte detached signature through its `SignerProvider` and
 embeds that signer's public key. Wire ED signatures are always 96 bytes:
 `[public key (32) | signature (64)]`, including `SIG_ED_` text and ABI encoding.
@@ -80,11 +82,18 @@ Transaction signing uses the lowercase digest hex as UTF-8, matching libfc.
 `signMessage` / `verifyMessage` use the supplied message bytes directly.
 
 For manual composition, use `Signature.fromRaw(detachedBytes, KeyType.ED, publicKey)`.
+`Signature.from(Crypto.sign(secret, message, KeyType.ED))` also retains the public
+key, so local-key and external-wallet paths use the same codec.
 Already embedded 96-byte signatures can be parsed without an additional key;
 when one is supplied, the embedded key must match. AuthEx proofs use the same
 codec. The retired 65-byte padding helpers and transaction public-key extension
 are removed; do not pad signatures or add an `extPubKey` extension. All transaction
 packing paths preserve the complete signature.
+
+Upgrade both producers and verifiers of off-chain `SIG_ED_` messages together
+(for example, a web app signing Council profiles and its API verifying them).
+Older SDK releases expect detached signatures there and cannot verify the new
+embedded-key representation.
 
 ## Read state and use domain clients
 

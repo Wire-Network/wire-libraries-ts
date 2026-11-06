@@ -184,7 +184,7 @@ export class Signature implements ABISerializableObject {
   }
 
   /**
-   * Build a Signature from raw “[r‖s‖v]” bytes.
+   * Build a Signature from native bytes or an ED wallet’s detached signature.
    * @param raw    96 bytes (ED), or 64 detached bytes with publicKey, or 65 bytes (EM/K1/R1) in [r(32)‖s(32)‖vRaw(1)] form
    * @param type   KeyType.ED | KeyType.EM | KeyType.K1 | KeyType.R1
    * @param publicKey Required for a detached ED wallet signature; checked against embedded ED keys.
@@ -273,13 +273,7 @@ export class Signature implements ABISerializableObject {
   recoverDigest(digest: Checksum256Type): PublicKey {
     digest = Checksum256.from(digest)
     if (this.type === KeyType.ED) {
-      const key = new PublicKey(
-        KeyType.ED,
-        this.data.array.subarray(0, ED_PUBLIC_KEY_LENGTH)
-      )
-      if (!this.verifyDigest(digest, key))
-        throw new Error("Invalid ED signature")
-      return key
+      return this.recoverMessage(Bytes.from(digest.hexString, "utf8"))
     }
     return recover(this.data.array, digest.array, this.type)
   }
@@ -388,7 +382,7 @@ export class Signature implements ABISerializableObject {
     return out
   }
 
-  /** Base58check encoded string representation of this signature (`SIG_<type>_<data>`). */
+  /** Native string representation (`SIG_<type>_<data>`), using each curve’s chain encoding. */
   toString(): string {
     if (this.type === KeyType.BLS) {
       return `SIG_BLS_${blsEncode(this.data.array)}`
