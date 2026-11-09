@@ -20,6 +20,7 @@ export class ABICache implements ABICacheInterface {
 
   constructor(readonly client: APIClient) {}
 
+  /** Share pending reads; failed RPCs are evicted so the next call can retry. */
   async getAbi(account: NameType): Promise<ABI> {
     const key = String(account)
     let record = this.cache.get(key)
@@ -28,12 +29,13 @@ export class ABICache implements ABICacheInterface {
       let getAbi = this.pending.get(key)
 
       if (!getAbi) {
-        getAbi = this.client.v1.chain.get_raw_abi(account)
+        getAbi = this.client.v1.chain
+          .get_raw_abi(account)
+          .finally(() => this.pending.delete(key))
         this.pending.set(key, getAbi)
       }
 
       const response = await getAbi
-      this.pending.delete(key)
 
       if (response.abi) {
         record = ABI.from(response.abi)

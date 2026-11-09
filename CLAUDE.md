@@ -7,7 +7,7 @@
 ```bash
 pnpm install                # Install deps (pnpm 10.34.5, Node >=22); available sibling OPP models link automatically
 pnpm build                  # Build all packages via tsc -b
-pnpm build:dev              # Watch mode (incremental)
+pnpm compile:watch          # Watch mode (incremental)
 pnpm test                   # Build + jest (all packages)
 pnpm format                 # Prettier on **/*.{ts,tsx,md}
 pnpm lint                    # ESLint (eslint.config.mjs) — no-restricted-syntax bans + typescript-eslint
@@ -15,11 +15,9 @@ pnpm lint                    # ESLint (eslint.config.mjs) — no-restricted-synt
 
 Per-package commands (run from package directory):
 ```bash
-pnpm build                  # Package-level build
+pnpm compile                # Package TypeScript build (where available)
 pnpm test                   # Package-level tests (where available)
-pnpm bundle                 # esbuild bundle (CLI packages only)
-pnpm dist                   # Full dist: compile + bundle + pkg binary (CLI packages only)
-pnpm dev                    # Watch mode (CLI packages only)
+pnpm compile:watch          # Watch package compilation (where available)
 ```
 
 ## Monorepo Structure
@@ -49,7 +47,7 @@ sdk-core ──→ wallet-ext-sdk ──→ wallet-browser-ext
 source artifact libraries ──→ sdk-outpost external-chain clients
 ```
 
-Protoc plugins and bundler are standalone (no internal deps).
+OPP generators and their outputs are owned by wire-sysio; this repository consumes the TypeScript models.
 
 ## TypeScript Configuration
 
@@ -61,7 +59,6 @@ Base configs live in `etc/tsconfig/`:
 | `tsconfig.base.cjs.json` | CJS packages (nodenext module resolution) |
 | `tsconfig.base.esm.json` | Pure ESM (ESNext target + modules) |
 | `tsconfig.base.jest.json` | Jest transform (CJS compat for ts-jest) |
-| `tsconfig.base.jest.json` | CJS Jest transform variant |
 
 Root `tsconfig.json` has project references to all packages. Build order is resolved by `tsc -b`.
 
@@ -75,14 +72,6 @@ Packages that publish both ESM and CJS (`shared`, `sdk-core`, `sdk-outpost`, `sh
 2. Post-build: `scripts/fix-hybrid-output.mjs` patches relative imports with `.js` extensions and creates `lib/cjs/package.json` with `{"type":"commonjs"}`
 3. Package.json `exports` map: `"import"` → `lib/esm/`, `"require"` → `lib/cjs/`
 
-## CLI Plugin Build Pipeline (protoc-gen-*, protobuf-bundler)
-
-1. `tsc` → `lib/` (compile)
-2. `esbuild` → `dist/bundle/*.cjs` with shebang + chmod (bundle)
-3. `@yao-pkg/pkg` → standalone binary at `dist/bin/` with embedded assets (dist)
-
-Assets (Rust runtime, Solidity templates, Handlebars templates) are embedded via `pkg.assets` in package.json.
-
 ## Testing
 
 - Framework: Jest 30 with ts-jest
@@ -90,7 +79,6 @@ Assets (Rust runtime, Solidity templates, Handlebars templates) are embedded via
 - Tests live in `<package>/tests/` (not alongside source)
 - Test environments: `node` for most packages, `jsdom` for web/extension packages
 - Module name mapping strips `.js` extensions: `(^.{1,2}/.*)\\.js$` → `$1`
-- protoc plugins have no TS unit tests — tested via `pnpm generate:test` which runs protoc end-to-end
 
 ## Code Style & Approach
 
@@ -193,9 +181,9 @@ Every new/modified symbol ships unit tests in the same change. Tests never assum
 ## CI/CD
 
 GitHub Actions:
-- `ci.yaml` — build + test gate on every PR and push to `master`.
+- `ci.yaml` — build, strict-null checks, unit tests and native CJS/ESM import checks on every PR and push to `master`.
 - Releases use the two-gate flow (ported from wire-sysio / wire-cdt "Strategy C"):
-  1. `prepare-release.yaml` (workflow_dispatch; bump = patch/minor/major/prerelease)
+  1. `prepare-release.yaml` (workflow_dispatch; bump = patch/minor/major/preminor/premajor/prerelease)
      bumps every package on its own track and opens a `release/prep-v<version>` PR —
      and REFUSES to run while a previous release PR is still open. Nothing publishes
      until a human merges the PR.
@@ -224,24 +212,22 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 
 ## Gotchas
 
-- `pnpm test` runs `npm run build` first (not `pnpm build`), then jest — the build must succeed before tests run
-- protoc-gen packages have `postinstall` scripts that trigger `pnpm dist` — this can be slow on first install
+- `pnpm test` builds the workspace before Jest; CI/publication use the frozen registry lockfile with local pnpm hooks disabled.
 - The `fix-hybrid-output.mjs` script must run after every build of hybrid packages or ESM imports will break in Node
+- `test:packages` finalizes shared/core/outpost hybrid output and verifies native CJS/ESM entrypoints. Import CommonJS dependencies through their default or individual-function exports; ESM cannot assume inferred named exports. The hybrid output pass maps per-file logger filenames to `import.meta.url` in ESM.
 - Keep `AccountObject.created` optional: valid system-account responses may omit it.
 - `packages/sdk-core/src/contracts/sysio/authex` owns `sysio.authex` action builders, link table reads, and create-link proof helpers. Consumers should not duplicate the `createlink` message/signature rules locally.
 - `packages/sdk-core/src/contracts/sysio/chains` owns `sysio.chains` registry reads, chain-code normalization, lifecycle filtering, and privileged action construction. Treat registry rows as protocol identity/activation data; RPCs, explorers, icons, wallets, and application capability metadata remain consumer concerns.
 - ED transaction signatures use the current 96-byte embedded-key format. Keep detached-wallet conversion in `Signature.fromRaw`, shared by the API client and AuthEx; do not add transaction extensions or 65-byte padding. Validate 32-byte ED public keys in the shared codec, and keep `Crypto.sign` parts directly composable with `Signature.from`.
 - AuthEx `links` reads use wire-sysio KV `index_name` queries with JSON-encoded bounds. Preserve KV row unwrapping, generated enum-name normalization, and compressed/uncompressed EM key equivalence.
-- `packages/sdk-core/src/contracts/sysio/Client.ts` is the generic transport facade for every generated system contract. Keep action/table names sourced from `SysioContractDefinitions`; keep workflow behavior in the `authex`, `msig`, and `reserv` domain clients.
+- `packages/sdk-core/src/contracts/sysio/Client.ts` is the generic transport facade for every generated system contract. Keep action/table names sourced from `SysioContractDefinitions`; keep workflow behavior in the `authex`, `msig`, `chains`, `tokens`, `swap` and `synd` domain modules.
 - `packages/sdk-core/src/contracts/sysio/Codecs.ts` is the only hand-written system-action codec registry. Add entries only when synchronous action construction is required; generated actions without a codec must retain the `AnyAction` fallback.
 - System-contract `prepare` prefers synchronous ABI encoding but must retain a typed `AnyAction` fallback so `APIClient` can resolve the deployed ABI. Never invent a default write authorization in the public SDK.
-- `packages/sdk-core/src/contracts/sysio/reserv` owns public `sysio.reserv` registry reads, normalized rows, matching, rewards, and read-only quote helpers. External-chain reserve custody belongs in the ABI/IDL-owning chain SDK.
-- `packages/sdk-core/src/contracts/sysio/uwrit` preserves raw request bytes and exposes `sourceRequestId` for swap correlation. External outpost ids are big-endian; synthetic WIRE queue ids are little-endian and high-bit tagged.
 - `packages/sdk-outpost` owns typed Ethereum/Solana clients and validates caller-supplied immutable deployment profiles. Canonical ABIs, IDLs, runtime templates, program binaries, ethers v6 factories, and Anchor types come from exact packages owned by `wire-ethereum` and `wire-solana`. For local platform development, the root pnpm hook links available sibling artifact outputs; never commit `file:`/`link:` specs to package manifests or the lockfile.
 - Producer repositories assemble those npm packages from checksummed deployment handoffs. `sdk-outpost` never downloads the handoff or owns producer publication inputs.
-- `sdk-outpost` registers exact producer package pairs in an internal compile-time artifact-suite registry. Select suites from deployment-profile ABI/IDL identity and verify exact live runtime identity; client factories must use the returned verified suite without resolving bindings again; never key suite selection by environment names or turn it into an endpoint catalog/runtime package loader.
+- `sdk-outpost` compiles one current producer pair. Public helpers, manifests and client factories must use that pair; verify both profile interfaces and the connected family's runtime before returning a client. Never select by environment name or download bindings at runtime.
 - Name the reusable deployment class `Sandbox` in documentation. Use a chain label such as `Bearbox` only as an optional descriptor for one specific Sandbox deployment and its validation provenance; never make that label an SDK key.
-- Advance exact producer pins as verified pairs; do not bump an unchanged producer for a profile respin. Keep supported pairs in the [SDK Outpost compatibility list](packages/sdk-outpost/README.md#artifact-compatibility). Retain the legacy Testnet suite until every supported network moves to the approved RC; then remove aliases, old IDL types and compatibility branches together. Preserve strict interface/runtime verification, exact registry lockfile integrity and installed-package tests; never commit local overlays. Publication must precede registry-install readiness claims.
+- Advance exact producer pins as a verified pair; profile respins alone do not need new artifacts. Retired deployments must remain on their matching SDK until upgraded. Preserve strict interface/runtime checks and registry lockfile integrity. Document intentional support removals and consumer migration before a major release.
 - `OutpostClient.create` is sdk-outpost's only published client-construction facade. It delegates family selection to an internal factory; concrete Ethereum/Solana instance types remain available for typing, but their backend factories and module paths are not package entrypoints.
 - `packages/sdk-outpost` owns verified outpost access, BAR-backed Ethereum node-owner registration, native deposits and PostLaunch syndication. BAR and syndication are optional deployment capabilities; missing identities fail closed at access. Use producer-owned bindings and BAR's canonical WireNodes address. External confirmation does not establish spendable Wire LIQ.
 - `sdk-outpost` accepts caller-owned providers and deployment profiles, verifies exact Ethereum implementations and Solana ProgramData against source-owned runtime artifacts, and never owns mutable endpoint catalogs. A same-code cluster respin requires a new profile, not an artifact or SDK release; any deployable binary change requires both a producer artifact and SDK release.
@@ -251,16 +237,16 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - Do not describe `sdk-outpost` as npm-available until `npm view` succeeds for both exact producer artifact versions and `@wireio/sdk-outpost`, and a clean platform-compatible install passes without sibling artifact links.
 - `wallet-browser-ext` uses a global shim to avoid `new Function()` restrictions in Chrome MV3
 - Path aliases in tsconfig base resolve to `src/` for dev, but published packages use `lib/` — jest module name maps handle this mismatch
-- Node >=22 required (package.json says >=22, README says >=24 — actual CI uses v24)
+- Node >=22 required; CI and release validation use Node 24.
 - The `web-logging-example` requires `WIRE_PUSH_URL` env var injected at webpack build time
 
 - Preserve Wire KV pagination cursors as opaque strings; do not decode JSON/encoded bounds as legacy numeric account names.
 - Multisig named bounds follow a known contract profile. Unknown profiles use bounded scoped reads with local filtering; log ABI failures and retry detection on later calls. Missing/disabled read-only endpoints may fall back to tables; transport and execution failures must remain errors. Raw approvals do not certify current authority or invalidation status.
 
 - Solana native exits use `client.withdrawals`: discover owned receipts through Token-2022, preserve exact receipt IDs and recheck serviceability before claims. Do not run cranks, replay receipt-ID collisions or infer native payout from a confirmed request.
-- Select nonce withdrawal encoding from the verified producer IDL. Nonce-capable programs use fresh random u64 user-scoped mint seeds and accept owned modern/legacy receipts; older verified programs retain counter encoding. Never retry an uncertain request.
+- Solana withdrawal requests use fresh random u64 user-scoped mint seeds from the current producer IDL. Preserve discovery of owned receipts still recognized by that program; never retry an uncertain request.
 
-- Withdrawal helpers require exact queue identities and producer bindings. Read ETH funding and submit claims through the payer selected by the verified queue ABI. Keep SOL receipt ownership/serviceability checks and avoid automatic retries. Raw artifact namespace exports do not verify deployments.
+- Withdrawal helpers require exact queue identities and producer bindings. Read ETH funding and submit claims through the verified WithdrawalQueueV2; DepositManager is not the payer. Keep SOL receipt ownership/serviceability checks and avoid automatic retries. Raw artifact namespace exports do not verify deployments.
 
 - Depot LP quotes (`quoteAddLiquidity` / `quoteRemoveLiquidity`) share the swap snapshot/yield math. Preserve ceil-rounded mint inputs and per-leg fees, floor-rounded burn outputs, locked shares and explicit tolerance. Results describe internal swap custody, not wallet payouts; reuse typed actions and caller-owned transaction composition.
 

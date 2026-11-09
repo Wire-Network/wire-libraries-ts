@@ -36,10 +36,10 @@ const localOverrides = {}
 // CIRCULAR DEP REMOVED
 
 const wirePkgPaths = [
-  ...["typescript", "solidity"].map(target => [
-    `@wireio/opp-${target}-models`,
-    Path.resolve(__dirname, "..", "wire-sysio", "build", "opp", target)
-  ]),
+  [
+    "@wireio/opp-typescript-models",
+    Path.resolve(__dirname, "..", "wire-sysio", "build", "opp", "typescript")
+  ],
   ...["ethereum","solana"].map(target => [
       `@wireio/outpost-${target}-artifacts`,
       Path.resolve(__dirname, "..", `wire-${target}`, "build", "sdk-artifacts")

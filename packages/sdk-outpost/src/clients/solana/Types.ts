@@ -3,43 +3,9 @@ import type { AnchorProvider, Program } from "@coral-xyz/anchor"
 import type { OutpostDeploymentProfile } from "../../deployments/index.js"
 import { SolanaProgramName } from "../../deployments/index.js"
 import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
-import type { LiqsolCore as LiqsolCoreV042 } from "@wireio/outpost-solana-artifacts-v0-4-2"
-import type { LiqsolCore as LiqsolCoreV046 } from "@wireio/outpost-solana-artifacts-v0-4-6"
-
-/** Verified IDLs that support user-chosen withdrawal nonces. */
-type ConcurrentLiqsolCore = LiqsolCore | LiqsolCoreV046
-
-/** Temporary Testnet IDL union; remove the retained type when Testnet adopts the RC. */
-export type SupportedLiqsolCore = ConcurrentLiqsolCore | LiqsolCoreV042
-
-/** Preserve each producer's complete generated Anchor program type. */
-type ConcurrentWithdrawalProgram = Program<LiqsolCore> | Program<LiqsolCoreV046>
-export type SolanaCoreProgram =
-  | ConcurrentWithdrawalProgram
-  | Program<LiqsolCoreV042>
-
-const WithdrawalRequestInstruction = "requestWithdraw",
-  WithdrawalNonceArgument = "nonce"
-
-/** Distinguish the supported, already verified producer instruction encodings. */
-export function hasWithdrawalNonce(
-  idl: SupportedLiqsolCore
-): idl is ConcurrentLiqsolCore {
-  return idl.instructions.some(
-    instruction =>
-      instruction.name === WithdrawalRequestInstruction &&
-      instruction.args.some(
-        argument => argument.name === WithdrawalNonceArgument
-      )
-  )
-}
-
-/** Narrow an Anchor client without widening or hand-declaring generated methods. */
-export function hasConcurrentWithdrawals(
-  program: SolanaCoreProgram
-): program is ConcurrentWithdrawalProgram {
-  return hasWithdrawalNonce(program.idl)
-}
+/** Producer-owned IDL and program types for the supported release. */
+export type SupportedLiqsolCore = LiqsolCore
+export type SolanaCoreProgram = Program<LiqsolCore>
 
 /** Inputs required to connect a Solana outpost client. */
 export interface SolanaOutpostClientOptions {

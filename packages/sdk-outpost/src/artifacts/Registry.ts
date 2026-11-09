@@ -8,20 +8,10 @@ import {
   OPPInbound__factory,
   OPP__factory
 } from "@wireio/outpost-ethereum-artifacts"
-import * as EthereumV045 from "@wireio/outpost-ethereum-artifacts-v0-4-5"
-import * as EthereumV043 from "@wireio/outpost-ethereum-artifacts-v0-4-3"
 import {
   SolanaOutpostArtifactManifest,
   liqsolCoreIdl
 } from "@wireio/outpost-solana-artifacts"
-import {
-  SolanaOutpostArtifactManifest as SolanaV042ArtifactManifest,
-  liqsolCoreIdl as solanaV042LiqsolCoreIdl
-} from "@wireio/outpost-solana-artifacts-v0-4-2"
-import {
-  SolanaOutpostArtifactManifest as SolanaV046ArtifactManifest,
-  liqsolCoreIdl as solanaV046LiqsolCoreIdl
-} from "@wireio/outpost-solana-artifacts-v0-4-6"
 import { match } from "ts-pattern"
 
 import {
@@ -32,9 +22,7 @@ import {
 } from "../deployments/index.js"
 
 type EthereumProducerBindings =
-  | typeof import("@wireio/outpost-ethereum-artifacts")
-  | typeof EthereumV043
-  | typeof EthereumV045
+  typeof import("@wireio/outpost-ethereum-artifacts")
 
 /** Generated ethers factories keyed by the contract name in a verified profile. */
 export type EthereumOutpostArtifactFactories = {
@@ -43,10 +31,7 @@ export type EthereumOutpostArtifactFactories = {
 
 /** Generated Anchor IDLs keyed by deployment identity. */
 export interface SolanaOutpostArtifactIdls {
-  readonly [SolanaProgramName.liqsolCore]:
-    | typeof liqsolCoreIdl
-    | typeof solanaV042LiqsolCoreIdl
-    | typeof solanaV046LiqsolCoreIdl
+  readonly [SolanaProgramName.liqsolCore]: typeof liqsolCoreIdl
 }
 
 /** Ethereum producer bindings and manifest owned by one artifact release. */
@@ -73,7 +58,7 @@ export interface OutpostArtifactSuite {
   readonly solana: SolanaOutpostArtifactSuite
 }
 
-/** One deployment-interface mismatch against a registered artifact suite. */
+/** One deployment-interface mismatch against the current producer suite. */
 export interface OutpostArtifactInterfaceMismatch {
   /** Human-readable interface identity. */
   readonly label: string
@@ -104,57 +89,6 @@ export const CurrentOutpostArtifactSuite: OutpostArtifactSuite = {
     }
   }
 }
-
-/**
- * Temporary Testnet compatibility: remove the retained suite and package aliases
- * as soon as all supported deployments converge on the approved RC artifacts.
- * Select by verified artifact identity, never by environment labels.
- */
-const RegisteredOutpostArtifactSuites: readonly OutpostArtifactSuite[] = [
-  CurrentOutpostArtifactSuite,
-  {
-    ethereum: {
-      manifest: EthereumV045.EthereumOutpostArtifactManifest,
-      factories: {
-        [EthereumContractName.WithdrawalQueue]:
-          EthereumV045.WithdrawalQueue__factory,
-        [EthereumContractName.BAR]: EthereumV045.BAR__factory,
-        [EthereumContractName.DepositManager]:
-          EthereumV045.DepositManager__factory,
-        [EthereumContractName.LiqEthToken]: EthereumV045.LiqEthToken__factory,
-        [EthereumContractName.SyndicationPool]:
-          EthereumV045.SyndicationPool__factory,
-        [EthereumContractName.OPP]: EthereumV045.OPP__factory,
-        [EthereumContractName.OPPInbound]: EthereumV045.OPPInbound__factory
-      }
-    },
-    solana: {
-      manifest: SolanaV046ArtifactManifest,
-      idls: { [SolanaProgramName.liqsolCore]: solanaV046LiqsolCoreIdl }
-    }
-  },
-  {
-    ethereum: {
-      manifest: EthereumV043.EthereumOutpostArtifactManifest,
-      factories: {
-        [EthereumContractName.WithdrawalQueue]:
-          EthereumV043.WithdrawalQueue__factory,
-        [EthereumContractName.BAR]: EthereumV043.BAR__factory,
-        [EthereumContractName.DepositManager]:
-          EthereumV043.DepositManager__factory,
-        [EthereumContractName.LiqEthToken]: EthereumV043.LiqEthToken__factory,
-        [EthereumContractName.SyndicationPool]:
-          EthereumV043.SyndicationPool__factory,
-        [EthereumContractName.OPP]: EthereumV043.OPP__factory,
-        [EthereumContractName.OPPInbound]: EthereumV043.OPPInbound__factory
-      }
-    },
-    solana: {
-      manifest: SolanaV042ArtifactManifest,
-      idls: { [SolanaProgramName.liqsolCore]: solanaV042LiqsolCoreIdl }
-    }
-  }
-]
 
 /** Return Ethereum interface mismatches for one artifact suite. */
 function ethereumInterfaceMismatches(
@@ -211,26 +145,4 @@ export function outpostArtifactInterfaceMismatches(
       solanaInterfaceMismatches(profile, suite)
     )
     .exhaustive()
-}
-
-/** Internal registry for producer package suites compiled into this SDK. */
-export namespace OutpostArtifactRegistry {
-  /** Return suites whose paired generated interfaces match one profile. */
-  export function candidates(
-    profile: OutpostDeploymentProfile
-  ): readonly OutpostArtifactSuite[] {
-    return RegisteredOutpostArtifactSuites.filter(
-      suite =>
-        outpostArtifactInterfaceMismatches(
-          profile,
-          OutpostChainFamily.ethereum,
-          suite
-        ).length === 0 &&
-        outpostArtifactInterfaceMismatches(
-          profile,
-          OutpostChainFamily.solana,
-          suite
-        ).length === 0
-    )
-  }
 }

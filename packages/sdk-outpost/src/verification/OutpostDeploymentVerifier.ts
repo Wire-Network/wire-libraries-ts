@@ -6,7 +6,6 @@ import { match } from "ts-pattern"
 
 import {
   CurrentOutpostArtifactSuite,
-  OutpostArtifactRegistry,
   type OutpostArtifactSuite
 } from "../artifacts/Registry.js"
 import {
@@ -234,7 +233,7 @@ async function verifySolana(
   )
 }
 
-/** Verify one candidate artifact suite against its live external chain. */
+/** Verify the current artifact suite against its live external chain. */
 async function verifyOutpostArtifactSuite(
   input: OutpostDeploymentVerificationInput,
   suite: OutpostArtifactSuite
@@ -249,42 +248,25 @@ async function verifyOutpostArtifactSuite(
     .exhaustive()
 }
 
-/** Verify compatible suites in registration order until one matches live code. */
-async function verifyOutpostArtifactSuiteCandidates(
-  input: OutpostDeploymentVerificationInput,
-  suites: readonly OutpostArtifactSuite[],
-  index = 0
-): Promise<OutpostArtifactSuite> {
-  const suite = suites[index]
-  if (suite == null) {
-    assertOutpostArtifactSuiteCompatibility(
-      input.profile,
-      input.family,
-      CurrentOutpostArtifactSuite
-    )
-    throw new Error(
-      `No registered artifact suite matches deployment profile ${input.profile.id}`
-    )
-  }
-
-  try {
-    await verifyOutpostArtifactSuite(input, suite)
-    return suite
-  } catch (error: unknown) {
-    if (index + 1 >= suites.length) throw error
-    return verifyOutpostArtifactSuiteCandidates(input, suites, index + 1)
-  }
-}
-
 /** Cross-chain facade for exact outpost deployment-profile verification. */
 export namespace OutpostDeploymentVerifier {
   /** Verify the deployment and return the exact producer bindings that passed. */
   export async function verify(
     input: OutpostDeploymentVerificationInput
   ): Promise<OutpostArtifactSuite> {
-    return verifyOutpostArtifactSuiteCandidates(
-      input,
-      OutpostArtifactRegistry.candidates(input.profile)
+    const suite = CurrentOutpostArtifactSuite
+    // A profile identifies one coordinated release, even when only one family is read.
+    assertOutpostArtifactSuiteCompatibility(
+      input.profile,
+      OutpostChainFamily.ethereum,
+      suite
     )
+    assertOutpostArtifactSuiteCompatibility(
+      input.profile,
+      OutpostChainFamily.solana,
+      suite
+    )
+    await verifyOutpostArtifactSuite(input, suite)
+    return suite
   }
 }

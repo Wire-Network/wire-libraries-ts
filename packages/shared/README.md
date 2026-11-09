@@ -8,6 +8,10 @@ Core shared utilities for Wire applications, providing a logging framework, type
 pnpm add @wireio/shared
 ```
 
+The package exposes CommonJS and ES module entrypoints. CI checks native Node
+imports for this package together with the SDKs; module loading does not require
+bundler-specific CommonJS named-export interop.
+
 ## Modules
 
 - [Logging](#logging) - Flexible logging framework with multiple appenders

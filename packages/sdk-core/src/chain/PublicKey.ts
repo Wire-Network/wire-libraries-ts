@@ -205,14 +205,15 @@ export class PublicKey implements ABISerializableObject {
    * Return the public key in the native format expected by the
    * signature_provider_manager_plugin's spec.
    *
-   * - K1/R1: Legacy SYS-prefixed string
-   * - EM (Ethereum): hex address (0x-prefixed, 20-byte keccak hash)
+   * - K1: SYS-prefixed string; R1: PUB_R1_... string
+   * - EM (Ethereum): 0x-prefixed compressed public key (not an address)
    * - ED (Solana): raw base58 of the 32-byte public key
    * - BLS: PUB_BLS_... encoded string
    */
   toNativeString(): string {
     return match(this.type)
-      .with(KeyType.K1, KeyType.R1, () => this.toLegacyString())
+      .with(KeyType.K1, () => this.toLegacyString())
+      .with(KeyType.R1, () => this.toString())
       .with(KeyType.EM, () => "0x" + arrayToHex(this.data.array))
       .with(KeyType.ED, () => Base58.encode(this.data))
       .with(KeyType.BLS, () => `PUB_BLS_${blsEncode(this.data.array)}`)

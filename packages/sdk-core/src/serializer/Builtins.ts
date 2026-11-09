@@ -1,4 +1,4 @@
-import { identity } from "lodash"
+import identity from "lodash/identity.js"
 import { match } from "ts-pattern"
 
 import { ABIDecoder } from "./Decoder.js"

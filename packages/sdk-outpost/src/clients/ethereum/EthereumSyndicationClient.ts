@@ -48,7 +48,6 @@ export class EthereumSyndicationClient {
 
   /** Convert the contract's minimum credited depot units to external LIQ base units. */
   private async minimumSyndication(): Promise<bigint> {
-    if (!("minSyndication" in this.pool)) return 1n
     const [minimum, precision] = await Promise.all([
       this.pool.minSyndication(),
       this.pool.liqTokenPrecision()
