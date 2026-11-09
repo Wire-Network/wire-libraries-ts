@@ -216,6 +216,8 @@ GitHub Actions:
 - Published package manifests must keep `repository.url` set to
   `https://github.com/Wire-Network/wire-libraries-ts` — npm provenance matches it.
 
+- Pool valuation and TWAP helpers are pure and use generated pool state. Keep pending yield out of historical accumulators, USD feeds/aggregation/cache policy in consumers, and arithmetic exact until the documented display boundary. Maintain [pricing source parity and consumer guidance](packages/sdk-core/docs/pool-pricing.md).
+
 - `contracts.sysio.swap.quoteSwap` owns pure, exact-input depot quote math. Compose generated pool/LIQ row types; require explicit holder/index reads for yield pools, accrue before pricing, and preserve integer fee/minimum rounding. Use generic system-contract tables for transport. Do not add environment keys, RPC, signing, multi-hop routing or execution-readiness claims to this helper. Keep source pins, exact-key lookups, verified-absence semantics and state-coherence limits in the [SDK quote guide](packages/sdk-core/README.md#depot-swap-quotes).
 
 ## Documentation Comments

@@ -1,3 +1,6 @@
 export * from "./Quote.js"
 export * from "./LiquidityQuote.js"
 export * from "./Types.js"
+export * from "./PricingTypes.js"
+export * from "./Valuation.js"
+export * from "./Twap.js"
