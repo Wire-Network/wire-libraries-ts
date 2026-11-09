@@ -9,9 +9,12 @@ import { ethers } from "../EthersCompat.js"
 import { blsSign, skFromLE } from "./BLS.js"
 import { asOption } from "@3fv/prelude-ts"
 import { match } from "ts-pattern"
-import { defaults } from "lodash"
+import lodash from "lodash"
 import { ChainKind } from "@wireio/opp-typescript-models"
 import { numberToBytesBE } from "@noble/curves/utils.js"
+
+/** Preserve the options helper from the CommonJS package export. */
+const { defaults } = lodash
 
 /** Number of bytes in each ECDSA signature component. */
 const SIGNATURE_COMPONENT_BYTES = 32

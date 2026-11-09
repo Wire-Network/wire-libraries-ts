@@ -1,13 +1,17 @@
 import { isNumber, isObject, isString } from "../guards/index.js"
 import { Option } from "@3fv/prelude-ts"
-import { flatten, isEmpty, min, negate } from "lodash"
+import lodash from "lodash"
 import type { Appender } from "./Appender.js"
 import { ConsoleAppender } from "./appenders/ConsoleAppender.js"
 import { Level, LevelKind, LevelThresholds } from "./Level.js"
 import { Logger, LoggerOptions } from "./Logger.js"
 import type { LogMetadata, LogRecord } from "./LogRecord.js"
 import { LogContext, LogContextContainer } from "./context/index.js"
-import { flow, get, nth } from "lodash/fp.js"
+import lodashFp from "lodash/fp.js"
+
+/** Preserve the functions provided by the CommonJS package exports. */
+const { flatten, isEmpty, min, negate } = lodash
+const { flow, get, nth } = lodashFp
 
 export type CategoryMatch = RegExp | string
 
