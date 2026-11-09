@@ -1,5 +1,6 @@
 import type { Action } from "../../../chain/Action.js"
 import { Checksum256 } from "../../../chain/Checksum.js"
+import { SYSIO_PAYER_NAME } from "../../../chain/constants.js"
 import { Name, type NameType } from "../../../chain/Name.js"
 import {
   PermissionLevel,
@@ -27,7 +28,11 @@ function permissionLevel(value: MsigPermissionLevel): PermissionLevel {
   return PermissionLevel.from(value as PermissionLevelType | string)
 }
 
-/** Builds an unsigned `sysio.msig::propose` action. */
+/**
+ * Builds an unsigned `sysio.msig::propose` action. It is authorized by
+ * `{proposer, sysio.payer}` followed by the proposer's permission, so the
+ * proposer pays its CPU and NET; the contract requires that first entry.
+ */
 export function buildProposeAction(options: BuildProposeActionOptions): Action {
   const proposer = Name.from(options.proposer)
 
@@ -46,6 +51,7 @@ export function buildProposeAction(options: BuildProposeActionOptions): Action {
       contract: options.contract || DEFAULT_MSIG_CONTRACT
     }).actions.propose.prepare(data, {
       authorization: [
+        PermissionLevel.from({ actor: proposer, permission: SYSIO_PAYER_NAME }),
         PermissionLevel.from({
           actor: proposer,
           permission: options.proposerPermission || "active"

@@ -123,6 +123,12 @@ Read-only execution failures remain errors; their table fallback is limited to a
 disabled or missing read-only endpoint. Approval rows alone do not
 prove executable authority: invalidations, current permissions and delay still apply.
 
+`msig.buildProposeAction` authorizes `propose` with `{proposer, sysio.payer}`
+followed by the proposer's permission (`active` by default), as the contract
+requires. The proposer pays the action's CPU and NET, including the proposed
+transaction's bytes, in addition to the proposal's RAM. Sign with a key of the
+proposer's permission; the `sysio.payer` entry needs no key of its own.
+
 For Wire KV table pagination, call `get_table_rows<string>(...)` and pass the
 returned `next_key` unchanged as the next bound (`lower_bound` forward,
 `upper_bound` in reverse). KV cursors are opaque JSON or encoded keys, not
