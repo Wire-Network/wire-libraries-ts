@@ -1,4 +1,5 @@
 import BN from "bn.js"
+
 import { Asset } from "../../../chain/Asset.js"
 import { UInt256 } from "../../../chain/Integer.js"
 import type { SysioSwapCurrencyStatsType } from "../../../types/SysioContractTypes.js"
@@ -9,15 +10,21 @@ export const PriceDecimalScale = BigInt(UInt256.SCALE.toString())
 
 /** Internal exact ratio of USD base units; round only at the public display boundary. */
 export interface PriceRatio {
+  /** Nonnegative numerator in the SDK's fixed-point price units. */
   numerator: bigint
+  /** Positive divisor; retain the ratio until display formatting. */
   denominator: bigint
 }
 
 /** Validated recorded reserves and whole-token scales, shared by spot and TWAP. */
 export interface PoolAmounts {
+  /** Recorded pool1 reserve in atomic units. */
   first: bigint
+  /** Recorded pool2 reserve in atomic units. */
   second: bigint
+  /** Atomic units per whole pool1 token. */
   firstScale: bigint
+  /** Atomic units per whole pool2 token. */
   secondScale: bigint
 }
 

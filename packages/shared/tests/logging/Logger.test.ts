@@ -2,6 +2,7 @@ import { Logger } from "@wireio/shared/logging/Logger"
 import { LoggingManager } from "@wireio/shared/logging/LoggingManager"
 import { Level } from "@wireio/shared/logging/Level"
 import type { LogRecord } from "@wireio/shared/logging/LogRecord"
+import { getInternalLogger } from "@wireio/shared/logging/InternalLogger"
 
 describe("Logger", () => {
   let manager: LoggingManager
@@ -131,5 +132,24 @@ describe("Logger", () => {
       expect(records[0].level).toBe("error")
       expect(records[0].message).toBe("assertion failed")
     })
+  })
+
+  it("reports a fatal assertion without a Node process in a browser", () => {
+    const logger = manager.getLogger("test-browser-fatal"),
+      nodeProcess = globalThis.process,
+      fallback = jest
+        .spyOn(getInternalLogger(), "fatal")
+        .mockImplementation(() => {})
+    try {
+      globalThis.process = undefined
+      logger.assertFatal(false, "assertion failed")
+    } finally {
+      globalThis.process = nodeProcess
+    }
+    expect(records[0].level).toBe(Level.fatal)
+    expect(fallback).toHaveBeenCalledWith(
+      "FATAL ASSERTION: `process` is not defined, probably in a web browser"
+    )
+    fallback.mockRestore()
   })
 })

@@ -35,7 +35,9 @@ import type {
   ProposalDetail
 } from "./Types.js"
 
-const log = getLogger(__filename)
+/** Match the filename-derived category without depending on CommonJS globals. */
+const LogCategory = "contracts:sysio:msig:Client"
+const log = getLogger(LogCategory)
 const READ_ONLY_TRANSACTION_PATH = "/v1/chain/send_read_only_transaction"
 const READ_ONLY_DISABLED = "read-only transactions execution not enabled"
 const NOT_FOUND_STATUS = 404

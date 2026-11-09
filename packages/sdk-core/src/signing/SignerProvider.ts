@@ -1,10 +1,13 @@
-import { identity } from "lodash"
+import lodash from "lodash"
 import { Option } from "@3fv/prelude-ts"
 import { ethers } from "../EthersCompat.js"
 import { PrivateKey, type PrivateKeyType } from "../chain/PrivateKey.js"
 import { KeyType } from "../chain/KeyType.js"
 import { PublicKey } from "../chain/PublicKey.js"
 import { hexToArray } from "../Utils.js"
+
+/** Preserve the identity function from the CommonJS package export. */
+const { identity } = lodash
 
 export interface SignerProvider {
   /**

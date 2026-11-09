@@ -99,9 +99,9 @@ Each `PoolPriceObservation` contains:
 - `observedAt`: UTC **chain block time**, ABI `time_point` syntax, up to six fractional digits.
 
 The helper verifies matching chain, issuer, LP symbol and both token identities;
-requires forward time and accumulators; and rejects invalid/empty inputs. It cannot
-prove that caller-supplied rows are coherent or finalized. Prefer an indexed,
-block-pinned snapshot; with ordinary RPC reads, use the quote guide's bounded
+requires a positive time window and nondecreasing raw accumulators; and rejects
+invalid/empty projected intervals. It cannot prove that caller-supplied rows are
+coherent or finalized. Prefer an indexed, block-pinned snapshot; with ordinary RPC reads, use the quote guide's bounded
 re-read strategy and label the output indicative. Clear observations on a network
 change/chain respin and use a consistent finality policy.
 

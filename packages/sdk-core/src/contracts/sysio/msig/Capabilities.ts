@@ -2,6 +2,7 @@ import { match } from "ts-pattern"
 import { getLogger } from "@wireio/shared"
 
 import type { APIClient } from "../../../api/Client.js"
+import type { GetAbiResponse } from "../../../api/v1/Types.js"
 import { ABI } from "../../../chain/Abi.js"
 import { Name, NameType } from "../../../chain/Name.js"
 
@@ -13,7 +14,14 @@ import type {
   MsigTableName
 } from "./Types.js"
 
-const log = getLogger(__filename)
+/** Match the filename-derived category without depending on CommonJS globals. */
+const LogCategory = "contracts:sysio:msig:Capabilities"
+const log = getLogger(LogCategory)
+
+enum AbiCollectionName {
+  actions = "actions",
+  tables = "tables"
+}
 
 /** Base action surface required by legacy and chunked-v2 `sysio.msig`. */
 export const MSIG_BASE_ACTIONS = [
@@ -75,16 +83,16 @@ export const MSIG_PROPOSAL_FIELDS = [
   ...MSIG_CHUNKED_PROPOSAL_FIELDS
 ] as const satisfies readonly MsigProposalFieldName[]
 
-type AbiLike = ABI.Def | { abi?: ABI.Def | null } | null
+type AbiLike = ABI.Def | Partial<GetAbiResponse> | null
 
-function resolveAbi(response: AbiLike): ABI.Def | null {
+function resolveAbi(response: AbiLike): ABI.Def {
   const candidate =
     response && "abi" in response ? response.abi || null : response || null
 
   return candidate as ABI.Def | null
 }
 
-function namesFromAbi(abi: ABI.Def | null, key: "actions" | "tables"): Set<string> {
+function namesFromAbi(abi: ABI.Def | null, key: AbiCollectionName): Set<string> {
   return new Set((abi?.[key] || []).map(entry => String(entry.name)))
 }
 
@@ -146,8 +154,8 @@ export function capabilitiesFromAbi(
 ): MsigCapabilities {
   const abi = resolveAbi(response),
     hasAbi = !!abi,
-    actionNames = namesFromAbi(abi, "actions"),
-    tableNames = namesFromAbi(abi, "tables"),
+    actionNames = namesFromAbi(abi, AbiCollectionName.actions),
+    tableNames = namesFromAbi(abi, AbiCollectionName.tables),
     proposalFieldNames = fieldsFromStruct(abi, "proposal"),
     approveFieldNames = fieldsFromStruct(abi, actionTypeFromAbi(abi, "approve")),
     actionResultNames = actionResultsFromAbi(abi),

@@ -8,6 +8,7 @@ import type { SwapPoolSnapshot } from "./Types.js"
 
 /** Caller-supplied USD price of one whole token, identified by contract and precision. */
 export interface PoolTokenPrice {
+  /** Issuing contract and full precision/symbol of a leg in the supplied pool. */
   token: SysioSwapExtendedSymbolType
   /** Positive decimal string, with at most 18 fractional digits; never a JS float. */
   usd: string
@@ -15,7 +16,9 @@ export interface PoolTokenPrice {
 
 /** Whether a USD price was supplied or inferred from this pool's effective reserves. */
 export enum PoolPriceSource {
+  /** Price supplied by the consumer. */
   reference = "reference",
+  /** Price inferred from the other leg's reference and effective reserves. */
   pool = "pool"
 }
 
@@ -27,9 +30,13 @@ export interface PoolValuationOptions extends SwapPoolSnapshot {
 
 /** Effective pool reserve and its indicative USD value, not an executable quote. */
 export interface PoolAssetValuation {
+  /** Recorded reserve plus any accrued yield assigned to this leg. */
   reserve: ExtendedAsset
+  /** USD per whole token, floored to at most 18 fractional digits. */
   priceUsd: string
+  /** Reserve value computed before rounding the public price. */
   valueUsd: string
+  /** Identifies which prices came from the caller rather than the pool. */
   priceSource: PoolPriceSource
 }
 
@@ -43,7 +50,9 @@ export interface PoolPrices {
 
 /** Snapshot display estimates; decimal outputs use the SDK's 18-decimal UInt256 scale. */
 export interface PoolValuation extends PoolPrices {
+  /** Valuation of the first leg in the supplied stat row. */
   pool1: PoolAssetValuation
+  /** Valuation of the second leg, including accrued WIRE for a yield pool. */
   pool2: PoolAssetValuation
   /** Pending/banked WIRE accrued to pool2, using the same math as swap/LP quotes. */
   accruedYield: ExtendedAsset
@@ -67,7 +76,9 @@ export interface PoolPriceObservation {
 
 /** Two retained observations of the same chain, swap issuer, LP symbol and token pair. */
 export interface PoolTwapOptions {
+  /** Earlier coherent state, retained by the consumer. */
   start: PoolPriceObservation
+  /** Later coherent state from the same chain and pool. */
   end: PoolPriceObservation
 }
 

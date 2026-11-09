@@ -262,9 +262,9 @@ arithmetic; they do not establish live deployment parity.
 
 `contracts.sysio.swap.getPoolValuation` derives spot rates, USD TVL and LP value
 from the existing pool/yield snapshot and explicit token-price references.
-`getPoolTwap` calculates historical rates from retained on-chain accumulator
-observations without submitting transactions. Both are pure; feed selection,
-network identity, freshness, caching and cross-pool policy stay with consumers.
+`getPoolTwap` calculates historical rates from coherent, nondecreasing on-chain
+accumulator observations without submitting transactions. Both are pure; feed
+selection, network identity, freshness, caching and cross-pool policy stay with consumers.
 See the [pricing guide](docs/pool-pricing.md) for examples, precision, source pins
 and the TGE/Hub integration plan.
 

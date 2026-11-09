@@ -216,7 +216,7 @@ GitHub Actions:
 - Published package manifests must keep `repository.url` set to
   `https://github.com/Wire-Network/wire-libraries-ts` — npm provenance matches it.
 
-- Pool valuation and TWAP helpers are pure and use generated pool state. Keep pending yield out of historical accumulators, USD feeds/aggregation/cache policy in consumers, and arithmetic exact until the documented display boundary. Maintain [pricing source parity and consumer guidance](packages/sdk-core/docs/pool-pricing.md).
+- Pool valuation and TWAP helpers are pure and use generated pool state. Reject backwards raw accumulators before idle projection; keep pending yield out of historical prices, USD feeds/aggregation/cache policy in consumers, and arithmetic exact until the documented display boundary. Maintain [pricing source parity and consumer guidance](packages/sdk-core/docs/pool-pricing.md).
 
 - `contracts.sysio.swap.quoteSwap` owns pure, exact-input depot quote math. Compose generated pool/LIQ row types; require explicit holder/index reads for yield pools, accrue before pricing, and preserve integer fee/minimum rounding. Use generic system-contract tables for transport. Do not add environment keys, RPC, signing, multi-hop routing or execution-readiness claims to this helper. Keep source pins, exact-key lookups, verified-absence semantics and state-coherence limits in the [SDK quote guide](packages/sdk-core/README.md#depot-swap-quotes).
 
@@ -229,6 +229,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - `pnpm test` runs `npm run build` first (not `pnpm build`), then jest — the build must succeed before tests run
 - protoc-gen packages have `postinstall` scripts that trigger `pnpm dist` — this can be slow on first install
 - The `fix-hybrid-output.mjs` script must run after every build of hybrid packages or ESM imports will break in Node
+- Native module interoperability tests cover Core signing (including embedded-key ED signatures) and Outpost loading in both CJS and ESM; preserve these checks alongside source-level tests.
 - Keep `AccountObject.created` optional: valid system-account responses may omit it.
 - `packages/sdk-core/src/contracts/sysio/authex` owns `sysio.authex` action builders, link table reads, and create-link proof helpers. Consumers should not duplicate the `createlink` message/signature rules locally.
 - `packages/sdk-core/src/contracts/sysio/chains` owns `sysio.chains` registry reads, chain-code normalization, lifecycle filtering, and privileged action construction. Treat registry rows as protocol identity/activation data; RPCs, explorers, icons, wallets, and application capability metadata remain consumer concerns.

@@ -1,4 +1,4 @@
-import { identity } from "lodash"
+import lodash from "lodash"
 import { match } from "ts-pattern"
 
 import { ABIDecoder } from "./Decoder.js"
@@ -34,6 +34,9 @@ import { Name } from "../chain/Name.js"
 import { PublicKey } from "../chain/PublicKey.js"
 import { Signature } from "../chain/Signature.js"
 import { Struct } from "../chain/Struct.js"
+
+/** Preserve the identity function from the CommonJS package export. */
+const { identity } = lodash
 
 const BOOL_FALSE_BYTE = 0
 const BOOL_TRUE_BYTE = 1

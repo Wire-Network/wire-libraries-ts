@@ -1,10 +1,12 @@
 import { p256 } from "@noble/curves/nist.js"
 import { secp256k1 } from "@noble/curves/secp256k1.js"
-import { ec } from "elliptic"
+import elliptic from "elliptic"
+import type { ec } from "elliptic"
+import { match } from "ts-pattern"
 import { KeyType } from "../chain/KeyType.js"
 
-const curves: { [type: string]: ec } = {}
-const nobleCurves: { [type: string]: typeof secp256k1 } = {}
+const curves: Record<string, ec> = {}
+const nobleCurves: Record<string, typeof secp256k1> = {}
 
 /**
  * Get curve for key type.
@@ -14,21 +16,18 @@ export function getCurve(type: KeyType): ec {
   let rv = curves[type]
 
   if (!rv) {
-    switch (type) {
-      case KeyType.K1:
-      case KeyType.EM:
-        rv = curves[type] = new ec("secp256k1")
-        break
-      case KeyType.R1:
-        rv = curves[type] = new ec("p256")
-        break
-      case KeyType.ED:
+    // Use the CommonJS default export for native ESM and transpiled consumers.
+    rv = curves[type] = match(type)
+      .with(KeyType.K1, KeyType.EM, () => new elliptic.ec("secp256k1"))
+      .with(KeyType.R1, () => new elliptic.ec("p256"))
+      .with(KeyType.ED, () => {
         throw new Error(
           "ED25519 keys are not supported via elliptic; use libsodium for ED-based operations"
         )
-      default:
+      })
+      .otherwise(() => {
         throw new Error(`Unknown curve type: ${type}`)
-    }
+      })
   }
 
   return rv
@@ -42,21 +41,17 @@ export function getNobleCurve(type: KeyType): typeof secp256k1 {
   let curve = nobleCurves[type]
 
   if (!curve) {
-    switch (type) {
-      case KeyType.K1:
-      case KeyType.EM:
-        curve = nobleCurves[type] = secp256k1
-        break
-      case KeyType.R1:
-        curve = nobleCurves[type] = p256
-        break
-      case KeyType.ED:
+    curve = nobleCurves[type] = match(type)
+      .with(KeyType.K1, KeyType.EM, () => secp256k1)
+      .with(KeyType.R1, () => p256)
+      .with(KeyType.ED, () => {
         throw new Error(
           "ED25519 keys are not supported via Noble Weierstrass curves"
         )
-      default:
+      })
+      .otherwise(() => {
         throw new Error(`Unknown curve type: ${type}`)
-    }
+      })
   }
 
   return curve

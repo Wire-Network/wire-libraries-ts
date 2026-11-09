@@ -187,4 +187,14 @@ describe("pool time-weighted prices", () => {
     end.accumulator.price1 = accumulator(LimbSize * 10n * SecondUs)
     expect(() => getPoolTwap({ start, end })).toThrow(/interval/)
   })
+
+  test("rejects raw accumulator regression even when idle projection hides it", () => {
+    const start = observation(),
+      end = observation(EndTime)
+    start.accumulator.price1 = accumulator(PriceOne)
+    expect(() => getPoolTwap({ start, end })).toThrow(/backwards/)
+    start.accumulator.price1 = accumulator(0n)
+    start.accumulator.price2 = accumulator(PriceOne)
+    expect(() => getPoolTwap({ start, end })).toThrow(/backwards/)
+  })
 })

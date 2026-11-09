@@ -7,7 +7,7 @@ import { sharedSecret } from "../crypto/SharedSecret.js"
 import { sign } from "../crypto/Sign.js"
 import { generate } from "../crypto/Generate.js"
 
-import { ec as EC } from "elliptic"
+import type { ec as EC } from "elliptic"
 
 import { ethers } from "../EthersCompat.js"
 

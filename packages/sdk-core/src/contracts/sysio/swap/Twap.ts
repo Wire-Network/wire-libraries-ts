@@ -100,6 +100,13 @@ export function getPoolTwap(options: PoolTwapOptions): PoolTwap {
     !matches(start.pool.pool2, end.pool.pool2)
   )
     throw new Error("TWAP observations must identify the same chain and pool")
+  if (
+    accumulatorValue(end.accumulator.price1) <
+      accumulatorValue(start.accumulator.price1) ||
+    accumulatorValue(end.accumulator.price2) <
+      accumulatorValue(start.accumulator.price2)
+  )
+    throw new Error("Price accumulator moved backwards")
   const earlier = projectPrices(start),
     later = projectPrices(end),
     elapsed = later.timeUs - earlier.timeUs,
