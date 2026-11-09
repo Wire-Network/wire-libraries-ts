@@ -1329,13 +1329,6 @@ export interface SysioLiqMintyieldAction {
   amount: number | string
 }
 
-/** sysio.liq::open (action) */
-export interface SysioLiqOpenAction {
-  owner: string
-  symbol: string
-  ram_payer: string
-}
-
 /** sysio.liq::pending_yield (type) */
 export interface SysioLiqPendingYieldType {
   quantity: string
@@ -1404,7 +1397,6 @@ export interface SysioLiqContract {
     creditowed: SysioLiqCreditowedAction
     mint: SysioLiqMintAction
     mintyield: SysioLiqMintyieldAction
-    open: SysioLiqOpenAction
     queueyield: SysioLiqQueueyieldAction
     recredit: SysioLiqRecreditAction
     regliqpool: SysioLiqRegliqpoolAction
@@ -2560,20 +2552,6 @@ export interface SysioSwapInittokenAction {
   yield_leg?: SysioSwapExtendedSymbolType | null
 }
 
-/** sysio.swap::open (action) */
-export interface SysioSwapOpenAction {
-  owner: string
-  symbol: string
-  ram_payer: string
-}
-
-/** sysio.swap::openext (action) */
-export interface SysioSwapOpenextAction {
-  user: string
-  payer: string
-  ext_symbol: SysioSwapExtendedSymbolType
-}
-
 /** sysio.swap::pair_identity_key (type) */
 export interface SysioSwapPairIdentityKeyType {
   contract1: string
@@ -2676,8 +2654,6 @@ export interface SysioSwapContract {
     exchange: SysioSwapExchangeAction
     fundyield: SysioSwapFundyieldAction
     inittoken: SysioSwapInittokenAction
-    open: SysioSwapOpenAction
-    openext: SysioSwapOpenextAction
     remliquidity: SysioSwapRemliquidityAction
     setconfig: SysioSwapSetconfigAction
     setyield: SysioSwapSetyieldAction
@@ -4133,13 +4109,6 @@ export interface SysioTokenIssueAction {
   memo: string
 }
 
-/** sysio.token::open (action) */
-export interface SysioTokenOpenAction {
-  owner: string
-  symbol: string
-  ram_payer: string
-}
-
 /** sysio.token::retire (action) */
 export interface SysioTokenRetireAction {
   quantity: string
@@ -4165,7 +4134,6 @@ export interface SysioTokenContract {
     close: SysioTokenCloseAction
     create: SysioTokenCreateAction
     issue: SysioTokenIssueAction
-    open: SysioTokenOpenAction
     retire: SysioTokenRetireAction
     transfer: SysioTokenTransferAction
   }
@@ -4562,7 +4530,6 @@ export const SysioContractDefinitions: {
       "creditowed",
       "mint",
       "mintyield",
-      "open",
       "queueyield",
       "recredit",
       "regliqpool",
@@ -4686,8 +4653,6 @@ export const SysioContractDefinitions: {
       "exchange",
       "fundyield",
       "inittoken",
-      "open",
-      "openext",
       "remliquidity",
       "setconfig",
       "setyield",
@@ -4844,7 +4809,7 @@ export const SysioContractDefinitions: {
   [SysioContractName.token]: {
     name: SysioContractName.token,
     account: "sysio.token",
-    actions: ["close", "create", "issue", "open", "retire", "transfer"],
+    actions: ["close", "create", "issue", "retire", "transfer"],
     tables: ["accounts", "stat"]
   },
   [SysioContractName.tokens]: {
