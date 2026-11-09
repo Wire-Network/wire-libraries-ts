@@ -14,7 +14,9 @@ A monorepo containing shared TypeScript libraries for Wire applications, providi
 | [`@wireio/wallet-ext-sdk`](packages/wallet-ext-sdk/) | Client SDK for the Wire Wallet browser extension | [![npm](https://img.shields.io/npm/v/@wireio/wallet-ext-sdk)](https://www.npmjs.com/package/@wireio/wallet-ext-sdk) |
 | [`@wireio/wallet-browser-ext`](packages/wallet-browser-ext/) | Chrome extension developer wallet for Wire | *private* |
 
-See the [SDK core guide](packages/sdk-core/README.md) for installation, contract access, [desyndication request decoding](packages/sdk-core/README.md#desyndication-request-decoding), and [depot swap quote snapshots](packages/sdk-core/README.md#depot-swap-quotes).
+See the [SDK core guide](packages/sdk-core/README.md) for installation, [ED wallet signing](packages/sdk-core/README.md#ed-wallet-signatures), contract access, [desyndication request decoding](packages/sdk-core/README.md#desyndication-request-decoding), and [depot swap quote snapshots](packages/sdk-core/README.md#depot-swap-quotes).
+
+Core signing and Outpost imports are checked in native Node CJS and ESM, including the same embedded-key ED signature format in both module systems.
 
 See [native deposits and syndication](packages/sdk-outpost/README.md#native-deposits-and-syndication) for external LIQ acquisition, deposit fee quotes and the separate Wire-settlement boundary.
 

@@ -1,3 +1,4 @@
+import { match } from "ts-pattern"
 import { Base58 } from "../Base58.js"
 import { hexToArray, isInstanceOf } from "../Utils.js"
 
@@ -7,7 +8,6 @@ import { sign } from "../crypto/Sign.js"
 import { generate } from "../crypto/Generate.js"
 
 import type { ec as EC } from "elliptic"
-import { match } from "ts-pattern"
 
 import { ethers } from "../EthersCompat.js"
 
@@ -79,7 +79,7 @@ export class PrivateKey {
    * Create PrivateKey object from elliptic key pair.
    * @param privKey - Elliptic key pair.
    * @param keyType - Key type.
-   * @param _ec - Legacy optional curve argument, retained for source compatibility.
+   * @param _ec - Optional curve parameter, retained for the existing call signature.
    * @returns PrivateKey object.
    */
   static fromElliptic(
@@ -210,7 +210,11 @@ export class PrivateKey {
   /** Sign a 32-byte digest with this key's native digest-signing domain. */
   signDigest(digest: Checksum256Type) {
     digest = Checksum256.from(digest)
-    return Signature.from(sign(this.data.array, digest.array, this.type))
+    const message =
+      this.type === KeyType.ED
+        ? Bytes.from(digest.hexString, "utf8").array
+        : digest.array
+    return Signature.from(sign(this.data.array, message, this.type))
   }
 
   /**
@@ -274,7 +278,7 @@ export class PrivateKey {
   toNativeString(): string {
     return match(this.type)
       .with(KeyType.K1, KeyType.R1, () => this.toWif())
-      .with(KeyType.EM, () => "0x" + Buffer.from(this.data.array).toString("hex"))
+      .with(KeyType.EM, () => "0x" + this.data.hexString)
       .with(KeyType.ED, () => Base58.encode(this.data))
       .with(KeyType.BLS, () => `PVT_BLS_${blsEncode(this.data.array)}`)
       .otherwise(() => this.toString())

@@ -82,6 +82,13 @@ const NativeSdkChecks = `
     assert.equal(signature.verifyMessage(message, publicKey), true)
     assert.equal(PrivateKey.from(key.toString()).toString(), key.toString())
     assert.equal(Signature.from(signature.toString()).toString(), signature.toString())
+    if (type === KeyType.ED) {
+      const composed = Signature.from(core.Crypto.sign(secret, message, type))
+      assert.equal(composed.data.length, publicKey.data.length + nacl.sign.signatureLength)
+      assert.deepEqual(composed.data.array.slice(0, publicKey.data.length), publicKey.data.array)
+      assert.equal(composed.toString(), signature.toString())
+      assert.equal(composed.recoverMessage(message).toString(), publicKey.toString())
+    }
     if (type !== KeyType.ED && type !== KeyType.BLS) {
       assert.equal(signature.recoverMessage(message).toString(), publicKey.toString())
       assert.deepEqual(key.sharedSecret(peer.toPublic()).array, peer.sharedSecret(publicKey).array)

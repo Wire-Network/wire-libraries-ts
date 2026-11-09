@@ -1,4 +1,6 @@
 import { getCurve, getNobleCurve } from "./Curves.js"
+import { PublicKey } from "../chain/PublicKey.js"
+import { getPublic } from "./GetPublic.js"
 import { KeyType } from "../chain/KeyType.js"
 import { SignatureParts } from "../chain/Signature.js"
 import nacl from "tweetnacl"
@@ -24,7 +26,7 @@ const SIGNATURE_COMPONENT_BYTES = 32
  * @param message - The message to sign as a byte array
  * @param type - The type of key/signing algorithm to use (ED25519, Ethereum, or ECDSA curves)
  * @param options
- * @returns A SignatureParts object containing the signature components (r, s, recid) and the key type
+ * @returns Signature components and key type; ED includes its public key for Signature.from.
  *
  * The function supports three types of signatures:
  * - ED25519 (ED): Uses TweetNaCl for EdDSA signatures
@@ -41,11 +43,16 @@ export function sign<C extends ChainKind = ChainKind.UNKNOWN>(
     .with(KeyType.ED, () => {
       // ED25519 detached signature via tweetnacl
       const sigBytes = nacl.sign.detached(message, secret)
-      const r = sigBytes.slice(0, 32)
-      const s = sigBytes.slice(32, 64)
-      return { type, r, s, recid: 0 }
+      const r = sigBytes.slice(0, SIGNATURE_COMPONENT_BYTES)
+      const s = sigBytes.slice(SIGNATURE_COMPONENT_BYTES)
+      return {
+        type,
+        r,
+        s,
+        recid: 0,
+        publicKey: new PublicKey(type, getPublic(secret, type))
+      }
     })
-
     .with(KeyType.EM, () => {
       // Ethereum signature using EIP-191 prefix by default.
       const ethOptions = sign.getOptions(options, ChainKind.EVM)
@@ -61,13 +68,11 @@ export function sign<C extends ChainKind = ChainKind.UNKNOWN>(
       const recid = sig.recoveryParam!
       return { type, r, s, recid }
     })
-
     .with(KeyType.BLS, () => {
       const skBE = skFromLE(secret)
       const sigLE = blsSign(skBE, message)
       return { type, r: sigLE, s: new Uint8Array(0), recid: 0 }
     })
-
     .with(KeyType.K1, () => {
       const curve = getCurve(type)
       const key = curve.keyFromPrivate(secret)
@@ -92,7 +97,6 @@ export function sign<C extends ChainKind = ChainKind.UNKNOWN>(
 
       return { type, r, s, recid: sig.recoveryParam || 0 }
     })
-
     .otherwise(() => {
       const signature = getNobleCurve(type).sign(message, secret, {
         lowS: true

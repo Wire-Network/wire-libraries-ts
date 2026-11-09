@@ -1,6 +1,5 @@
 import { ethers } from "../../../EthersCompat.js"
 
-import { Bytes } from "../../../chain/Bytes.js"
 import { KeyType } from "../../../chain/KeyType.js"
 import { Name, type NameType } from "../../../chain/Name.js"
 import { PublicKey, type PublicKeyType } from "../../../chain/PublicKey.js"
@@ -140,26 +139,14 @@ export function createLinkSignatureFromRaw(
     return Signature.fromRaw(rawSignature, KeyType.EM)
   }
 
-  if (rawSignature.length === 96) {
-    return new Signature(KeyType.ED, Bytes.from(rawSignature))
-  }
-
-  if (rawSignature.length !== 64) {
-    throw new Error(
-      `SVM AuthEx signatures must be 64 or 96 bytes, got ${rawSignature.length}.`
-    )
-  }
-
-  const signature96 = new Uint8Array(96)
-  signature96.set(key.data.array, 0)
-  signature96.set(rawSignature, 32)
-
-  return new Signature(KeyType.ED, Bytes.from(signature96))
+  return Signature.fromRaw(rawSignature, KeyType.ED, key)
 }
 
 /** Options for {@link signCreateLink} — the create-link inputs plus the external signer. */
-export interface SignCreateLinkOptions
-  extends Omit<PrepareCreateLinkOptions, "publicKey"> {
+export interface SignCreateLinkOptions extends Omit<
+  PrepareCreateLinkOptions,
+  "publicKey"
+> {
   signer: SignerProvider
   publicKey?: PublicKeyType
 }
