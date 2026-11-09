@@ -2822,6 +2822,11 @@ export interface SysioSyndDropenvAction {
   epoch_index: number
 }
 
+/** sysio.synd::emitdesynd (action) */
+export interface SysioSyndEmitdesyndAction {
+  request_id: number | string
+}
+
 /** sysio.synd::envelope_key (type) */
 export interface SysioSyndEnvelopeKeyType {
   chain_code: number | string
@@ -3197,6 +3202,7 @@ export interface SysioSyndContract {
     crank: SysioSyndCrankAction
     desyndicate: SysioSyndDesyndicateAction
     dropenv: SysioSyndDropenvAction
+    emitdesynd: SysioSyndEmitdesyndAction
     finishreturn: SysioSyndFinishreturnAction
     importdone: SysioSyndImportdoneAction
     importsynd: SysioSyndImportsyndAction
@@ -4717,6 +4723,7 @@ export const SysioContractDefinitions: {
       "crank",
       "desyndicate",
       "dropenv",
+      "emitdesynd",
       "finishreturn",
       "importdone",
       "importsynd",
