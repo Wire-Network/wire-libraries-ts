@@ -1,5 +1,4 @@
-/* eslint-disable no-console */
-// src/crypto/public_key.ts
+import { match } from "ts-pattern"
 
 import { ABIDecoder } from "../serializer/Decoder.js"
 import { ABIEncoder } from "../serializer/Encoder.js"
@@ -12,10 +11,14 @@ import { Bytes } from "./Bytes.js"
 import { KeyType } from "./KeyType.js"
 import { blsEncode, blsDecode } from "../crypto/BLSSerdes.js"
 
-export type PublicKeyType =
-  | PublicKey
-  | string
-  | { type: string; compressed: Uint8Array }
+/** Public-key bytes paired with their curve. */
+export interface PublicKeyFields {
+  type: string
+  compressed: Uint8Array
+}
+export type PublicKeyType = PublicKey | string | PublicKeyFields
+
+const ED_PUBLIC_KEY_LENGTH = 32
 
 export class PublicKey implements ABISerializableObject {
   static abiName = "public_key"
@@ -76,12 +79,11 @@ export class PublicKey implements ABISerializableObject {
         } else {
           data = Base58.decodeRipemd160Check(payload, size, type)
         }
-      } catch (e) {
+      } catch (error) {
         try {
           data = hexToArray(payload)
-        } catch (e2) {
-          console.error("Both base58 and hex failed to parse", e, e2)
-          throw e
+        } catch {
+          throw error
         }
       }
       return new PublicKey(type, data)
@@ -98,7 +100,7 @@ export class PublicKey implements ABISerializableObject {
   static fromABI(decoder: ABIDecoder) {
     const type = KeyType.from(decoder.readByte())
 
-    if (type == KeyType.WA) {
+    if (type === KeyType.WA) {
       const startPos = decoder.getPosition()
       decoder.advance(33) // key_data
       decoder.advance(1) // user presence
@@ -122,6 +124,11 @@ export class PublicKey implements ABISerializableObject {
   constructor(type: KeyType, data: Bytes | Uint8Array) {
     this.type = type
     this.data = data instanceof Bytes ? data : new Bytes(data)
+    if (type === KeyType.ED && this.data.length !== ED_PUBLIC_KEY_LENGTH) {
+      throw new Error(
+        `ED public key must be ${ED_PUBLIC_KEY_LENGTH} bytes, got ${this.data.length}`
+      )
+    }
   }
 
   equals(other: PublicKeyType) {
@@ -204,19 +211,12 @@ export class PublicKey implements ABISerializableObject {
    * - BLS: PUB_BLS_... encoded string
    */
   toNativeString(): string {
-    switch (this.type) {
-      case KeyType.K1:
-      case KeyType.R1:
-        return this.toLegacyString()
-      case KeyType.EM:
-        return "0x" + arrayToHex(this.data.array)
-      case KeyType.ED:
-        return Base58.encode(this.data)
-      case KeyType.BLS:
-        return `PUB_BLS_${blsEncode(this.data.array)}`
-      default:
-        return this.toString()
-    }
+    return match(this.type)
+      .with(KeyType.K1, KeyType.R1, () => this.toLegacyString())
+      .with(KeyType.EM, () => "0x" + arrayToHex(this.data.array))
+      .with(KeyType.ED, () => Base58.encode(this.data))
+      .with(KeyType.BLS, () => `PUB_BLS_${blsEncode(this.data.array)}`)
+      .otherwise(() => this.toString())
   }
 
   /** @internal */

@@ -119,7 +119,7 @@ describe("AuthEx create-link signing", () => {
     expect(wireSignature.data.array.slice(0, 32)).toEqual(publicKey.data.array)
     expect(wireSignature.data.array.slice(32)).toEqual(rawSignature)
     expect(
-      Signature.fromRaw(rawSignature, KeyType.ED).verifyMessage(
+      Signature.fromRaw(rawSignature, KeyType.ED, publicKey).verifyMessage(
         Bytes.from(payload),
         publicKey
       )
