@@ -3077,6 +3077,13 @@ export interface SysioSyndReleaseReceiptType {
   parked_batch_id: number | string
 }
 
+/** sysio.synd::retsent (action) */
+export interface SysioSyndRetsentAction {
+  chain_code: string
+  epoch_index: number
+  request_ids: (number | string)[]
+}
+
 /** sysio.synd::return_key (type) */
 export interface SysioSyndReturnKeyType {
   request_id: number | string
@@ -3091,6 +3098,7 @@ export interface SysioSyndReturnRowType {
   chain_kind: SysioSyndChainkind | keyof typeof SysioSyndChainkind
   pubkey: string
   amount: number | string
+  sent_epoch: number
 }
 
 /** sysio.synd::setconfig (action) */
@@ -3209,6 +3217,7 @@ export interface SysioSyndContract {
     quotedesynd: SysioSyndQuotedesyndAction
     reconcile: SysioSyndReconcileAction
     refundreturn: SysioSyndRefundreturnAction
+    retsent: SysioSyndRetsentAction
     setconfig: SysioSyndSetconfigAction
     sweep: SysioSyndSweepAction
     sweepyield: SysioSyndSweepyieldAction
@@ -4727,6 +4736,7 @@ export const SysioContractDefinitions: {
       "quotedesynd",
       "reconcile",
       "refundreturn",
+      "retsent",
       "setconfig",
       "sweep",
       "sweepyield",
