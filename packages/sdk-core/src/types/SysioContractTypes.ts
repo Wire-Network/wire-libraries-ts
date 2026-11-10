@@ -132,8 +132,6 @@ export interface SysioBiosBlockchainParametersType {
   target_block_net_usage_pct: number
   max_transaction_net_usage: number
   net_usage_leeway: number
-  context_free_discount_net_usage_num: number
-  context_free_discount_net_usage_den: number
   max_block_cpu_usage: number
   target_block_cpu_usage_pct: number
   max_transaction_cpu_usage: number
@@ -3079,6 +3077,13 @@ export interface SysioSyndReleaseReceiptType {
   parked_batch_id: number | string
 }
 
+/** sysio.synd::retsent (action) */
+export interface SysioSyndRetsentAction {
+  chain_code: string
+  epoch_index: number
+  request_ids: (number | string)[]
+}
+
 /** sysio.synd::return_key (type) */
 export interface SysioSyndReturnKeyType {
   request_id: number | string
@@ -3093,6 +3098,7 @@ export interface SysioSyndReturnRowType {
   chain_kind: SysioSyndChainkind | keyof typeof SysioSyndChainkind
   pubkey: string
   amount: number | string
+  sent_epoch: number
 }
 
 /** sysio.synd::setconfig (action) */
@@ -3211,6 +3217,7 @@ export interface SysioSyndContract {
     quotedesynd: SysioSyndQuotedesyndAction
     reconcile: SysioSyndReconcileAction
     refundreturn: SysioSyndRefundreturnAction
+    retsent: SysioSyndRetsentAction
     setconfig: SysioSyndSetconfigAction
     sweep: SysioSyndSweepAction
     sweepyield: SysioSyndSweepyieldAction
@@ -3329,8 +3336,6 @@ export interface SysioSystemBlockchainParametersType {
   target_block_net_usage_pct: number
   max_transaction_net_usage: number
   net_usage_leeway: number
-  context_free_discount_net_usage_num: number
-  context_free_discount_net_usage_den: number
   max_block_cpu_usage: number
   target_block_cpu_usage_pct: number
   max_transaction_cpu_usage: number
@@ -4731,6 +4736,7 @@ export const SysioContractDefinitions: {
       "quotedesynd",
       "reconcile",
       "refundreturn",
+      "retsent",
       "setconfig",
       "sweep",
       "sweepyield",
