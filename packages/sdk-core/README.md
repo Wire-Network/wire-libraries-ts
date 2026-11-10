@@ -284,8 +284,8 @@ tolerance produces maximum inputs or minimum outputs. All amounts retain their
 issuing contract and exact precision; no RPC, signing or readiness check occurs.
 
 Use the existing typed `swap` actions through `contracts.sysio.createClient`:
-open the required `evodexacnts` rows with `openext`, deposit the reviewed input
-amounts, then call `addliquidity` with shares/maxima or `remliquidity` with
+deposit the reviewed input amounts (the first deposit of a token creates its
+`evodexacnts` row), then call `addliquidity` with shares/maxima or `remliquidity` with
 shares/minima. Unspent deposits and removal proceeds remain in internal custody;
 use `withdraw` for a reviewed amount. `closeext` returns the entire remaining
 balance, so never close a preexisting row without the user's explicit intent.
