@@ -65,7 +65,10 @@ export interface BuildProposeActionOptions {
   requested: MsigPermissionLevel[]
   /** Inner transaction proposed for execution. */
   transaction: TransactionType
-  /** Proposer permission to authorize with. Defaults to `active`. */
+  /**
+   * Proposer permission to authorize with, after the `{proposer, sysio.payer}`
+   * entry. Defaults to `active`.
+   */
   proposerPermission?: NameType
   /** Multisig contract account. Defaults to `sysio.msig`. */
   contract?: NameType

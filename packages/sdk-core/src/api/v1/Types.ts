@@ -711,7 +711,6 @@ export class TransactionTrace extends Struct {
   @Struct.field("number") declare block_num: number
   @Struct.field(BlockTimestamp) declare block_time: BlockTimestamp
   @Struct.field("string") declare console: string
-  @Struct.field("boolean") declare context_free: boolean
   @Struct.field("number") declare elapsed: number
   @Struct.field("any?") declare except: any
   @Struct.field(TransactionTrace) declare inline_traces: TransactionTrace[]

@@ -132,8 +132,6 @@ export interface SysioBiosBlockchainParametersType {
   target_block_net_usage_pct: number
   max_transaction_net_usage: number
   net_usage_leeway: number
-  context_free_discount_net_usage_num: number
-  context_free_discount_net_usage_den: number
   max_block_cpu_usage: number
   target_block_cpu_usage_pct: number
   max_transaction_cpu_usage: number
@@ -3305,8 +3303,6 @@ export interface SysioSystemBlockchainParametersType {
   target_block_net_usage_pct: number
   max_transaction_net_usage: number
   net_usage_leeway: number
-  context_free_discount_net_usage_num: number
-  context_free_discount_net_usage_den: number
   max_block_cpu_usage: number
   target_block_cpu_usage_pct: number
   max_transaction_cpu_usage: number

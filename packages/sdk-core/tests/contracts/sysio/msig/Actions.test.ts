@@ -1,4 +1,5 @@
 import { Checksum256 } from "@wireio/sdk-core/chain/Checksum"
+import { SYSIO_PAYER_NAME } from "@wireio/sdk-core/chain/constants"
 import { Transaction } from "@wireio/sdk-core/chain/Transaction"
 import { contracts } from "@wireio/sdk-core"
 
@@ -31,7 +32,7 @@ function transaction(): Transaction {
 }
 
 describe("msig action builders", () => {
-  test("builds propose with proposer authorization and requested approvals", () => {
+  test("builds propose with payer and proposer authorization and requested approvals", () => {
     const action = buildProposeAction({
         proposer: "alice",
         proposalName: "upgrade1",
@@ -42,11 +43,29 @@ describe("msig action builders", () => {
 
     expect(action.account.toString()).toBe("sysio.msig")
     expect(action.name.toString()).toBe("propose")
-    expect(action.authorization.map(String)).toEqual(["alice@active"])
+    expect(action.authorization.map(String)).toEqual([
+      `alice@${SYSIO_PAYER_NAME}`,
+      "alice@active"
+    ])
     expect(data.proposer.toString()).toBe("alice")
     expect(data.proposal_name.toString()).toBe("upgrade1")
     expect(data.requested.map(String)).toEqual(["bob@active"])
     expect(data.trx.expiration.toString()).toBe("2026-06-16T16:00:00")
+  })
+
+  test("builds propose with the payer entry before a custom proposer permission", () => {
+    const action = buildProposeAction({
+      proposer: "alice",
+      proposalName: "upgrade1",
+      requested: ["bob@active"],
+      transaction: transaction(),
+      proposerPermission: "propose"
+    })
+
+    expect(action.authorization.map(String)).toEqual([
+      "alice@sysio.payer",
+      "alice@propose"
+    ])
   })
 
   test("builds approve with signer authorization and proposal hash extension", () => {
