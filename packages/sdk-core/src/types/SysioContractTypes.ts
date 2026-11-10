@@ -145,6 +145,7 @@ export interface SysioBiosBlockchainParametersType {
   max_kv_key_size: number
   max_kv_value_size: number
   max_kv_secondary_key_size: number
+  notify_cpu_stipend: number
 }
 
 /** sysio.bios::code_hash (type) */
@@ -3340,6 +3341,7 @@ export interface SysioSystemBlockchainParametersType {
   max_kv_key_size: number
   max_kv_value_size: number
   max_kv_secondary_key_size: number
+  notify_cpu_stipend: number
 }
 
 /** sysio.system::blockinfo_key (type) */
