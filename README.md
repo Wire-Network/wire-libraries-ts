@@ -14,13 +14,17 @@ A monorepo containing shared TypeScript libraries for Wire applications, providi
 | [`@wireio/wallet-ext-sdk`](packages/wallet-ext-sdk/) | Client SDK for the Wire Wallet browser extension | [![npm](https://img.shields.io/npm/v/@wireio/wallet-ext-sdk)](https://www.npmjs.com/package/@wireio/wallet-ext-sdk) |
 | [`@wireio/wallet-browser-ext`](packages/wallet-browser-ext/) | Chrome extension developer wallet for Wire | *private* |
 
-See the [SDK core guide](packages/sdk-core/README.md) for installation, contract access, [desyndication request decoding](packages/sdk-core/README.md#desyndication-request-decoding), and [depot swap quote snapshots](packages/sdk-core/README.md#depot-swap-quotes).
+See the [SDK core guide](packages/sdk-core/README.md) for installation, [ED wallet signing](packages/sdk-core/README.md#ed-wallet-signatures), contract access, [desyndication request decoding](packages/sdk-core/README.md#desyndication-request-decoding), and [depot swap quote snapshots](packages/sdk-core/README.md#depot-swap-quotes).
+
+Core signing and Outpost imports are checked in native Node CJS and ESM, including the same embedded-key ED signature format in both module systems.
 
 See [native deposits and syndication](packages/sdk-outpost/README.md#native-deposits-and-syndication) for external LIQ acquisition, deposit fee quotes and the separate Wire-settlement boundary.
 
 Use [deployment profiles](packages/sdk-outpost/README.md#deployment-profiles) to select multiple supported networks in one SDK version. Client bindings, ETH withdrawal payer and applicable syndication limits come from the verified suite.
 Solana withdrawal requests select user-scoped nonce or counter encoding from that verified producer IDL; callers keep the same signing flow.
 The Outpost guide documents temporary Testnet support and its required removal when deployments converge on the RC.
+
+See [pool pricing and valuation](packages/sdk-core/docs/pool-pricing.md) for explicit USD references, yield-adjusted TVL/LP values and read-only TWAP calculations.
 
 ## Examples
 

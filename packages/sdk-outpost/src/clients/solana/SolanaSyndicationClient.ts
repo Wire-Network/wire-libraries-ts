@@ -1,5 +1,5 @@
 import { SolanaSeeds as Seed, solanaProgramAddress } from "./Addresses.js"
-import { BN } from "@coral-xyz/anchor"
+import { BN } from "./AnchorCompat.js"
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
