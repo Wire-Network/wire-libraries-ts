@@ -268,3 +268,5 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - Depot LP quotes (`quoteAddLiquidity` / `quoteRemoveLiquidity`) share the swap snapshot/yield math. Preserve ceil-rounded mint inputs and per-leg fees, floor-rounded burn outputs, locked shares and explicit tolerance. Results describe internal swap custody, not wallet payouts; reuse typed actions and caller-owned transaction composition.
 
 - `contracts.sysio.synd.decodeDesyndicateLIQ` decodes public queueout data with the producer model. Keep bigint precision and distinguish request decoding from canonical execution and outpost payout verification.
+
+- AuthEx unlinked-funds reads use bounded KV lookups and full-key matching; absence is distinct from RPC failure. Keep sponsorship policy, ownership proofs and issuance limits in consumers.

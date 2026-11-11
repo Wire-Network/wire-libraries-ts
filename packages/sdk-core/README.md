@@ -134,6 +134,27 @@ returned `next_key` unchanged as the next bound (`lower_bound` forward,
 `upper_bound` in reverse). KV cursors are opaque JSON or encoded keys, not
 numeric account names. Domain clients such as AuthEx use this same reader.
 
+### Funds waiting for an external wallet
+
+`contracts.sysio.authex.readUnlinkedFunds(api, publicKey)` accepts an EM or ED key
+and returns its canonical key, native address, chain kind, and optional `Asset`
+amounts `wire` and `liq`. It reads unclaimed imported WIRE (`sysio.dclaim::unmapped`)
+and released shadow LIQ (`sysio.synd::parked`) using bounded KV lookups and exact
+full-address/key matching. Failed RPCs reject; absent/zero amounts are `undefined`.
+
+```ts
+const funds = await contracts.sysio.authex.readUnlinkedFunds(api, walletPublicKey)
+console.log(funds.address, funds.wire?.toString(), funds.liq?.toString())
+```
+
+Pending syndication intake, future yield and account-scoped `pclaims` are excluded.
+This is a current-state read, not a finality guarantee or permission to sponsor an
+account. Applications must verify wallet ownership and enforce their own sponsorship
+limits. Account creation, AuthEx linking (which sweeps waiting funds), and a later
+WIRE claim are separate actions. `externalWalletIdentity(publicKey)` exposes the
+same validated EM/ED native-address derivation without an RPC call.
+
+
 ## Desyndication request decoding
 
 `contracts.sysio.synd.decodeDesyndicateLIQ(queueout)` accepts generated
