@@ -401,6 +401,7 @@ export interface SysioBondClaimAction {
 /** sysio.bond::claimwire (action) */
 export interface SysioBondClaimwireAction {
   account: string
+  issuer: string
 }
 
 /** sysio.bond::escrow_key (type) */
@@ -524,12 +525,15 @@ export interface SysioBondSweepyieldAction {
 /** sysio.bond::wire_claim (type) */
 export interface SysioBondWireClaimType {
   account: string
+  issuer: string
   amount: number | string
+  reservations: number | string
 }
 
 /** sysio.bond::wire_key (type) */
 export interface SysioBondWireKeyType {
   account: string
+  issuer: string
 }
 
 /** sysio.bond::yield_pool (type) */
