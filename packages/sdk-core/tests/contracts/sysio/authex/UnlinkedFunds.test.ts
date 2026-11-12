@@ -17,6 +17,10 @@ const ED = new PublicKey(
   KeyType.ED,
   nacl.sign.keyPair.fromSeed(new Uint8Array(32).fill(8)).publicKey
 )
+const IncompleteCredit = {
+  chain_kind: externalWalletIdentity(EM).chainKind,
+  balance: "0"
+}
 
 /** Mock only the transport; exercise the deployed full-key matching and KV cursors. */
 function fixture(key: PublicKey, balance = "1234567890") {
@@ -38,7 +42,9 @@ function fixture(key: PublicKey, balance = "1234567890") {
     position: { owed_wire: "999999999999" }
   }
   const call = jest.fn(async ({ params }) => ({
-    rows: [{ value: params.table === "unmapped" ? unmapped : parked }],
+    rows: [
+      { value: (params.table === "unmapped" ? unmapped : parked) as unknown }
+    ],
     more: false
   }))
   return {
@@ -107,6 +113,24 @@ describe("unlinked external funds", () => {
     const { client, parked } = fixture(EM)
     Object.assign(parked, { balance: 9007199254740992 })
     await expect(readUnlinkedFunds(client, EM)).rejects.toThrow("Unsafe")
+  })
+  test.each([
+    ["unmapped", "deadbeef"],
+    ["parked", "deadbeef"],
+    ["unmapped", IncompleteCredit],
+    ["parked", IncompleteCredit]
+  ] as const)("rejects invalid %s credit rows (%p)", async (table, value) => {
+    const { client, call, unmapped, parked } = fixture(EM)
+    call.mockImplementation(async ({ params }) => {
+      const decoded = params.table === "unmapped" ? unmapped : parked
+      return {
+        rows: [{ value: params.table === table ? value : decoded }],
+        more: false
+      }
+    })
+    await expect(readUnlinkedFunds(client, EM)).rejects.toThrow(
+      `Invalid decoded ${table} credit row`
+    )
   })
   test("uses a binary cursor unchanged within the collision range", async () => {
     const { client, call, unmapped, parked } = fixture(EM)

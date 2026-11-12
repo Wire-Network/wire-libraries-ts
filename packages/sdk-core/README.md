@@ -140,7 +140,8 @@ numeric account names. Domain clients such as AuthEx use this same reader.
 and returns its canonical key, native address, chain kind, and optional `Asset`
 amounts `wire` and `liq`. It reads unclaimed imported WIRE (`sysio.dclaim::unmapped`)
 and released shadow LIQ (`sysio.synd::parked`) using bounded KV lookups and exact
-full-address/key matching. Failed RPCs reject; absent/zero amounts are `undefined`.
+full-address/key matching. RPC failures and undecodable rows reject. Absent or zero
+amounts from valid responses are `undefined`.
 
 ```ts
 const funds = await contracts.sysio.authex.readUnlinkedFunds(api, walletPublicKey)

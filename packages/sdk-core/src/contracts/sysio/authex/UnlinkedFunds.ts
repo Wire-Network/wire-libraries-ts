@@ -23,6 +23,8 @@ const PrefixBits = 64n
 const SlugHexWidth = 16
 const ShadowPrecision = 9
 const WireSymbol = "WIRE"
+const HexBytes = /^(?:[0-9a-f]{2})+$/i
+const IntegerString = /^-?\d+$/
 const ShadowSymbols = {
   [KeyType.EM]: "LIQETH",
   [KeyType.ED]: "LIQSOL"
@@ -77,10 +79,21 @@ export function externalWalletIdentity(
 }
 
 /** Unwrap deployed KV envelopes without passing their binary cursors through the classic uint64 decoder. */
-function unwrap<Row>(row: Row | KvRow<Row>): Row {
-  return row && typeof row === "object" && "value" in row
-    ? row.value
-    : (row as Row)
+function unwrap<
+  Row extends SysioDclaimUnmappedTokenType | SysioSyndParkedRowType
+>(row: Row | KvRow<Row>, table: string): Row {
+  const value =
+    row && typeof row === "object" && "value" in row ? row.value : (row as Row)
+  // The node can return raw hex in value even when the request specified json: true.
+  if (
+    !value ||
+    typeof value !== "object" ||
+    (typeof value.chain_kind !== "number" &&
+      typeof value.chain_kind !== "string") ||
+    !Object.hasOwn(SysioAuthexChainkind, value.chain_kind)
+  )
+    throw new Error(`Invalid decoded ${table} credit row`)
+  return value
 }
 
 /** Query a bounded generated-row surface; RPC failures propagate to the caller. */
@@ -140,19 +153,29 @@ export async function readUnlinkedFunds(
             limit: PageSize
           }
         ),
-        row = page.rows
-          .map(unwrap)
+        credit = page.rows
+          .map(entry => {
+            const row = unwrap(entry, UnmappedTable)
+            if (
+              typeof row.native_pubkey !== "string" ||
+              !HexBytes.test(row.native_pubkey) ||
+              typeof row.balance !== "string"
+            )
+              throw new Error(`Invalid decoded ${UnmappedTable} credit row`)
+            const amount = Asset.from(row.balance)
+            if (amount.symbol.name !== WireSymbol)
+              throw new Error("Unexpected unmapped credit symbol")
+            return { row, amount }
+          })
           .find(
-            candidate =>
-              matchesKind(candidate.chain_kind) &&
-              candidate.native_pubkey.toLowerCase() === nativeHex
+            ({ row }) =>
+              matchesKind(row.chain_kind) &&
+              row.native_pubkey.toLowerCase() === nativeHex
           )
-      if (row) {
-        const amount = Asset.from(row.balance)
-        if (amount.symbol.name !== WireSymbol)
-          throw new Error("Unexpected unmapped credit symbol")
-        return BigInt(amount.units.toString()) > 0n ? amount : undefined
-      }
+      if (credit)
+        return BigInt(credit.amount.units.toString()) > 0n
+          ? credit.amount
+          : undefined
       if (!page.more) return undefined
       if (!page.next_key) throw new Error("Unmapped credit cursor is missing")
       return readWire(page.next_key)
@@ -173,18 +196,33 @@ export async function readUnlinkedFunds(
         limit: 1
       })
     ]),
-    row = parked.rows.map(unwrap)[0]
+    credit = parked.rows.map(entry => {
+      const row = unwrap(entry, ParkedTable)
+      if (
+        typeof row.token_code !== "string" ||
+        !row.token_code ||
+        typeof row.pubkey !== "string" ||
+        !HexBytes.test(row.pubkey) ||
+        (typeof row.balance !== "number" &&
+          (typeof row.balance !== "string" || !IntegerString.test(row.balance)))
+      )
+        throw new Error(`Invalid decoded ${ParkedTable} credit row`)
+      if (typeof row.balance === "number" && !Number.isSafeInteger(row.balance))
+        throw new Error("Unsafe parked credit amount")
+      return { row, units: BigInt(row.balance) }
+    })[0]
   let liq: Asset | undefined
   if (
-    row &&
-    row.token_code === symbol &&
-    matchesKind(row.chain_kind) &&
-    row.pubkey.toLowerCase() === key.data.hexString.toLowerCase()
+    credit &&
+    credit.row.token_code === symbol &&
+    matchesKind(credit.row.chain_kind) &&
+    credit.row.pubkey.toLowerCase() === key.data.hexString.toLowerCase() &&
+    credit.units > 0n
   ) {
-    if (typeof row.balance === "number" && !Number.isSafeInteger(row.balance))
-      throw new Error("Unsafe parked credit amount")
-    if (BigInt(row.balance) > 0n)
-      liq = Asset.fromUnits(String(row.balance), `${ShadowPrecision},${symbol}`)
+    liq = Asset.fromUnits(
+      credit.units.toString(),
+      `${ShadowPrecision},${symbol}`
+    )
   }
   return { ...identity, wire, liq }
 }

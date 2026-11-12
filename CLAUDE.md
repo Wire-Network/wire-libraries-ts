@@ -269,4 +269,4 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 
 - `contracts.sysio.synd.decodeDesyndicateLIQ` decodes public queueout data with the producer model. Keep bigint precision and distinguish request decoding from canonical execution and outpost payout verification.
 
-- AuthEx unlinked-funds reads use bounded KV lookups and full-key matching; absence is distinct from RPC failure. Keep sponsorship policy, ownership proofs and issuance limits in consumers.
+- AuthEx unlinked-funds reads use bounded KV lookups and full-key matching. Validate decoded credit rows before matching and propagate raw-hex fallback or RPC failures. Keep sponsorship policy, ownership proofs and issuance limits in consumers.
