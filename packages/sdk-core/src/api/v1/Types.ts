@@ -166,6 +166,13 @@ export class AccountObject extends Struct {
   @Struct.field("uint64") declare ram_usage: UInt64
   @Struct.field(AccountPermission, { array: true })
   declare permissions: AccountPermission[]
+  /**
+   * Actions linked to the special `sysio.any` permission, which ANY of the
+   * account's permissions may then authorize. Optional so a response that
+   * omits the field still decodes.
+   */
+  @Struct.field(AccountLinkedAction, { optional: true, array: true })
+  declare sysio_any_linked_actions: AccountLinkedAction[]
   @Struct.field(AccountTotalResources, { optional: true })
   declare total_resources: AccountTotalResources
   @Struct.field(AccountSelfDelegatedBandwidth, { optional: true })

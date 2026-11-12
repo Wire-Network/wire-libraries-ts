@@ -100,6 +100,50 @@ describe("generated council round interface", () => {
     })
   })
 
+  test("encodes the node-owner authority crank with its caller's authorization", () => {
+    const refresh = {
+      caller: voter
+    } satisfies SysioContracts.SysioCounclSyncnodesAction
+    const prepared = council.actions.syncnodes.prepare(refresh, {
+      abi: councilAbi,
+      authorization
+    })
+
+    expect(prepared).toBeInstanceOf(Action)
+    if (!(prepared instanceof Action)) {
+      throw new Error(
+        "Node-owner authority crank unexpectedly fell back to an unencoded action"
+      )
+    }
+    expect(String(prepared.account)).toEqual(
+      SysioContracts.SysioContractAccount[
+        SysioContracts.SysioContractName.councl
+      ]
+    )
+    expect(String(prepared.name)).toEqual("syncnodes")
+    expect(Serializer.objectify(prepared.decodeData(councilAbi))).toEqual(
+      refresh
+    )
+    expect(prepared.authorization.map(String)).toEqual(authorization)
+  })
+
+  test("defers the node-owner authority crank to the deployed ABI without one", () => {
+    const refresh = {
+      caller: voter
+    } satisfies SysioContracts.SysioCounclSyncnodesAction
+    const prepared = council.actions.syncnodes.prepare(refresh, {
+      authorization
+    })
+
+    expect(prepared).not.toBeInstanceOf(Action)
+    expect(prepared).toMatchObject({ data: refresh })
+    const encoded = Action.from(prepared, councilAbi)
+    expect(encoded.authorization.map(String)).toEqual(authorization)
+    expect(Serializer.objectify(encoded.decodeData(councilAbi))).toEqual(
+      refresh
+    )
+  })
+
   test("decodes round ballot counters from the generated state ABI", () => {
     const state = {
       phase: SysioContracts.SysioCounclElectionPhase.VOTING,

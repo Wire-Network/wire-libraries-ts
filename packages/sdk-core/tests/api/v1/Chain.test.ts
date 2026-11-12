@@ -137,6 +137,73 @@ describe("ChainAPI.get_account", () => {
     expect(account.account_name.toString()).toBe("sysio")
     expect(account.created).toBeNull()
   })
+
+  test("decodes each permission's linked actions and the actions linked to sysio.any", async () => {
+    const client = createClient({
+        "/v1/chain/get_account": {
+          account_name: "sysio.andon",
+          head_block_num: 729126,
+          head_block_time: "2026-07-21T19:06:21.000",
+          privileged: true,
+          last_code_update: "2026-07-16T21:03:45.500",
+          ram_quota: 464220502,
+          net_weight: -1,
+          cpu_weight: -1,
+          net_limit: { used: -1, available: -1, max: -1 },
+          cpu_limit: { used: -1, available: -1, max: -1 },
+          ram_usage: 1745389,
+          permissions: [
+            {
+              perm_name: "pull",
+              parent: "active",
+              required_auth: {
+                threshold: 1,
+                keys: [],
+                accounts: [
+                  { permission: { actor: "andon.panic", permission: "active" }, weight: 1 }
+                ]
+              },
+              linked_actions: [{ account: "sysio.andon", action: "pull" }]
+            }
+          ],
+          sysio_any_linked_actions: [{ account: "sysio.token" }]
+        }
+      }),
+      account = await client.v1.chain.get_account("sysio.andon")
+
+    expect(
+      account.permissions[0].linked_actions.map(link => [
+        String(link.account),
+        String(link.action)
+      ])
+    ).toEqual([["sysio.andon", "pull"]])
+    expect(account.sysio_any_linked_actions).toHaveLength(1)
+    expect(String(account.sysio_any_linked_actions[0].account)).toBe("sysio.token")
+    // A contract-wide link names no action.
+    expect(account.sysio_any_linked_actions[0].action).toBeNull()
+  })
+
+  test("decodes a response that omits the sysio.any links", async () => {
+    const client = createClient({
+        "/v1/chain/get_account": {
+          account_name: "alice",
+          head_block_num: 1,
+          head_block_time: "2026-07-21T19:06:21.000",
+          privileged: false,
+          last_code_update: "1970-01-01T00:00:00.000",
+          ram_quota: 1144,
+          net_weight: 0,
+          cpu_weight: 0,
+          net_limit: { used: 0, available: 0, max: 0 },
+          cpu_limit: { used: 0, available: 0, max: 0 },
+          ram_usage: 1000,
+          permissions: []
+        }
+      }),
+      account = await client.v1.chain.get_account("alice")
+
+    expect(account.sysio_any_linked_actions).toBeUndefined()
+  })
 })
 
 describe("ChainAPI.get_table_rows — wire-sysio KV row shape", () => {

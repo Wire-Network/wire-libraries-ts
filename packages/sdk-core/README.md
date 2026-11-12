@@ -318,6 +318,9 @@ workspace requirements and publishing.
 Council declarations and the ABI fixture come from
 [wire-sysio #669](https://github.com/Wire-Network/wire-sysio/pull/669), commit
 `0ab1185ec02be806efc2d03abcc10fec466c2411`, for WIRE-418's simultaneous rounds.
+The fixture also carries the `syncnodes(caller)` action, which replaces
+`sysio.nodes@active` with the current tier-1 node owners; the contract writes
+`sysio.cncl@active` itself when an election fills its last seat.
 
 From the Libraries repository root, `scripts/test-council-live.mjs` starts a
 disposable producing Wire node and tests the locally built candidate SDK over
