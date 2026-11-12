@@ -36,7 +36,7 @@ function accountString(value: NameType): string {
 }
 
 /** Canonicalizes EM keys to the compressed form used by the live bypubkey index. */
-function canonicalExternalPublicKey(value: PublicKeyType): PublicKey {
+export function canonicalExternalPublicKey(value: PublicKeyType): PublicKey {
   const key = PublicKey.from(value)
   if (key.type !== KeyType.EM) return key
 

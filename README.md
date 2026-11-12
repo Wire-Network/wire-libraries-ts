@@ -93,3 +93,5 @@ The monorepo uses [project references](https://www.typescriptlang.org/docs/handb
 ## License
 
 MIT
+
+For external-wallet onboarding reads, see [sdk-core funds awaiting linkage](packages/sdk-core/README.md#funds-waiting-for-an-external-wallet). Treat unreadable credit rows as a read failure. Sponsorship policy belongs to the application.
