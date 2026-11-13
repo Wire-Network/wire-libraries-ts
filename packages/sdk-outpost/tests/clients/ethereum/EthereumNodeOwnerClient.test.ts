@@ -13,7 +13,8 @@ import {
 
 import {
   EthereumNodeOwnerClient,
-  EthereumNodeOwnerTier
+  EthereumNodeOwnerTier,
+  type EthereumNodeOwnerCommitRequest
 } from "@wireio/sdk-outpost"
 
 const BarAddress = "0x18E317A7D70d8fBf8e6E893616b52390EbBdb629",
@@ -26,7 +27,32 @@ const BarAddress = "0x18E317A7D70d8fBf8e6E893616b52390EbBdb629",
   TransactionReceiptFixture = {
     logs: [],
     status: 1
-  } as unknown as TransactionReceipt
+  } as unknown as TransactionReceipt,
+  AllTiers = [
+    EthereumNodeOwnerTier.T1,
+    EthereumNodeOwnerTier.T2,
+    EthereumNodeOwnerTier.T3
+  ],
+  UnsupportedTier = 4 as EthereumNodeOwnerTier,
+  DottedAccountNames = ["acme.ceo", "a.b", "sysio.roa"],
+  DotRuleMessage = 'must use only a-z and 1-5; "." is not allowed',
+  RefusedLengthCases: [EthereumNodeOwnerTier, string, string][] = [
+    [EthereumNodeOwnerTier.T1, "", "2 to 6"],
+    [EthereumNodeOwnerTier.T1, "a", "2 to 6"],
+    [EthereumNodeOwnerTier.T1, "abcdefg", "2 to 6"],
+    [EthereumNodeOwnerTier.T2, "", "1 to 12"],
+    [EthereumNodeOwnerTier.T2, "abcdefghijkl1", "1 to 12"],
+    [EthereumNodeOwnerTier.T3, "", "1 to 12"],
+    [EthereumNodeOwnerTier.T3, "abcdefghijkl1", "1 to 12"]
+  ],
+  AcceptedLengthCases: [EthereumNodeOwnerTier, string][] = [
+    [EthereumNodeOwnerTier.T1, "ab"],
+    [EthereumNodeOwnerTier.T1, "abcdef"],
+    [EthereumNodeOwnerTier.T2, "a"],
+    [EthereumNodeOwnerTier.T2, "abcdefghijkl"],
+    [EthereumNodeOwnerTier.T3, "a"],
+    [EthereumNodeOwnerTier.T3, "abcdefghijkl"]
+  ]
 
 /** Create a confirmed transaction fixture with optional parsed logs. */
 function transactionFixture(
@@ -82,6 +108,20 @@ function wirePublicKey(wallet: Wallet): PublicKey {
     type: KeyType.K1,
     compressed: getBytes(wallet.signingKey.compressedPublicKey)
   })
+}
+
+/** Return a commit request for one tier and claim name, signed by `wallet`. */
+function commitRequest(
+  wallet: Wallet,
+  tokenId: EthereumNodeOwnerTier,
+  accountName: string
+): EthereumNodeOwnerCommitRequest {
+  return {
+    tokenId,
+    wireAccountName: Name.from(accountName),
+    wirePublicKey: wirePublicKey(wallet),
+    depositorPublicKey: wallet.signingKey.publicKey
+  }
 }
 
 afterEach(() => jest.restoreAllMocks())
@@ -177,6 +217,71 @@ describe("EthereumNodeOwnerClient", () => {
     ).rejects.toThrow("does not belong to the EVM signer")
     expect(bar.commitNode).not.toHaveBeenCalled()
   })
+
+  it.each(AllTiers)(
+    "refuses dotted names for tier %d before sending any transaction",
+    async tokenId => {
+      const { wallet, bar, token } = contractFixtures(false),
+        client = new EthereumNodeOwnerClient(bar, wallet)
+
+      await Promise.all(
+        DottedAccountNames.map(name =>
+          expect(
+            client.commit(commitRequest(wallet, tokenId, name))
+          ).rejects.toThrow(`wireAccountName "${name}" ${DotRuleMessage}`)
+        )
+      )
+      expect(token.setApprovalForAll).not.toHaveBeenCalled()
+      expect(bar.commitNode).not.toHaveBeenCalled()
+    }
+  )
+
+  it.each(RefusedLengthCases)(
+    "refuses tier %d name %j outside %s characters before sending any transaction",
+    async (tokenId, name, range) => {
+      const { wallet, bar, token } = contractFixtures(false),
+        client = new EthereumNodeOwnerClient(bar, wallet)
+
+      await expect(
+        client.commit(commitRequest(wallet, tokenId, name))
+      ).rejects.toThrow(
+        `wireAccountName "${name}" must be ${range} characters for tier ${EthereumNodeOwnerTier[tokenId]}`
+      )
+      expect(token.setApprovalForAll).not.toHaveBeenCalled()
+      expect(bar.commitNode).not.toHaveBeenCalled()
+    }
+  )
+
+  it("refuses an unsupported tier before sending any transaction", async () => {
+    const { wallet, bar, token } = contractFixtures(false),
+      client = new EthereumNodeOwnerClient(bar, wallet)
+
+    await expect(
+      client.commit(commitRequest(wallet, UnsupportedTier, WireAccountName))
+    ).rejects.toThrow(`${UnsupportedTier} is not a node-owner tier`)
+    expect(token.setApprovalForAll).not.toHaveBeenCalled()
+    expect(bar.commitNode).not.toHaveBeenCalled()
+  })
+
+  it.each(AcceptedLengthCases)(
+    "commits tier %d name %j at its length bound",
+    async (tokenId, name) => {
+      const { wallet, bar } = contractFixtures(),
+        client = new EthereumNodeOwnerClient(bar, wallet)
+
+      await expect(
+        client.commit(commitRequest(wallet, tokenId, name))
+      ).resolves.toEqual(
+        expect.objectContaining({ transactionId: CommitTransactionHash })
+      )
+      expect(bar.commitNode).toHaveBeenCalledWith(
+        tokenId,
+        name,
+        expect.objectContaining({ keyType: 1 }),
+        getBytes(wallet.signingKey.publicKey)
+      )
+    }
+  )
 
   it("fails closed when BAR has no canonical WireNodes contract", async () => {
     const { wallet, bar } = contractFixtures(true, ZeroAddress)
