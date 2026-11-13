@@ -22,7 +22,8 @@ import { assertEthereumSigner } from "./Connection.js"
 const ConfirmationCount = 1,
   NodeCommittedEventName = "NodeCommitted",
   UncompressedPublicKeyByteLength = 65,
-  UncompressedPublicKeyPrefix = 4
+  UncompressedPublicKeyPrefix = 4,
+  NodeOwnerAccountNameAlphabet = /^[a-z1-5]*$/
 
 /** BAR WireKey numeric variants accepted for node-owner account authority. */
 enum NodeOwnerWireKeyType {
@@ -45,6 +46,24 @@ const DefaultNodeOwnerTiers = [
   EthereumNodeOwnerTier.T3
 ] as const
 
+/** Inclusive Wire account name length range for one node-owner tier. */
+interface NodeOwnerAccountNameLengths {
+  /** Fewest characters the depot accepts. */
+  minimum: number
+  /** Most characters the depot accepts. */
+  maximum: number
+}
+
+/** Length bounds of `sysio.roa::valid_name_for_tier`: tier 1, then tiers 2 and 3. */
+const T1AccountNameLengths: NodeOwnerAccountNameLengths = {
+    minimum: 2,
+    maximum: 6
+  },
+  T2T3AccountNameLengths: NodeOwnerAccountNameLengths = {
+    minimum: 1,
+    maximum: 12
+  }
+
 /** One owned WireNodes tier returned from the canonical ERC-1155 contract. */
 export interface EthereumNodeOwnerSlotBalance {
   /** WireNodes token id and node-owner tier. */
@@ -59,7 +78,11 @@ export interface EthereumNodeOwnerSlotBalance {
 export interface EthereumNodeOwnerCommitRequest {
   /** WireNodes token id and node-owner tier to commit. */
   tokenId: EthereumNodeOwnerTier
-  /** Canonical Wire account name to create or register. */
+  /**
+   * Wire account name to create or register. It must satisfy the depot's
+   * node-owner rule: only `a-z` and `1-5` (no `.`), 2 to 6 characters for tier
+   * 1 and 1 to 12 for tiers 2 and 3.
+   */
   wireAccountName: Name
   /** Wire account owner/active authority. */
   wirePublicKey: PublicKey
@@ -125,7 +148,10 @@ export class EthereumNodeOwnerClient {
     return balances.filter(({ balance }) => balance > 0n)
   }
 
-  /** Approve BAR when needed, commit one WireNodes unit, and return its event. */
+  /**
+   * Refuse a name the depot would reject, approve BAR when needed, commit one
+   * WireNodes unit, and return its event.
+   */
   async commit(
     request: EthereumNodeOwnerCommitRequest
   ): Promise<EthereumNodeOwnerCommitSubmission> {
@@ -135,7 +161,8 @@ export class EthereumNodeOwnerClient {
         request.depositorPublicKey,
         owner
       ),
-      wireAccountName = this.canonicalAccountName(
+      wireAccountName = this.assertAccountName(
+        request.tokenId,
         request.wireAccountName.toString()
       ),
       tokenContractAddress = await this.canonicalTokenContractAddress(),
@@ -221,10 +248,34 @@ export class EthereumNodeOwnerClient {
     return publicKey
   }
 
-  /** Validate and canonicalize the non-empty Wire account name. */
-  private canonicalAccountName(value: string): string {
-    if (value.length === 0) {
-      throw new Error("wireAccountName must not be empty.")
+  /**
+   * Validate the claim name against `sysio.roa`'s node-owner rule. BAR escrows
+   * the NFT before the depot checks the name and only an admin can release it,
+   * so a name the depot would reject must never be sent.
+   */
+  private assertAccountName(
+    tokenId: EthereumNodeOwnerTier,
+    value: string
+  ): string {
+    if (!NodeOwnerAccountNameAlphabet.test(value)) {
+      throw new Error(
+        `wireAccountName "${value}" must use only a-z and 1-5; "." is not allowed in a node-owner account name.`
+      )
+    }
+    const { minimum, maximum } = match(tokenId)
+      .with(EthereumNodeOwnerTier.T1, () => T1AccountNameLengths)
+      .with(
+        EthereumNodeOwnerTier.T2,
+        EthereumNodeOwnerTier.T3,
+        () => T2T3AccountNameLengths
+      )
+      .otherwise(tier => {
+        throw new Error(`${tier} is not a node-owner tier.`)
+      })
+    if (value.length < minimum || value.length > maximum) {
+      throw new Error(
+        `wireAccountName "${value}" must be ${minimum} to ${maximum} characters for tier ${EthereumNodeOwnerTier[tokenId]}.`
+      )
     }
     return value
   }

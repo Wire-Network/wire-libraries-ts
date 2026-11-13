@@ -213,6 +213,12 @@ BAR is an optional deployment capability: schema-v1 profiles without a BAR
 identity can still verify the OPP clients, while accessing `nodeOwners` fails
 closed with an explicit availability error.
 
+`commit` refuses an account name the depot would reject before it sends any
+transaction, including the approval. BAR escrows the NFT first and only an admin
+can release it after the depot rejects the claim. The rule mirrors
+`sysio.roa`: only `a-z` and `1-5` (no `.`, which also excludes every reserved
+`sysio.` name), 2 to 6 characters for tier 1 and 1 to 12 for tiers 2 and 3.
+
 ```ts
 const slots = await ethereum.nodeOwners.ownedSlots(ownerAddress)
 const submission = await ethereum.nodeOwners.commit({
