@@ -1974,9 +1974,6 @@ export interface SysioOpregOpConfigType {
   req_prod_collat: SysioOpregChainMinBondType[]
   req_batchop_collat: SysioOpregChainMinBondType[]
   req_uw_collat: SysioOpregChainMinBondType[]
-  max_available_producers: number
-  max_available_batch_ops: number
-  max_available_underwriters: number
   terminate_prune_delay_ms: number | string
   terminate_max_consecutive_misses: number
   terminate_max_pct_misses_24h: number
@@ -2068,9 +2065,6 @@ export interface SysioOpregRemitclaimKeyType {
 
 /** sysio.opreg::setconfig (action) */
 export interface SysioOpregSetconfigAction {
-  max_available_producers: number
-  max_available_batch_ops: number
-  max_available_underwriters: number
   terminate_prune_delay_ms: number | string
   terminate_max_consecutive_misses: number
   terminate_max_pct_misses_24h: number
@@ -2286,6 +2280,12 @@ export interface SysioRoaNodeownersType {
   network_gen: number
 }
 
+/** sysio.roa::nodeownfin (action) */
+export interface SysioRoaNodeownfinAction {
+  owner: string
+  tier: number
+}
+
 /** sysio.roa::nodeownreg (action) */
 export interface SysioRoaNodeownregAction {
   owner: string
@@ -2407,6 +2407,7 @@ export interface SysioRoaContract {
     giftram: SysioRoaGiftramAction
     newnameduser: SysioRoaNewnameduserAction
     newuser: SysioRoaNewuserAction
+    nodeownfin: SysioRoaNodeownfinAction
     nodeownreg: SysioRoaNodeownregAction
     raiseacctlim: SysioRoaRaiseacctlimAction
     reducepolicy: SysioRoaReducepolicyAction
@@ -2844,11 +2845,6 @@ export interface SysioSyndFeeRowType {
   position: SysioSyndPositionType
 }
 
-/** sysio.synd::finishreturn (action) */
-export interface SysioSyndFinishreturnAction {
-  request_id: number | string
-}
-
 /** sysio.synd::import_credit (type) */
 export interface SysioSyndImportCreditType {
   pubkey: string
@@ -3196,7 +3192,6 @@ export interface SysioSyndContract {
     desyndicate: SysioSyndDesyndicateAction
     dropenv: SysioSyndDropenvAction
     emitdesynd: SysioSyndEmitdesyndAction
-    finishreturn: SysioSyndFinishreturnAction
     importdone: SysioSyndImportdoneAction
     importsynd: SysioSyndImportsyndAction
     linkswept: SysioSyndLinksweptAction
@@ -4645,6 +4640,7 @@ export const SysioContractDefinitions: {
       "giftram",
       "newnameduser",
       "newuser",
+      "nodeownfin",
       "nodeownreg",
       "raiseacctlim",
       "reducepolicy",
@@ -4707,7 +4703,6 @@ export const SysioContractDefinitions: {
       "desyndicate",
       "dropenv",
       "emitdesynd",
-      "finishreturn",
       "importdone",
       "importsynd",
       "linkswept",
