@@ -934,6 +934,11 @@ export interface SysioCounclStirAction {
   caller: string
 }
 
+/** sysio.councl::syncnodes (action) */
+export interface SysioCounclSyncnodesAction {
+  caller: string
+}
+
 /** sysio.councl::tier2_row (type) */
 export interface SysioCounclTier2RowType {
   idx: number | string
@@ -976,6 +981,7 @@ export interface SysioCounclContract {
     settle: SysioCounclSettleAction
     startinit: SysioCounclStartinitAction
     stir: SysioCounclStirAction
+    syncnodes: SysioCounclSyncnodesAction
     vote: SysioCounclVoteAction
   }
   tables: {
@@ -4496,6 +4502,7 @@ export const SysioContractDefinitions: {
       "settle",
       "startinit",
       "stir",
+      "syncnodes",
       "vote"
     ],
     tables: [
