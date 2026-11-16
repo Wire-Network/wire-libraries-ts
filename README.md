@@ -22,7 +22,7 @@ See [native deposits and syndication](packages/sdk-outpost/README.md#native-depo
 
 Use [deployment profiles](packages/sdk-outpost/README.md#deployment-profiles) to select multiple supported networks in one SDK version. Client bindings, ETH withdrawal payer and applicable syndication limits come from the verified suite.
 Solana withdrawal requests select user-scoped nonce or counter encoding from that verified producer IDL; callers keep the same signing flow.
-The Outpost guide documents temporary Testnet support and its required removal when deployments converge on the RC.
+See [artifact compatibility](packages/sdk-outpost/README.md#artifact-compatibility) for the current Devnet and Sandbox pairs and retained Testnet support.
 
 See [pool pricing and valuation](packages/sdk-core/docs/pool-pricing.md) for explicit USD references, yield-adjusted TVL/LP values and read-only TWAP calculations.
 

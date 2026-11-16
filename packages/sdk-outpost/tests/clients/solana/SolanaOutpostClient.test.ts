@@ -3,8 +3,8 @@ import { sha256 } from "ethers"
 import {
   liqsolCoreIdl as devnetIdl,
   SolanaOutpostArtifactManifest
-} from "@wireio/outpost-solana-artifacts-v0-4-6"
-import { EthereumOutpostArtifactManifest } from "@wireio/outpost-ethereum-artifacts-v0-4-5"
+} from "@wireio/outpost-solana-artifacts-v0-4-7"
+import { EthereumOutpostArtifactManifest } from "@wireio/outpost-ethereum-artifacts-v0-4-6"
 import { createRequire } from "node:module"
 import { readFileSync } from "node:fs"
 
@@ -37,14 +37,14 @@ function createSolanaClient(
 }
 
 describe("SolanaOutpostClient", () => {
-  it("decodes the 500-epoch history of the verified Devnet program", async () => {
+  it("decodes the 200-epoch history of the verified Devnet program", async () => {
     const profile = createOutpostDeploymentProfileFixture(
         EthereumOutpostArtifactManifest,
-        "@wireio/outpost-ethereum-artifacts-v0-4-5"
+        "@wireio/outpost-ethereum-artifacts-v0-4-6"
       ),
       artifact = SolanaOutpostArtifactManifest.programs.liqsolCore,
       binaryPath = createRequire(__filename).resolve(
-        `@wireio/outpost-solana-artifacts-v0-4-6/${artifact.programBinaryPath}`
+        `@wireio/outpost-solana-artifacts-v0-4-7/${artifact.programBinaryPath}`
       ),
       programData = createSolanaProgramDataAccountData(
         readFileSync(binaryPath)
@@ -55,19 +55,19 @@ describe("SolanaOutpostClient", () => {
     const provider = createSolanaProviderFixture(profile, programData)
     const client = await createSolanaClient({ profile, provider }),
       program = client.program(SolanaProgramName.liqsolCore),
-      data = Buffer.alloc(8032)
+      data = Buffer.alloc(3232)
     Buffer.from(
       devnetIdl.accounts.find(
         account => account.name === "pretokenPurchaseHistory"
       )!.discriminator
     ).copy(data)
-    data.writeBigUInt64LE(7n, 24 + 500 * 8)
-    data[8024] = 255
+    data.writeBigUInt64LE(7n, 24 + 200 * 8)
+    data[3224] = 255
     const decoded = program.coder.accounts.decode(
       "pretokenPurchaseHistory",
       data
     )
-    expect(decoded.syndPerEpoch).toHaveLength(500)
+    expect(decoded.syndPerEpoch).toHaveLength(200)
     expect(decoded.syndPerEpoch[0].toString()).toBe("7")
     expect(decoded.bump).toBe(255)
   })
