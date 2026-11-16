@@ -2286,6 +2286,12 @@ export interface SysioRoaNodeownersType {
   network_gen: number
 }
 
+/** sysio.roa::nodeownfin (action) */
+export interface SysioRoaNodeownfinAction {
+  owner: string
+  tier: number
+}
+
 /** sysio.roa::nodeownreg (action) */
 export interface SysioRoaNodeownregAction {
   owner: string
@@ -2325,19 +2331,6 @@ export interface SysioRoaReducepolicyAction {
   cpu_weight: string
   ram_weight: string
   network_gen: number
-}
-
-/** sysio.roa::reslimit (type) */
-export interface SysioRoaReslimitType {
-  owner: string
-  net_weight: string
-  cpu_weight: string
-  ram_bytes: number | string
-}
-
-/** sysio.roa::reslimit_key (type) */
-export interface SysioRoaReslimitKeyType {
-  owner: number | string
 }
 
 /** sysio.roa::roa_state (type) */
@@ -2407,6 +2400,7 @@ export interface SysioRoaContract {
     giftram: SysioRoaGiftramAction
     newnameduser: SysioRoaNewnameduserAction
     newuser: SysioRoaNewuserAction
+    nodeownfin: SysioRoaNodeownfinAction
     nodeownreg: SysioRoaNodeownregAction
     raiseacctlim: SysioRoaRaiseacctlimAction
     reducepolicy: SysioRoaReducepolicyAction
@@ -2420,7 +2414,6 @@ export interface SysioRoaContract {
     nodeownerreg: SysioRoaNodeownerregType
     nodeowners: SysioRoaNodeownersType
     policies: SysioRoaPoliciesType
-    reslimit: SysioRoaReslimitType
     roastate: SysioRoaRoaStateType
     sponsorcount: SysioRoaSponsorcountType
     sponsors: SysioRoaSponsorType
@@ -2844,11 +2837,6 @@ export interface SysioSyndFeeRowType {
   position: SysioSyndPositionType
 }
 
-/** sysio.synd::finishreturn (action) */
-export interface SysioSyndFinishreturnAction {
-  request_id: number | string
-}
-
 /** sysio.synd::import_credit (type) */
 export interface SysioSyndImportCreditType {
   pubkey: string
@@ -3196,7 +3184,6 @@ export interface SysioSyndContract {
     desyndicate: SysioSyndDesyndicateAction
     dropenv: SysioSyndDropenvAction
     emitdesynd: SysioSyndEmitdesyndAction
-    finishreturn: SysioSyndFinishreturnAction
     importdone: SysioSyndImportdoneAction
     importsynd: SysioSyndImportsyndAction
     linkswept: SysioSyndLinksweptAction
@@ -3975,6 +3962,26 @@ export interface SysioSystemV0DataType {
   pubkey?: string | null
 }
 
+/** sysio.system::addsubjex (action) */
+export interface SysioSystemAddsubjexAction {
+  account: string
+}
+
+/** sysio.system::delsubjex (action) */
+export interface SysioSystemDelsubjexAction {
+  account: string
+}
+
+/** sysio.system::subj_exempt (type) */
+export interface SysioSystemSubjExemptType {
+  account: string
+}
+
+/** sysio.system::subjexempt_key (type) */
+export interface SysioSystemSubjexemptKeyType {
+  account: string
+}
+
 /** sysio.system::addtrxp (action) */
 export interface SysioSystemAddtrxpAction {
   receiver: string
@@ -4058,6 +4065,8 @@ export interface SysioSystemContract {
     delpeerkey: SysioSystemDelpeerkeyAction
     getpeerkeys: SysioSystemGetpeerkeysAction
     regpeerkey: SysioSystemRegpeerkeyAction
+    addsubjex: SysioSystemAddsubjexAction
+    delsubjex: SysioSystemDelsubjexAction
     addtrxp: SysioSystemAddtrxpAction
     deltrxp: SysioSystemDeltrxpAction
   }
@@ -4089,6 +4098,7 @@ export interface SysioSystemContract {
     t5state: SysioSystemT5StateType
     limitauthchg: SysioSystemLimitAuthChangeType
     peerkeys: SysioSystemPeerKeyType
+    subjexempt: SysioSystemSubjExemptType
     trxpglobal: SysioSystemTrxPrioGlobalType
     trxpriority: SysioSystemTrxPrioType
   }
@@ -4645,6 +4655,7 @@ export const SysioContractDefinitions: {
       "giftram",
       "newnameduser",
       "newuser",
+      "nodeownfin",
       "nodeownreg",
       "raiseacctlim",
       "reducepolicy",
@@ -4658,7 +4669,6 @@ export const SysioContractDefinitions: {
       "nodeownerreg",
       "nodeowners",
       "policies",
-      "reslimit",
       "roastate",
       "sponsorcount",
       "sponsors"
@@ -4707,7 +4717,6 @@ export const SysioContractDefinitions: {
       "desyndicate",
       "dropenv",
       "emitdesynd",
-      "finishreturn",
       "importdone",
       "importsynd",
       "linkswept",
@@ -4797,6 +4806,8 @@ export const SysioContractDefinitions: {
       "delpeerkey",
       "getpeerkeys",
       "regpeerkey",
+      "addsubjex",
+      "delsubjex",
       "addtrxp",
       "deltrxp"
     ],
@@ -4828,6 +4839,7 @@ export const SysioContractDefinitions: {
       "t5state",
       "limitauthchg",
       "peerkeys",
+      "subjexempt",
       "trxpglobal",
       "trxpriority"
     ]
