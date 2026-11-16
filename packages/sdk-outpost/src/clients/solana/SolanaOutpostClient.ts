@@ -5,7 +5,7 @@ import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
 import {
   liqsolCoreIdl as devnetIdl,
   type LiqsolCore as DevnetLiqsolCore
-} from "@wireio/outpost-solana-artifacts-v0-4-6"
+} from "@wireio/outpost-solana-artifacts-v0-4-7"
 import type { LiqsolCore as LiqsolCoreV042 } from "@wireio/outpost-solana-artifacts-v0-4-2"
 import { match } from "ts-pattern"
 

@@ -11,8 +11,9 @@ deployment profiles remain caller-supplied.
 Sandbox pairs Ethereum **0.4.4** / Solana **0.4.5**, from
 [the October 28 cluster release](https://github.com/Wire-Network/wire-platform-build-system/releases/tag/cluster-v1.0.0-dev-20261028_144410).
 The retained **0.4.3 / 0.4.2** Testnet pair remains supported temporarily.
-Devnet pairs Ethereum **0.4.5** (V3 staking and V2 withdrawal queue) with
-Solana **0.4.6** (500-epoch history).
+Devnet pairs Ethereum **0.4.6** (V3 staking and V2 withdrawal queue) with
+Solana **0.4.7** (200-epoch history). Use a fresh deployment profile for the
+[November 16 cluster](https://github.com/Wire-Network/wire-platform-build-system/releases/tag/cluster-v1.0.0-dev-20261116_132344).
 Selection uses exact paired interface identity followed by live
 runtime verification; network names and version strings never authorize a match.
 
@@ -165,7 +166,7 @@ release; consumers continue to use the same `OutpostClient.create` facade.
 
 ### Artifact compatibility
 
-Devnet (`0.4.5 / 0.4.6`), Sandbox (`0.4.4 / 0.4.5`) and temporary Testnet
+Devnet (`0.4.6 / 0.4.7`), Sandbox (`0.4.4 / 0.4.5`) and temporary Testnet
 (`0.4.3 / 0.4.2`) are selected by exact interface and live runtime verification.
 Requests use the verified producer IDL's withdrawal arguments.
 Earlier pairs are not retained;

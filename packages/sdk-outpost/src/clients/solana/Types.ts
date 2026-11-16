@@ -4,16 +4,16 @@ import type { OutpostDeploymentProfile } from "../../deployments/index.js"
 import { SolanaProgramName } from "../../deployments/index.js"
 import type { LiqsolCore } from "@wireio/outpost-solana-artifacts"
 import type { LiqsolCore as LiqsolCoreV042 } from "@wireio/outpost-solana-artifacts-v0-4-2"
-import type { LiqsolCore as LiqsolCoreV046 } from "@wireio/outpost-solana-artifacts-v0-4-6"
+import type { LiqsolCore as LiqsolCoreV047 } from "@wireio/outpost-solana-artifacts-v0-4-7"
 
 /** Verified IDLs that support user-chosen withdrawal nonces. */
-type ConcurrentLiqsolCore = LiqsolCore | LiqsolCoreV046
+type ConcurrentLiqsolCore = LiqsolCore | LiqsolCoreV047
 
 /** Temporary Testnet IDL union; remove the retained type when Testnet adopts the RC. */
 export type SupportedLiqsolCore = ConcurrentLiqsolCore | LiqsolCoreV042
 
 /** Preserve each producer's complete generated Anchor program type. */
-type ConcurrentWithdrawalProgram = Program<LiqsolCore> | Program<LiqsolCoreV046>
+type ConcurrentWithdrawalProgram = Program<LiqsolCore> | Program<LiqsolCoreV047>
 export type SolanaCoreProgram =
   | ConcurrentWithdrawalProgram
   | Program<LiqsolCoreV042>

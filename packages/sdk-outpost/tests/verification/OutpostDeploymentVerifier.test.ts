@@ -6,8 +6,8 @@ import {
 } from "@wireio/sdk-outpost"
 import { SolanaOutpostArtifactManifest as SolanaV042Manifest } from "@wireio/outpost-solana-artifacts-v0-4-2"
 import { EthereumOutpostArtifactManifest as EthereumV043Manifest } from "@wireio/outpost-ethereum-artifacts-v0-4-3"
-import { EthereumOutpostArtifactManifest as EthereumV045Manifest } from "@wireio/outpost-ethereum-artifacts-v0-4-5"
-import { SolanaOutpostArtifactManifest as SolanaV046Manifest } from "@wireio/outpost-solana-artifacts-v0-4-6"
+import { EthereumOutpostArtifactManifest as EthereumV046Manifest } from "@wireio/outpost-ethereum-artifacts-v0-4-6"
+import { SolanaOutpostArtifactManifest as SolanaV047Manifest } from "@wireio/outpost-solana-artifacts-v0-4-7"
 import { sha256 } from "ethers"
 import {
   CurrentOutpostArtifactSuite,
@@ -47,16 +47,16 @@ describe("OutpostDeploymentVerifier", () => {
 
   it("requires both registered Devnet interfaces before selecting the new suite", () => {
     const profile = createOutpostDeploymentProfileFixture(
-      EthereumV045Manifest,
-      "@wireio/outpost-ethereum-artifacts-v0-4-5"
+      EthereumV046Manifest,
+      "@wireio/outpost-ethereum-artifacts-v0-4-6"
     )
     expect(OutpostArtifactRegistry.candidates(profile)).toHaveLength(0)
     profile.solana.programs.liqsolCore.idlSha256 =
-      SolanaV046Manifest.programs.liqsolCore.idlSha256
+      SolanaV047Manifest.programs.liqsolCore.idlSha256
     expect(OutpostArtifactRegistry.candidates(profile)).toMatchObject([
       {
-        ethereum: { manifest: EthereumV045Manifest },
-        solana: { manifest: SolanaV046Manifest }
+        ethereum: { manifest: EthereumV046Manifest },
+        solana: { manifest: SolanaV047Manifest }
       }
     ])
   })
