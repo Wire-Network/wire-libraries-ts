@@ -42,6 +42,9 @@ const ZERO_CONSUMPTION_ARRAY_ELEMENT_ERROR =
 const NON_CANONICAL_VARUINT32_ERROR =
   "varuint32 is not in its shortest encoding at offset"
 
+/** Error reported when a varuint32's fifth byte still has its continuation bit. */
+const TOO_LONG_VARUINT32_ERROR = "varuint32 is longer than five bytes at offset"
+
 /** Error reported when a float is read with a width other than 32 or 64 bits. */
 const INVALID_FLOAT_SIZE_ERROR = "Invalid float size"
 
@@ -551,8 +554,8 @@ function defaultValue(
 export interface ABIDecoderOptions {
   /**
    * Reject every varuint32 that is not in its shortest encoding: a zero-padded high group (`80 00`
-   * for zero), a fifth byte with bits above bit 31, or a fifth byte with its continuation bit.
-   * Defaults to false, which accepts them.
+   * for zero) or a fifth byte with bits above bit 31. Defaults to false, which accepts them. A
+   * fifth byte with its continuation bit is rejected either way.
    */
   canonicalVaruint32?: boolean
 }
@@ -631,22 +634,28 @@ export class ABIDecoder {
   }
 
   /**
-   * Read a varuint32 of at most five bytes. A decoder created with `canonicalVaruint32` throws
-   * unless the bytes are the shortest encoding of the value.
+   * Read a varuint32 of at most five bytes, throwing when the fifth byte still has its continuation
+   * bit as nodeop's `fc::raw::unpack` does. A decoder created with `canonicalVaruint32` also
+   * throws unless the bytes are the shortest encoding of the value.
    */
   readVaruint32() {
     const start = this.pos
     let v = 0
     let bit = 0
+    let b: number
 
     for (;;) {
-      const b = this.readByte()
+      b = this.readByte()
       v |= (b & VARUINT32_PAYLOAD_MASK) << bit
       bit += VARUINT32_PAYLOAD_BITS
 
       if (!(b & VARUINT32_CONTINUATION_BIT) || bit >= VARUINT32_MAX_BITS) {
         break
       }
+    }
+
+    if (b & VARUINT32_CONTINUATION_BIT) {
+      throw this.createVaruint32Error(TOO_LONG_VARUINT32_ERROR, start)
     }
 
     const value = v >>> 0
@@ -671,12 +680,15 @@ export class ABIDecoder {
           finalByte === value >>> (VARUINT32_PAYLOAD_BITS * finalIndex))
 
     if (!isShortest) {
-      throw new Error(
-        `${NON_CANONICAL_VARUINT32_ERROR} ${start}: ${arrayToHex(
-          this.array.subarray(start, this.pos)
-        )}`
-      )
+      throw this.createVaruint32Error(NON_CANONICAL_VARUINT32_ERROR, start)
     }
+  }
+
+  /** Create `message`'s error for the varuint32 read from `start`, naming its offset and bytes. */
+  private createVaruint32Error(message: string, start: number): Error {
+    return new Error(
+      `${message} ${start}: ${arrayToHex(this.array.subarray(start, this.pos))}`
+    )
   }
 
   readVarint32() {

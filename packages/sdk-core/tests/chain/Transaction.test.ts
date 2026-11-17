@@ -16,6 +16,7 @@ import {
 
 const NON_CANONICAL_VARUINT32_MESSAGE =
   /varuint32 is not in its shortest encoding/
+const TOO_LONG_VARUINT32_MESSAGE = /varuint32 is longer than five bytes/
 const TRAILING_BYTES_MESSAGE = /Unread bytes after the packed transaction: 1$/
 const PADDED_ZERO = hexToArray("8000")
 const PADDED_ONE = hexToArray("8100")
@@ -172,8 +173,9 @@ describe("PackedTransaction canonical decoding", () => {
       replaceByte(encodeEmptyTransaction(), DELAY_SEC_OFFSET, SIX_BYTE_ZERO)
     )
 
+    expect(() => packed.getTransaction()).toThrow(TOO_LONG_VARUINT32_MESSAGE)
     expect(() => packed.getTransaction({ canonical: true })).toThrow(
-      NON_CANONICAL_VARUINT32_MESSAGE
+      TOO_LONG_VARUINT32_MESSAGE
     )
   })
 
