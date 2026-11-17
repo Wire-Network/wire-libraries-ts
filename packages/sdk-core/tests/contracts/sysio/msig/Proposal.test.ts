@@ -1,9 +1,61 @@
 import { Checksum256 } from "@wireio/sdk-core/chain/Checksum"
 import { contracts } from "@wireio/sdk-core"
+import { getLogger } from "@wireio/shared"
+import { hexToArray } from "@wireio/sdk-core/Utils"
+import {
+  createEmptyTransaction,
+  EmptyTransactionVaruint32Offsets,
+  encodeEmptyTransaction,
+  replaceByte
+} from "../../../support/transactions.js"
 
-const { capabilitiesFromAbi, createProposalDetail, MsigProposal } = contracts.sysio.msig
+const {
+  capabilitiesFromAbi,
+  createProposalDetail,
+  MsigProposal,
+  unpackProposalTransaction
+} = contracts.sysio.msig
 
 const packedTransaction = new Uint8Array([1, 2, 3, 4])
+const PROPOSAL_NAME = "upgrade1"
+const PADDED_ZERO = hexToArray("8000")
+const TRAILING_BYTE = Uint8Array.from([0x00])
+const NON_CANONICAL_VARUINT32_MESSAGE =
+  /varuint32 is not in its shortest encoding/
+const TRAILING_BYTES_MESSAGE = /Unread bytes after the packed transaction/
+const UNPACK_FAILED_LOG_MESSAGE =
+  "Multisig proposal %s transaction did not unpack: %s"
+
+/** Spy on the proposal module's logger without letting warnings print. */
+function spyOnProposalWarnings() {
+  return jest
+    .spyOn(
+      getLogger(
+        require.resolve("@wireio/sdk-core/contracts/sysio/msig/Proposal")
+      ),
+      "warn"
+    )
+    .mockImplementation(() => {})
+}
+
+/** Create a proposal row holding `packed` as its transaction. */
+function createProposal(packed: Uint8Array) {
+  return MsigProposal.from({
+    proposal_name: PROPOSAL_NAME,
+    packed_transaction: packed
+  })
+}
+
+/** Create the proposal detail of a proposal holding `packed`, without ABI capabilities. */
+function createDetail(packed: Uint8Array) {
+  return createProposalDetail({
+    proposer: "alice",
+    proposal: createProposal(packed),
+    approvals: null,
+    capabilities: null,
+    readStrategy: null
+  })
+}
 
 function chunkedCapabilities() {
   return capabilitiesFromAbi({
@@ -123,5 +175,82 @@ describe("proposal details", () => {
     expect(detail.hash.status).toBe("unavailable")
     expect(detail.hash.reason).toBe("profile-does-not-support-hash")
     expect(detail.hash.matches).toBeNull()
+  })
+})
+
+describe("proposal transaction unpacking", () => {
+  test("unpacks a canonical proposal transaction", () => {
+    const packed = encodeEmptyTransaction()
+
+    expect(
+      unpackProposalTransaction(createProposal(packed)).equals(
+        createEmptyTransaction()
+      )
+    ).toBe(true)
+    expect(
+      createDetail(packed).transaction.equals(createEmptyTransaction())
+    ).toBe(true)
+  })
+
+  test.each(EmptyTransactionVaruint32Offsets)(
+    "rejects a proposal with a zero-padded %s",
+    (_, offset) => {
+      const packed = replaceByte(encodeEmptyTransaction(), offset, PADDED_ZERO)
+
+      expect(() => unpackProposalTransaction(createProposal(packed))).toThrow(
+        NON_CANONICAL_VARUINT32_MESSAGE
+      )
+      expect(createDetail(packed).transaction).toBeNull()
+    }
+  )
+
+  test("rejects a proposal with bytes after the transaction", () => {
+    const packed = Uint8Array.from([
+      ...encodeEmptyTransaction(),
+      ...TRAILING_BYTE
+    ])
+
+    expect(() => unpackProposalTransaction(createProposal(packed))).toThrow(
+      TRAILING_BYTES_MESSAGE
+    )
+    expect(createDetail(packed).transaction).toBeNull()
+  })
+
+  test("logs why a non-canonical proposal does not unpack", () => {
+    const warn = spyOnProposalWarnings()
+
+    try {
+      createDetail(
+        replaceByte(
+          encodeEmptyTransaction(),
+          EmptyTransactionVaruint32Offsets[0][1],
+          PADDED_ZERO
+        )
+      )
+
+      expect(warn).toHaveBeenCalledWith(
+        UNPACK_FAILED_LOG_MESSAGE,
+        PROPOSAL_NAME,
+        expect.stringMatching(NON_CANONICAL_VARUINT32_MESSAGE)
+      )
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  test("logs why an undecodable proposal does not unpack", () => {
+    const warn = spyOnProposalWarnings()
+
+    try {
+      createDetail(packedTransaction)
+
+      expect(warn).toHaveBeenCalledWith(
+        UNPACK_FAILED_LOG_MESSAGE,
+        PROPOSAL_NAME,
+        expect.not.stringMatching(NON_CANONICAL_VARUINT32_MESSAGE)
+      )
+    } finally {
+      warn.mockRestore()
+    }
   })
 })

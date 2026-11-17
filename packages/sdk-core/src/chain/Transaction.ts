@@ -3,7 +3,7 @@ import pako from "pako"
 
 import { abiEncode } from "../serializer/Encoder.js"
 import { Signature, SignatureType } from "./Signature.js"
-import { abiDecode } from "../serializer/Decoder.js"
+import { abiDecode, ABIDecoder } from "../serializer/Decoder.js"
 
 import { ABIDef } from "./Abi.js"
 import { Action, ActionType, AnyAction } from "./Action.js"
@@ -238,6 +238,37 @@ export class SignedTransaction extends Transaction {
   }
 }
 
+/** Options for decoding the transaction in a packed transaction. */
+export interface DecodePackedTransactionOptions extends InflatePackedTransactionOptions {
+  /**
+   * Accept only the canonical encoding: every varuint32 in its shortest form and no bytes after
+   * the transaction, the bytes `sysio.msig` and `sysio.wrap` execute. Defaults to false.
+   */
+  canonical?: boolean
+}
+
+/** Error reported when canonical packed transaction bytes continue past the transaction; takes the count. */
+const TRAILING_TRANSACTION_BYTES_ERROR =
+  "Unread bytes after the packed transaction"
+
+/** Decode `transactionBytes` as exactly one transaction in canonical encoding. */
+function decodeCanonicalTransaction(transactionBytes: Bytes): Transaction {
+  const decoder = new ABIDecoder(transactionBytes.array, null, {
+      canonicalVaruint32: true
+    }),
+    transaction = abiDecode({ data: decoder, type: Transaction })
+
+  if (decoder.canRead()) {
+    throw new Error(
+      `${TRAILING_TRANSACTION_BYTES_ERROR}: ${
+        transactionBytes.array.byteLength - decoder.getPosition()
+      }`
+    )
+  }
+
+  return transaction
+}
+
 /** Fields for a packed transaction. */
 export interface PackedTransactionFields {
   signatures?: SignatureType[]
@@ -296,25 +327,24 @@ export class PackedTransaction extends Struct {
   }
 
   /** Decode and return the packed transaction. */
-  getTransaction(options: InflatePackedTransactionOptions = {}): Transaction {
-    return match(Number(this.compression))
-      .with(CompressionType.none, () =>
-        abiDecode({ data: this.packed_trx, type: Transaction })
-      )
+  getTransaction(options: DecodePackedTransactionOptions = {}): Transaction {
+    const transactionBytes = match(Number(this.compression))
+      .with(CompressionType.none, () => this.packed_trx)
       .with(CompressionType.zlib, () =>
-        abiDecode({
-          data: inflatePackedTransaction(this.packed_trx, options),
-          type: Transaction
-        })
+        inflatePackedTransaction(this.packed_trx, options)
       )
       .otherwise(() => {
         throw new Error(`Unknown transaction compression ${this.compression}`)
       })
+
+    return options.canonical
+      ? decodeCanonicalTransaction(transactionBytes)
+      : abiDecode({ data: transactionBytes, type: Transaction })
   }
 
   /** Decode and return the signed transaction. */
   getSignedTransaction(
-    options: InflatePackedTransactionOptions = {}
+    options: DecodePackedTransactionOptions = {}
   ): SignedTransaction {
     const transaction = this.getTransaction(options)
     // TODO: decode context free data
