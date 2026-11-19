@@ -2,10 +2,12 @@
  * Antelope/SYSIO ABI Decoder
  */
 
+import { match } from "ts-pattern"
 import { NestedError } from "@wireio/shared"
 
 import { ABI, ABIDef } from "../chain/Abi.js"
 import { Bytes, BytesType } from "../chain/Bytes.js"
+import { Float32, Float64 } from "../chain/Float.js"
 import { Variant } from "../chain/Variant.js"
 
 import {
@@ -30,11 +32,21 @@ import {
   VARUINT32_PAYLOAD_MASK
 } from "./Varuint.js"
 
-import { isInstanceOf } from "../Utils.js"
+import { arrayToHex, isInstanceOf } from "../Utils.js"
 
 /** Error reported when an array element cannot advance the binary decoder. */
 const ZERO_CONSUMPTION_ARRAY_ELEMENT_ERROR =
   "Array element decoded without consuming input"
+
+/** Error reported when a canonical-only decoder reads a varuint32 longer than its shortest form. */
+const NON_CANONICAL_VARUINT32_ERROR =
+  "varuint32 is not in its shortest encoding at offset"
+
+/** Error reported when a varuint32's fifth byte still has its continuation bit. */
+const TOO_LONG_VARUINT32_ERROR = "varuint32 is longer than five bytes at offset"
+
+/** Error reported when a float is read with a width other than 32 or 64 bits. */
+const INVALID_FLOAT_SIZE_ERROR = "Invalid float size"
 
 interface DecodeArgsBase {
   abi?: ABIDef
@@ -185,10 +197,18 @@ export function abiDecode(
   }
 }
 
+/** One step of the path from the decoded root to the value being decoded. */
+interface CodingPathEntry {
+  /** Field name, or element index inside an array. */
+  field: string | number
+  /** Type decoded at this step. */
+  type: ABI.ResolvedType
+}
+
 interface DecodingContext {
   types: TypeLookup
   strictExtensions: boolean
-  codingPath: { field: string | number; type: ABI.ResolvedType }[]
+  codingPath: CodingPathEntry[]
 }
 
 /** Marker for objects when they have been resolved, i.e. their types `from` factory method will not need to resolve children. */
@@ -530,22 +550,40 @@ function defaultValue(
   throw new Error("Unable to determine default value")
 }
 
+/** Options for an {@link ABIDecoder}. */
+export interface ABIDecoderOptions {
+  /**
+   * Reject every varuint32 that is not in its shortest encoding: a zero-padded high group (`80 00`
+   * for zero) or a fifth byte with bits above bit 31. Defaults to false, which accepts them. A
+   * fifth byte with its continuation bit is rejected either way.
+   */
+  canonicalVaruint32?: boolean
+}
+
 export class ABIDecoder {
   static __className = "ABIDecoder"
 
   private pos = 0
   private data: DataView
   private textDecoder: TextDecoder
+  private readonly canonicalVaruint32: boolean
 
   /** User declared metadata, can be used to pass info to instances when decoding.  */
   metadata: Record<string, any> = {}
 
+  /**
+   * @param array - Bytes to decode.
+   * @param textDecoder - Decoder for strings; defaults to UTF-8 that throws on invalid input.
+   * @param options - Decoding options.
+   */
   constructor(
     private array: Uint8Array,
-    textDecoder?: TextDecoder
+    textDecoder?: TextDecoder,
+    { canonicalVaruint32 = false }: ABIDecoderOptions = {}
   ) {
     this.textDecoder = textDecoder || new TextDecoder("utf-8", { fatal: true })
     this.data = new DataView(array.buffer, array.byteOffset, array.byteLength)
+    this.canonicalVaruint32 = canonicalVaruint32
   }
 
   canRead(bytes = 1): boolean {
@@ -584,29 +622,30 @@ export class ABIDecoder {
   /** Read floating point as JavaScript number, 32 or 64 bits. */
   readFloat(byteWidth: number) {
     this.ensure(byteWidth)
-    let rv: number
-
-    switch (byteWidth) {
-      case 4:
-        rv = this.data.getFloat32(this.pos, true)
-        break
-      case 8:
-        rv = this.data.getFloat64(this.pos, true)
-        break
-      default:
-        throw new Error("Invalid float size")
-    }
+    const rv = match(byteWidth)
+      .with(Float32.byteWidth, () => this.data.getFloat32(this.pos, true))
+      .with(Float64.byteWidth, () => this.data.getFloat64(this.pos, true))
+      .otherwise(() => {
+        throw new Error(INVALID_FLOAT_SIZE_ERROR)
+      })
 
     this.pos += byteWidth
     return rv
   }
 
+  /**
+   * Read a varuint32 of at most five bytes, throwing when the fifth byte still has its continuation
+   * bit as nodeop's `fc::raw::unpack` does. A decoder created with `canonicalVaruint32` also
+   * throws unless the bytes are the shortest encoding of the value.
+   */
   readVaruint32() {
+    const start = this.pos
     let v = 0
     let bit = 0
+    let b: number
 
     for (;;) {
-      const b = this.readByte()
+      b = this.readByte()
       v |= (b & VARUINT32_PAYLOAD_MASK) << bit
       bit += VARUINT32_PAYLOAD_BITS
 
@@ -615,7 +654,41 @@ export class ABIDecoder {
       }
     }
 
-    return v >>> 0
+    if (b & VARUINT32_CONTINUATION_BIT) {
+      throw this.createVaruint32Error(TOO_LONG_VARUINT32_ERROR, start)
+    }
+
+    const value = v >>> 0
+
+    if (this.canonicalVaruint32) {
+      this.assertShortestVaruint32(start, value)
+    }
+
+    return value
+  }
+
+  /**
+   * Throw unless the varuint32 just read from `start` is the shortest encoding of `value`: its
+   * final byte is exactly `value`'s top 7-bit group, and nonzero unless it is the only byte.
+   */
+  private assertShortestVaruint32(start: number, value: number) {
+    const finalIndex = this.pos - 1 - start,
+      finalByte = this.array[this.pos - 1],
+      isShortest =
+        finalIndex === 0 ||
+        (finalByte !== 0 &&
+          finalByte === value >>> (VARUINT32_PAYLOAD_BITS * finalIndex))
+
+    if (!isShortest) {
+      throw this.createVaruint32Error(NON_CANONICAL_VARUINT32_ERROR, start)
+    }
+  }
+
+  /** Create `message`'s error for the varuint32 read from `start`, naming its offset and bytes. */
+  private createVaruint32Error(message: string, start: number): Error {
+    return new Error(
+      `${message} ${start}: ${arrayToHex(this.array.subarray(start, this.pos))}`
+    )
   }
 
   readVarint32() {

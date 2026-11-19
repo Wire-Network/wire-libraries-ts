@@ -41,6 +41,37 @@ const { identity } = lodash
 const BOOL_FALSE_BYTE = 0
 const BOOL_TRUE_BYTE = 1
 
+/** Error reported when a bool field is given a value that is not a bool. */
+const INVALID_BOOL_VALUE_ERROR =
+  "Invalid bool value, expected true, false, 1 or 0"
+
+/**
+ * Every carrier a bool field can arrive in: `true` / `false`, or the byte values `1` / `0` that
+ * nodeop's abi_serializer gives bool fields in JSON.
+ */
+export type BoolValue = boolean | typeof BOOL_TRUE_BYTE | typeof BOOL_FALSE_BYTE
+
+/**
+ * Read a bool field's value as a boolean. Throws on anything outside {@link BoolValue}, which
+ * untyped input can still carry.
+ */
+function toBoolean(value: BoolValue): boolean {
+  return match(value)
+    .when(
+      candidate => candidate === true || candidate === BOOL_TRUE_BYTE,
+      () => true
+    )
+    .when(
+      candidate => candidate === false || candidate === BOOL_FALSE_BYTE,
+      () => false
+    )
+    .otherwise(invalid => {
+      throw new Error(
+        `${INVALID_BOOL_VALUE_ERROR}: ${String(invalid)} (${typeof invalid})`
+      )
+    })
+}
+
 const StringType = {
   abiName: "string",
   abiDefault: () => "",
@@ -59,9 +90,9 @@ const BoolType = {
   fromABI: (decoder: ABIDecoder) => {
     return decoder.readByte() !== BOOL_FALSE_BYTE
   },
-  from: identity<boolean>,
-  toABI: (value: boolean, encoder: ABIEncoder) => {
-    encoder.writeByte(value === true ? BOOL_TRUE_BYTE : BOOL_FALSE_BYTE)
+  from: toBoolean,
+  toABI: (value: BoolValue, encoder: ABIEncoder) => {
+    encoder.writeByte(toBoolean(value) ? BOOL_TRUE_BYTE : BOOL_FALSE_BYTE)
   }
 }
 

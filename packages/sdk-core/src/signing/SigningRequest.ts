@@ -2,6 +2,9 @@
  * SYSIO Signing Request (SSR).
  */
 
+import { match } from "ts-pattern"
+import { NestedError } from "@wireio/shared"
+
 import { ABI, ABIDef } from "../chain/Abi.js"
 import { ABIDecoder } from "../serializer/Decoder.js"
 import { ABIEncoder } from "../serializer/Encoder.js"
@@ -13,6 +16,7 @@ import {
 import { Action, AnyAction } from "../chain/Action.js"
 import {
   AnyTransaction,
+  PackedTransaction,
   Transaction,
   TransactionExtension
 } from "../chain/Transaction.js"
@@ -57,6 +61,48 @@ import * as Base64u from "./Base64u.js"
 // import { IdentityProof } from './identity-proof.js'
 // import {IdentityProof} from './identity-proof.js'
 
+/** Names of the `variant_req` arms, as a decoded request reports them in `variantName`. */
+const RequestVariantName = {
+  action: Action.abiName,
+  actions: `${Action.abiName}[]`,
+  transaction: Transaction.abiName,
+  identity: IdentityV2.abiName
+} as const
+
+/** Error reported when a request's `req` variant is none of {@link RequestVariantName}. */
+const INVALID_REQUEST_DATA_ERROR = "Invalid signing request data"
+
+/** Error reported when the transaction a signing request carries is not canonically encoded. */
+const NON_CANONICAL_TRANSACTION_ERROR =
+  "Signing request transaction is not canonically encoded"
+
+/** Run `decode`, rethrowing any failure as a non-canonical transaction error. */
+function assertCanonicalTransaction(decode: () => void): void {
+  try {
+    decode()
+  } catch (error) {
+    throw new NestedError(NON_CANONICAL_TRANSACTION_ERROR, { cause: error })
+  }
+}
+
+/**
+ * Throw unless the transaction in a transaction request's `payload` is canonically encoded. It
+ * follows the chain id and the `req` variant's index; the rest of the payload is not checked.
+ */
+function assertCanonicalRequestTransaction(payload: Bytes): void {
+  const envelope = new ABIDecoder(payload.array)
+  Serializer.decode({ data: envelope, type: ChainIdVariant })
+  envelope.readVaruint32()
+  const decoder = new ABIDecoder(payload.array, null, {
+    canonicalVaruint32: true
+  })
+  decoder.setPosition(envelope.getPosition())
+
+  assertCanonicalTransaction(() =>
+    Serializer.decode({ data: decoder, type: Transaction })
+  )
+}
+
 /** Current supported protocol version, backwards compatible with version 2. */
 export const ProtocolVersion = 3
 
@@ -83,10 +129,18 @@ export namespace SigningRequestCompression {
   export const DefaultMaxInflatedBytes = 1_048_576
 }
 
+/** Signer name and signature returned by a {@link SignatureProvider}. */
+export interface SignatureProviderResult {
+  /** Account that signed. */
+  signer: NameType
+  /** Signature over the message. */
+  signature: SignatureType
+}
+
 /** Interface that should be implemented by signature providers. */
 export interface SignatureProvider {
   /** Sign 32-byte message and return signer name and signature string. */
-  sign: (message: Checksum256) => { signer: NameType; signature: SignatureType }
+  sign: (message: Checksum256) => SignatureProviderResult
 }
 
 /**
@@ -231,7 +285,15 @@ export interface ResolvedTransaction {
   transaction_extensions: TransactionExtension[]
 }
 
-export type CallbackType = string | { url: string; background: boolean }
+/** Callback URL with its background flag, the object form of {@link CallbackType}. */
+export interface CallbackOptions {
+  /** Where the callback should be sent. */
+  url: string
+  /** Whether the callback should be sent in the background. */
+  background: boolean
+}
+
+export type CallbackType = string | CallbackOptions
 
 interface SigningRequestCommonArguments {
   /**
@@ -245,7 +307,7 @@ interface SigningRequestCommonArguments {
    */
   chainIds?: ChainIdType[]
   /** Optional metadata to pass along with the request. */
-  info?: { [key: string]: Bytes | ABISerializable }
+  info?: Record<string, Bytes | ABISerializable>
 }
 
 export interface SigningRequestCreateArguments extends SigningRequestCommonArguments {
@@ -259,10 +321,7 @@ export interface SigningRequestCreateArguments extends SigningRequestCommonArgum
    */
   transaction?: Partial<AnyTransaction>
   /** Create an identity request. */
-  identity?: {
-    scope?: NameType
-    permission?: PermissionLevelType
-  }
+  identity?: SigningRequestIdentityArguments
   /** Whether wallet should broadcast tx, defaults to true. */
   broadcast?: boolean
   /**
@@ -270,6 +329,14 @@ export interface SigningRequestCreateArguments extends SigningRequestCommonArgum
    * broadcasting or signing. Passing a string means background = false.
    */
   callback?: CallbackType
+}
+
+/** Identity requested by {@link SigningRequestCreateArguments.identity}. */
+export interface SigningRequestIdentityArguments {
+  /** Scope for the request. */
+  scope?: NameType
+  /** Requested permission; any identity when omitted. */
+  permission?: PermissionLevelType
 }
 
 export interface SigningRequestCreateIdentityArguments extends SigningRequestCommonArguments {
@@ -577,6 +644,13 @@ export class SigningRequest {
   ) {
     const id = ChainId.from(chainId)
     serializedTransaction = Bytes.from(serializedTransaction)
+    assertCanonicalTransaction(() =>
+      PackedTransaction.from({
+        packed_trx: serializedTransaction
+      }).getTransaction({
+        canonical: true
+      })
+    )
 
     const encoder = new ABIEncoder()
     encoder.writeByte(2) // header
@@ -631,6 +705,11 @@ export class SigningRequest {
       data: decoder,
       type: this.storageType(version)
     })
+
+    if (req.req.variantName === RequestVariantName.transaction) {
+      assertCanonicalRequestTransaction(payload)
+    }
+
     let sig: RequestSignature | undefined
 
     if (decoder.canRead()) {
@@ -1024,7 +1103,7 @@ export class SigningRequest {
   /**
    * Chain IDs this request is valid for, only valid for multi chain requests. Value of `null` when `isMultiChain` is true denotes any chain.
    */
-  public getChainIds(): ChainId[] | null {
+  public getChainIds(): ChainId[] {
     if (!this.isMultiChain()) {
       return null
     }
@@ -1063,62 +1142,65 @@ export class SigningRequest {
   public getRawActions(): Action[] {
     const req = this.data.req
 
-    switch (req.variantName) {
-      case "action":
-        return [req.value as Action]
-      case "action[]":
-        return req.value as Action[]
+    return match(req.variantName)
+      .with(RequestVariantName.action, () => [req.value as Action])
+      .with(RequestVariantName.actions, () => req.value as Action[])
+      .with(RequestVariantName.identity, () => this.getIdentityActions())
+      .with(
+        RequestVariantName.transaction,
+        () => (req.value as Transaction).actions
+      )
+      .otherwise(() => {
+        throw new Error(INVALID_REQUEST_DATA_ERROR)
+      })
+  }
 
-      case "identity": {
-        if (this.version === 2) {
-          const id = req.value as IdentityV2
-          let data: BytesType = "0101000000000000000200000000000000" // placeholder permission
-          let authorization: PermissionLevelType[] = [PlaceholderAuth]
+  /** The single `identity` action an identity request resolves to. */
+  private getIdentityActions(): Action[] {
+    const req = this.data.req
 
-          if (id.permission) {
-            data = Serializer.encode({ object: id })
-            authorization = [id.permission]
-          }
+    if (this.version === 2) {
+      const id = req.value as IdentityV2
+      let data: BytesType = "0101000000000000000200000000000000" // placeholder permission
+      let authorization: PermissionLevelType[] = [PlaceholderAuth]
 
-          const action = Action.from({
-            account: "",
-            name: "identity",
-            authorization,
-            data
-          })
-          // TODO: The way payloads are encoded is including the ABI, which isn't what we want
-          // This needs to be resolved in wharfkit/antelope, and then the delete call here should be removed
-          delete action.abi
-          return [action]
-        } else {
-          // eslint-disable-next-line prefer-const
-          let { scope, permission } = req.value as IdentityV3
-
-          if (!permission) {
-            permission = PlaceholderAuth
-          }
-
-          const data = Serializer.encode({
-            object: { scope, permission },
-            type: IdentityV3
-          })
-          const action = Action.from({
-            account: "",
-            name: "identity",
-            authorization: [permission],
-            data
-          })
-          // TODO: The way payloads are encoded is including the ABI, which isn't what we want
-          // This needs to be resolved in wharfkit/antelope, and then the delete call here should be removed
-          delete action.abi
-          return [action]
-        }
+      if (id.permission) {
+        data = Serializer.encode({ object: id })
+        authorization = [id.permission]
       }
 
-      case "transaction":
-        return (req.value as Transaction).actions
-      default:
-        throw new Error("Invalid signing request data")
+      const action = Action.from({
+        account: "",
+        name: "identity",
+        authorization,
+        data
+      })
+      // TODO: The way payloads are encoded is including the ABI, which isn't what we want
+      // This needs to be resolved in wharfkit/antelope, and then the delete call here should be removed
+      delete action.abi
+      return [action]
+    } else {
+      // eslint-disable-next-line prefer-const
+      let { scope, permission } = req.value as IdentityV3
+
+      if (!permission) {
+        permission = PlaceholderAuth
+      }
+
+      const data = Serializer.encode({
+        object: { scope, permission },
+        type: IdentityV3
+      })
+      const action = Action.from({
+        account: "",
+        name: "identity",
+        authorization: [permission],
+        data
+      })
+      // TODO: The way payloads are encoded is including the ABI, which isn't what we want
+      // This needs to be resolved in wharfkit/antelope, and then the delete call here should be removed
+      delete action.abi
+      return [action]
     }
   }
 
@@ -1126,26 +1208,30 @@ export class SigningRequest {
   public getRawTransaction(): Transaction {
     const req = this.data.req
 
-    switch (req.variantName) {
-      case "transaction":
-        return Transaction.from({ ...(req.value as Transaction) })
-      case "action":
-      case "action[]":
-      case "identity":
-        return Transaction.from({
-          actions: this.getRawActions(),
-          context_free_actions: [],
-          transaction_extensions: [],
-          expiration: "1970-01-01T00:00:00.000",
-          ref_block_num: 0,
-          ref_block_prefix: 0,
-          max_cpu_usage_ms: 0,
-          max_net_usage_words: 0,
-          delay_sec: 0
-        })
-      default:
-        throw new Error("Invalid signing request data")
-    }
+    return match(req.variantName)
+      .with(RequestVariantName.transaction, () =>
+        Transaction.from({ ...(req.value as Transaction) })
+      )
+      .with(
+        RequestVariantName.action,
+        RequestVariantName.actions,
+        RequestVariantName.identity,
+        () =>
+          Transaction.from({
+            actions: this.getRawActions(),
+            context_free_actions: [],
+            transaction_extensions: [],
+            expiration: "1970-01-01T00:00:00.000",
+            ref_block_num: 0,
+            ref_block_prefix: 0,
+            max_cpu_usage_ms: 0,
+            max_net_usage_words: 0,
+            delay_sec: 0
+          })
+      )
+      .otherwise(() => {
+        throw new Error(INVALID_REQUEST_DATA_ERROR)
+      })
   }
 
   /** Whether the request is an identity request. */
@@ -1167,7 +1253,7 @@ export class SigningRequest {
    * @note This returns `nil` unless a specific identity has been requested,
    *       use `isIdentity` to check id requests.
    */
-  public getIdentity(): Name | null {
+  public getIdentity(): Name {
     if (!this.isIdentity()) {
       return null
     }
@@ -1186,7 +1272,7 @@ export class SigningRequest {
    * @note This returns `nil` unless a specific permission has been requested,
    *       use `isIdentity` to check id requests.
    */
-  public getIdentityPermission(): Name | null {
+  public getIdentityPermission(): Name {
     if (!this.isIdentity()) {
       return null
     }
@@ -1208,7 +1294,7 @@ export class SigningRequest {
    * @note This returns `nil` unless a specific permission has been requested,
    *       use `isIdentity` to check id requests.
    */
-  public getIdentityScope(): Name | null {
+  public getIdentityScope(): Name {
     if (!this.isIdentity() || this.version <= 2) {
       return null
     }
@@ -1218,14 +1304,10 @@ export class SigningRequest {
   }
 
   /** Get raw info dict */
-  public getRawInfo(): { [key: string]: Bytes } {
-    const rv: { [key: string]: Bytes } = {}
-
-    for (const { key, value } of this.data.info) {
-      rv[key] = value
-    }
-
-    return rv
+  public getRawInfo(): Record<string, Bytes> {
+    return Object.fromEntries(
+      this.data.info.map(({ key, value }) => [key, value])
+    )
   }
 
   public getRawInfoKey(key: string) {
@@ -1380,7 +1462,7 @@ export class ResolvedSigningRequest {
   public getCallback(
     signatures: SignatureType[],
     blockNum?: UInt32Type
-  ): ResolvedCallback | null {
+  ): ResolvedCallback {
     const { callback, flags } = this.request.data
 
     if (!callback || callback.length === 0) {
@@ -1485,16 +1567,21 @@ function expirationTime(
  * IDENTITY PROOF ts
  */
 
-export type IdentityProofType =
-  | IdentityProof
-  | string
-  | {
-      chainId: ChainIdType
-      scope: NameType
-      expiration: TimePointType
-      signer: PermissionLevelType
-      signature: SignatureType
-    }
+/** Fields of an {@link IdentityProof}, in their input types. */
+export interface IdentityProofFields {
+  /** Chain the proof is for. */
+  chainId: ChainIdType
+  /** Scope of the identity request. */
+  scope: NameType
+  /** When the proof expires. */
+  expiration: TimePointType
+  /** Permission that signed the proof. */
+  signer: PermissionLevelType
+  /** Signature over the proof's transaction. */
+  signature: SignatureType
+}
+
+export type IdentityProofType = IdentityProof | string | IdentityProofFields
 
 @Struct.type("identity_proof")
 export class IdentityProof extends Struct {

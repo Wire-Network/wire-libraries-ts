@@ -170,10 +170,7 @@ const SwitchDebtFiles = [
   "packages/sdk-core/src/crypto/Recover.ts",
   "packages/sdk-core/src/crypto/SharedSecret.ts",
   "packages/sdk-core/src/crypto/Verify.ts",
-  "packages/sdk-core/src/serializer/Decoder.ts",
   "packages/sdk-core/src/serializer/Encoder.ts",
-  "packages/sdk-core/src/serializer/index.ts",
-  "packages/sdk-core/src/signing/SigningRequest.ts",
   "packages/wallet-browser-ext/src/background/Background.ts",
   "packages/wallet-browser-ext/src/popup/App.tsx"
 ]
@@ -181,10 +178,8 @@ const InlineIifeDebtFiles = ["packages/wallet-browser-ext/src/inject/Provider.ts
 const NullUnionReturnDebtFiles = [
   "packages/sdk-core/src/contracts/Contract.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Hash.ts",
-  "packages/sdk-core/src/contracts/sysio/msig/Proposal.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Status.ts",
-  "packages/sdk-core/src/contracts/sysio/msig/Transaction.ts",
-  "packages/sdk-core/src/signing/SigningRequest.ts"
+  "packages/sdk-core/src/contracts/sysio/msig/Transaction.ts"
 ]
 const InlineTypeLiteralDebtFiles = [
   "packages/sdk-core/src/Utils.ts",
@@ -203,16 +198,13 @@ const InlineTypeLiteralDebtFiles = [
   "packages/sdk-core/src/chain/PermissionLevel.ts",
   "packages/sdk-core/src/common/Connect.ts",
   "packages/sdk-core/src/common/Types.ts",
-  "packages/sdk-core/src/contracts/sysio/msig/Proposal.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Status.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Transaction.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Types.ts",
   "packages/sdk-core/src/p2p/Client.ts",
   "packages/sdk-core/src/p2p/Provider.ts",
-  "packages/sdk-core/src/serializer/Decoder.ts",
   "packages/sdk-core/src/serializer/Encoder.ts",
   "packages/sdk-core/src/serializer/Serializable.ts",
-  "packages/sdk-core/src/signing/SigningRequest.ts",
   "packages/sdk-core/src/types/SysioContractTypes.ts",
   "packages/sdk-core/tests/api/Provider.test.ts",
   "packages/sdk-core/tests/chain/Integer.test.ts",

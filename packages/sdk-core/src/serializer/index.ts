@@ -1,3 +1,5 @@
+import { match } from "ts-pattern"
+
 import { abiEncode } from "./Encoder.js"
 import { abiDecode } from "./Decoder.js"
 import {
@@ -8,6 +10,7 @@ import {
 
 export { ABIEncoder } from "./Encoder.js"
 export { ABIDecoder } from "./Decoder.js"
+export type { ABIDecoderOptions } from "./Decoder.js"
 
 export { ManualWriter } from "./Writer.js"
 
@@ -31,36 +34,28 @@ export namespace Serializer {
   }
   /** Create a vanilla js representation of a core object. */
   export function objectify(object: ABISerializable) {
-    const walk = (v: any) => {
-      switch (typeof v) {
-        case "boolean":
-        case "number":
-        case "string":
+    const walk = (v: any): any =>
+        match(typeof v)
+          .with("boolean", "number", "string", () => v)
+          .with("object", () => walkObject(v))
+          .otherwise(() => undefined),
+      walkObject = (v: any): any => {
+        if (v === null) {
           return v
-
-        case "object": {
-          if (v === null) {
-            return v
-          }
-
-          if (typeof v.toJSON === "function") {
-            return walk(v.toJSON())
-          }
-
-          if (Array.isArray(v)) {
-            return v.map(walk)
-          }
-
-          const rv: any = {}
-
-          for (const key of Object.keys(v)) {
-            rv[key] = walk(v[key])
-          }
-
-          return rv
         }
+
+        if (typeof v.toJSON === "function") {
+          return walk(v.toJSON())
+        }
+
+        if (Array.isArray(v)) {
+          return v.map(walk)
+        }
+
+        return Object.fromEntries(
+          Object.keys(v).map(key => [key, walk(v[key])])
+        )
       }
-    }
 
     return walk(object)
   }
