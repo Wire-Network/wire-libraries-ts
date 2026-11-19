@@ -7,6 +7,7 @@ const config: Config = {
     "packages/shared-web",
     "packages/sdk-core",
     "packages/sdk-outpost",
+    "packages/opp-snapshot",
     "packages/wallet-browser-ext",
     "packages/wallet-ext-sdk"
   ]
