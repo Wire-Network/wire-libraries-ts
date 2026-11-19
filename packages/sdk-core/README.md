@@ -136,8 +136,10 @@ KV keys. Legacy endpoints retain typed cursors and user-defined row fields.
 
 The shared reader discovers the endpoint transport with a one-row binary read
 in the requested table/scope, then caches the observed format on that API client.
-Concurrent discovery is shared. Empty or failed probes are never cached, and
-RPC failures propagate. A terminal empty page needs no probe. An incomplete
+Concurrent discovery is shared, including retries after an empty probe. Malformed,
+empty or failed probes are never cached. Failures propagate to matching queries;
+other queries may discover the format from their own table, scope or index.
+A terminal empty page needs no probe. An incomplete
 empty probe raises an error so a partial read cannot appear complete. Discovery
 uses the endpoint response independently of contract ABI metadata.
 

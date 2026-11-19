@@ -60,13 +60,45 @@ import {
 } from "../../serializer/index.js"
 import { isInstanceOf } from "../../Utils.js"
 
+/** Binary table values are complete, even-length hex strings, including empty data. */
+const BinaryTableValue = /^(?:[0-9a-f]{2})*$/i
+
+/** Only callers with a matching probe share its failure. */
+interface PendingTableRowsFormat {
+  requestKey: string
+  result: Promise<TableRowsFormat>
+}
+
 export class ChainAPI {
-  private pendingTableRowsFormat?: Promise<TableRowsFormat>
+  private pendingTableRowsFormat?: PendingTableRowsFormat
 
   constructor(
     private client: APIClient,
     private tableRowsFormat?: TableRowsFormat
   ) {}
+
+  /** Use the same legacy key type for the requested read and format discovery. */
+  private getTableKeyType(
+    params: GetTableRowsParams | GetTableRowsParamsKeyed
+  ): keyof TableIndexTypes {
+    let key_type = (params as GetTableRowsParamsKeyed).key_type
+    const someBound = params.lower_bound || params.upper_bound
+
+    if (!key_type && someBound) {
+      // determine key type from bounds type
+      if (isInstanceOf(someBound, UInt64)) {
+        key_type = "i64"
+      } else if (isInstanceOf(someBound, UInt128)) {
+        key_type = "i128"
+      } else if (isInstanceOf(someBound, Checksum256)) {
+        key_type = "sha256"
+      } else if (isInstanceOf(someBound, Checksum160)) {
+        key_type = "ripemd160"
+      }
+    }
+
+    return key_type || "name"
+  }
 
   /** Discover the endpoint transport using a bounded binary read in the caller's
    * table/scope. Binary user data cannot imitate a JSON transport envelope.
@@ -74,26 +106,34 @@ export class ChainAPI {
    * switching endpoints or after an endpoint transport upgrade.
    */
   async getTableRowsFormat(
-    params: GetTableRowsParams
+    params: GetTableRowsParams | GetTableRowsParamsKeyed
   ): Promise<TableRowsFormat> {
     if (this.tableRowsFormat) return this.tableRowsFormat
-    if (this.pendingTableRowsFormat) {
-      const format = await this.pendingTableRowsFormat
-      if (format) return format
+    const probe = {
+      code: Name.from(params.code),
+      table: Name.from(params.table),
+      scope: String(params.scope ?? params.code),
+      index_position: params.index_position,
+      key_type: this.getTableKeyType(params),
+      json: false,
+      show_payer: true,
+      limit: 1
     }
-    const pending = this.client
+    const requestKey = JSON.stringify(probe)
+    while (this.pendingTableRowsFormat) {
+      const pending = this.pendingTableRowsFormat
+      try {
+        const format = await pending.result
+        if (format) return format
+      } catch (error) {
+        // A different table/scope/index may still support binary discovery.
+        if (pending.requestKey === requestKey) throw error
+      }
+    }
+    const result = this.client
       .call<GetTableRowsResponse>({
         path: "/v1/chain/get_table_rows",
-        params: {
-          code: Name.from(params.code),
-          table: Name.from(params.table),
-          scope: String(params.scope ?? params.code),
-          index_position: params.index_position,
-          key_type: (params as GetTableRowsParamsKeyed).key_type || "name",
-          json: false,
-          show_payer: true,
-          limit: 1
-        }
+        params: probe
       })
       .then(page => {
         const row = page.rows[0]
@@ -105,18 +145,18 @@ export class ChainAPI {
           return undefined
         }
         const format =
-          typeof row === "string" && Bytes.isBytes(row)
+          typeof row === "string" && BinaryTableValue.test(row)
             ? TableRowsFormat.legacy
             : row &&
                 typeof row === "object" &&
                 "key" in row &&
                 typeof row.value === "string" &&
-                Bytes.isBytes(row.value)
+                BinaryTableValue.test(row.value)
               ? TableRowsFormat.wireKv
               : row &&
                   typeof row === "object" &&
                   typeof row.data === "string" &&
-                  Bytes.isBytes(row.data) &&
+                  BinaryTableValue.test(row.data) &&
                   typeof row.payer === "string"
                 ? TableRowsFormat.legacyPayer
                 : undefined
@@ -127,9 +167,10 @@ export class ChainAPI {
         this.tableRowsFormat = format
         return format
       })
+    const pending = { requestKey, result }
     this.pendingTableRowsFormat = pending
     try {
-      return await pending
+      return await result
     } finally {
       if (this.pendingTableRowsFormat === pending)
         this.pendingTableRowsFormat = undefined
@@ -358,25 +399,7 @@ export class ChainAPI {
       | GetTableRowsParamsKeyed
   ) {
     const type = (params as GetTableRowsParamsTyped).type
-    let key_type = (params as GetTableRowsParamsKeyed).key_type
-    const someBound = params.lower_bound || params.upper_bound
-
-    if (!key_type && someBound) {
-      // determine key type from bounds type
-      if (isInstanceOf(someBound, UInt64)) {
-        key_type = "i64"
-      } else if (isInstanceOf(someBound, UInt128)) {
-        key_type = "i128"
-      } else if (isInstanceOf(someBound, Checksum256)) {
-        key_type = "sha256"
-      } else if (isInstanceOf(someBound, Checksum160)) {
-        key_type = "ripemd160"
-      }
-    }
-
-    if (!key_type) {
-      key_type = "name"
-    }
+    const key_type = this.getTableKeyType(params)
 
     let json = params.json
 

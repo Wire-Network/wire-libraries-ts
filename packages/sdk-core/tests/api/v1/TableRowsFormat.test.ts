@@ -1,7 +1,8 @@
+import { Checksum160, Checksum256 } from "@wireio/sdk-core/chain/Checksum"
 import { APIClient } from "@wireio/sdk-core/api/Client"
 import { TableRowsFormat } from "@wireio/sdk-core/api/v1/Types"
 import { Name } from "@wireio/sdk-core/chain/Name"
-import { UInt64 } from "@wireio/sdk-core/chain/Integer"
+import { UInt64, UInt128 } from "@wireio/sdk-core/chain/Integer"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
@@ -186,6 +187,140 @@ describe("endpoint table transport", () => {
     expect(
       wire.call.mock.calls.filter(([args]) => args.params.json === false)
     ).toHaveLength(1)
+  })
+
+  test("shares rediscovery after a concurrent empty probe", async () => {
+    const { client, call } = endpoint(TableRowsFormat.wireKv, {})
+    call.mockResolvedValueOnce({
+      status: 200,
+      headers: {},
+      text: "",
+      json: { rows: [], more: false, next_key: "" }
+    })
+    expect(
+      await Promise.all([
+        client.v1.chain.getTableRowsFormat(query),
+        client.v1.chain.getTableRowsFormat(query),
+        client.v1.chain.getTableRowsFormat(query)
+      ])
+    ).toEqual([undefined, TableRowsFormat.wireKv, TableRowsFormat.wireKv])
+    expect(call).toHaveBeenCalledTimes(2)
+  })
+
+  test.each([
+    { code: "usr.other" },
+    { table: "balances" },
+    { scope: "alice" },
+    { index_position: "secondary" },
+    { lower_bound: Checksum256.from("ab".repeat(32)) }
+  ] as const)(
+    "isolates probe failures from a different query %j",
+    async changes => {
+      const { client, call } = endpoint(TableRowsFormat.wireKv, { balance: 7 })
+      const respond = call.getMockImplementation()!
+      const failure = new Error("First table binary read timed out")
+      let probes = 0
+      call.mockImplementation(async args => {
+        if (args.params.json === false && ++probes === 1) throw failure
+        return respond(args)
+      })
+      const results = await Promise.allSettled([
+        client.v1.chain.get_table_rows(query),
+        client.v1.chain.get_table_rows({ ...query, ...changes }),
+        client.v1.chain.get_table_rows({ ...query, ...changes })
+      ])
+      expect(results).toEqual([
+        { status: "rejected", reason: failure },
+        {
+          status: "fulfilled",
+          value: expect.objectContaining({ rows: [{ balance: 7 }] })
+        },
+        {
+          status: "fulfilled",
+          value: expect.objectContaining({ rows: [{ balance: 7 }] })
+        }
+      ])
+      expect(probes).toBe(2)
+      expect((await client.v1.chain.get_table_rows(query)).rows).toEqual([
+        { balance: 7 }
+      ])
+      expect(probes).toBe(2)
+    }
+  )
+
+  test("shares a matching probe failure without retrying or caching it", async () => {
+    const { client, call } = endpoint(TableRowsFormat.wireKv, { balance: 7 })
+    const respond = call.getMockImplementation()!
+    const failure = new Error("Binary read timed out")
+    let probes = 0
+    call.mockImplementation(async args => {
+      if (args.params.json === false && ++probes === 1) throw failure
+      return respond(args)
+    })
+    const results = await Promise.allSettled([
+      client.v1.chain.get_table_rows(query),
+      client.v1.chain.get_table_rows(query)
+    ])
+    expect(results).toEqual([
+      { status: "rejected", reason: failure },
+      { status: "rejected", reason: failure }
+    ])
+    expect(probes).toBe(1)
+    expect((await client.v1.chain.get_table_rows(query)).rows).toEqual([
+      { balance: 7 }
+    ])
+    expect(probes).toBe(2)
+  })
+
+  test.each([
+    [UInt64.from(7), "i64"],
+    [UInt128.from(7), "i128"],
+    [Checksum160.from("ab".repeat(20)), "ripemd160"],
+    [Checksum256.from("ab".repeat(32)), "sha256"]
+  ] as const)(
+    "preserves the inferred secondary type %s in discovery",
+    async (bound, keyType) => {
+      const { client, call } = endpoint(TableRowsFormat.legacyPayer, {
+        balance: 7
+      })
+      await client.v1.chain.get_table_rows({
+        ...query,
+        index_position: "secondary",
+        lower_bound: bound
+      })
+      expect(call).toHaveBeenCalledTimes(2)
+      call.mock.calls.forEach(([args]) =>
+        expect(args.params.key_type).toBe(keyType)
+      )
+      const direct = endpoint(TableRowsFormat.legacyPayer, { balance: 7 })
+      await direct.client.v1.chain.getTableRowsFormat({
+        ...query,
+        index_position: "secondary",
+        lower_bound: bound
+      })
+      expect(direct.call.mock.calls[0][0].params.key_type).toBe(keyType)
+    }
+  )
+
+  test.each([
+    "original data",
+    "abc",
+    { key: "00", value: "original data" },
+    { data: "abc", payer: "alice" }
+  ])("rejects malformed binary discovery %j without caching it", async row => {
+    const { client, call } = endpoint(TableRowsFormat.wireKv, {})
+    call.mockResolvedValueOnce({
+      status: 200,
+      headers: {},
+      text: "",
+      json: { rows: [row], more: false, next_key: "" }
+    })
+    await expect(client.v1.chain.getTableRowsFormat(query)).rejects.toThrow(
+      "Invalid binary table response"
+    )
+    expect(await client.v1.chain.getTableRowsFormat(query)).toBe(
+      TableRowsFormat.wireKv
+    )
   })
 
   test("does not cache failed discovery and propagates failures", async () => {
