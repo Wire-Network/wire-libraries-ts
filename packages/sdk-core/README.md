@@ -116,9 +116,9 @@ explorers, wallet adapters and application capabilities remain caller
 configuration. The former external reserve and swap-underwriter clients are
 removed.
 
-`msig.MsigClient` encodes named proposal bounds for the detected legacy or Wire KV
-contract profile. Unknown profiles use bounded scoped reads with local name
-filtering; ABI failures are logged and detection retries on later calls.
+`msig.MsigClient` encodes named proposal bounds for the detected endpoint transport,
+independently of the contract profile. Unknown profiles use bounded scoped reads
+with local name filtering; ABI failures are logged and detection retries on later calls.
 Read-only execution failures remain errors; their table fallback is limited to a
 disabled or missing read-only endpoint. Approval rows alone do not
 prove executable authority: invalidations, current permissions and delay still apply.
@@ -139,8 +139,10 @@ in the requested table/scope, then caches the observed format on that API client
 Concurrent discovery is shared, including retries after an empty probe. Malformed,
 empty or failed probes are never cached. Failures propagate to matching queries;
 other queries may discover the format from their own table, scope or index.
-A terminal empty page needs no probe. An incomplete
-empty probe raises an error so a partial read cannot appear complete. Discovery
+A terminal empty page needs no probe. Direct `getTableRowsFormat` calls return
+`undefined` when a terminal empty probe cannot establish a format; callers must
+handle that result before using the format. An incomplete empty probe raises an
+error so a partial read cannot appear complete. Discovery
 uses the endpoint response independently of contract ABI metadata.
 
 Applications with a verified endpoint format can skip discovery by constructing

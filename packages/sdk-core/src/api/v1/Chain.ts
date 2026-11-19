@@ -66,7 +66,7 @@ const BinaryTableValue = /^(?:[0-9a-f]{2})*$/i
 /** Only callers with a matching probe share its failure. */
 interface PendingTableRowsFormat {
   requestKey: string
-  result: Promise<TableRowsFormat>
+  result: Promise<TableRowsFormat | undefined>
 }
 
 export class ChainAPI {
@@ -104,10 +104,12 @@ export class ChainAPI {
    * table/scope. Binary user data cannot imitate a JSON transport envelope.
    * Cache only an observed format on this API client. Recreate the client when
    * switching endpoints or after an endpoint transport upgrade.
+   * @returns The known or discovered format, or undefined when a terminal empty
+   * probe provides no format evidence. Empty results are not cached.
    */
   async getTableRowsFormat(
     params: GetTableRowsParams | GetTableRowsParamsKeyed
-  ): Promise<TableRowsFormat> {
+  ): Promise<TableRowsFormat | undefined> {
     if (this.tableRowsFormat) return this.tableRowsFormat
     const probe = {
       code: Name.from(params.code),
