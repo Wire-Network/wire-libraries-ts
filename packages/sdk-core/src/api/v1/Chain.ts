@@ -266,7 +266,7 @@ export class ChainAPI {
   ): Promise<GetTableRowsResponse<TableIndexTypes[Key]>>
   async get_table_rows<
     Row extends ABISerializableConstructor,
-    Index extends TableIndexType = Name
+    Index extends TableIndexType | string = Name
   >(
     params: GetTableRowsParamsTyped<Index, Row>
   ): Promise<GetTableRowsResponse<Index, InstanceType<Row>>>
@@ -331,6 +331,12 @@ export class ChainAPI {
       scope = String(scope)
     }
 
+    // An unwrapped legacy JSON struct can itself be {key, value}. Request the
+    // payer envelope on ambiguous reads: legacy nodes wrap user data in
+    // {data, payer}, Wire nodes in {key, value, payer}. Legacy binary rows
+    // are bare bytes. Expose payer names only when the caller requests them.
+    const show_payer = json || params.show_payer
+
     // eslint-disable-next-line prefer-const
     let { rows, more, next_key } = await this.client.call<any>({
       path: "/v1/chain/get_table_rows",
@@ -342,66 +348,25 @@ export class ChainAPI {
           params.limit !== undefined ? UInt32.from(params.limit) : undefined,
         scope,
         key_type,
+        // Keep the transport envelope even when callers forward raw RPC options.
+        values_only: undefined,
+        show_payer,
         json,
         upper_bound,
         lower_bound
       }
     })
-    let ram_payers: (Name | undefined)[] | undefined
+    const first = rows[0]
+    const isEnvelope = first !== null && typeof first === "object"
+    const kvEnvelope = isEnvelope && "key" in first && "value" in first
+    const ram_payers: (Name | undefined)[] | undefined = params.show_payer
+      ? rows.map(row => (row.payer ? Name.from(row.payer) : undefined))
+      : undefined
 
-    // Wire-sysio unified get_table_rows returns KV-backed rows as
-    //   {key: {scope, primary_key, ...}, value: <decoded>, payer?: <name>}
-    // instead of the legacy shape (decoded struct directly, or
-    // {data, payer} when show_payer is set). Detect by shape: each row
-    // must be an object whose `key` is itself a plain object (the
-    // wire-sysio key is always a composite scope+primary_key struct)
-    // and also has a `value` field. Requiring `key` to be a non-array
-    // object avoids misinterpreting user tables that happen to have
-    // scalar or array fields named `key` and `value`.
-    //
-    // Residual ambiguity: a user-defined row whose top-level struct
-    // contains a nested struct named `key` AND a field named `value`
-    // will still trigger the KV unwrap and be silently stripped to
-    // `value`. Row shapes like `{key: {...}, value: ...}` are rare in
-    // practice, but cannot be fully distinguished from the wire KV
-    // shape by heuristic alone — the ABI would need to be consulted.
-    // See the test `does not unwrap user table whose key is itself an
-    // object` for a pinned repro of this known false-positive so the
-    // behavior is caught if the discriminant is ever tightened.
-    interface WireKvRow {
-      key: Record<string, unknown>
-      value: unknown
-      payer?: string
-    }
-
-    const isWireKvShape =
-      Array.isArray(rows) &&
-      rows.length > 0 &&
-      typeof rows[0] === "object" &&
-      rows[0] !== null &&
-      "key" in rows[0] &&
-      "value" in rows[0] &&
-      typeof rows[0].key === "object" &&
-      rows[0].key !== null &&
-      !Array.isArray(rows[0].key)
-
-    if (isWireKvShape) {
-      if (params.show_payer) {
-        ram_payers = []
-        rows = rows.map((row: WireKvRow) => {
-          ram_payers!.push(row.payer ? Name.from(row.payer) : undefined)
-          return row.value
-        })
-      } else {
-        rows = rows.map((row: WireKvRow) => row.value)
-      }
-    } else if (params.show_payer) {
-      // Legacy show_payer wrapper: {data, payer}
-      ram_payers = []
-      rows = rows.map(({ data, payer }) => {
-        ram_payers!.push(payer ? Name.from(payer) : undefined)
-        return data
-      })
+    if (kvEnvelope) {
+      rows = rows.map(row => row.value)
+    } else if (show_payer && isEnvelope && "data" in first) {
+      rows = rows.map(row => row.data)
     }
 
     if (type) {
@@ -421,9 +386,24 @@ export class ChainAPI {
       }
     }
 
-    // KV cursors are opaque JSON bounds (or encoded bytes), not legacy name/i64 keys.
-    const isKvCursor =
-      params.index_name || isWireKvShape || next_key?.startsWith("{")
+    // A nonterminal empty page (e.g. limit=0) has no envelope. A named KV
+    // index or JSON object cursor is explicit. Otherwise identical bytes can
+    // be a legacy numeric/checksum key or a KV bound, so consult the table ABI.
+    let isKvCursor = kvEnvelope
+    if (next_key && rows.length === 0) {
+      isKvCursor = Boolean(params.index_name) || next_key.startsWith("{")
+      if (!isKvCursor) {
+        const { abi } = await this.get_abi(params.code)
+        const table = abi?.tables.find(
+          table => String(table.name) === String(params.table)
+        )
+        if (!table)
+          throw new Error(
+            `Missing ABI table definition for ${params.code}::${params.table}`
+          )
+        isKvCursor = table.table_id !== undefined
+      }
+    }
     if (next_key && next_key.length > 0 && !isKvCursor) {
       const indexType: ABISerializableType = match(key_type)
         .with("i64", () => UInt64)

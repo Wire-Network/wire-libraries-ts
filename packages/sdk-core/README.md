@@ -132,7 +132,12 @@ proposer's permission; the `sysio.payer` entry needs no key of its own.
 For Wire KV table pagination, call `get_table_rows<string>(...)` and pass the
 returned `next_key` unchanged as the next bound (`lower_bound` forward,
 `upper_bound` in reverse). KV cursors are opaque JSON or encoded keys, not
-numeric account names. Domain clients such as AuthEx use this same reader.
+numeric account names. Rows contain the table values whether the node encodes the
+KV key as an object or as hex. Pass `show_payer: true` for a separate
+`ram_payers` array aligned with the rows. Legacy tables retain their typed cursors
+and user-defined fields, including fields named `key` and `value`.
+An empty page with a continuation can require a `get_abi` read to identify the
+table format. Domain clients such as AuthEx use this same reader.
 
 ### Funds waiting for an external wallet
 
