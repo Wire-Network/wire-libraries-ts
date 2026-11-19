@@ -1974,9 +1974,6 @@ export interface SysioOpregOpConfigType {
   req_prod_collat: SysioOpregChainMinBondType[]
   req_batchop_collat: SysioOpregChainMinBondType[]
   req_uw_collat: SysioOpregChainMinBondType[]
-  max_available_producers: number
-  max_available_batch_ops: number
-  max_available_underwriters: number
   terminate_prune_delay_ms: number | string
   terminate_max_consecutive_misses: number
   terminate_max_pct_misses_24h: number
@@ -2068,9 +2065,6 @@ export interface SysioOpregRemitclaimKeyType {
 
 /** sysio.opreg::setconfig (action) */
 export interface SysioOpregSetconfigAction {
-  max_available_producers: number
-  max_available_batch_ops: number
-  max_available_underwriters: number
   terminate_prune_delay_ms: number | string
   terminate_max_consecutive_misses: number
   terminate_max_pct_misses_24h: number
