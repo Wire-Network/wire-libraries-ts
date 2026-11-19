@@ -583,6 +583,16 @@ export type TableIndexType =
   | Checksum256
   | Checksum160
 
+/** Endpoint table transport, independent of contract ABI and storage layout. */
+export enum TableRowsFormat {
+  /** Older endpoints return bare rows even when show_payer is requested. */
+  legacy = "legacy",
+  /** Legacy endpoints support the {data, payer} envelope. */
+  legacyPayer = "legacyPayer",
+  /** Wire returns {key, value, payer?} envelopes and opaque cursors. */
+  wireKv = "wireKv"
+}
+
 export interface GetTableRowsParams<Index = TableIndexType | string> {
   /** The name of the smart contract that controls the provided table. */
   code: NameType

@@ -29,7 +29,7 @@ See [pool pricing and valuation](packages/sdk-core/docs/pool-pricing.md) for exp
 ## Examples
 
 The [Core SDK guide](packages/sdk-core/README.md) covers generated contract access
-and multisig compatibility, including Wire KV bounds, ABI recovery and read-only failure handling.
+and multisig compatibility, including endpoint-aware Wire KV and legacy table decoding, pagination, ABI recovery and read-only failure handling.
 
 | Example | Description |
 |---------|-------------|

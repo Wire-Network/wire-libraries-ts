@@ -116,9 +116,9 @@ explorers, wallet adapters and application capabilities remain caller
 configuration. The former external reserve and swap-underwriter clients are
 removed.
 
-`msig.MsigClient` encodes named proposal bounds for the detected legacy or Wire KV
-contract profile. Unknown profiles use bounded scoped reads with local name
-filtering; ABI failures are logged and detection retries on later calls.
+`msig.MsigClient` encodes named proposal bounds for the detected endpoint transport,
+independently of the contract profile. Unknown profiles use bounded scoped reads
+with local name filtering; ABI failures are logged and detection retries on later calls.
 Read-only execution failures remain errors; their table fallback is limited to a
 disabled or missing read-only endpoint. Approval rows alone do not
 prove executable authority: invalidations, current permissions and delay still apply.
@@ -131,8 +131,34 @@ proposer's permission; the `sysio.payer` entry needs no key of its own.
 
 For Wire KV table pagination, call `get_table_rows<string>(...)` and pass the
 returned `next_key` unchanged as the next bound (`lower_bound` forward,
-`upper_bound` in reverse). KV cursors are opaque JSON or encoded keys, not
-numeric account names. Domain clients such as AuthEx use this same reader.
+`upper_bound` in reverse). Rows contain the table values for object and encoded
+KV keys. Legacy endpoints retain typed cursors and user-defined row fields.
+
+The shared reader discovers the endpoint transport with a one-row binary read
+in the requested table/scope, then caches the observed format on that API client.
+Concurrent discovery is shared, including retries after an empty probe. Malformed,
+empty or failed probes are never cached. Failures propagate to matching queries;
+other queries may discover the format from their own table, scope or index.
+A terminal empty page needs no probe. Direct `getTableRowsFormat` calls return
+`undefined` when a terminal empty probe cannot establish a format; callers must
+handle that result before using the format. An incomplete empty probe raises an
+error so a partial read cannot appear complete. Discovery
+uses the endpoint response independently of contract ABI metadata.
+
+Applications with a verified endpoint format can skip discovery by constructing
+`APIClient` with `tableRowsFormat: API.v1.TableRowsFormat.wireKv`,
+`legacyPayer` (legacy endpoints honoring `show_payer`), or `legacy` (bare rows,
+including endpoints ignoring `show_payer`). This setting is SDK-local. It is
+also required when a nonterminal response's format cannot be discovered.
+Create a new API client when changing endpoints or after a transport upgrade.
+Custom providers should consistently route each client to one endpoint format.
+
+`show_payer: true` populates `ram_payers` alongside rows where supported.
+Unsupported or missing payers remain undefined. `getRows` preserves opaque
+bounds and the caller's options. AuthEx credit reads use the same decoder while
+validating exact identity, token and amount. Multisig lookup bounds use the
+endpoint transport independently of the contract's action capabilities.
+Chain registry pagination reports missing or repeated continuations as errors.
 
 ### Funds waiting for an external wallet
 

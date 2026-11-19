@@ -1,3 +1,4 @@
+import { TableRowsFormat } from "@wireio/sdk-core/api/v1/Types"
 import nacl from "tweetnacl"
 import {
   APIClient,
@@ -43,12 +44,21 @@ function fixture(key: PublicKey, balance = "1234567890") {
   }
   const call = jest.fn(async ({ params }) => ({
     rows: [
-      { value: (params.table === "unmapped" ? unmapped : parked) as unknown }
+      {
+        key: "00",
+        value: (String(params.table) === "unmapped" ? unmapped : parked) as unknown
+      }
     ],
     more: false
   }))
   return {
-    client: { call } as unknown as APIClient,
+    client: Object.assign(
+      new APIClient({
+        url: "https://unused.invalid",
+        tableRowsFormat: TableRowsFormat.wireKv
+      }),
+      { call }
+    ),
     call,
     identity,
     unmapped,
@@ -122,9 +132,9 @@ describe("unlinked external funds", () => {
   ] as const)("rejects invalid %s credit rows (%p)", async (table, value) => {
     const { client, call, unmapped, parked } = fixture(EM)
     call.mockImplementation(async ({ params }) => {
-      const decoded = params.table === "unmapped" ? unmapped : parked
+      const decoded = String(params.table) === "unmapped" ? unmapped : parked
       return {
-        rows: [{ value: params.table === table ? value : decoded }],
+        rows: [{ key: "00", value: String(params.table) === table ? value : decoded }],
         more: false
       }
     })
@@ -135,10 +145,10 @@ describe("unlinked external funds", () => {
   test("uses a binary cursor unchanged within the collision range", async () => {
     const { client, call, unmapped, parked } = fixture(EM)
     call.mockImplementation(async ({ params }) =>
-      params.table === "parked"
-        ? { rows: [{ value: parked }], more: false }
+      String(params.table) === "parked"
+        ? { rows: [{ key: "00", value: parked }], more: false }
         : params.lower_bound === "0xff000001"
-          ? { rows: [{ value: unmapped }], more: false }
+          ? { rows: [{ key: "00", value: unmapped }], more: false }
           : { rows: [], more: true, next_key: "0xff000001" }
     )
     expect((await readUnlinkedFunds(client, EM)).wire.toString()).toBe(

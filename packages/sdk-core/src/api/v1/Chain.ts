@@ -48,6 +48,7 @@ import {
   SendTransaction2Options,
   SendTransaction2Response,
   SendTransactionResponse,
+  TableRowsFormat,
   TableIndexType,
   TableIndexTypes
 } from "./Types.js"
@@ -59,8 +60,124 @@ import {
 } from "../../serializer/index.js"
 import { isInstanceOf } from "../../Utils.js"
 
+/** Binary table values are complete, even-length hex strings, including empty data. */
+const BinaryTableValue = /^(?:[0-9a-f]{2})*$/i
+
+/** Only callers with a matching probe share its failure. */
+interface PendingTableRowsFormat {
+  requestKey: string
+  result: Promise<TableRowsFormat | undefined>
+}
+
 export class ChainAPI {
-  constructor(private client: APIClient) {}
+  private pendingTableRowsFormat?: PendingTableRowsFormat
+
+  constructor(
+    private client: APIClient,
+    private tableRowsFormat?: TableRowsFormat
+  ) {}
+
+  /** Use the same legacy key type for the requested read and format discovery. */
+  private getTableKeyType(
+    params: GetTableRowsParams | GetTableRowsParamsKeyed
+  ): keyof TableIndexTypes {
+    let key_type = (params as GetTableRowsParamsKeyed).key_type
+    const someBound = params.lower_bound || params.upper_bound
+
+    if (!key_type && someBound) {
+      // determine key type from bounds type
+      if (isInstanceOf(someBound, UInt64)) {
+        key_type = "i64"
+      } else if (isInstanceOf(someBound, UInt128)) {
+        key_type = "i128"
+      } else if (isInstanceOf(someBound, Checksum256)) {
+        key_type = "sha256"
+      } else if (isInstanceOf(someBound, Checksum160)) {
+        key_type = "ripemd160"
+      }
+    }
+
+    return key_type || "name"
+  }
+
+  /** Discover the endpoint transport using a bounded binary read in the caller's
+   * table/scope. Binary user data cannot imitate a JSON transport envelope.
+   * Cache only an observed format on this API client. Recreate the client when
+   * switching endpoints or after an endpoint transport upgrade.
+   * @returns The known or discovered format, or undefined when a terminal empty
+   * probe provides no format evidence. Empty results are not cached.
+   */
+  async getTableRowsFormat(
+    params: GetTableRowsParams | GetTableRowsParamsKeyed
+  ): Promise<TableRowsFormat | undefined> {
+    if (this.tableRowsFormat) return this.tableRowsFormat
+    const probe = {
+      code: Name.from(params.code),
+      table: Name.from(params.table),
+      scope: String(params.scope ?? params.code),
+      index_position: params.index_position,
+      key_type: this.getTableKeyType(params),
+      json: false,
+      show_payer: true,
+      limit: 1
+    }
+    const requestKey = JSON.stringify(probe)
+    while (this.pendingTableRowsFormat) {
+      const pending = this.pendingTableRowsFormat
+      try {
+        const format = await pending.result
+        if (format) return format
+      } catch (error) {
+        // A different table/scope/index may still support binary discovery.
+        if (pending.requestKey === requestKey) throw error
+      }
+    }
+    const result = this.client
+      .call<GetTableRowsResponse>({
+        path: "/v1/chain/get_table_rows",
+        params: probe
+      })
+      .then(page => {
+        const row = page.rows[0]
+        if (row === undefined) {
+          if (page.more)
+            throw new Error(
+              "Table format discovery returned an incomplete empty page"
+            )
+          return undefined
+        }
+        const format =
+          typeof row === "string" && BinaryTableValue.test(row)
+            ? TableRowsFormat.legacy
+            : row &&
+                typeof row === "object" &&
+                "key" in row &&
+                typeof row.value === "string" &&
+                BinaryTableValue.test(row.value)
+              ? TableRowsFormat.wireKv
+              : row &&
+                  typeof row === "object" &&
+                  typeof row.data === "string" &&
+                  BinaryTableValue.test(row.data) &&
+                  typeof row.payer === "string"
+                ? TableRowsFormat.legacyPayer
+                : undefined
+        if (!format)
+          throw new Error(
+            "Invalid binary table response during format discovery"
+          )
+        this.tableRowsFormat = format
+        return format
+      })
+    const pending = { requestKey, result }
+    this.pendingTableRowsFormat = pending
+    try {
+      return await result
+    } finally {
+      if (this.pendingTableRowsFormat === pending)
+        this.pendingTableRowsFormat = undefined
+    }
+  }
 
   async get_abi(accountName: NameType) {
     return this.client.call<GetAbiResponse>({
@@ -266,7 +383,7 @@ export class ChainAPI {
   ): Promise<GetTableRowsResponse<TableIndexTypes[Key]>>
   async get_table_rows<
     Row extends ABISerializableConstructor,
-    Index extends TableIndexType = Name
+    Index extends TableIndexType | string = Name
   >(
     params: GetTableRowsParamsTyped<Index, Row>
   ): Promise<GetTableRowsResponse<Index, InstanceType<Row>>>
@@ -284,25 +401,7 @@ export class ChainAPI {
       | GetTableRowsParamsKeyed
   ) {
     const type = (params as GetTableRowsParamsTyped).type
-    let key_type = (params as GetTableRowsParamsKeyed).key_type
-    const someBound = params.lower_bound || params.upper_bound
-
-    if (!key_type && someBound) {
-      // determine key type from bounds type
-      if (isInstanceOf(someBound, UInt64)) {
-        key_type = "i64"
-      } else if (isInstanceOf(someBound, UInt128)) {
-        key_type = "i128"
-      } else if (isInstanceOf(someBound, Checksum256)) {
-        key_type = "sha256"
-      } else if (isInstanceOf(someBound, Checksum160)) {
-        key_type = "ripemd160"
-      }
-    }
-
-    if (!key_type) {
-      key_type = "name"
-    }
+    const key_type = this.getTableKeyType(params)
 
     let json = params.json
 
@@ -342,65 +441,38 @@ export class ChainAPI {
           params.limit !== undefined ? UInt32.from(params.limit) : undefined,
         scope,
         key_type,
+        // Keep the transport envelope even when callers forward raw RPC options.
+        values_only: undefined,
+        show_payer: params.show_payer,
         json,
         upper_bound,
         lower_bound
       }
     })
-    let ram_payers: (Name | undefined)[] | undefined
-
-    // Wire-sysio unified get_table_rows returns KV-backed rows as
-    //   {key: {scope, primary_key, ...}, value: <decoded>, payer?: <name>}
-    // instead of the legacy shape (decoded struct directly, or
-    // {data, payer} when show_payer is set). Detect by shape: each row
-    // must be an object whose `key` is itself a plain object (the
-    // wire-sysio key is always a composite scope+primary_key struct)
-    // and also has a `value` field. Requiring `key` to be a non-array
-    // object avoids misinterpreting user tables that happen to have
-    // scalar or array fields named `key` and `value`.
-    //
-    // Residual ambiguity: a user-defined row whose top-level struct
-    // contains a nested struct named `key` AND a field named `value`
-    // will still trigger the KV unwrap and be silently stripped to
-    // `value`. Row shapes like `{key: {...}, value: ...}` are rare in
-    // practice, but cannot be fully distinguished from the wire KV
-    // shape by heuristic alone — the ABI would need to be consulted.
-    // See the test `does not unwrap user table whose key is itself an
-    // object` for a pinned repro of this known false-positive so the
-    // behavior is caught if the discriminant is ever tightened.
-    interface WireKvRow {
-      key: Record<string, unknown>
-      value: unknown
-      payer?: string
+    const format =
+      rows.length || next_key
+        ? await this.getTableRowsFormat(params)
+        : this.tableRowsFormat
+    if (!format && (rows.length || next_key)) {
+      throw new Error(
+        "Unable to determine table response format. Configure APIClient tableRowsFormat for this endpoint."
+      )
     }
-
-    const isWireKvShape =
-      Array.isArray(rows) &&
-      rows.length > 0 &&
-      typeof rows[0] === "object" &&
-      rows[0] !== null &&
-      "key" in rows[0] &&
-      "value" in rows[0] &&
-      typeof rows[0].key === "object" &&
-      rows[0].key !== null &&
-      !Array.isArray(rows[0].key)
-
-    if (isWireKvShape) {
-      if (params.show_payer) {
-        ram_payers = []
-        rows = rows.map((row: WireKvRow) => {
-          ram_payers!.push(row.payer ? Name.from(row.payer) : undefined)
-          return row.value
-        })
-      } else {
-        rows = rows.map((row: WireKvRow) => row.value)
-      }
-    } else if (params.show_payer) {
-      // Legacy show_payer wrapper: {data, payer}
-      ram_payers = []
-      rows = rows.map(({ data, payer }) => {
-        ram_payers!.push(payer ? Name.from(payer) : undefined)
-        return data
+    const wrapped =
+      format === TableRowsFormat.wireKv ||
+      (format === TableRowsFormat.legacyPayer && params.show_payer)
+    const ram_payers = params.show_payer
+      ? rows.map(row =>
+          wrapped && row.payer ? Name.from(row.payer) : undefined
+        )
+      : undefined
+    if (wrapped) {
+      const field = format === TableRowsFormat.wireKv ? "value" : "data"
+      rows = rows.map(row => {
+        if (!row || typeof row !== "object" || !(field in row)) {
+          throw new Error("Invalid table response envelope")
+        }
+        return row[field]
       })
     }
 
@@ -421,9 +493,7 @@ export class ChainAPI {
       }
     }
 
-    // KV cursors are opaque JSON bounds (or encoded bytes), not legacy name/i64 keys.
-    const isKvCursor =
-      params.index_name || isWireKvShape || next_key?.startsWith("{")
+    const isKvCursor = format === TableRowsFormat.wireKv
     if (next_key && next_key.length > 0 && !isKvCursor) {
       const indexType: ABISerializableType = match(key_type)
         .with("i64", () => UInt64)

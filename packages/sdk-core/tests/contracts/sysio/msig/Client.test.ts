@@ -1,6 +1,7 @@
+import { TableRowsFormat } from "@wireio/sdk-core/api/v1/Types"
 import { Checksum256 } from "@wireio/sdk-core/chain/Checksum"
 import { Serializer } from "@wireio/sdk-core/serializer"
-import { APIError, Name, contracts } from "@wireio/sdk-core"
+import { APIClient, APIError, Name, contracts } from "@wireio/sdk-core"
 
 const { MsigClient, MsigProposal, decodeReadOnlyProposalReturn } =
   contracts.sysio.msig
@@ -153,7 +154,13 @@ describe("MsigClient", () => {
         }),
         client = new MsigClient({
           client: {
-            v1: { chain: { get_abi: getAbi, get_table_rows: tableRows } }
+            v1: {
+              chain: {
+                get_abi: getAbi,
+                get_table_rows: tableRows,
+                getTableRowsFormat: jest.fn(async () => TableRowsFormat.wireKv)
+              }
+            }
           } as any
         })
 
@@ -221,6 +228,7 @@ describe("MsigClient", () => {
           client: {
             v1: {
               chain: {
+                getTableRowsFormat: jest.fn(async () => TableRowsFormat.wireKv),
                 get_abi: jest.fn(async () => ({ abi: chunkedAbi() })),
                 get_table_rows: tableRows
               }
@@ -297,6 +305,7 @@ describe("MsigClient", () => {
           client: {
             v1: {
               chain: {
+                getTableRowsFormat: jest.fn(async () => TableRowsFormat.wireKv),
                 get_abi: jest.fn(async () => ({ abi: chunkedAbi() })),
                 get_info: jest.fn(async () => ({
                   getTransactionHeader: () => ({
@@ -333,9 +342,14 @@ describe("MsigClient", () => {
     }
   )
 
-  test.each([false, true])(
-    "encodes bounded proposal queries for the detected profile (chunked=%s)",
-    async chunked => {
+  test.each([
+    [false, TableRowsFormat.legacyPayer],
+    [false, TableRowsFormat.wireKv],
+    [true, TableRowsFormat.legacyPayer],
+    [true, TableRowsFormat.wireKv]
+  ])(
+    "encodes bounded proposals independently of contract profile (chunked=%s, endpoint=%s)",
+    async (chunked, format) => {
       const tableRows = jest.fn(async (_request: any) => ({
           rows: [],
           more: false
@@ -345,6 +359,7 @@ describe("MsigClient", () => {
           client: {
             v1: {
               chain: {
+                getTableRowsFormat: jest.fn(async () => format),
                 get_abi: jest.fn(async () => ({
                   abi: chunked
                     ? abi
@@ -372,14 +387,14 @@ describe("MsigClient", () => {
       const request = tableRows.mock.calls[0][0]
       expect(String(request.scope)).toBe("alice")
       expect(String(request.lower_bound)).toBe(
-        chunked
+        format === TableRowsFormat.wireKv
           ? JSON.stringify({
               proposal_name: Name.from("first").value.toString()
             })
           : "first"
       )
       expect(String(request.upper_bound)).toBe(
-        chunked
+        format === TableRowsFormat.wireKv
           ? JSON.stringify({
               proposal_name: Name.from("last").value.toString()
             })
@@ -403,6 +418,7 @@ describe("MsigClient", () => {
           client: {
             v1: {
               chain: {
+                getTableRowsFormat: jest.fn(async () => TableRowsFormat.wireKv),
                 get_abi: jest.fn(async () => ({ abi: chunkedAbi() })),
                 get_info: jest.fn(async () => ({
                   getTransactionHeader: () => ({
@@ -423,6 +439,62 @@ describe("MsigClient", () => {
         failure
       )
       expect(tables).not.toHaveBeenCalled()
+    }
+  )
+})
+
+describe("multisig contract and endpoint independence", () => {
+  test.each([
+    TableRowsFormat.legacy,
+    TableRowsFormat.legacyPayer,
+    TableRowsFormat.wireKv
+  ])(
+    "reads a legacy contract on %s through the real table decoder",
+    async format => {
+      const abi = chunkedAbi()
+      abi.actions = abi.actions.filter(action => action.name !== "getproposal")
+      abi.structs[0].fields = abi.structs[0].fields.slice(0, 2)
+      const proposal = "upgrade1"
+      const approval = {
+        version: 1,
+        proposal_name: proposal,
+        requested_approvals: [],
+        provided_approvals: []
+      }
+      const call = jest.fn(async ({ path, params }) => {
+        if (path.endsWith("get_abi"))
+          return { status: 200, headers: {}, text: "", json: { abi } }
+        const binary = params.json === false
+        if (!binary) {
+          expect(params.lower_bound).toBe(
+            format === TableRowsFormat.wireKv
+              ? JSON.stringify({
+                  proposal_name: Name.from(proposal).value.toString()
+                })
+              : proposal
+          )
+          expect(Number(params.limit)).toBe(1)
+        }
+        const data = binary ? "00" : approval
+        const row =
+          format === TableRowsFormat.wireKv
+            ? { key: { proposal_name: proposal }, value: data }
+            : format === TableRowsFormat.legacyPayer && params.show_payer
+              ? { data, payer: "alice" }
+              : data
+        return {
+          status: 200,
+          headers: {},
+          text: "",
+          json: { rows: [row], more: false }
+        }
+      })
+      const api = new APIClient({ provider: { call } })
+      const msig = new MsigClient({ client: api })
+      expect((await msig.getApprovals("alice", proposal))?.kind).toBe(
+        "approvals2"
+      )
+      expect(call).toHaveBeenCalledTimes(3)
     }
   )
 })

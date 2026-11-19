@@ -21,6 +21,10 @@ export interface GetRowsOptions {
     | "ninth"
     | "tenth"
     | undefined
+  /** Named Wire KV secondary index. */
+  index_name?: string
+  /** Include RAM payers when supported by the endpoint. */
+  show_payer?: boolean
   limit?: number
   lower_bound?: TableIndexType | string
   upper_bound?: TableIndexType | string

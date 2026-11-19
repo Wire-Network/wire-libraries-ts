@@ -37,6 +37,8 @@ export interface APIClientOptions extends FetchProviderOptions {
   hyperionUrl?: string
   /** Optional signer function that receives a message digest (Uint8Array) and returns a signed hash bytes (Promise<Uint8Array>). */
   signer?: SignerProvider
+  /** Known endpoint table transport. Omit for bounded binary discovery. */
+  tableRowsFormat?: v1.TableRowsFormat
 }
 export interface APIErrorDetail {
   message: string
@@ -172,10 +174,11 @@ export class APIClient {
       this.v2Provider = new FetchProvider(options.hyperionUrl, options)
 
     if (options.signer) this._signer = options.signer
+    this.v1.chain = new ChainAPI(this, options.tableRowsFormat)
   }
 
   v1 = {
-    chain: new ChainAPI(this),
+    chain: null as ChainAPI,
     history: new HistoryAPI(this)
   }
 
@@ -229,25 +232,24 @@ export class APIClient {
     options: GetRowsOptions
   ): Promise<v1.GetTableRowsResponse<any, T>> {
     try {
-      // Trim string fields
-      for (const key in options) {
-        if (typeof options[key] === "string") {
-          options[key] = (options[key] as string).trim()
-        }
-      }
-
-      if (!options.key_type) options.key_type = "i64" // default to int keytype
+      const normalizeName = (value: NameType) =>
+        typeof value === "string" ? value.trim() : value
+      const contract = normalizeName(options.contract)
+      const scope =
+        options.scope !== undefined ? normalizeName(options.scope) : contract
 
       const result = await this.v1.chain.get_table_rows({
         json: true,
-        code: options.contract,
-        scope: options.scope !== undefined ? options.scope : options.contract,
-        table: options.table,
+        code: contract,
+        scope,
+        table: normalizeName(options.table),
+        index_name: options.index_name,
+        show_payer: options.show_payer,
         index_position: options.index_position,
         limit: options.limit != null ? options.limit : 50,
         lower_bound: options.lower_bound as any,
         upper_bound: options.upper_bound as any,
-        key_type: options.key_type,
+        key_type: options.key_type ?? "i64",
         reverse: options.reverse !== undefined ? options.reverse : true
       })
 
