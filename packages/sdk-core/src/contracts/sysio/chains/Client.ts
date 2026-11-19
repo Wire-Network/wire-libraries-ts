@@ -114,6 +114,7 @@ export class ChainsClient {
         1
       ),
       rows: SysioContracts.SysioChainsChainRowType[] = []
+    const visited = new Set<string>()
     let lowerBound: string | undefined
 
     do {
@@ -134,8 +135,12 @@ export class ChainsClient {
       rows.push(...matches.slice(0, limit - rows.length))
 
       const nextKey = result.more ? result.next_key : undefined
-      if (!nextKey || String(nextKey) === lowerBound) break
+      if (!result.more || rows.length >= limit) break
+      if (!nextKey) throw new Error("Chain registry cursor is missing")
+      if (visited.has(String(nextKey)))
+        throw new Error("Chain registry cursor did not advance")
       lowerBound = String(nextKey)
+      visited.add(lowerBound)
     } while (rows.length < limit)
 
     return rows

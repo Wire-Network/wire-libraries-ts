@@ -131,13 +131,30 @@ proposer's permission; the `sysio.payer` entry needs no key of its own.
 
 For Wire KV table pagination, call `get_table_rows<string>(...)` and pass the
 returned `next_key` unchanged as the next bound (`lower_bound` forward,
-`upper_bound` in reverse). KV cursors are opaque JSON or encoded keys, not
-numeric account names. Rows contain the table values whether the node encodes the
-KV key as an object or as hex. Pass `show_payer: true` for a separate
-`ram_payers` array aligned with the rows. Legacy tables retain their typed cursors
-and user-defined fields, including fields named `key` and `value`.
-An empty page with a continuation can require a `get_abi` read to identify the
-table format. Domain clients such as AuthEx use this same reader.
+`upper_bound` in reverse). Rows contain the table values for object and encoded
+KV keys. Legacy endpoints retain typed cursors and user-defined row fields.
+
+The shared reader discovers the endpoint transport with a one-row binary read
+in the requested table/scope, then caches the observed format on that API client.
+Concurrent discovery is shared. Empty or failed probes are never cached, and
+RPC failures propagate. A terminal empty page needs no probe. An incomplete
+empty probe raises an error so a partial read cannot appear complete. Discovery
+uses the endpoint response independently of contract ABI metadata.
+
+Applications with a verified endpoint format can skip discovery by constructing
+`APIClient` with `tableRowsFormat: API.v1.TableRowsFormat.wireKv`,
+`legacyPayer` (legacy endpoints honoring `show_payer`), or `legacy` (bare rows,
+including endpoints ignoring `show_payer`). This setting is SDK-local. It is
+also required when a nonterminal response's format cannot be discovered.
+Create a new API client when changing endpoints or after a transport upgrade.
+Custom providers should consistently route each client to one endpoint format.
+
+`show_payer: true` populates `ram_payers` alongside rows where supported.
+Unsupported or missing payers remain undefined. `getRows` preserves opaque
+bounds and the caller's options. AuthEx credit reads use the same decoder while
+validating exact identity, token and amount. Multisig lookup bounds use the
+endpoint transport independently of the contract's action capabilities.
+Chain registry pagination reports missing or repeated continuations as errors.
 
 ### Funds waiting for an external wallet
 

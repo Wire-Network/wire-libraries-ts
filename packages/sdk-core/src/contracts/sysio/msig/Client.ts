@@ -2,7 +2,10 @@ import { match } from "ts-pattern"
 import { getLogger } from "@wireio/shared"
 
 import { APIClient, APIError } from "../../../api/Client.js"
-import type { SendTransactionResponse } from "../../../api/v1/Types.js"
+import {
+  TableRowsFormat,
+  type SendTransactionResponse
+} from "../../../api/v1/Types.js"
 import { Action } from "../../../chain/Action.js"
 import { Bytes } from "../../../chain/Bytes.js"
 import { Name, NameType } from "../../../chain/Name.js"
@@ -41,7 +44,6 @@ const log = getLogger(LogCategory)
 const READ_ONLY_TRANSACTION_PATH = "/v1/chain/send_read_only_transaction"
 const READ_ONLY_DISABLED = "read-only transactions execution not enabled"
 const NOT_FOUND_STATUS = 404
-const CHUNKED_PROFILE = "chunked-v2"
 const UNKNOWN_PROFILE = "unknown"
 const SCOPED_ROW_LIMIT = 1000
 const PROPOSAL_KEY = "proposal_name"
@@ -248,21 +250,29 @@ export class MsigClient {
         options.lowerBound || options.upperBound
           ? await this.getProfile()
           : null,
+      format =
+        profile && profile !== UNKNOWN_PROFILE
+          ? await this.client.v1.chain.getTableRowsFormat({
+              code: this.contractClient.account,
+              table: "proposal",
+              scope: nameString(proposer)
+            })
+          : undefined,
       result = await this.contractClient.tables.proposal.query({
         scope: nameString(proposer),
-        ...(profile && profile !== UNKNOWN_PROFILE && options.lowerBound
+        ...(format && options.lowerBound
           ? {
               lower_bound: this.proposalBound(
                 options.lowerBound as NameType,
-                profile
+                format
               )
             }
           : {}),
-        ...(profile && profile !== UNKNOWN_PROFILE && options.upperBound
+        ...(format && options.upperBound
           ? {
               upper_bound: this.proposalBound(
                 options.upperBound as NameType,
-                profile
+                format
               )
             }
           : {}),
@@ -539,9 +549,15 @@ export class MsigClient {
         ) || null
       )
     }
+    const format = await this.client.v1.chain.getTableRowsFormat({
+      code: this.contractClient.account,
+      table,
+      scope: nameString(scope)
+    })
+    if (!format) return null
     const { rows } = await this.contractClient.tables[table].query({
       scope: nameString(scope),
-      lower_bound: this.proposalBound(proposalName, profile),
+      lower_bound: this.proposalBound(proposalName, format),
       limit: 1
     })
 
@@ -557,13 +573,13 @@ export class MsigClient {
     return row
   }
 
-  /** Encodes named bounds only for a known contract profile. */
+  /** Encode proposal bounds for the endpoint independently of the contract ABI. */
   private proposalBound(
     value: NameType,
-    profile: Exclude<MsigCapabilities["profile"], typeof UNKNOWN_PROFILE>
+    format: TableRowsFormat
   ): Name | string {
     const name = Name.from(value)
-    return profile === CHUNKED_PROFILE
+    return format === TableRowsFormat.wireKv
       ? JSON.stringify({ [PROPOSAL_KEY]: name.value.toString() })
       : name
   }

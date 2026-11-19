@@ -131,3 +131,36 @@ describe("ChainsClient", () => {
     expect(activate.account.toString()).toBe("chain.admin")
   })
 })
+
+describe("chain registry pagination completeness", () => {
+  test.each(["missing", "repeated", "cycle"])(
+    "rejects %s continuation",
+    async scenario => {
+      const { client, getTableRows } = clientFixture()
+      const cursors =
+        scenario === "missing"
+          ? [""]
+          : scenario === "cycle"
+            ? ["a", "b", "a"]
+            : ["a", "a"]
+      cursors.forEach(next_key =>
+        getTableRows.mockResolvedValueOnce({ rows: [], more: true, next_key })
+      )
+      await expect(client.listChains()).rejects.toThrow(
+        scenario === "missing" ? "cursor is missing" : "cursor did not advance"
+      )
+      expect(getTableRows).toHaveBeenCalledTimes(cursors.length)
+    }
+  )
+
+  test("returns the caller's requested limit without requiring another page", async () => {
+    const { client, getTableRows } = clientFixture()
+    getTableRows.mockResolvedValueOnce({
+      rows: CHAIN_ROWS,
+      more: true,
+      next_key: ""
+    })
+    expect(await client.listChains({ limit: 1 })).toHaveLength(1)
+    expect(getTableRows).toHaveBeenCalledTimes(1)
+  })
+})

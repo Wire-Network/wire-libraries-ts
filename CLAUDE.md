@@ -257,7 +257,7 @@ All generated or modified code **must** include JSDoc comments (`/** ... */`), c
 - Node >=22 required (package.json says >=22, README says >=24 — actual CI uses v24)
 - The `web-logging-example` requires `WIRE_PUSH_URL` env var injected at webpack build time
 
-- Use the shared table reader for Wire KV values and opaque pagination bounds. Preserve legacy row fields, typed cursors and caller-selected RAM payer output.
+- Use the shared table reader for Wire KV values and opaque pagination bounds. Determine transport from binary RPC evidence or explicit endpoint configuration, independently of contract ABI metadata. Preserve legacy row fields, typed cursors and caller-selected RAM payer output.
 - Multisig named bounds follow a known contract profile. Unknown profiles use bounded scoped reads with local filtering; log ABI failures and retry detection on later calls. Missing/disabled read-only endpoints may fall back to tables; transport and execution failures must remain errors. Raw approvals do not certify current authority or invalidation status.
 
 - Solana native exits use `client.withdrawals`: discover owned receipts through Token-2022, preserve exact receipt IDs and recheck serviceability before claims. Do not run cranks, replay receipt-ID collisions or infer native payout from a confirmed request.

@@ -48,6 +48,7 @@ import {
   SendTransaction2Options,
   SendTransaction2Response,
   SendTransactionResponse,
+  TableRowsFormat,
   TableIndexType,
   TableIndexTypes
 } from "./Types.js"
@@ -60,7 +61,80 @@ import {
 import { isInstanceOf } from "../../Utils.js"
 
 export class ChainAPI {
-  constructor(private client: APIClient) {}
+  private pendingTableRowsFormat?: Promise<TableRowsFormat>
+
+  constructor(
+    private client: APIClient,
+    private tableRowsFormat?: TableRowsFormat
+  ) {}
+
+  /** Discover the endpoint transport using a bounded binary read in the caller's
+   * table/scope. Binary user data cannot imitate a JSON transport envelope.
+   * Cache only an observed format on this API client. Recreate the client when
+   * switching endpoints or after an endpoint transport upgrade.
+   */
+  async getTableRowsFormat(
+    params: GetTableRowsParams
+  ): Promise<TableRowsFormat> {
+    if (this.tableRowsFormat) return this.tableRowsFormat
+    if (this.pendingTableRowsFormat) {
+      const format = await this.pendingTableRowsFormat
+      if (format) return format
+    }
+    const pending = this.client
+      .call<GetTableRowsResponse>({
+        path: "/v1/chain/get_table_rows",
+        params: {
+          code: Name.from(params.code),
+          table: Name.from(params.table),
+          scope: String(params.scope ?? params.code),
+          index_position: params.index_position,
+          key_type: (params as GetTableRowsParamsKeyed).key_type || "name",
+          json: false,
+          show_payer: true,
+          limit: 1
+        }
+      })
+      .then(page => {
+        const row = page.rows[0]
+        if (row === undefined) {
+          if (page.more)
+            throw new Error(
+              "Table format discovery returned an incomplete empty page"
+            )
+          return undefined
+        }
+        const format =
+          typeof row === "string" && Bytes.isBytes(row)
+            ? TableRowsFormat.legacy
+            : row &&
+                typeof row === "object" &&
+                "key" in row &&
+                typeof row.value === "string" &&
+                Bytes.isBytes(row.value)
+              ? TableRowsFormat.wireKv
+              : row &&
+                  typeof row === "object" &&
+                  typeof row.data === "string" &&
+                  Bytes.isBytes(row.data) &&
+                  typeof row.payer === "string"
+                ? TableRowsFormat.legacyPayer
+                : undefined
+        if (!format)
+          throw new Error(
+            "Invalid binary table response during format discovery"
+          )
+        this.tableRowsFormat = format
+        return format
+      })
+    this.pendingTableRowsFormat = pending
+    try {
+      return await pending
+    } finally {
+      if (this.pendingTableRowsFormat === pending)
+        this.pendingTableRowsFormat = undefined
+    }
+  }
 
   async get_abi(accountName: NameType) {
     return this.client.call<GetAbiResponse>({
@@ -331,12 +405,6 @@ export class ChainAPI {
       scope = String(scope)
     }
 
-    // An unwrapped legacy JSON struct can itself be {key, value}. Request the
-    // payer envelope on ambiguous reads: legacy nodes wrap user data in
-    // {data, payer}, Wire nodes in {key, value, payer}. Legacy binary rows
-    // are bare bytes. Expose payer names only when the caller requests them.
-    const show_payer = json || params.show_payer
-
     // eslint-disable-next-line prefer-const
     let { rows, more, next_key } = await this.client.call<any>({
       path: "/v1/chain/get_table_rows",
@@ -350,23 +418,37 @@ export class ChainAPI {
         key_type,
         // Keep the transport envelope even when callers forward raw RPC options.
         values_only: undefined,
-        show_payer,
+        show_payer: params.show_payer,
         json,
         upper_bound,
         lower_bound
       }
     })
-    const first = rows[0]
-    const isEnvelope = first !== null && typeof first === "object"
-    const kvEnvelope = isEnvelope && "key" in first && "value" in first
-    const ram_payers: (Name | undefined)[] | undefined = params.show_payer
-      ? rows.map(row => (row.payer ? Name.from(row.payer) : undefined))
+    const format =
+      rows.length || next_key
+        ? await this.getTableRowsFormat(params)
+        : this.tableRowsFormat
+    if (!format && (rows.length || next_key)) {
+      throw new Error(
+        "Unable to determine table response format. Configure APIClient tableRowsFormat for this endpoint."
+      )
+    }
+    const wrapped =
+      format === TableRowsFormat.wireKv ||
+      (format === TableRowsFormat.legacyPayer && params.show_payer)
+    const ram_payers = params.show_payer
+      ? rows.map(row =>
+          wrapped && row.payer ? Name.from(row.payer) : undefined
+        )
       : undefined
-
-    if (kvEnvelope) {
-      rows = rows.map(row => row.value)
-    } else if (show_payer && isEnvelope && "data" in first) {
-      rows = rows.map(row => row.data)
+    if (wrapped) {
+      const field = format === TableRowsFormat.wireKv ? "value" : "data"
+      rows = rows.map(row => {
+        if (!row || typeof row !== "object" || !(field in row)) {
+          throw new Error("Invalid table response envelope")
+        }
+        return row[field]
+      })
     }
 
     if (type) {
@@ -386,24 +468,7 @@ export class ChainAPI {
       }
     }
 
-    // A nonterminal empty page (e.g. limit=0) has no envelope. A named KV
-    // index or JSON object cursor is explicit. Otherwise identical bytes can
-    // be a legacy numeric/checksum key or a KV bound, so consult the table ABI.
-    let isKvCursor = kvEnvelope
-    if (next_key && rows.length === 0) {
-      isKvCursor = Boolean(params.index_name) || next_key.startsWith("{")
-      if (!isKvCursor) {
-        const { abi } = await this.get_abi(params.code)
-        const table = abi?.tables.find(
-          table => String(table.name) === String(params.table)
-        )
-        if (!table)
-          throw new Error(
-            `Missing ABI table definition for ${params.code}::${params.table}`
-          )
-        isKvCursor = table.table_id !== undefined
-      }
-    }
+    const isKvCursor = format === TableRowsFormat.wireKv
     if (next_key && next_key.length > 0 && !isKvCursor) {
       const indexType: ABISerializableType = match(key_type)
         .with("i64", () => UInt64)

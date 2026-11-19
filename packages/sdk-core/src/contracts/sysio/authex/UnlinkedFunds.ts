@@ -1,3 +1,4 @@
+import type { GetTableRowsResponse } from "../../../api/v1/Types.js"
 import type { APIClient } from "../../../api/Client.js"
 import { Asset } from "../../../chain/Asset.js"
 import { Base58 } from "../../../Base58.js"
@@ -12,7 +13,6 @@ import {
 } from "../../../types/SysioContractTypes.js"
 import { canonicalExternalPublicKey } from "./Client.js"
 
-const TablePath = "/v1/chain/get_table_rows"
 const DclaimAccount = "sysio.dclaim"
 const SyndAccount = "sysio.synd"
 const AddressIndex = "bychainad"
@@ -43,14 +43,6 @@ export interface UnlinkedFunds extends ExternalWalletIdentity {
   liq?: Asset
 }
 
-interface KvRow<Row> {
-  value: Row
-}
-interface KvPage<Row> {
-  rows: Array<Row | KvRow<Row>>
-  more: boolean
-  next_key?: string
-}
 interface KvBounds {
   lower_bound: string
   upper_bound?: string
@@ -78,12 +70,10 @@ export function externalWalletIdentity(
   }
 }
 
-/** Unwrap deployed KV envelopes without passing their binary cursors through the classic uint64 decoder. */
-function unwrap<
+/** Validate decoded credit rows before exact identity and amount checks. */
+function validateCreditRow<
   Row extends SysioDclaimUnmappedTokenType | SysioSyndParkedRowType
->(row: Row | KvRow<Row>, table: string): Row {
-  const value =
-    row && typeof row === "object" && "value" in row ? row.value : (row as Row)
+>(value: Row, table: string): Row {
   // The node can return raw hex in value even when the request specified json: true.
   if (
     !value ||
@@ -102,10 +92,13 @@ function readPage<Row>(
   code: string,
   table: string,
   bounds: KvBounds
-): Promise<KvPage<Row>> {
-  return client.call<KvPage<Row>>({
-    path: TablePath,
-    params: { code, scope: code, table, json: true, ...bounds }
+): Promise<GetTableRowsResponse<string, Row>> {
+  return client.v1.chain.get_table_rows<string>({
+    code,
+    scope: code,
+    table,
+    json: true,
+    ...bounds
   })
 }
 
@@ -155,7 +148,7 @@ export async function readUnlinkedFunds(
         ),
         credit = page.rows
           .map(entry => {
-            const row = unwrap(entry, UnmappedTable)
+            const row = validateCreditRow(entry, UnmappedTable)
             if (
               typeof row.native_pubkey !== "string" ||
               !HexBytes.test(row.native_pubkey) ||
@@ -197,7 +190,7 @@ export async function readUnlinkedFunds(
       })
     ]),
     credit = parked.rows.map(entry => {
-      const row = unwrap(entry, ParkedTable)
+      const row = validateCreditRow(entry, ParkedTable)
       if (
         typeof row.token_code !== "string" ||
         !row.token_code ||
