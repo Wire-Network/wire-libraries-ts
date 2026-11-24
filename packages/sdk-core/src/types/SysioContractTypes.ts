@@ -3384,6 +3384,11 @@ export interface SysioSystemCodehashKeyType {
   owner: number | string
 }
 
+/** sysio.system::creditwork (action) */
+export interface SysioSystemCreditworkAction {
+  epoch_index: number
+}
+
 /** sysio.system::deleteauth (action) */
 export interface SysioSystemDeleteauthAction {
   account: string
@@ -3605,6 +3610,20 @@ export interface SysioSystemObservedScheduleType {
 /** sysio.system::onblock (action) */
 export interface SysioSystemOnblockAction {
   header: SysioSystemBlockHeaderType
+}
+
+/** sysio.system::parked_work (type) */
+export interface SysioSystemParkedWorkType {
+  economic_epoch: number
+  account_name: string
+  blocks: number
+  units: number
+}
+
+/** sysio.system::parked_work_key (type) */
+export interface SysioSystemParkedWorkKeyType {
+  economic_epoch: number | string
+  account_name: number | string
 }
 
 /** sysio.system::pay_claim (type) */
@@ -4059,6 +4078,7 @@ export interface SysioSystemContract {
     addnodeowner: SysioSystemAddnodeownerAction
     claimnodedis: SysioSystemClaimnodedisAction
     claimpay: SysioSystemClaimpayAction
+    creditwork: SysioSystemCreditworkAction
     deleteauth: SysioSystemDeleteauthAction
     delfinkey: SysioSystemDelfinkeyAction
     delsnapprov: SysioSystemDelsnapprovAction
@@ -4124,6 +4144,7 @@ export interface SysioSystemContract {
     lastpropfins: SysioSystemLastPropFinalizersInfoType
     nodecount: SysioSystemNodeCountStateType
     nodedist: SysioSystemNodeOwnerDistributionType
+    parkedwork: SysioSystemParkedWorkType
     payclaims: SysioSystemPayClaimType
     payclaimtot: SysioSystemPayClaimTotalType
     prodsched: SysioSystemObservedScheduleType
@@ -4804,6 +4825,7 @@ export const SysioContractDefinitions: {
       "addnodeowner",
       "claimnodedis",
       "claimpay",
+      "creditwork",
       "deleteauth",
       "delfinkey",
       "delsnapprov",
@@ -4869,6 +4891,7 @@ export const SysioContractDefinitions: {
       "lastpropfins",
       "nodecount",
       "nodedist",
+      "parkedwork",
       "payclaims",
       "payclaimtot",
       "prodsched",
