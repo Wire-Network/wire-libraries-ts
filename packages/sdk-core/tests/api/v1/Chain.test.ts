@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { createClient as createSysioClient } from "@wireio/sdk-core/contracts/sysio/Client"
-import { APIClient } from "@wireio/sdk-core/api/Client"
+import { APIClient, ChainAPI } from "@wireio/sdk-core/api/Client"
 import type { APIProvider } from "@wireio/sdk-core/api/Provider"
 import type { APIResponse } from "@wireio/sdk-core/api/Client"
 import {
@@ -727,5 +727,29 @@ describe("ChainAPI.get_table_by_scope", () => {
     expect(result.rows[0].payer == null).toBe(true)
     expect(result.rows[0].count == null).toBe(true)
     expect(result.more).toBe("")
+  })
+})
+
+describe("ChainAPI.isBinaryTableValue", () => {
+  test.each(["", "00ff", "29000000000000002900000000000000", "ABcd09"])(
+    "accepts the hex encoding %j of a table value",
+    value => {
+      expect(ChainAPI.isBinaryTableValue(value)).toBe(true)
+    }
+  )
+
+  test.each([
+    "0",
+    "0g",
+    "0x00ff",
+    " 00",
+    "upgrade1",
+    0,
+    null,
+    undefined,
+    ["00"],
+    { value: "00" }
+  ])("rejects %j, which is not a complete hex string", value => {
+    expect(ChainAPI.isBinaryTableValue(value)).toBe(false)
   })
 })

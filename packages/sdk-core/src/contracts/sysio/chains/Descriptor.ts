@@ -1,7 +1,9 @@
 import type { ContractDescriptor } from "../../Contract.js"
+import { SysioContractName } from "../../../types/SysioContractTypes.js"
 import type * as SysioContracts from "../../../types/SysioContractTypes.js"
+import { normalizeSysioTableRow } from "../TableRows.js"
 
-import { DEFAULT_CHAINS_CONTRACT } from "./Constants.js"
+import { CHAINS_TABLE, DEFAULT_CHAINS_CONTRACT } from "./Constants.js"
 import {
   ChainsActivateChain,
   ChainsRegisterChain,
@@ -46,8 +48,10 @@ export const descriptor: ContractDescriptor<
   },
   tables: {
     chains: {
-      name: "chains",
-      rowType: null
+      name: CHAINS_TABLE,
+      rowType: null,
+      deserialize: row =>
+        normalizeSysioTableRow(SysioContractName.chains, CHAINS_TABLE, row)
     }
   }
 }

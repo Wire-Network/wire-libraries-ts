@@ -4406,12 +4406,67 @@ export interface SysioContractMapping {
   [SysioContractName.wrap]: SysioWrapContract
 }
 
+/** Kind of value a {@link SysioBooleanDescriptor} describes. */
+export enum SysioBooleanDescriptorKind {
+  /** An ABI `bool`. */
+  boolean = "boolean",
+  /** An ABI array whose elements hold `bool` values. */
+  array = "array",
+  /** An ABI struct whose fields hold `bool` values. */
+  struct = "struct"
+}
+
+/** An ABI `bool`, which a JSON table row encodes as `0` or `1`. */
+export interface SysioBooleanValueDescriptor {
+  /** Descriptor discriminator. */
+  readonly kind: SysioBooleanDescriptorKind.boolean
+}
+
+/** An ABI array whose elements hold ABI `bool` values. */
+export interface SysioBooleanArrayDescriptor {
+  /** Descriptor discriminator. */
+  readonly kind: SysioBooleanDescriptorKind.array
+  /** Where the `bool` values sit inside each element. */
+  readonly items: SysioBooleanDescriptor
+}
+
+/** An ABI struct with fields that hold ABI `bool` values; fields holding none are omitted. */
+export interface SysioBooleanStructDescriptor {
+  /** Descriptor discriminator. */
+  readonly kind: SysioBooleanDescriptorKind.struct
+  /** Field descriptors, keyed by the ABI field name a JSON table row uses. */
+  readonly fields: SysioBooleanFieldDescriptors
+}
+
+/** ABI field name -> where the `bool` values sit inside that field. */
+export interface SysioBooleanFieldDescriptors {
+  /** Descriptor of one field. */
+  readonly [field: string]: SysioBooleanDescriptor
+}
+
+/** Where the ABI `bool` values sit inside a value of one ABI type; optionals and binary extensions are described by their inner type. */
+export type SysioBooleanDescriptor =
+  | SysioBooleanValueDescriptor
+  | SysioBooleanArrayDescriptor
+  | SysioBooleanStructDescriptor
+
+/** Table name -> its row descriptor, for the tables of one contract whose rows hold ABI `bool` values. */
+export type SysioTableBooleanDescriptors<Name extends SysioContractName> = {
+  readonly [TableName in keyof SysioContractMapping[Name]["tables"]]?: SysioBooleanStructDescriptor
+}
+
 /** Runtime action/table names + account per contract (the typed client validates against this). */
 export interface SysioContractDefinition<Name extends SysioContractName> {
+  /** Short contract name. */
   readonly name: Name
+  /** Default on-chain account hosting the contract. */
   readonly account: string
+  /** ABI action names. */
   readonly actions: ReadonlyArray<string>
+  /** ABI table names. */
   readonly tables: ReadonlyArray<string>
+  /** Row descriptors of the tables whose rows hold ABI `bool` values. */
+  readonly tableBooleans: SysioTableBooleanDescriptors<Name>
 }
 export const SysioContractDefinitions: {
   readonly [Name in SysioContractName]: SysioContractDefinition<Name>
@@ -4420,13 +4475,20 @@ export const SysioContractDefinitions: {
     name: SysioContractName.andon,
     account: "sysio.andon",
     actions: ["clear", "pull"],
-    tables: ["cord"]
+    tables: ["cord"],
+    tableBooleans: {
+      cord: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: { pulled: { kind: SysioBooleanDescriptorKind.boolean } }
+      }
+    }
   },
   [SysioContractName.authex]: {
     name: SysioContractName.authex,
     account: "sysio.authex",
     actions: ["createlink", "recordlink"],
-    tables: ["links"]
+    tables: ["links"],
+    tableBooleans: {}
   },
   [SysioContractName.bios]: {
     name: SysioContractName.bios,
@@ -4449,7 +4511,8 @@ export const SysioContractDefinitions: {
       "unlinkauth",
       "updateauth"
     ],
-    tables: ["abihash", "codehash"]
+    tables: ["abihash", "codehash"],
+    tableBooleans: {}
   },
   [SysioContractName.bond]: {
     name: SysioContractName.bond,
@@ -4478,19 +4541,45 @@ export const SysioContractDefinitions: {
       "requests",
       "wireclaims",
       "yieldpool"
-    ]
+    ],
+    tableBooleans: {
+      bonds: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: { paid: { kind: SysioBooleanDescriptorKind.boolean } }
+      },
+      escrows: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: { paid: { kind: SysioBooleanDescriptorKind.boolean } }
+      },
+      requests: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: {
+          outcome_acknowledged: { kind: SysioBooleanDescriptorKind.boolean }
+        }
+      }
+    }
   },
   [SysioContractName.chains]: {
     name: SysioContractName.chains,
     account: "sysio.chains",
     actions: ["activchain", "regchain", "setoutpost"],
-    tables: ["chains"]
+    tables: ["chains"],
+    tableBooleans: {
+      chains: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: {
+          is_depot: { kind: SysioBooleanDescriptorKind.boolean },
+          active: { kind: SysioBooleanDescriptorKind.boolean }
+        }
+      }
+    }
   },
   [SysioContractName.chalg]: {
     name: SysioContractName.chalg,
     account: "sysio.chalg",
     actions: ["chkdispute", "opendispute", "slashop", "votedispute"],
-    tables: ["chalgstate", "disputes", "disputevote"]
+    tables: ["chalgstate", "disputes", "disputevote"],
+    tableBooleans: {}
   },
   [SysioContractName.councl]: {
     name: SysioContractName.councl,
@@ -4519,13 +4608,54 @@ export const SysioContractDefinitions: {
       "state",
       "tier2",
       "tier3"
-    ]
+    ],
+    tableBooleans: {
+      ballots: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: {
+          votes: {
+            kind: SysioBooleanDescriptorKind.array,
+            items: {
+              kind: SysioBooleanDescriptorKind.struct,
+              fields: {
+                v1: { kind: SysioBooleanDescriptorKind.boolean },
+                v2: { kind: SysioBooleanDescriptorKind.boolean },
+                v3: { kind: SysioBooleanDescriptorKind.boolean }
+              }
+            }
+          }
+        }
+      },
+      candidates: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: { elected: { kind: SysioBooleanDescriptorKind.boolean } }
+      },
+      config: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: {
+          t2_scan_complete: { kind: SysioBooleanDescriptorKind.boolean },
+          t3_scan_complete: { kind: SysioBooleanDescriptorKind.boolean }
+        }
+      },
+      flights: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: { automatic: { kind: SysioBooleanDescriptorKind.boolean } }
+      }
+    }
   },
   [SysioContractName.dclaim]: {
     name: SysioContractName.dclaim,
     account: "sysio.dclaim",
     actions: ["claim", "importdone", "importseed", "linkswept", "setconfig"],
-    tables: ["capcfg", "capcounters", "pclaims", "unmapped"]
+    tables: ["capcfg", "capcounters", "pclaims", "unmapped"],
+    tableBooleans: {
+      capcfg: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: {
+          imported_complete: { kind: SysioBooleanDescriptorKind.boolean }
+        }
+      }
+    }
   },
   [SysioContractName.epoch]: {
     name: SysioContractName.epoch,
@@ -4538,13 +4668,28 @@ export const SysioContractDefinitions: {
       "setconfig",
       "unpause"
     ],
-    tables: ["blocklog", "epochcfg", "epochstate"]
+    tables: ["blocklog", "epochcfg", "epochstate"],
+    tableBooleans: {
+      epochstate: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: { is_paused: { kind: SysioBooleanDescriptorKind.boolean } }
+      }
+    }
   },
   [SysioContractName.kicker]: {
     name: SysioContractName.kicker,
     account: "sysio.kicker",
     actions: ["addpool", "kick", "rmpool", "setconfig", "setpool"],
-    tables: ["kickcfg", "kickpools"]
+    tables: ["kickcfg", "kickpools"],
+    tableBooleans: {
+      kickpools: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: {
+          gift_overflow: { kind: SysioBooleanDescriptorKind.boolean },
+          spot_deviation: { kind: SysioBooleanDescriptorKind.boolean }
+        }
+      }
+    }
   },
   [SysioContractName.liq]: {
     name: SysioContractName.liq,
@@ -4564,7 +4709,8 @@ export const SysioContractDefinitions: {
       "settle",
       "transfer"
     ],
-    tables: ["accounts", "liqpending", "stat", "yieldidx"]
+    tables: ["accounts", "liqpending", "stat", "yieldidx"],
+    tableBooleans: {}
   },
   [SysioContractName.msgch]: {
     name: SysioContractName.msgch,
@@ -4587,7 +4733,15 @@ export const SysioContractDefinitions: {
       "outenvelopes",
       "outpcons",
       "outqueue"
-    ]
+    ],
+    tableBooleans: {
+      outpcons: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: {
+          consensus_reached: { kind: SysioBooleanDescriptorKind.boolean }
+        }
+      }
+    }
   },
   [SysioContractName.msig]: {
     name: SysioContractName.msig,
@@ -4601,7 +4755,8 @@ export const SysioContractDefinitions: {
       "propose",
       "unapprove"
     ],
-    tables: ["approvals", "approvals2", "invals", "propchunks", "proposal"]
+    tables: ["approvals", "approvals2", "invals", "propchunks", "proposal"],
+    tableBooleans: {}
   },
   [SysioContractName.opreg]: {
     name: SysioContractName.opreg,
@@ -4635,7 +4790,26 @@ export const SysioContractDefinitions: {
       "wtdwqueue",
       "yielddebts",
       "yieldpool"
-    ]
+    ],
+    tableBooleans: {
+      dellog: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: { delivered: { kind: SysioBooleanDescriptorKind.boolean } }
+      },
+      operators: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: {
+          is_bootstrapped: { kind: SysioBooleanDescriptorKind.boolean },
+          recent_actions: {
+            kind: SysioBooleanDescriptorKind.array,
+            items: {
+              kind: SysioBooleanDescriptorKind.struct,
+              fields: { success: { kind: SysioBooleanDescriptorKind.boolean } }
+            }
+          }
+        }
+      }
+    }
   },
   [SysioContractName.roa]: {
     name: SysioContractName.roa,
@@ -4666,7 +4840,13 @@ export const SysioContractDefinitions: {
       "roastate",
       "sponsorcount",
       "sponsors"
-    ]
+    ],
+    tableBooleans: {
+      roastate: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: { is_active: { kind: SysioBooleanDescriptorKind.boolean } }
+      }
+    }
   },
   [SysioContractName.swap]: {
     name: SysioContractName.swap,
@@ -4699,7 +4879,8 @@ export const SysioContractDefinitions: {
       "swapconfig",
       "yieldfunds",
       "yieldpayouts"
-    ]
+    ],
+    tableBooleans: {}
   },
   [SysioContractName.synd]: {
     name: SysioContractName.synd,
@@ -4745,7 +4926,15 @@ export const SysioContractDefinitions: {
       "syndcursors",
       "syndstate",
       "yieldpool"
-    ]
+    ],
+    tableBooleans: {
+      syndstate: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: {
+          import_complete: { kind: SysioBooleanDescriptorKind.boolean }
+        }
+      }
+    }
   },
   [SysioContractName.system]: {
     name: SysioContractName.system,
@@ -4836,24 +5025,60 @@ export const SysioContractDefinitions: {
       "subjexempt",
       "trxpglobal",
       "trxpriority"
-    ]
+    ],
+    tableBooleans: {
+      epochlog: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: {
+          batch_history_complete: { kind: SysioBooleanDescriptorKind.boolean }
+        }
+      },
+      prodstate: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: {
+          rescore_pending: { kind: SysioBooleanDescriptorKind.boolean }
+        }
+      },
+      producers: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: {
+          is_active: { kind: SysioBooleanDescriptorKind.boolean },
+          is_demoted: { kind: SysioBooleanDescriptorKind.boolean }
+        }
+      }
+    }
   },
   [SysioContractName.token]: {
     name: SysioContractName.token,
     account: "sysio.token",
     actions: ["close", "create", "issue", "retire", "transfer"],
-    tables: ["accounts", "stat"]
+    tables: ["accounts", "stat"],
+    tableBooleans: {}
   },
   [SysioContractName.tokens]: {
     name: SysioContractName.tokens,
     account: "sysio.tokens",
     actions: ["activctok", "activtoken", "regctok", "regtoken"],
-    tables: ["chaintokens", "tokens"]
+    tables: ["chaintokens", "tokens"],
+    tableBooleans: {
+      chaintokens: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: {
+          is_native: { kind: SysioBooleanDescriptorKind.boolean },
+          active: { kind: SysioBooleanDescriptorKind.boolean }
+        }
+      },
+      tokens: {
+        kind: SysioBooleanDescriptorKind.struct,
+        fields: { active: { kind: SysioBooleanDescriptorKind.boolean } }
+      }
+    }
   },
   [SysioContractName.wrap]: {
     name: SysioContractName.wrap,
     account: "sysio.wrap",
     actions: ["exec"],
-    tables: []
+    tables: [],
+    tableBooleans: {}
   }
 }

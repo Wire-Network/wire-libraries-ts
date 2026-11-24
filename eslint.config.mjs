@@ -238,7 +238,6 @@ const StringLiteralUnionDebtFiles = [
   "packages/sdk-core/src/chain/Bytes.ts",
   "packages/sdk-core/src/chain/Integer.ts",
   "packages/sdk-core/src/common/Logo.ts",
-  "packages/sdk-core/src/contracts/Contract.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Types.ts",
   "packages/shared/src/logging/context/LogContext.ts",
   "packages/wallet-browser-ext/src/popup/slices/WalletSlice.ts",

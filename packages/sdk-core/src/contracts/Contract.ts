@@ -3,6 +3,7 @@ import type { ABIDef } from "../chain/Abi.js"
 import { Action } from "../chain/Action.js"
 import type { NameType } from "../chain/Name.js"
 import { PermissionLevel, type PermissionLevelType } from "../chain/PermissionLevel.js"
+import { ChainAPI } from "../api/v1/Chain.js"
 import type {
   GetTableByScopeParams,
   GetTableRowsParams,
@@ -36,12 +37,17 @@ export interface ContractActionDescriptor<TData> {
   serialize: ContractActionSerializer<TData> | null
 }
 
+/** Runtime decoder that turns one ABI-decoded JSON table row into generated row data. */
+export type ContractTableDeserializer<TRow> = (row: unknown) => TRow
+
 /** Runtime metadata for one contract table. */
 export interface ContractTableDescriptor<TRow> {
   /** ABI table name. */
   name: NameType
   /** Type marker for generated table row data. */
   rowType: TRow | null
+  /** Optional decoder applied to every ABI-decoded row, such as converting ABI `bool` fields. */
+  deserialize?: ContractTableDeserializer<TRow>
 }
 
 /** Runtime metadata for a typed contract client. */
@@ -88,16 +94,24 @@ export interface BuildContractActionArgs<TData> extends ContractBuildActionOptio
   data: TData
 }
 
+/** Table request fields a contract client fills from its account and table descriptor. */
+export enum ContractTableBoundField {
+  /** Contract account hosting the table. */
+  code = "code",
+  /** ABI table name. */
+  table = "table"
+}
+
 /** Options for querying typed contract table rows. */
 export type ContractTableRowsOptions<Index = TableIndexType | string> = Omit<
   GetTableRowsParams<Index>,
-  "code" | "table"
+  `${ContractTableBoundField}`
 >
 
 /** Options for querying typed contract table scopes. */
 export type ContractTableScopesOptions = Omit<
   GetTableByScopeParams,
-  "code" | "table"
+  `${ContractTableBoundField}`
 >
 
 /** Typed action builder methods derived from a contract action map. */
@@ -135,6 +149,33 @@ export function buildContractAction<TData>(
   )
 }
 
+/**
+ * Applies a table's JSON row decoder to one `get_table_rows` page. Only rows
+ * the node ABI-decoded reach `deserialize`. A row the node returned as the hex
+ * string of its bytes because ABI decoding failed, every row of a
+ * `json: false` page, and the page's `more`, `next_key` and `ram_payers` are
+ * kept as returned.
+ *
+ * @param page - One page as `get_table_rows` returned it.
+ * @param json - The request's `json` option; only `false` skips decoding.
+ * @param deserialize - Decoder for one ABI-decoded JSON row.
+ * @returns The page with each ABI-decoded row deserialized.
+ */
+export function deserializeTableRows<Index, TRow>(
+  page: GetTableRowsResponse<Index, TRow>,
+  json: GetTableRowsParams<Index>["json"],
+  deserialize: ContractTableDeserializer<TRow>
+): GetTableRowsResponse<Index, TRow> {
+  return json === false
+    ? page
+    : {
+        ...page,
+        rows: page.rows.map(row =>
+          ChainAPI.isBinaryTableValue(row) ? row : deserialize(row)
+        )
+      }
+}
+
 /** Typed table reader for one contract table. */
 export class ContractTableClient<TRow> {
   /** Table metadata. */
@@ -151,29 +192,41 @@ export class ContractTableClient<TRow> {
     this.descriptor = descriptor
   }
 
-  /** Reads rows from this table, returning the generated row type. */
+  /**
+   * Reads rows from this table, returning the generated row type. The
+   * descriptor's `deserialize` decodes each row the node ABI-decoded; a row the
+   * node returned as hex, and every `json: false` row, is returned untouched.
+   */
   async rows<Index = TableIndexType | string>(
     options: ContractTableRowsOptions<Index> = {}
   ): Promise<GetTableRowsResponse<Index, TRow>> {
-    return this.contractClient.client.v1.chain.get_table_rows({
-      code: this.contractClient.contract,
-      table: this.descriptor.name,
-      scope: this.contractClient.contract,
-      json: true,
-      ...options
-    } as any) as Promise<GetTableRowsResponse<Index, TRow>>
+    const result = (await this.contractClient.client.v1.chain.get_table_rows({
+        code: this.contractClient.contract,
+        table: this.descriptor.name,
+        scope: this.contractClient.contract,
+        json: true,
+        ...options
+      } as any)) as GetTableRowsResponse<Index, TRow>,
+      { deserialize } = this.descriptor
+
+    return deserialize
+      ? deserializeTableRows(result, options.json, deserialize)
+      : result
   }
 
-  /** Reads the first row from this table, or null when no row is available. */
+  /**
+   * Reads the first row from this table, or null when the page holds no row.
+   * The first row is returned as is, even when it is falsy.
+   */
   async first<Index = TableIndexType | string>(
     options: ContractTableRowsOptions<Index> = {}
   ): Promise<TRow | null> {
-    const result = await this.rows({
+    const { rows } = await this.rows({
       ...options,
       limit: options.limit || 1
     })
 
-    return result.rows[0] || null
+    return rows.length === 0 ? null : rows[0]
   }
 
   /** Lists scopes that currently contain rows for this table. */
