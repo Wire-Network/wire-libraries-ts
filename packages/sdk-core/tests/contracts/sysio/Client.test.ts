@@ -7,10 +7,27 @@ import {
   contracts,
   KeyType,
   PrivateKey,
-  SysioContracts
+  Serializer,
+  SlugName,
+  SysioContracts,
+  UInt64
 } from "@wireio/sdk-core"
 
 const { SysioContractName } = SysioContracts
+
+/**
+ * The `sysio.chains` code of the outpost chain whose consensus epoch the
+ * sample `sysio.epoch::advance` closes.
+ */
+const EthereumCode = "ETHEREUM"
+
+/**
+ * Sample data for `sysio.epoch::advance`, a generated action with no
+ * hand-written codec.
+ */
+const EthereumAdvance: SysioContracts.SysioEpochAdvanceAction = {
+  chain_code: EthereumCode
+}
 
 /** Creates the minimal API surface exercised by the system-contract proxy. */
 function createMockApi(rows: unknown[] = []) {
@@ -91,7 +108,7 @@ describe("system contract proxy", () => {
         client: createMockApi(),
         contracts: { [SysioContractName.epoch]: "custom.epoch" }
       }),
-      prepared = sysio.epoch.actions.advance.prepare({})
+      prepared = sysio.epoch.actions.advance.prepare(EthereumAdvance)
 
     expect(sysio.epoch.account).toBe("custom.epoch")
     expect(prepared.account).toBe("custom.epoch")
@@ -293,7 +310,7 @@ describe("system contract proxy", () => {
 
   test("prepares generated contracts without hand-written codecs", () => {
     const epoch = contracts.sysio.getSysioContract(SysioContractName.epoch),
-      prepared = epoch.actions.advance.prepare({})
+      prepared = epoch.actions.advance.prepare(EthereumAdvance)
 
     expect(prepared).not.toBeInstanceOf(Action)
     expect(prepared).toMatchObject({
@@ -301,7 +318,7 @@ describe("system contract proxy", () => {
       account: "sysio.epoch",
       name: "advance",
       authorization: [],
-      data: {}
+      data: EthereumAdvance
     })
   })
 
@@ -345,25 +362,31 @@ describe("system contract proxy", () => {
 
   test("uses a caller ABI to encode generated actions without local codecs", () => {
     const epoch = contracts.sysio.getSysioContract(SysioContractName.epoch),
-      prepared = epoch.actions.advance.prepare(
-        {},
-        {
-          abi: {
-            version: "sysio::abi/1.2",
-            structs: [{ name: "advance", base: "", fields: [] }],
-            actions: [
-              {
-                name: "advance",
-                type: "advance",
-                ricardian_contract: ""
-              }
-            ]
-          }
+      prepared = epoch.actions.advance.prepare(EthereumAdvance, {
+        abi: {
+          version: "sysio::abi/1.2",
+          structs: [
+            {
+              name: "advance",
+              base: "",
+              fields: [{ name: "chain_code", type: "slug_name" }]
+            }
+          ],
+          actions: [
+            {
+              name: "advance",
+              type: "advance",
+              ricardian_contract: ""
+            }
+          ]
         }
-      )
+      })
 
     expect(prepared).toBeInstanceOf(Action)
-    expect((prepared as Action).data.hexString).toBe("")
+    expect((prepared as Action).data.hexString).toBe(
+      Serializer.encode({ object: UInt64.from(SlugName.from(EthereumCode)) })
+        .hexString
+    )
   })
 
   test("invokes prepared actions through the configured API client", async () => {
@@ -372,13 +395,10 @@ describe("system contract proxy", () => {
         client: api
       })
 
-    await epoch.actions.advance.invoke(
-      {},
-      {
-        authorization: [{ actor: "alice", permission: "active" }],
-        pushOptions: { wait_final: true }
-      }
-    )
+    await epoch.actions.advance.invoke(EthereumAdvance, {
+      authorization: [{ actor: "alice", permission: "active" }],
+      pushOptions: { wait_final: true }
+    })
 
     const [prepared, pushOptions] = api.pushTransaction.mock.calls[0]
     expect(prepared.account).toBe("sysio.epoch")
@@ -463,11 +483,11 @@ describe("system contract proxy", () => {
   test("requires an API client only for reads and invocation", async () => {
     const epoch = contracts.sysio.getSysioContract(SysioContractName.epoch)
 
-    expect(() => epoch.actions.advance.prepare({})).not.toThrow()
+    expect(() => epoch.actions.advance.prepare(EthereumAdvance)).not.toThrow()
     await expect(epoch.tables.epochstate.query()).rejects.toThrow(
       "An APIClient is required to query or invoke a system contract."
     )
-    await expect(epoch.actions.advance.invoke({})).rejects.toThrow(
+    await expect(epoch.actions.advance.invoke(EthereumAdvance)).rejects.toThrow(
       "An APIClient is required to query or invoke a system contract."
     )
   })
