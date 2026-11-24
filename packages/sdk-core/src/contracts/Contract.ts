@@ -36,12 +36,17 @@ export interface ContractActionDescriptor<TData> {
   serialize: ContractActionSerializer<TData> | null
 }
 
+/** Runtime decoder used to turn one JSON table row into generated row data. */
+export type ContractTableDeserializer<TRow> = (row: unknown) => TRow
+
 /** Runtime metadata for one contract table. */
 export interface ContractTableDescriptor<TRow> {
   /** ABI table name. */
   name: NameType
   /** Type marker for generated table row data. */
   rowType: TRow | null
+  /** Optional runtime decoder applied to every JSON row, such as converting ABI `bool` fields. */
+  deserialize?: ContractTableDeserializer<TRow>
 }
 
 /** Runtime metadata for a typed contract client. */
@@ -88,16 +93,24 @@ export interface BuildContractActionArgs<TData> extends ContractBuildActionOptio
   data: TData
 }
 
+/** Table request fields a contract client fills from its account and table descriptor. */
+export enum ContractTableBoundField {
+  /** Contract account hosting the table. */
+  code = "code",
+  /** ABI table name. */
+  table = "table"
+}
+
 /** Options for querying typed contract table rows. */
 export type ContractTableRowsOptions<Index = TableIndexType | string> = Omit<
   GetTableRowsParams<Index>,
-  "code" | "table"
+  `${ContractTableBoundField}`
 >
 
 /** Options for querying typed contract table scopes. */
 export type ContractTableScopesOptions = Omit<
   GetTableByScopeParams,
-  "code" | "table"
+  `${ContractTableBoundField}`
 >
 
 /** Typed action builder methods derived from a contract action map. */
@@ -151,23 +164,32 @@ export class ContractTableClient<TRow> {
     this.descriptor = descriptor
   }
 
-  /** Reads rows from this table, returning the generated row type. */
+  /**
+   * Reads rows from this table, returning the generated row type. The
+   * descriptor's `deserialize` decodes JSON rows; `json: false` rows are
+   * returned untouched.
+   */
   async rows<Index = TableIndexType | string>(
     options: ContractTableRowsOptions<Index> = {}
   ): Promise<GetTableRowsResponse<Index, TRow>> {
-    return this.contractClient.client.v1.chain.get_table_rows({
-      code: this.contractClient.contract,
-      table: this.descriptor.name,
-      scope: this.contractClient.contract,
-      json: true,
-      ...options
-    } as any) as Promise<GetTableRowsResponse<Index, TRow>>
+    const result = (await this.contractClient.client.v1.chain.get_table_rows({
+        code: this.contractClient.contract,
+        table: this.descriptor.name,
+        scope: this.contractClient.contract,
+        json: true,
+        ...options
+      } as any)) as GetTableRowsResponse<Index, TRow>,
+      { deserialize } = this.descriptor
+
+    return deserialize && options.json !== false
+      ? { ...result, rows: result.rows.map(deserialize) }
+      : result
   }
 
   /** Reads the first row from this table, or null when no row is available. */
   async first<Index = TableIndexType | string>(
     options: ContractTableRowsOptions<Index> = {}
-  ): Promise<TRow | null> {
+  ): Promise<TRow> {
     const result = await this.rows({
       ...options,
       limit: options.limit || 1

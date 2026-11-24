@@ -24,6 +24,7 @@ import type {
 } from "../Contract.js"
 import { getSysioActionCodec, type SysioActionCodec } from "./Codecs.js"
 import type { SysioMsigActionDataOverrides } from "./msig/Types.js"
+import { normalizeSysioTableRow } from "./TableRows.js"
 
 const GetSysioContractMember = "getSysioContract"
 const PromiseThenMember = "then"
@@ -123,7 +124,11 @@ export interface SysioTableQuery<
   Name extends SysioContractName,
   TableName extends SysioTableName<Name>
 > {
-  /** Reads table rows with the complete chain table-query option surface. */
+  /**
+   * Reads table rows with the complete chain table-query option surface.
+   * JSON rows carry their declared types: ABI `bool` fields, which the node
+   * encodes as `0`/`1`, are returned as booleans.
+   */
   query<Index = TableIndexType | string>(
     options?: ContractTableRowsOptions<Index>
   ): Promise<GetTableRowsResponse<Index, SysioTableRow<Name, TableName>>>
@@ -283,27 +288,39 @@ function createActionInvoker<
   }
 }
 
-/** Creates one lazy typed table query. */
+/**
+ * Creates one lazy typed table query. JSON rows are normalized to their
+ * generated row type; `json: false` leaves the binary rows untouched.
+ */
 function createTableQuery<
   Name extends SysioContractName,
   TableName extends SysioTableName<Name>
 >(
+  name: Name,
   account: NameType,
   tableName: TableName,
   client?: APIClient
 ): SysioTableQuery<Name, TableName> {
   const query = async <Index = TableIndexType | string>(
       options: ContractTableRowsOptions<Index> = {}
-    ) =>
-      assertClient(client).v1.chain.get_table_rows({
+    ): Promise<GetTableRowsResponse<Index, SysioTableRow<Name, TableName>>> => {
+      const result = (await assertClient(client).v1.chain.get_table_rows({
         code: account,
         table: tableName,
         scope: account,
         json: true,
         ...options
-      } as any) as Promise<
-        GetTableRowsResponse<Index, SysioTableRow<Name, TableName>>
-      >,
+      } as any)) as GetTableRowsResponse<Index>
+
+      return options.json === false
+        ? result
+        : {
+            ...result,
+            rows: result.rows.map(row =>
+              normalizeSysioTableRow(name, tableName, row)
+            )
+          }
+    },
     first = async <Index = TableIndexType | string>(
       options: ContractTableRowsOptions<Index> = {}
     ) => {
@@ -387,6 +404,7 @@ export function getSysioContract<Name extends SysioContractName>(
       definition.tables,
       tableName =>
         createTableQuery<Name, SysioTableName<Name>>(
+          name,
           account,
           tableName as SysioTableName<Name>,
           options.client

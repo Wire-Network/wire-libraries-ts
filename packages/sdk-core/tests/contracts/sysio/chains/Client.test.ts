@@ -81,6 +81,33 @@ describe("ChainsClient", () => {
     })
   })
 
+  test("returns boolean lifecycle flags from node-encoded 0/1 rows", async () => {
+    const getTableRows = jest.fn(async () => ({
+        rows: CHAIN_ROWS.map(row => ({
+          ...row,
+          is_depot: Number(row.is_depot),
+          active: Number(row.active)
+        })),
+        more: false
+      })),
+      client = new ChainsClient({
+        client: { v1: { chain: { get_table_rows: getTableRows } } } as any
+      }),
+      chains = await client.listChains()
+
+    expect(
+      chains.map(chain => [chain.code, chain.isDepot, chain.active])
+    ).toEqual([
+      ["ETHEREUM", false, true],
+      ["SOLANA", false, false],
+      ["WIRE", true, true]
+    ])
+    expect(chains[2].raw.is_depot).toBe(true)
+    await expect(
+      client.listChains({ activeOnly: true, includeDepot: false })
+    ).resolves.toEqual([expect.objectContaining({ code: "ETHEREUM" })])
+  })
+
   test("filters by chain kind and reads one exact chain", async () => {
     const { client } = clientFixture()
 

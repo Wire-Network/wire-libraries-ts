@@ -1,6 +1,9 @@
 /** Default account that hosts the Wire chain registry. */
 export const DEFAULT_CHAINS_CONTRACT = "sysio.chains"
 
+/** ABI name of the chain registry table. */
+export const CHAINS_TABLE = "chains"
+
 /** Rows requested per page while scanning the chain registry. */
 export const DEFAULT_CHAIN_QUERY_LIMIT = 500
 

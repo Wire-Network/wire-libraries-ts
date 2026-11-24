@@ -472,3 +472,145 @@ describe("system contract proxy", () => {
     )
   })
 })
+
+/** One `sysio.system::epochlog` row as the node's JSON encodes it: `batch_history_complete` is 0 or 1. */
+function epochLogWireRow(
+  sysioEpochIndex: number,
+  batchHistoryComplete: unknown
+) {
+  return {
+    sysio_epoch_index: sysioEpochIndex,
+    epoch_count: sysioEpochIndex,
+    timestamp: "2026-11-20T00:00:00.000",
+    total_emission: 1_000,
+    compute_amount: 600,
+    capex_amount: 200,
+    governance_amount: 100,
+    batch_history_complete: batchHistoryComplete,
+    batch_emission_retained: 0
+  }
+}
+
+/** One `sysio.opreg::operators` row as the node's JSON encodes it, with nested action-log flags. */
+function operatorWireRow(isBootstrapped: number, successes: unknown[]) {
+  return {
+    account: "batchop.a",
+    type: "OPERATOR_TYPE_BATCH",
+    status: "OPERATOR_STATUS_ACTIVE",
+    is_bootstrapped: isBootstrapped,
+    balances: [],
+    registered_at: 1,
+    available_at: 1,
+    updated_at: 1,
+    terminated_at: 0,
+    status_reason: "",
+    recent_actions: successes.map((success, index) => ({
+      action: { action_type: "ACTION_TYPE_DEPOSIT" },
+      success,
+      timestamp: { value: index },
+      error_message: ""
+    }))
+  }
+}
+
+describe("system contract table rows", () => {
+  test("returns complete (1) and incomplete (0) epochlog rows with a boolean flag", async () => {
+    const complete = epochLogWireRow(41, 1),
+      incomplete = epochLogWireRow(42, 0),
+      system = contracts.sysio.getSysioContract(SysioContractName.system, {
+        client: createMockApi([complete, incomplete])
+      }),
+      result = await system.tables.epochlog.query(),
+      rows: SysioContracts.SysioSystemEpochLogType[] = result.rows
+
+    expect(rows.map(row => row.batch_history_complete)).toEqual([true, false])
+    expect(rows[0].batch_history_complete === true).toBe(true)
+    expect(rows[1].batch_history_complete === false).toBe(true)
+    expect(rows[0]).toEqual({ ...complete, batch_history_complete: true })
+    expect(rows[1]).toEqual({ ...incomplete, batch_history_complete: false })
+    expect(complete.batch_history_complete).toBe(1)
+    await expect(system.tables.epochlog.first()).resolves.toMatchObject({
+      batch_history_complete: true
+    })
+  })
+
+  test("converts top-level and nested array bool fields of another table", async () => {
+    const opreg = contracts.sysio.getSysioContract(SysioContractName.opreg, {
+        client: createMockApi([
+          operatorWireRow(1, [1, 0]),
+          operatorWireRow(0, [])
+        ])
+      }),
+      rows: SysioContracts.SysioOpregOperatorEntryType[] = (
+        await opreg.tables.operators.rows()
+      ).rows
+
+    expect(rows.map(row => row.is_bootstrapped)).toEqual([true, false])
+    expect(rows[0].recent_actions.map(action => action.success)).toEqual([
+      true,
+      false
+    ])
+    expect(rows[0].recent_actions[0].timestamp).toEqual({ value: 0 })
+    expect(rows[1].recent_actions).toEqual([])
+  })
+
+  test("keeps JSON booleans, absent fields, and the response envelope unchanged", async () => {
+    const api = createMockApi(),
+      epoch = contracts.sysio.getSysioContract(SysioContractName.epoch, {
+        client: api
+      })
+    api.v1.chain.get_table_rows.mockResolvedValueOnce({
+      rows: [{ current_epoch_index: 7 }, { is_paused: true }],
+      more: true,
+      next_key: "8",
+      ram_payers: ["alice", "bob"]
+    })
+
+    const result = await epoch.tables.epochstate.query({ show_payer: true })
+
+    expect(result).toEqual({
+      rows: [{ current_epoch_index: 7 }, { is_paused: true }],
+      more: true,
+      next_key: "8",
+      ram_payers: ["alice", "bob"]
+    })
+    expect(result.rows[0]).not.toHaveProperty("is_paused")
+  })
+
+  test("leaves rows of tables without bool fields and binary rows untouched", async () => {
+    const row = { chain_code: 42, queued: 3 },
+      msgch = contracts.sysio.getSysioContract(SysioContractName.msgch, {
+        client: createMockApi([row])
+      }),
+      binary = contracts.sysio.getSysioContract(SysioContractName.system, {
+        client: createMockApi(["00ff"])
+      })
+
+    expect((await msgch.tables.outqueue.query()).rows[0]).toBe(row)
+    await expect(
+      binary.tables.epochlog.query({ json: false })
+    ).resolves.toMatchObject({ rows: ["00ff"] })
+  })
+
+  test("rejects a value that is not an ABI bool encoding, naming the field", async () => {
+    const system = contracts.sysio.getSysioContract(SysioContractName.system, {
+        client: createMockApi([epochLogWireRow(43, 2)])
+      }),
+      quoted = contracts.sysio.getSysioContract(SysioContractName.system, {
+        client: createMockApi([epochLogWireRow(44, "1")])
+      }),
+      opreg = contracts.sysio.getSysioContract(SysioContractName.opreg, {
+        client: createMockApi([operatorWireRow(1, [1, "1"])])
+      })
+
+    await expect(system.tables.epochlog.query()).rejects.toThrow(
+      /ABI bool value is not 0, 1, false or true.*sysio\.system::epochlog\.batch_history_complete/
+    )
+    await expect(quoted.tables.epochlog.query()).rejects.toThrow(
+      /sysio\.system::epochlog\.batch_history_complete/
+    )
+    await expect(opreg.tables.operators.query()).rejects.toThrow(
+      /sysio\.opreg::operators\.recent_actions\[1\]\.success/
+    )
+  })
+})

@@ -111,4 +111,52 @@ describe("generic contract client", () => {
       table: "proposal"
     })
   })
+
+  test("decodes JSON rows with the table descriptor's deserializer", async () => {
+    const deserialize = jest.fn((row: unknown) => ({
+        ...(row as SysioContracts.SysioMsigProposalType),
+        proposal_name: "decoded"
+      })),
+      descriptor: contracts.ContractDescriptor<
+        ProposalContractActions,
+        ProposalContractTables
+      > = {
+        ...ProposalContractDescriptor,
+        tables: { proposal: { name: "proposal", rowType: null, deserialize } }
+      },
+      client = contracts.createContractClient({
+        client: mockApi([{ proposal_name: "upgrade1" }]),
+        descriptor
+      })
+
+    await expect(client.tables.proposal.rows()).resolves.toEqual({
+      rows: [{ proposal_name: "decoded" }],
+      more: false
+    })
+    await expect(client.tables.proposal.first()).resolves.toEqual({
+      proposal_name: "decoded"
+    })
+    await expect(client.tables.proposal.rows({ json: false })).resolves.toEqual(
+      { rows: [{ proposal_name: "upgrade1" }], more: false }
+    )
+    expect(deserialize).toHaveBeenCalledTimes(2)
+  })
+
+  test("returns boolean sysio.chains registry flags through the published descriptor", async () => {
+    const client = contracts.createContractClient({
+        client: mockApi([
+          { code: "WIRE", is_depot: 1, active: 1 },
+          { code: "SOLANA", is_depot: 0, active: 0 }
+        ]),
+        descriptor: contracts.sysio.chains.descriptor
+      }),
+      rows: SysioContracts.SysioChainsChainRowType[] = (
+        await client.tables.chains.rows()
+      ).rows
+
+    expect(rows.map(row => [row.is_depot, row.active])).toEqual([
+      [true, true],
+      [false, false]
+    ])
+  })
 })
