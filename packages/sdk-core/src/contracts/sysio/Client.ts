@@ -16,11 +16,12 @@ import {
   SysioContractName,
   type SysioContractMapping
 } from "../../types/SysioContractTypes.js"
-import type {
-  ContractBuildActionOptions,
-  ContractPermissionLevel,
-  ContractTableRowsOptions,
-  ContractTableScopesOptions
+import {
+  deserializeTableRows,
+  type ContractBuildActionOptions,
+  type ContractPermissionLevel,
+  type ContractTableRowsOptions,
+  type ContractTableScopesOptions
 } from "../Contract.js"
 import { getSysioActionCodec, type SysioActionCodec } from "./Codecs.js"
 import type { SysioMsigActionDataOverrides } from "./msig/Types.js"
@@ -127,7 +128,8 @@ export interface SysioTableQuery<
   /**
    * Reads table rows with the complete chain table-query option surface.
    * JSON rows carry their declared types: ABI `bool` fields, which the node
-   * encodes as `0`/`1`, are returned as booleans.
+   * encodes as `0`/`1`, are returned as booleans. A row the node could not
+   * ABI-decode is returned as the hex string of its bytes.
    */
   query<Index = TableIndexType | string>(
     options?: ContractTableRowsOptions<Index>
@@ -138,7 +140,10 @@ export interface SysioTableQuery<
     options?: ContractTableRowsOptions<Index>
   ): Promise<GetTableRowsResponse<Index, SysioTableRow<Name, TableName>>>
 
-  /** Reads the first matching table row. */
+  /**
+   * Reads the first matching table row, or null when the page holds no row.
+   * The first row is returned as is, even when it is falsy.
+   */
   first<Index = TableIndexType | string>(
     options?: ContractTableRowsOptions<Index>
   ): Promise<SysioTableRow<Name, TableName>>
@@ -289,8 +294,9 @@ function createActionInvoker<
 }
 
 /**
- * Creates one lazy typed table query. JSON rows are normalized to their
- * generated row type; `json: false` leaves the binary rows untouched.
+ * Creates one lazy typed table query. Each row the node ABI-decoded is
+ * normalized to its generated row type; a row the node returned as hex, and
+ * every `json: false` row, is left untouched.
  */
 function createTableQuery<
   Name extends SysioContractName,
@@ -310,22 +316,17 @@ function createTableQuery<
         scope: account,
         json: true,
         ...options
-      } as any)) as GetTableRowsResponse<Index>
+      } as any)) as GetTableRowsResponse<Index, SysioTableRow<Name, TableName>>
 
-      return options.json === false
-        ? result
-        : {
-            ...result,
-            rows: result.rows.map(row =>
-              normalizeSysioTableRow(name, tableName, row)
-            )
-          }
+      return deserializeTableRows(result, options.json, row =>
+        normalizeSysioTableRow(name, tableName, row)
+      )
     },
     first = async <Index = TableIndexType | string>(
       options: ContractTableRowsOptions<Index> = {}
     ) => {
-      const result = await query({ ...options, limit: options.limit || 1 })
-      return result.rows[0] || null
+      const { rows } = await query({ ...options, limit: options.limit || 1 })
+      return rows.length === 0 ? null : rows[0]
     },
     scopes = async (options: ContractTableScopesOptions = {}) => {
       const result = await assertClient(client).v1.chain.get_table_by_scope({

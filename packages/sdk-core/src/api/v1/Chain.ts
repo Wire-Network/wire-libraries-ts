@@ -146,22 +146,19 @@ export class ChainAPI {
             )
           return undefined
         }
-        const format =
-          typeof row === "string" && BinaryTableValue.test(row)
-            ? TableRowsFormat.legacy
+        const format = ChainAPI.isBinaryTableValue(row)
+          ? TableRowsFormat.legacy
+          : row &&
+              typeof row === "object" &&
+              "key" in row &&
+              ChainAPI.isBinaryTableValue(row.value)
+            ? TableRowsFormat.wireKv
             : row &&
                 typeof row === "object" &&
-                "key" in row &&
-                typeof row.value === "string" &&
-                BinaryTableValue.test(row.value)
-              ? TableRowsFormat.wireKv
-              : row &&
-                  typeof row === "object" &&
-                  typeof row.data === "string" &&
-                  BinaryTableValue.test(row.data) &&
-                  typeof row.payer === "string"
-                ? TableRowsFormat.legacyPayer
-                : undefined
+                ChainAPI.isBinaryTableValue(row.data) &&
+                typeof row.payer === "string"
+              ? TableRowsFormat.legacyPayer
+              : undefined
         if (!format)
           throw new Error(
             "Invalid binary table response during format discovery"
@@ -538,5 +535,20 @@ export class ChainAPI {
       },
       responseType: GetTransactionStatusResponse
     })
+  }
+}
+
+/** Table-transport helpers for `ChainAPI` callers. */
+export namespace ChainAPI {
+  /**
+   * Returns true when a table value is the hex encoding of its stored bytes:
+   * every row of a `json: false` read, and, under `json: true`, a row the node
+   * could not ABI-decode, which it returns as hex instead of a JSON value.
+   *
+   * @param value - One table value or row as the endpoint returned it.
+   * @returns True for a complete, even-length hex string, including `""`.
+   */
+  export function isBinaryTableValue(value: unknown): value is string {
+    return typeof value === "string" && BinaryTableValue.test(value)
   }
 }

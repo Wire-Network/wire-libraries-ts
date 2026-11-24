@@ -3,11 +3,15 @@ import { computeAddress } from "@ethersproject/transactions"
 
 import {
   Action,
+  API,
+  APIClient,
   Bytes,
   contracts,
   KeyType,
+  Name,
   PrivateKey,
-  SysioContracts
+  SysioContracts,
+  UInt64
 } from "@wireio/sdk-core"
 
 const { SysioContractName } = SysioContracts
@@ -491,6 +495,21 @@ function epochLogWireRow(
   }
 }
 
+/** An `epochlog` value the node could not ABI-decode, returned as the hex of its bytes. */
+const UndecodedEpochLogValue = "29000000000000002900000000000000"
+
+/** One endpoint table transport and the cursor it returns for a page. */
+interface TableTransportCase {
+  /** Transport the API client is configured for. */
+  format: API.v1.TableRowsFormat
+  /** Wraps one node row value in the transport's row envelope. */
+  wrap: (value: unknown, index: number) => unknown
+  /** `next_key` as the endpoint returns it. */
+  cursor: string
+  /** `next_key` as the API client returns it, in string form. */
+  nextKey: string
+}
+
 /** One `sysio.opreg::operators` row as the node's JSON encodes it, with nested action-log flags. */
 function operatorWireRow(isBootstrapped: number, successes: unknown[]) {
   return {
@@ -612,5 +631,65 @@ describe("system contract table rows", () => {
     await expect(opreg.tables.operators.query()).rejects.toThrow(
       /sysio\.opreg::operators\.recent_actions\[1\]\.success/
     )
+  })
+
+  test.each<TableTransportCase>([
+    {
+      format: API.v1.TableRowsFormat.wireKv,
+      wrap: (value, index) => ({
+        key: { sysio_epoch_index: 41 + index },
+        value,
+        payer: "sysio"
+      }),
+      cursor: '{"sysio_epoch_index":45}',
+      nextKey: '{"sysio_epoch_index":45}'
+    },
+    {
+      format: API.v1.TableRowsFormat.legacyPayer,
+      wrap: value => ({ data: value, payer: "sysio" }),
+      cursor: "45",
+      nextKey: String(Name.from(UInt64.from(45)))
+    }
+  ])(
+    "keeps undecoded rows, and the page cursor, of a mixed $format page",
+    async ({ format, wrap, cursor, nextKey }) => {
+      const complete = epochLogWireRow(41, 1),
+        incomplete = epochLogWireRow(43, 0),
+        values = [complete, UndecodedEpochLogValue, incomplete, ""],
+        call = jest.fn(async () => ({
+          status: 200,
+          headers: {},
+          text: "",
+          json: { rows: values.map(wrap), more: true, next_key: cursor }
+        })),
+        system = contracts.sysio.getSysioContract(SysioContractName.system, {
+          client: new APIClient({ provider: { call }, tableRowsFormat: format })
+        }),
+        page = await system.tables.epochlog.query({ show_payer: true })
+
+      expect(page.rows).toEqual([
+        { ...complete, batch_history_complete: true },
+        UndecodedEpochLogValue,
+        { ...incomplete, batch_history_complete: false },
+        ""
+      ])
+      expect(page.more).toBe(true)
+      expect(String(page.next_key)).toBe(nextKey)
+      expect(page.ram_payers.map(String)).toEqual(values.map(() => "sysio"))
+      expect(call).toHaveBeenCalledTimes(1)
+    }
+  )
+
+  test("returns a falsy first row as is, and null for an empty page", async () => {
+    const undecoded = contracts.sysio.getSysioContract(
+        SysioContractName.system,
+        { client: createMockApi([""]) }
+      ),
+      empty = contracts.sysio.getSysioContract(SysioContractName.system, {
+        client: createMockApi([])
+      })
+
+    await expect(undecoded.tables.epochlog.first()).resolves.toBe("")
+    await expect(empty.tables.epochlog.first()).resolves.toBeNull()
   })
 })

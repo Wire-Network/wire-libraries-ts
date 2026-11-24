@@ -126,7 +126,9 @@ function normalizeBooleans(
  *
  * @param name - Generated short system-contract name.
  * @param tableName - Generated table name.
- * @param row - One row as `get_table_rows` returns it with `json: true`.
+ * @param row - One row the node ABI-decoded under `json: true`. Table readers
+ *   keep a row the node returned as hex away from this function
+ *   (`deserializeTableRows`).
  * @returns The row with its declared `boolean` fields.
  * @throws NestedError naming the field when a located value is not a valid
  *   ABI `bool`, array or struct encoding.

@@ -179,6 +179,7 @@ const SwitchDebtFiles = [
 ]
 const InlineIifeDebtFiles = ["packages/wallet-browser-ext/src/inject/Provider.ts"]
 const NullUnionReturnDebtFiles = [
+  "packages/sdk-core/src/contracts/Contract.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Hash.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Proposal.ts",
   "packages/sdk-core/src/contracts/sysio/msig/Status.ts",
