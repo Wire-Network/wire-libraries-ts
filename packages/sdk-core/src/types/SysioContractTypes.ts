@@ -1134,6 +1134,7 @@ export interface SysioEpochEconomicStateType {
   current_epoch_index: number
   current_epoch_start: string
   next_epoch_start: string
+  caught_up: boolean
 }
 
 /** sysio.epoch::epoch_config (type) */
@@ -3373,6 +3374,7 @@ export interface SysioSystemAbihashKeyType {
 export interface SysioSystemAccrueepochAction {
   epoch_index: number
   per_epoch_emission: number | string
+  closed_epoch_duration_sec: number
 }
 
 /** sysio.system::actfinkey (action) */
@@ -3737,6 +3739,7 @@ export interface SysioSystemPayclaimKeyType {
 export interface SysioSystemPayepochAction {
   epoch_index: number
   period_emission: number | string
+  spend: boolean
 }
 
 /** sysio.system::permission_level (type) */
@@ -4009,6 +4012,7 @@ export interface SysioSystemT5StateType {
   last_epoch_index: number
   last_epoch_time: string
   last_epoch_emission: number | string
+  last_epoch_duration_sec: number
   total_distributed: number | string
   pending_emission_amount: number | string
   period_start_epoch: number
