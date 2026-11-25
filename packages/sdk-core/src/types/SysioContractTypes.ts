@@ -1151,7 +1151,8 @@ export interface SysioEpochEpochStateType {
   chain_code: number | string
   current_epoch_index: number
   current_epoch_start: string
-  next_epoch_start: string
+  traffic_since: string
+  due_at: string
   current_batch_op_group: number
   batch_op_groups: string[][]
   is_paused: boolean
@@ -1167,6 +1168,12 @@ export interface SysioEpochFinishadvAction {
 /** sysio.epoch::network_genesis (type) */
 export interface SysioEpochNetworkGenesisType {
   genesis_at: string
+}
+
+/** sysio.epoch::notetraffic (action) */
+export interface SysioEpochNotetrafficAction {
+  chain_code: string
+  since: string
 }
 
 /** sysio.epoch::pause (action) */
@@ -1221,6 +1228,7 @@ export interface SysioEpochContract {
   actions: {
     advance: SysioEpochAdvanceAction
     finishadv: SysioEpochFinishadvAction
+    notetraffic: SysioEpochNotetrafficAction
     pause: SysioEpochPauseAction
     resendroster: SysioEpochResendrosterAction
     schbatchgps: SysioEpochSchbatchgpsAction
@@ -4694,6 +4702,7 @@ export const SysioContractDefinitions: {
     actions: [
       "advance",
       "finishadv",
+      "notetraffic",
       "pause",
       "resendroster",
       "schbatchgps",
