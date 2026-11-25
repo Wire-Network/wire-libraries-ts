@@ -1686,6 +1686,21 @@ export interface SysioMsgchOutpostConsensusKeyType {
   chain_code: number | string
 }
 
+/** sysio.msgch::queue_report_entry (type) */
+export interface SysioMsgchQueueReportEntryType {
+  chain_code: number | string
+  account: string
+  epoch_index: number
+  pending_count: number
+  oldest_pending_at: string
+}
+
+/** sysio.msgch::queue_report_key (type) */
+export interface SysioMsgchQueueReportKeyType {
+  chain_code: number | string
+  account: string
+}
+
 /** sysio.msgch::queueout (action) */
 export interface SysioMsgchQueueoutAction {
   chain_code: number | string
@@ -1693,6 +1708,15 @@ export interface SysioMsgchQueueoutAction {
     | SysioMsgchAttestationtype
     | keyof typeof SysioMsgchAttestationtype
   data: string
+}
+
+/** sysio.msgch::reportqueue (action) */
+export interface SysioMsgchReportqueueAction {
+  batch_op: string
+  chain_code: number | string
+  epoch_index: number
+  pending_count: number
+  oldest_pending_ms: number | string
 }
 
 /** sysio.msgch::resolvedisp (action) */
@@ -1717,6 +1741,7 @@ export interface SysioMsgchContract {
     deliver: SysioMsgchDeliverAction
     evalcons: SysioMsgchEvalconsAction
     queueout: SysioMsgchQueueoutAction
+    reportqueue: SysioMsgchReportqueueAction
     resolvedisp: SysioMsgchResolvedispAction
   }
   tables: {
@@ -1728,6 +1753,7 @@ export interface SysioMsgchContract {
     outenvelopes: SysioMsgchOutboundEnvelopeType
     outpcons: SysioMsgchOutpostConsensusEntryType
     outqueue: SysioMsgchOutboundQueueEntryType
+    qreports: SysioMsgchQueueReportEntryType
   }
 }
 
@@ -4758,6 +4784,7 @@ export const SysioContractDefinitions: {
       "deliver",
       "evalcons",
       "queueout",
+      "reportqueue",
       "resolvedisp"
     ],
     tables: [
@@ -4768,7 +4795,8 @@ export const SysioContractDefinitions: {
       "messages",
       "outenvelopes",
       "outpcons",
-      "outqueue"
+      "outqueue",
+      "qreports"
     ]
   },
   [SysioContractName.msig]: {
