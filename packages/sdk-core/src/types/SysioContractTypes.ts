@@ -1105,6 +1105,7 @@ export interface SysioEpochAdvanceAction {}
 /** sysio.epoch::blocklog_entry (type) */
 export interface SysioEpochBlocklogEntryType {
   epoch_index: number
+  last_epoch_index: number
   reason:
     | SysioEpochEmissionsblockreason
     | keyof typeof SysioEpochEmissionsblockreason
@@ -1112,13 +1113,27 @@ export interface SysioEpochBlocklogEntryType {
   treasury_remaining: number | string
   sysio_balance: number | string
   first_blocked_at: number
-  last_retry_at: number
-  retry_count: number
+  last_blocked_at: number
+  blocked_epochs: number
 }
 
 /** sysio.epoch::blocklog_key (type) */
 export interface SysioEpochBlocklogKeyType {
   epoch_index: number | string
+}
+
+/** sysio.epoch::economic_config (type) */
+export interface SysioEpochEconomicConfigType {
+  epoch_duration_sec: number
+  start_time: string
+}
+
+/** sysio.epoch::economic_state (type) */
+export interface SysioEpochEconomicStateType {
+  current_epoch_index: number
+  current_epoch_start: string
+  next_epoch_start: string
+  caught_up: boolean
 }
 
 /** sysio.epoch::epoch_config (type) */
@@ -1144,7 +1159,6 @@ export interface SysioEpochEpochStateType {
 /** sysio.epoch::finishadv (action) */
 export interface SysioEpochFinishadvAction {
   epoch_index: number
-  emission_amount: number | string
 }
 
 /** sysio.epoch::pause (action) */
@@ -1162,6 +1176,17 @@ export interface SysioEpochSetconfigAction {
   epoch_retention_envelope_log_count: number
 }
 
+/** sysio.epoch::seteconomy (action) */
+export interface SysioEpochSeteconomyAction {
+  epoch_duration_sec: number
+  start_time: string
+}
+
+/** sysio.epoch::tickeconomy (action) */
+export interface SysioEpochTickeconomyAction {
+  epoch_index: number
+}
+
 /** sysio.epoch::unpause (action) */
 export interface SysioEpochUnpauseAction {}
 
@@ -1173,10 +1198,14 @@ export interface SysioEpochContract {
     pause: SysioEpochPauseAction
     schbatchgps: SysioEpochSchbatchgpsAction
     setconfig: SysioEpochSetconfigAction
+    seteconomy: SysioEpochSeteconomyAction
+    tickeconomy: SysioEpochTickeconomyAction
     unpause: SysioEpochUnpauseAction
   }
   tables: {
     blocklog: SysioEpochBlocklogEntryType
+    economycfg: SysioEpochEconomicConfigType
+    economystate: SysioEpochEconomicStateType
     epochcfg: SysioEpochEpochConfigType
     epochstate: SysioEpochEpochStateType
   }
@@ -1966,7 +1995,8 @@ export interface SysioOpregDepositAction {
 
 /** sysio.opreg::flushwtdw (action) */
 export interface SysioOpregFlushwtdwAction {
-  current_epoch: number
+  economic_epoch: number
+  consensus_epoch: number
 }
 
 /** sysio.opreg::op_config (type) */
@@ -2125,8 +2155,9 @@ export interface SysioOpregWithdrawRequestType {
   chain_code: string
   token_code: string
   amount: number | string
-  eligible_at_epoch: number
-  requested_at_epoch: number
+  eligible_at_economic_epoch: number
+  eligible_at_consensus_epoch: number
+  requested_at_economic_epoch: number
 }
 
 /** sysio.opreg::yield_debt (type) */
@@ -2732,7 +2763,7 @@ export interface SysioSyndBucketRowType {
   token_code: string
   direction: SysioSyndBucketDirection | keyof typeof SysioSyndBucketDirection
   level: number | string
-  last_epoch: number
+  last_refill: string
 }
 
 /** sysio.synd::burn_receipt (type) */
@@ -3240,8 +3271,8 @@ export interface SysioSystemAbihashKeyType {
 /** sysio.system::accrueepoch (action) */
 export interface SysioSystemAccrueepochAction {
   epoch_index: number
-  batch_group_index: number
   per_epoch_emission: number | string
+  closed_epoch_duration_sec: number
 }
 
 /** sysio.system::actfinkey (action) */
@@ -3268,15 +3299,16 @@ export interface SysioSystemAuthorityType {
   accounts: SysioSystemPermissionLevelWeightType[]
 }
 
-/** sysio.system::batch_epoch (type) */
-export interface SysioSystemBatchEpochType {
-  sysio_epoch_index: number
-  members: string[]
+/** sysio.system::batch_duty (type) */
+export interface SysioSystemBatchDutyType {
+  account_name: string
+  period: number
+  units: number
 }
 
-/** sysio.system::batch_epoch_key (type) */
-export interface SysioSystemBatchEpochKeyType {
-  sysio_epoch_index: number
+/** sysio.system::batch_duty_key (type) */
+export interface SysioSystemBatchDutyKeyType {
+  account_name: number | string
 }
 
 /** sysio.system::block_header (type) */
@@ -3372,6 +3404,18 @@ export interface SysioSystemDelsnapprovAction {
   producer: string
 }
 
+/** sysio.system::duty_state (type) */
+export interface SysioSystemDutyStateType {
+  open_period: number
+  open_units: number | string
+  settling_period: number
+  settling_pool: number | string
+  settling_units: number | string
+  settling_paid: number | string
+  settling_epoch_index: number
+  settle_cursor: number | string
+}
+
 /** sysio.system::emission_config (type) */
 export interface SysioSystemEmissionConfigType {
   t1_allocation: number | string
@@ -3417,20 +3461,21 @@ export interface SysioSystemEpochInfoResultType {
 
 /** sysio.system::epoch_log (type) */
 export interface SysioSystemEpochLogType {
-  sysio_epoch_index: number
+  economic_epoch_index: number
   epoch_count: number | string
   timestamp: string
   total_emission: number | string
   compute_amount: number | string
   capex_amount: number | string
   governance_amount: number | string
-  batch_history_complete: boolean
+  batch_emission: number | string
   batch_emission_retained: number | string
+  batch_settled: boolean
 }
 
 /** sysio.system::epochlog_key (type) */
 export interface SysioSystemEpochlogKeyType {
-  sysio_epoch_index: number | string
+  economic_epoch_index: number | string
 }
 
 /** sysio.system::fin_key_id_generator_info (type) */
@@ -3489,9 +3534,7 @@ export interface SysioSystemInitAction {
 }
 
 /** sysio.system::initt5 (action) */
-export interface SysioSystemInitt5Action {
-  start_time: string
-}
+export interface SysioSystemInitt5Action {}
 
 /** sysio.system::key_weight (type) */
 export interface SysioSystemKeyWeightType {
@@ -3585,8 +3628,8 @@ export interface SysioSystemPayclaimKeyType {
 /** sysio.system::payepoch (action) */
 export interface SysioSystemPayepochAction {
   epoch_index: number
-  batch_op_groups: string[][]
   period_emission: number | string
+  spend: boolean
 }
 
 /** sysio.system::permission_level (type) */
@@ -3668,8 +3711,8 @@ export interface SysioSystemProducerScoreConfigType {
   seniority_base_sec: number
 }
 
-/** sysio.system::rcrdbatch (action) */
-export interface SysioSystemRcrdbatchAction {
+/** sysio.system::rcrdduty (action) */
+export interface SysioSystemRcrddutyAction {
   epoch_index: number
   members: string[]
 }
@@ -3797,6 +3840,9 @@ export interface SysioSystemSetsnpcfgAction {
   block_spacing: number
 }
 
+/** sysio.system::settleduty (action) */
+export interface SysioSystemSettledutyAction {}
+
 /** sysio.system::snap_config (type) */
 export interface SysioSystemSnapConfigType {
   min_providers: number
@@ -3854,11 +3900,12 @@ export interface SysioSystemT5StateType {
   last_epoch_index: number
   last_epoch_time: string
   last_epoch_emission: number | string
+  last_epoch_duration_sec: number
   total_distributed: number | string
   pending_emission_amount: number | string
   period_start_epoch: number
-  batch_group_epochs: number[]
   pending_nominal_slots: number | string
+  unsettled_batch_emission: number | string
 }
 
 /** sysio.system::unlinkauth (action) */
@@ -4027,7 +4074,7 @@ export interface SysioSystemContract {
     newaccount: SysioSystemNewaccountAction
     onblock: SysioSystemOnblockAction
     payepoch: SysioSystemPayepochAction
-    rcrdbatch: SysioSystemRcrdbatchAction
+    rcrdduty: SysioSystemRcrddutyAction
     regfinkey: SysioSystemRegfinkeyAction
     regproducer: SysioSystemRegproducerAction
     regproducer2: SysioSystemRegproducer2Action
@@ -4048,6 +4095,7 @@ export interface SysioSystemContract {
     setram: SysioSystemSetramAction
     setscorecfg: SysioSystemSetscorecfgAction
     setsnpcfg: SysioSystemSetsnpcfgAction
+    settleduty: SysioSystemSettledutyAction
     unlinkauth: SysioSystemUnlinkauthAction
     unregprod: SysioSystemUnregprodAction
     updateauth: SysioSystemUpdateauthAction
@@ -4066,9 +4114,10 @@ export interface SysioSystemContract {
   }
   tables: {
     abihash: SysioSystemAbiHashType
-    batchepochs: SysioSystemBatchEpochType
+    batchduty: SysioSystemBatchDutyType
     blockinfo: SysioSystemBlockInfoRecordType
     codehash: SysioSystemCodeHashType
+    dutystate: SysioSystemDutyStateType
     emissionmngr: SysioSystemEmissionStateType
     emitcfg: SysioSystemEmissionConfigType
     epochlog: SysioSystemEpochLogType
@@ -4536,9 +4585,11 @@ export const SysioContractDefinitions: {
       "pause",
       "schbatchgps",
       "setconfig",
+      "seteconomy",
+      "tickeconomy",
       "unpause"
     ],
-    tables: ["blocklog", "epochcfg", "epochstate"]
+    tables: ["blocklog", "economycfg", "economystate", "epochcfg", "epochstate"]
   },
   [SysioContractName.kicker]: {
     name: SysioContractName.kicker,
@@ -4768,7 +4819,7 @@ export const SysioContractDefinitions: {
       "newaccount",
       "onblock",
       "payepoch",
-      "rcrdbatch",
+      "rcrdduty",
       "regfinkey",
       "regproducer",
       "regproducer2",
@@ -4789,6 +4840,7 @@ export const SysioContractDefinitions: {
       "setram",
       "setscorecfg",
       "setsnpcfg",
+      "settleduty",
       "unlinkauth",
       "unregprod",
       "updateauth",
@@ -4807,9 +4859,10 @@ export const SysioContractDefinitions: {
     ],
     tables: [
       "abihash",
-      "batchepochs",
+      "batchduty",
       "blockinfo",
       "codehash",
+      "dutystate",
       "emissionmngr",
       "emitcfg",
       "epochlog",
