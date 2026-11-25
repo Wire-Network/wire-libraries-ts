@@ -3629,6 +3629,7 @@ export interface SysioSystemPayclaimKeyType {
 export interface SysioSystemPayepochAction {
   epoch_index: number
   period_emission: number | string
+  spend: boolean
 }
 
 /** sysio.system::permission_level (type) */
