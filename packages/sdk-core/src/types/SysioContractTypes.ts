@@ -1140,6 +1140,8 @@ export interface SysioEpochEconomicStateType {
 export interface SysioEpochEpochConfigType {
   chain_code: number | string
   epoch_duration_sec: number
+  traffic_wait_sec: number
+  late_window_sec: number
   operators_per_epoch: number
   batch_operator_minimum_active: number
   batch_op_groups: number
@@ -1201,6 +1203,8 @@ export interface SysioEpochSchbatchgpsAction {
 export interface SysioEpochSetconfigAction {
   chain_code: string
   epoch_duration_sec: number
+  traffic_wait_sec: number
+  late_window_sec: number
   operators_per_epoch: number
   batch_operator_minimum_active: number
   batch_op_groups: number
