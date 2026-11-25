@@ -1133,6 +1133,7 @@ export interface SysioEpochEconomicStateType {
   current_epoch_index: number
   current_epoch_start: string
   next_epoch_start: string
+  caught_up: boolean
 }
 
 /** sysio.epoch::epoch_config (type) */
@@ -3271,6 +3272,7 @@ export interface SysioSystemAbihashKeyType {
 export interface SysioSystemAccrueepochAction {
   epoch_index: number
   per_epoch_emission: number | string
+  closed_epoch_duration_sec: number
 }
 
 /** sysio.system::actfinkey (action) */
@@ -3382,11 +3384,6 @@ export interface SysioSystemCodeHashType {
 /** sysio.system::codehash_key (type) */
 export interface SysioSystemCodehashKeyType {
   owner: number | string
-}
-
-/** sysio.system::creditwork (action) */
-export interface SysioSystemCreditworkAction {
-  epoch_index: number
 }
 
 /** sysio.system::deleteauth (action) */
@@ -3610,20 +3607,6 @@ export interface SysioSystemObservedScheduleType {
 /** sysio.system::onblock (action) */
 export interface SysioSystemOnblockAction {
   header: SysioSystemBlockHeaderType
-}
-
-/** sysio.system::parked_work (type) */
-export interface SysioSystemParkedWorkType {
-  economic_epoch: number
-  account_name: string
-  blocks: number
-  units: number
-}
-
-/** sysio.system::parked_work_key (type) */
-export interface SysioSystemParkedWorkKeyType {
-  economic_epoch: number | string
-  account_name: number | string
 }
 
 /** sysio.system::pay_claim (type) */
@@ -3916,6 +3899,7 @@ export interface SysioSystemT5StateType {
   last_epoch_index: number
   last_epoch_time: string
   last_epoch_emission: number | string
+  last_epoch_duration_sec: number
   total_distributed: number | string
   pending_emission_amount: number | string
   period_start_epoch: number
@@ -4078,7 +4062,6 @@ export interface SysioSystemContract {
     addnodeowner: SysioSystemAddnodeownerAction
     claimnodedis: SysioSystemClaimnodedisAction
     claimpay: SysioSystemClaimpayAction
-    creditwork: SysioSystemCreditworkAction
     deleteauth: SysioSystemDeleteauthAction
     delfinkey: SysioSystemDelfinkeyAction
     delsnapprov: SysioSystemDelsnapprovAction
@@ -4144,7 +4127,6 @@ export interface SysioSystemContract {
     lastpropfins: SysioSystemLastPropFinalizersInfoType
     nodecount: SysioSystemNodeCountStateType
     nodedist: SysioSystemNodeOwnerDistributionType
-    parkedwork: SysioSystemParkedWorkType
     payclaims: SysioSystemPayClaimType
     payclaimtot: SysioSystemPayClaimTotalType
     prodsched: SysioSystemObservedScheduleType
@@ -4825,7 +4807,6 @@ export const SysioContractDefinitions: {
       "addnodeowner",
       "claimnodedis",
       "claimpay",
-      "creditwork",
       "deleteauth",
       "delfinkey",
       "delsnapprov",
@@ -4891,7 +4872,6 @@ export const SysioContractDefinitions: {
       "lastpropfins",
       "nodecount",
       "nodedist",
-      "parkedwork",
       "payclaims",
       "payclaimtot",
       "prodsched",
