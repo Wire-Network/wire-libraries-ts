@@ -1155,6 +1155,7 @@ export interface SysioEpochEpochStateType {
   current_batch_op_group: number
   batch_op_groups: string[][]
   is_paused: boolean
+  previous_group: string[]
 }
 
 /** sysio.epoch::finishadv (action) */
@@ -1668,6 +1669,8 @@ export interface SysioMsgchOutpostConsensusEntryType {
   winning_checksum: string
   envelope_digest: string
   message_tip: string
+  previous_epoch_index: number
+  previous_winning_checksum: string
 }
 
 /** sysio.msgch::outpost_consensus_key (type) */
