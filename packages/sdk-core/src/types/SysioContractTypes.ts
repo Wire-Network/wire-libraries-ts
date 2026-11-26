@@ -650,11 +650,6 @@ export enum SysioChalgDisputestatus {
   DISPUTE_STATUS_RESOLVED = 2
 }
 
-/** sysio.chalg::chalg_state (type) */
-export interface SysioChalgChalgStateType {
-  open_disputes: number
-}
-
 /** sysio.chalg::chkdispute (action) */
 export interface SysioChalgChkdisputeAction {
   dispute_id: number | string
@@ -727,7 +722,6 @@ export interface SysioChalgContract {
     votedispute: SysioChalgVotedisputeAction
   }
   tables: {
-    chalgstate: SysioChalgChalgStateType
     disputes: SysioChalgDisputeEntryType
     disputevote: SysioChalgDisputeVoteType
   }
@@ -1100,7 +1094,9 @@ export enum SysioEpochEmissionsblockreason {
 }
 
 /** sysio.epoch::advance (action) */
-export interface SysioEpochAdvanceAction {}
+export interface SysioEpochAdvanceAction {
+  chain_code: string
+}
 
 /** sysio.epoch::blocklog_entry (type) */
 export interface SysioEpochBlocklogEntryType {
@@ -1122,6 +1118,11 @@ export interface SysioEpochBlocklogKeyType {
   epoch_index: number | string
 }
 
+/** sysio.epoch::chain_key (type) */
+export interface SysioEpochChainKeyType {
+  chain_code: number | string
+}
+
 /** sysio.epoch::economic_config (type) */
 export interface SysioEpochEconomicConfigType {
   epoch_duration_sec: number
@@ -1138,6 +1139,7 @@ export interface SysioEpochEconomicStateType {
 
 /** sysio.epoch::epoch_config (type) */
 export interface SysioEpochEpochConfigType {
+  chain_code: number | string
   epoch_duration_sec: number
   operators_per_epoch: number
   batch_operator_minimum_active: number
@@ -1147,28 +1149,50 @@ export interface SysioEpochEpochConfigType {
 
 /** sysio.epoch::epoch_state (type) */
 export interface SysioEpochEpochStateType {
+  chain_code: number | string
   current_epoch_index: number
   current_epoch_start: string
   next_epoch_start: string
   current_batch_op_group: number
   batch_op_groups: string[][]
-  last_consensus_hash: string
   is_paused: boolean
 }
 
 /** sysio.epoch::finishadv (action) */
 export interface SysioEpochFinishadvAction {
+  chain_code: string
   epoch_index: number
 }
 
+/** sysio.epoch::network_genesis (type) */
+export interface SysioEpochNetworkGenesisType {
+  genesis_at: string
+}
+
 /** sysio.epoch::pause (action) */
-export interface SysioEpochPauseAction {}
+export interface SysioEpochPauseAction {
+  chain_code: string
+}
+
+/** sysio.epoch::resendroster (action) */
+export interface SysioEpochResendrosterAction {
+  code: string
+}
+
+/** sysio.epoch::roster_sent (type) */
+export interface SysioEpochRosterSentType {
+  chain_code: number | string
+  roster_hash: string
+}
 
 /** sysio.epoch::schbatchgps (action) */
-export interface SysioEpochSchbatchgpsAction {}
+export interface SysioEpochSchbatchgpsAction {
+  chain_code: string
+}
 
 /** sysio.epoch::setconfig (action) */
 export interface SysioEpochSetconfigAction {
+  chain_code: string
   epoch_duration_sec: number
   operators_per_epoch: number
   batch_operator_minimum_active: number
@@ -1188,7 +1212,9 @@ export interface SysioEpochTickeconomyAction {
 }
 
 /** sysio.epoch::unpause (action) */
-export interface SysioEpochUnpauseAction {}
+export interface SysioEpochUnpauseAction {
+  chain_code: string
+}
 
 /** sysio.epoch - action + table surface for the typed contract client. */
 export interface SysioEpochContract {
@@ -1196,6 +1222,7 @@ export interface SysioEpochContract {
     advance: SysioEpochAdvanceAction
     finishadv: SysioEpochFinishadvAction
     pause: SysioEpochPauseAction
+    resendroster: SysioEpochResendrosterAction
     schbatchgps: SysioEpochSchbatchgpsAction
     setconfig: SysioEpochSetconfigAction
     seteconomy: SysioEpochSeteconomyAction
@@ -1208,6 +1235,8 @@ export interface SysioEpochContract {
     economystate: SysioEpochEconomicStateType
     epochcfg: SysioEpochEpochConfigType
     epochstate: SysioEpochEpochStateType
+    netgenesis: SysioEpochNetworkGenesisType
+    rostersent: SysioEpochRosterSentType
   }
 }
 
@@ -1535,6 +1564,11 @@ export interface SysioMsgchAttestationEntryType {
   processed_timestamp: number | string
 }
 
+/** sysio.msgch::bootchain (action) */
+export interface SysioMsgchBootchainAction {
+  chain_code: number | string
+}
+
 /** sysio.msgch::bootstrap (action) */
 export interface SysioMsgchBootstrapAction {}
 
@@ -1544,7 +1578,9 @@ export interface SysioMsgchBuildenvAction {
 }
 
 /** sysio.msgch::chkcons (action) */
-export interface SysioMsgchChkconsAction {}
+export interface SysioMsgchChkconsAction {
+  chain_code: number | string
+}
 
 /** sysio.msgch::deliver (action) */
 export interface SysioMsgchDeliverAction {
@@ -1568,6 +1604,8 @@ export interface SysioMsgchEnvelopeEntryType {
 /** sysio.msgch::envelope_log_entry (type) */
 export interface SysioMsgchEnvelopeLogEntryType {
   id: number | string
+  chain_code: number | string
+  chain_seq: number | string
   endpoints: SysioMsgchEndpointsType
   epoch_index: number
   checksum: string
@@ -1662,6 +1700,7 @@ export interface SysioMsgchVarintUint32Type {
 /** sysio.msgch - action + table surface for the typed contract client. */
 export interface SysioMsgchContract {
   actions: {
+    bootchain: SysioMsgchBootchainAction
     bootstrap: SysioMsgchBootstrapAction
     buildenv: SysioMsgchBuildenvAction
     chkcons: SysioMsgchChkconsAction
@@ -1897,6 +1936,13 @@ export enum SysioOpregOperatortype {
   OPERATOR_TYPE_CHALLENGER = 4
 }
 
+/** sysio.opreg::chain_service_status (enum, uint8) */
+export enum SysioOpregChainServiceStatus {
+  SERVING = 0,
+  LEFT = 1,
+  EVICTED = 2
+}
+
 /** sysio.opreg::ChainAddress (type) */
 export interface SysioOpregChainaddressType {
   kind: SysioOpregChainkind | keyof typeof SysioOpregChainkind
@@ -1972,8 +2018,17 @@ export interface SysioOpregClaimyieldAction {
   token_code: string
 }
 
+/** sysio.opreg::consensus_wait (type) */
+export interface SysioOpregConsensusWaitType {
+  chain_code: string
+  eligible_at_epoch: number
+}
+
 /** sysio.opreg::delivery_key (type) */
 export interface SysioOpregDeliveryKeyType {
+  chain_code: string
+  account: string
+  ts_ms: number | string
   log_id: number | string
 }
 
@@ -1981,6 +2036,7 @@ export interface SysioOpregDeliveryKeyType {
 export interface SysioOpregDeliveryLogEntryType {
   log_id: number | string
   account: string
+  chain_code: string
   epoch: number
   delivered: boolean
   ts_ms: number | string
@@ -1993,10 +2049,29 @@ export interface SysioOpregDepositAction {
   amount: number | string
 }
 
+/** sysio.opreg::duty_tally (type) */
+export interface SysioOpregDutyTallyType {
+  first_log_id: number | string
+  duties: number | string
+  misses: number | string
+  miss_run: number | string
+}
+
 /** sysio.opreg::flushwtdw (action) */
 export interface SysioOpregFlushwtdwAction {
   economic_epoch: number
-  consensus_epoch: number
+}
+
+/** sysio.opreg::joinchain (action) */
+export interface SysioOpregJoinchainAction {
+  account: string
+  chain_code: string
+}
+
+/** sysio.opreg::leavechain (action) */
+export interface SysioOpregLeavechainAction {
+  account: string
+  chain_code: string
 }
 
 /** sysio.opreg::op_config (type) */
@@ -2007,6 +2082,7 @@ export interface SysioOpregOpConfigType {
   terminate_prune_delay_ms: number | string
   terminate_max_consecutive_misses: number
   terminate_max_pct_misses_24h: number
+  terminate_min_pct_samples: number
   terminate_window_ms: number | string
 }
 
@@ -2014,6 +2090,7 @@ export interface SysioOpregOpConfigType {
 export interface SysioOpregOpCountersType {
   next_withdraw_id: number | string
   next_dellog_id: number | string
+  flush_resume_id: number | string
 }
 
 /** sysio.opreg::operator_entry (type) */
@@ -2069,6 +2146,7 @@ export interface SysioOpregPruneAction {}
 /** sysio.opreg::recorddel (action) */
 export interface SysioOpregRecorddelAction {
   account: string
+  chain_code: string
   epoch: number
   delivered: boolean
 }
@@ -2093,11 +2171,31 @@ export interface SysioOpregRemitclaimKeyType {
   token_code: string
 }
 
+/** sysio.opreg::served_chain (type) */
+export interface SysioOpregServedChainType {
+  account: string
+  chain_code: string
+  status:
+    | SysioOpregChainServiceStatus
+    | keyof typeof SysioOpregChainServiceStatus
+  joined_at_ms: number | string
+  updated_at_ms: number | string
+  status_reason: string
+  tally: SysioOpregDutyTallyType
+}
+
+/** sysio.opreg::served_chain_key (type) */
+export interface SysioOpregServedChainKeyType {
+  chain_code: string
+  account: string
+}
+
 /** sysio.opreg::setconfig (action) */
 export interface SysioOpregSetconfigAction {
   terminate_prune_delay_ms: number | string
   terminate_max_consecutive_misses: number
   terminate_max_pct_misses_24h: number
+  terminate_min_pct_samples: number
   terminate_window_ms: number | string
   req_prod_collat: SysioOpregChainMinBondType[]
   req_batchop_collat: SysioOpregChainMinBondType[]
@@ -2118,6 +2216,7 @@ export interface SysioOpregSweepyieldAction {
 /** sysio.opreg::termcheck (action) */
 export interface SysioOpregTermcheckAction {
   account: string
+  chain_code: string
 }
 
 /** sysio.opreg::terminate (action) */
@@ -2156,7 +2255,7 @@ export interface SysioOpregWithdrawRequestType {
   token_code: string
   amount: number | string
   eligible_at_economic_epoch: number
-  eligible_at_consensus_epoch: number
+  consensus_waits: SysioOpregConsensusWaitType[]
   requested_at_economic_epoch: number
 }
 
@@ -2189,6 +2288,8 @@ export interface SysioOpregContract {
     claimyield: SysioOpregClaimyieldAction
     deposit: SysioOpregDepositAction
     flushwtdw: SysioOpregFlushwtdwAction
+    joinchain: SysioOpregJoinchainAction
+    leavechain: SysioOpregLeavechainAction
     processbatch: SysioOpregProcessbatchAction
     processprod: SysioOpregProcessprodAction
     processuw: SysioOpregProcessuwAction
@@ -2208,6 +2309,7 @@ export interface SysioOpregContract {
     opcounters: SysioOpregOpCountersType
     operators: SysioOpregOperatorEntryType
     remitclaims: SysioOpregRemitClaimType
+    servchains: SysioOpregServedChainType
     wtdwqueue: SysioOpregWithdrawRequestType
     yielddebts: SysioOpregYieldDebtType
     yieldpool: SysioOpregYieldPoolType
@@ -3302,13 +3404,15 @@ export interface SysioSystemAuthorityType {
 /** sysio.system::batch_duty (type) */
 export interface SysioSystemBatchDutyType {
   account_name: string
+  chain_code: string
   period: number
-  units: number
+  seat_seconds: number | string
 }
 
 /** sysio.system::batch_duty_key (type) */
 export interface SysioSystemBatchDutyKeyType {
-  account_name: number | string
+  account_name: string
+  chain_code: string
 }
 
 /** sysio.system::block_header (type) */
@@ -3407,10 +3511,10 @@ export interface SysioSystemDelsnapprovAction {
 /** sysio.system::duty_state (type) */
 export interface SysioSystemDutyStateType {
   open_period: number
-  open_units: number | string
+  open_seat_seconds: number | string
   settling_period: number
   settling_pool: number | string
-  settling_units: number | string
+  settling_seat_seconds: number | string
   settling_paid: number | string
   settling_epoch_index: number
   settle_cursor: number | string
@@ -3520,6 +3624,12 @@ export interface SysioSystemFinalizerKeyTType {
 /** sysio.system::finkey_key_t (type) */
 export interface SysioSystemFinkeyKeyTType {
   id: number | string
+}
+
+/** sysio.system::forfeitduty (action) */
+export interface SysioSystemForfeitdutyAction {
+  account: string
+  chain_code: string
 }
 
 /** sysio.system::getsnaphash (action) */
@@ -3713,8 +3823,10 @@ export interface SysioSystemProducerScoreConfigType {
 
 /** sysio.system::rcrdduty (action) */
 export interface SysioSystemRcrddutyAction {
+  chain_code: string
   epoch_index: number
   members: string[]
+  duty_seconds: number
 }
 
 /** sysio.system::regfinkey (action) */
@@ -4066,6 +4178,7 @@ export interface SysioSystemContract {
     deleteauth: SysioSystemDeleteauthAction
     delfinkey: SysioSystemDelfinkeyAction
     delsnapprov: SysioSystemDelsnapprovAction
+    forfeitduty: SysioSystemForfeitdutyAction
     getsnaphash: SysioSystemGetsnaphashAction
     init: SysioSystemInitAction
     initt5: SysioSystemInitt5Action
@@ -4539,7 +4652,7 @@ export const SysioContractDefinitions: {
     name: SysioContractName.chalg,
     account: "sysio.chalg",
     actions: ["chkdispute", "opendispute", "slashop", "votedispute"],
-    tables: ["chalgstate", "disputes", "disputevote"]
+    tables: ["disputes", "disputevote"]
   },
   [SysioContractName.councl]: {
     name: SysioContractName.councl,
@@ -4583,13 +4696,22 @@ export const SysioContractDefinitions: {
       "advance",
       "finishadv",
       "pause",
+      "resendroster",
       "schbatchgps",
       "setconfig",
       "seteconomy",
       "tickeconomy",
       "unpause"
     ],
-    tables: ["blocklog", "economycfg", "economystate", "epochcfg", "epochstate"]
+    tables: [
+      "blocklog",
+      "economycfg",
+      "economystate",
+      "epochcfg",
+      "epochstate",
+      "netgenesis",
+      "rostersent"
+    ]
   },
   [SysioContractName.kicker]: {
     name: SysioContractName.kicker,
@@ -4621,6 +4743,7 @@ export const SysioContractDefinitions: {
     name: SysioContractName.msgch,
     account: "sysio.msgch",
     actions: [
+      "bootchain",
       "bootstrap",
       "buildenv",
       "chkcons",
@@ -4664,6 +4787,8 @@ export const SysioContractDefinitions: {
       "claimyield",
       "deposit",
       "flushwtdw",
+      "joinchain",
+      "leavechain",
       "processbatch",
       "processprod",
       "processuw",
@@ -4683,6 +4808,7 @@ export const SysioContractDefinitions: {
       "opcounters",
       "operators",
       "remitclaims",
+      "servchains",
       "wtdwqueue",
       "yielddebts",
       "yieldpool"
@@ -4811,6 +4937,7 @@ export const SysioContractDefinitions: {
       "deleteauth",
       "delfinkey",
       "delsnapprov",
+      "forfeitduty",
       "getsnaphash",
       "init",
       "initt5",
