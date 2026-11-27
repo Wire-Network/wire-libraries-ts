@@ -3367,11 +3367,6 @@ export interface SysioSystemDelfinkeyAction {
   finalizer_key: string
 }
 
-/** sysio.system::delsnapprov (action) */
-export interface SysioSystemDelsnapprovAction {
-  producer: string
-}
-
 /** sysio.system::emission_config (type) */
 export interface SysioSystemEmissionConfigType {
   t1_allocation: number | string
@@ -3697,12 +3692,6 @@ export interface SysioSystemRegproducer2Action {
   location: number
 }
 
-/** sysio.system::regsnapprov (action) */
-export interface SysioSystemRegsnapprovAction {
-  producer: string
-  snap_account: string
-}
-
 /** sysio.system::rmvproducer (action) */
 export interface SysioSystemRmvproducerAction {
   producer: string
@@ -3803,17 +3792,6 @@ export interface SysioSystemSnapConfigType {
   block_spacing: number
 }
 
-/** sysio.system::snap_provider (type) */
-export interface SysioSystemSnapProviderType {
-  snap_account: string
-  producer: string
-}
-
-/** sysio.system::snap_provider_key_t (type) */
-export interface SysioSystemSnapProviderKeyTType {
-  snap_account: number | string
-}
-
 /** sysio.system::snap_record (type) */
 export interface SysioSystemSnapRecordType {
   block_num: number
@@ -3896,7 +3874,7 @@ export interface SysioSystemViewnodedistAction {
 
 /** sysio.system::votesnaphash (action) */
 export interface SysioSystemVotesnaphashAction {
-  snap_account: string
+  producer: string
   block_id: string
   snapshot_hash: string
 }
@@ -4018,7 +3996,6 @@ export interface SysioSystemContract {
     claimpay: SysioSystemClaimpayAction
     deleteauth: SysioSystemDeleteauthAction
     delfinkey: SysioSystemDelfinkeyAction
-    delsnapprov: SysioSystemDelsnapprovAction
     getsnaphash: SysioSystemGetsnaphashAction
     init: SysioSystemInitAction
     initt5: SysioSystemInitt5Action
@@ -4031,7 +4008,6 @@ export interface SysioSystemContract {
     regfinkey: SysioSystemRegfinkeyAction
     regproducer: SysioSystemRegproducerAction
     regproducer2: SysioSystemRegproducer2Action
-    regsnapprov: SysioSystemRegsnapprovAction
     rmvproducer: SysioSystemRmvproducerAction
     setabi: SysioSystemSetabiAction
     setacctcpu: SysioSystemSetacctcpuAction
@@ -4086,7 +4062,6 @@ export interface SysioSystemContract {
     prodstate: SysioSystemProducerRuntimeStateType
     producers: SysioSystemProducerInfoType
     snapconfig: SysioSystemSnapConfigType
-    snapprovs: SysioSystemSnapProviderType
     snaprecords: SysioSystemSnapRecordType
     snapvotes: SysioSystemSnapVoteType
     t5state: SysioSystemT5StateType
@@ -4759,7 +4734,6 @@ export const SysioContractDefinitions: {
       "claimpay",
       "deleteauth",
       "delfinkey",
-      "delsnapprov",
       "getsnaphash",
       "init",
       "initt5",
@@ -4772,7 +4746,6 @@ export const SysioContractDefinitions: {
       "regfinkey",
       "regproducer",
       "regproducer2",
-      "regsnapprov",
       "rmvproducer",
       "setabi",
       "setacctcpu",
@@ -4827,7 +4800,6 @@ export const SysioContractDefinitions: {
       "prodstate",
       "producers",
       "snapconfig",
-      "snapprovs",
       "snaprecords",
       "snapvotes",
       "t5state",
