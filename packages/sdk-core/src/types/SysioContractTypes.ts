@@ -1123,6 +1123,11 @@ export interface SysioEpochChainKeyType {
   chain_code: number | string
 }
 
+/** sysio.epoch::closebooks (action) */
+export interface SysioEpochClosebooksAction {
+  chain_code: string
+}
+
 /** sysio.epoch::economic_config (type) */
 export interface SysioEpochEconomicConfigType {
   epoch_duration_sec: number
@@ -1232,6 +1237,7 @@ export interface SysioEpochUnpauseAction {
 export interface SysioEpochContract {
   actions: {
     advance: SysioEpochAdvanceAction
+    closebooks: SysioEpochClosebooksAction
     finishadv: SysioEpochFinishadvAction
     notetraffic: SysioEpochNotetrafficAction
     pause: SysioEpochPauseAction
@@ -4735,6 +4741,7 @@ export const SysioContractDefinitions: {
     account: "sysio.epoch",
     actions: [
       "advance",
+      "closebooks",
       "finishadv",
       "notetraffic",
       "pause",
