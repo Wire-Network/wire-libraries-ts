@@ -1123,6 +1123,11 @@ export interface SysioEpochChainKeyType {
   chain_code: number | string
 }
 
+/** sysio.epoch::closebooks (action) */
+export interface SysioEpochClosebooksAction {
+  chain_code: string
+}
+
 /** sysio.epoch::economic_config (type) */
 export interface SysioEpochEconomicConfigType {
   epoch_duration_sec: number
@@ -1141,6 +1146,8 @@ export interface SysioEpochEconomicStateType {
 export interface SysioEpochEpochConfigType {
   chain_code: number | string
   epoch_duration_sec: number
+  traffic_wait_sec: number
+  late_window_sec: number
   operators_per_epoch: number
   batch_operator_minimum_active: number
   batch_op_groups: number
@@ -1152,10 +1159,12 @@ export interface SysioEpochEpochStateType {
   chain_code: number | string
   current_epoch_index: number
   current_epoch_start: string
-  next_epoch_start: string
+  traffic_since: string
+  due_at: string
   current_batch_op_group: number
   batch_op_groups: string[][]
   is_paused: boolean
+  previous_group: string[]
 }
 
 /** sysio.epoch::finishadv (action) */
@@ -1167,6 +1176,12 @@ export interface SysioEpochFinishadvAction {
 /** sysio.epoch::network_genesis (type) */
 export interface SysioEpochNetworkGenesisType {
   genesis_at: string
+}
+
+/** sysio.epoch::notetraffic (action) */
+export interface SysioEpochNotetrafficAction {
+  chain_code: string
+  since: string
 }
 
 /** sysio.epoch::pause (action) */
@@ -1194,6 +1209,8 @@ export interface SysioEpochSchbatchgpsAction {
 export interface SysioEpochSetconfigAction {
   chain_code: string
   epoch_duration_sec: number
+  traffic_wait_sec: number
+  late_window_sec: number
   operators_per_epoch: number
   batch_operator_minimum_active: number
   batch_op_groups: number
@@ -1220,7 +1237,9 @@ export interface SysioEpochUnpauseAction {
 export interface SysioEpochContract {
   actions: {
     advance: SysioEpochAdvanceAction
+    closebooks: SysioEpochClosebooksAction
     finishadv: SysioEpochFinishadvAction
+    notetraffic: SysioEpochNotetrafficAction
     pause: SysioEpochPauseAction
     resendroster: SysioEpochResendrosterAction
     schbatchgps: SysioEpochSchbatchgpsAction
@@ -1669,11 +1688,28 @@ export interface SysioMsgchOutpostConsensusEntryType {
   winning_checksum: string
   envelope_digest: string
   message_tip: string
+  previous_epoch_index: number
+  previous_winning_checksum: string
 }
 
 /** sysio.msgch::outpost_consensus_key (type) */
 export interface SysioMsgchOutpostConsensusKeyType {
   chain_code: number | string
+}
+
+/** sysio.msgch::queue_report_entry (type) */
+export interface SysioMsgchQueueReportEntryType {
+  chain_code: number | string
+  account: string
+  epoch_index: number
+  pending_count: number
+  oldest_pending_at: string
+}
+
+/** sysio.msgch::queue_report_key (type) */
+export interface SysioMsgchQueueReportKeyType {
+  chain_code: number | string
+  account: string
 }
 
 /** sysio.msgch::queueout (action) */
@@ -1683,6 +1719,15 @@ export interface SysioMsgchQueueoutAction {
     | SysioMsgchAttestationtype
     | keyof typeof SysioMsgchAttestationtype
   data: string
+}
+
+/** sysio.msgch::reportqueue (action) */
+export interface SysioMsgchReportqueueAction {
+  batch_op: string
+  chain_code: number | string
+  epoch_index: number
+  pending_count: number
+  oldest_pending_ms: number | string
 }
 
 /** sysio.msgch::resolvedisp (action) */
@@ -1707,6 +1752,7 @@ export interface SysioMsgchContract {
     deliver: SysioMsgchDeliverAction
     evalcons: SysioMsgchEvalconsAction
     queueout: SysioMsgchQueueoutAction
+    reportqueue: SysioMsgchReportqueueAction
     resolvedisp: SysioMsgchResolvedispAction
   }
   tables: {
@@ -1718,6 +1764,7 @@ export interface SysioMsgchContract {
     outenvelopes: SysioMsgchOutboundEnvelopeType
     outpcons: SysioMsgchOutpostConsensusEntryType
     outqueue: SysioMsgchOutboundQueueEntryType
+    qreports: SysioMsgchQueueReportEntryType
   }
 }
 
@@ -4694,7 +4741,9 @@ export const SysioContractDefinitions: {
     account: "sysio.epoch",
     actions: [
       "advance",
+      "closebooks",
       "finishadv",
+      "notetraffic",
       "pause",
       "resendroster",
       "schbatchgps",
@@ -4750,6 +4799,7 @@ export const SysioContractDefinitions: {
       "deliver",
       "evalcons",
       "queueout",
+      "reportqueue",
       "resolvedisp"
     ],
     tables: [
@@ -4760,7 +4810,8 @@ export const SysioContractDefinitions: {
       "messages",
       "outenvelopes",
       "outpcons",
-      "outqueue"
+      "outqueue",
+      "qreports"
     ]
   },
   [SysioContractName.msig]: {
